@@ -49,6 +49,12 @@
     return `<span class="tt-logo tt-logo--${size}" aria-label="TapTrivia"><span class="tt-logo__tap">Tap</span><span class="tt-logo__trivia">Trivia</span></span>`;
   }
 
+  /** Build bar name HTML */
+  function barNameHTML(size) {
+    if (!barName) return '';
+    return `<div class="tt-bar-name tt-bar-name--${size}">${barName}</div>`;
+  }
+
   /** Build avatar HTML — v4 lines 129-145 */
   function avatarHTML(name, opts = {}) {
     const { rank, size = 'md', you = false } = opts;
@@ -357,6 +363,7 @@
     screenEl.innerHTML = `
       <div class="tt-idle">
         <div class="tt-idle__logo">${logoHTML('xl')}</div>
+        ${barNameHTML('xl')}
         <div class="tt-idle__cta">Ask your bartender to start a game!</div>
         <div class="tt-idle__sub">Live trivia, right from your phone</div>
       </div>`;
@@ -399,6 +406,7 @@
       <div class="tt-lobby">
         <div class="tt-lobby__left">
           <div class="tt-lobby__logo">${logoHTML('xl')}</div>
+          ${barNameHTML('lg')}
           <div class="tt-lobby__subtitle">Scan to join or enter code below</div>
           ${qrCodeHTML(360)}
           <div class="tt-lobby__code-section">
@@ -425,6 +433,7 @@
     screenEl.innerHTML = `
       <div class="tt-getready">
         ${logoHTML('lg')}
+        ${barNameHTML('lg')}
         <div class="tt-getready__label">Game Starting</div>
         <div class="tt-getready__ring">
           <span class="tt-getready__num">${countdown}</span>
@@ -447,6 +456,7 @@
 
     screenEl.innerHTML = `
       <div class="tt-category">
+        ${barNameHTML('md')}
         <div class="tt-category__counter">QUESTION ${num} OF ${total}</div>
         <div class="tt-category__icon">${icon}</div>
         <div class="tt-category__name">${category}</div>
@@ -499,7 +509,7 @@
       <div class="tt-play">
         <!-- Header -->
         <div class="tt-play__header">
-          ${logoHTML('sm')}
+          <div style="display:flex;align-items:center;gap:24px">${logoHTML('sm')}${barNameHTML('header')}</div>
           <div class="tt-play__pts-area">
             <div id="tv-pts-value" class="tt-play__pts-value" style="color:${color};filter:drop-shadow(0 4px 16px ${color}40)">${pts}</div>
             <div class="tt-play__pts-label">Points Available</div>
@@ -571,7 +581,7 @@
     screenEl.innerHTML = `
       <div class="tt-play">
         <div class="tt-play__header">
-          ${logoHTML('sm')}
+          <div style="display:flex;align-items:center;gap:24px">${logoHTML('sm')}${barNameHTML('header')}</div>
           <div class="tt-play__pts-area">
             <div class="tt-play__pts-value" style="color:#00d4aa">Answer Revealed</div>
           </div>
@@ -612,6 +622,7 @@
       <div class="tt-between">
         <div class="tt-between__left">
           ${logoHTML('md')}
+          ${barNameHTML('lg')}
           <div class="tt-between__after">After Question ${num}</div>
           ${podiumHTML(scores)}
         </div>
@@ -636,6 +647,7 @@
       <div class="tt-leaderboard">
         <div class="tt-leaderboard__left">
           ${logoHTML('md')}
+          ${barNameHTML('lg')}
           <div class="tt-leaderboard__after">After Question ${num}</div>
           ${podiumHTML(scores)}
         </div>
@@ -658,6 +670,7 @@
       ${confettiHTML(24)}
       <div class="tt-results">
         <div class="tt-results__left">
+          ${barNameHTML('lg')}
           <div class="tt-results__trophy">🏆</div>
           <div class="tt-results__title">Game Over!</div>
           <div class="tt-results__subtitle">${totalQ} questions · ${playerCount} players</div>
@@ -1084,6 +1097,7 @@
 
   function runDemoMode() {
     barCode = 'BR7X';
+    barName = barName || 'Murphy\'s Pub';
     let idx = 0;
 
     // Check for specific screen in URL: ?demo&screen=playing

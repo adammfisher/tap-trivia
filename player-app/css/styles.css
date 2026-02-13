@@ -58,6 +58,8 @@
 
 /* ─── Reset & Base ──────────────────────────────────────────── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+*::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; -ms-overflow-style: none; }
 
 body {
   font-family: var(--font-body);
@@ -68,7 +70,11 @@ body {
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+body::-webkit-scrollbar { display: none; }
 
 /* ─── Background Layer ──────────────────────────────────────── */
 .tt-bg {
@@ -109,7 +115,9 @@ body {
 .screen {
   display: none;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
   padding-bottom: 70px;
   position: relative;
   z-index: 1;

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=1920, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TapTrivia — TV</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,6 +28,17 @@
     </div>
   </div>
 
+  <script>
+    (function() {
+      function scaleToFit() {
+        var sx = window.innerWidth / 1920;
+        var sy = window.innerHeight / 1080;
+        document.body.style.transform = 'scale(' + sx + ',' + sy + ')';
+      }
+      scaleToFit();
+      window.addEventListener('resize', scaleToFit);
+    })();
+  </script>
   <script src="js/config.js"></script>
   <script src="js/scoring.js"></script>
   <script src="js/game-clock.js"></script>

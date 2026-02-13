@@ -14,7 +14,13 @@
   padding: 0;
 }
 
-html, body {
+html {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #0a0218;
+}
+body {
   width: 1920px;
   height: 1080px;
   overflow: hidden;
@@ -24,6 +30,7 @@ html, body {
   color: rgba(255,255,255,0.9);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transform-origin: top left;
 }
 
 .tt-hidden { display: none !important; }
@@ -82,6 +89,29 @@ html, body {
 /* ═══════════════════════════════════════════════════════════════
    SHARED COMPONENTS
    ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Bar Name ─────────────────────────────────────────────────── */
+.tt-bar-name {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+  color: #f0f0f0;
+  line-height: 1.1;
+  text-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+.tt-bar-name--xl {
+  font-size: 72px; /* 36×2 */
+  letter-spacing: -1px;
+}
+.tt-bar-name--lg {
+  font-size: 56px; /* 28×2 */
+  letter-spacing: -0.5px;
+}
+.tt-bar-name--md {
+  font-size: 40px; /* 20×2 */
+}
+.tt-bar-name--header {
+  font-size: 36px; /* 18×2 */
+}
 
 /* ─── Logo ────────────────────────────────────────────────────── */
 /* v4 lines 88-95 */
