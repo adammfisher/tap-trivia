@@ -12,8 +12,8 @@ const GAME_DURATION_MS = TOTAL_QUESTIONS * QUESTION_DURATION_MS;
 
 const PHASES = {
   CATEGORY_SPLASH: { start: 0,     end: 5000  },
-  READ_TIME:       { start: 5000,  end: 13000 },
-  ALL_ANSWERS:     { start: 13000, end: 18000 },
+  READ_TIME:       { start: 5000,  end: 14000 },
+  ALL_ANSWERS:     { start: 14000, end: 18000 },
   HINT_1:          { start: 18000, end: 33000 },
   HINT_2:          { start: 33000, end: 45000 },
   REVEAL:          { start: 45000, end: 50000 },
@@ -127,7 +127,7 @@ function getGameState(gameStartEpoch, nowEpoch) {
   if (elapsedInQuestion >= 18000) hintsVisible.push(0);
   if (elapsedInQuestion >= 33000) hintsVisible.push(1);
 
-  const correctRevealed = elapsedInQuestion >= 45000;
+  const correctRevealed = elapsedInQuestion >= 50000;
 
   // calculatePoints is from scoring.js — available globally in browser,
   // or must be required separately in Node.js

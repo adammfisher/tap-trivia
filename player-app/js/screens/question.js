@@ -107,9 +107,11 @@ const QuestionScreen = {
       ? `${category}${subcategory ? ` — ${subcategory}` : ''}`
       : '';
 
+    const _barNameSplash = Player.getBarName();
     container.innerHTML = `
       <div class="p-category-splash">
         <div class="logo-small"><span class="logo__tap">Tap</span><span class="logo__trivia">Trivia</span></div>
+        ${_barNameSplash ? `<div class="p-bar-name">${_barNameSplash}</div>` : ''}
         <div class="p-cat-qnum">QUESTION ${state.questionNumber} OF 15</div>
         ${categoryLine ? `<div class="p-cat-sub">${categoryLine}</div>` : ''}
         <div class="p-countdown-ring">
@@ -188,9 +190,11 @@ const QuestionScreen = {
       // Points section
       const pointsSectionHtml = this._buildPointsSectionHtml(correctRevealed, isReadTime, pointsDisplay, ptsPct, ptsColorClass);
 
+      const _barName = Player.getBarName();
       container.innerHTML = `
         <div class="p-game-top">
           <div class="logo-small"><span class="logo__tap">Tap</span><span class="logo__trivia">Trivia</span></div>
+          ${_barName ? `<div class="p-bar-name">${_barName}</div>` : ''}
         </div>
 
         <div class="p-points-section" id="points-section">

@@ -126,6 +126,20 @@ body::-webkit-scrollbar { display: none; }
 .screen.active { display: flex; }
 .hidden { display: none !important; }
 
+/* ─── Bar Name ─────────────────────────────────────────────── */
+.p-bar-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.1;
+  text-align: right;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ─── Logo ──────────────────────────────────────────────────── */
 .logo, .logo-small {
   font-family: var(--font-display);
@@ -1308,6 +1322,14 @@ body::-webkit-scrollbar { display: none; }
   padding: var(--sp-lg);
   gap: var(--sp-md);
   overflow-y: auto;
+}
+
+.results-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 8px 0;
+  margin-bottom: 2px;
 }
 
 .results-header {

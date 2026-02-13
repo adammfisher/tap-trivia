@@ -6,13 +6,20 @@
 const ResultsScreen = {
   gameId: null,
   finalScore: 0,
+  _autoNavTimer: null,
 
   async show(gameId, totalScore) {
     this.gameId = gameId;
     this.finalScore = totalScore;
+    this.clearAutoNav();
 
+    const barName = Player.getBarName();
     const container = document.getElementById('results-content');
     container.innerHTML = `
+      <div class="results-top-bar">
+        <div class="logo-small"><span class="logo__tap">Tap</span><span class="logo__trivia">Trivia</span></div>
+        ${barName ? `<div class="p-bar-name">${barName}</div>` : ''}
+      </div>
       <div class="results-header">
         <div class="results-gameover">GAME OVER</div>
         <div class="results-score">${totalScore.toLocaleString()}</div>
@@ -22,6 +29,22 @@ const ResultsScreen = {
     `;
 
     await this.loadLeaderboards();
+
+    // Auto-navigate after 15 seconds — go to lobby if bar joined, else home
+    this._autoNavTimer = setTimeout(() => {
+      if (Player.hasBar()) {
+        App.showScreen('lobby');
+      } else {
+        App.showScreen('home');
+      }
+    }, 15000);
+  },
+
+  clearAutoNav() {
+    if (this._autoNavTimer) {
+      clearTimeout(this._autoNavTimer);
+      this._autoNavTimer = null;
+    }
   },
 
   async loadLeaderboards() {
@@ -77,13 +100,18 @@ const ResultsScreen = {
       globalLeaderHtml = '<div class="results-pending">Global leaderboard loading...</div>';
     }
 
+    const _barName = Player.getBarName();
     container.innerHTML = `
+      <div class="results-top-bar">
+        <div class="logo-small"><span class="logo__tap">Tap</span><span class="logo__trivia">Trivia</span></div>
+        ${_barName ? `<div class="p-bar-name">${_barName}</div>` : ''}
+      </div>
       <div class="results-header">
         <div class="results-gameover">GAME OVER</div>
         <div class="results-score">${this.finalScore.toLocaleString()}</div>
         <div class="results-points-label">POINTS</div>
       </div>
-      ${barLeaderHtml ? `<div class="results-bar-section"><h3>${Player.getBarName()} Leaderboard</h3>${barLeaderHtml}</div>` : ''}
+      ${barLeaderHtml ? `<div class="results-bar-section"><h3>${_barName} Leaderboard</h3>${barLeaderHtml}</div>` : ''}
       <div class="results-tabs">
         <button class="tab-btn active" onclick="ResultsScreen.showTab('bar')">YOUR BAR</button>
         <button class="tab-btn" onclick="ResultsScreen.showTab('global')">GLOBAL</button>
@@ -98,6 +126,10 @@ const ResultsScreen = {
         Next Game →
       </button>
     `;
+  },
+
+  hide() {
+    this.clearAutoNav();
   },
 
   showTab(tab) {

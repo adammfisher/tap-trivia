@@ -11,8 +11,10 @@ const LobbyScreen = {
     const barCode = Player.getBarCode();
     const playerName = Player.getName();
 
-    // Display bar code
+    // Display bar code and name
     document.getElementById('lobby-bar-code').textContent = barCode;
+    const barNameEl = document.getElementById('lobby-bar-name');
+    if (barNameEl) barNameEl.textContent = Player.getBarName();
 
     // Player card
     const initial = playerName.charAt(0).toUpperCase();

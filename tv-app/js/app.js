@@ -509,7 +509,7 @@
       <div class="tt-play">
         <!-- Header -->
         <div class="tt-play__header">
-          <div style="display:flex;align-items:center;gap:24px">${logoHTML('sm')}${barNameHTML('header')}</div>
+          <div style="display:flex;flex-direction:column;gap:4px">${logoHTML('sm')}${barNameHTML('header')}</div>
           <div class="tt-play__pts-area">
             <div id="tv-pts-value" class="tt-play__pts-value" style="color:${color};filter:drop-shadow(0 4px 16px ${color}40)">${pts}</div>
             <div class="tt-play__pts-label">Points Available</div>
@@ -581,7 +581,7 @@
     screenEl.innerHTML = `
       <div class="tt-play">
         <div class="tt-play__header">
-          <div style="display:flex;align-items:center;gap:24px">${logoHTML('sm')}${barNameHTML('header')}</div>
+          <div style="display:flex;flex-direction:column;gap:4px">${logoHTML('sm')}${barNameHTML('header')}</div>
           <div class="tt-play__pts-area">
             <div class="tt-play__pts-value" style="color:#00d4aa">Answer Revealed</div>
           </div>
