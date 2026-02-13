@@ -1,0 +1,385 @@
+'use strict';
+
+const { TABLE, get, query, update } = require('./shared/dynamo');
+const { getGameState, getNextGameTime, gameTimeslotPK, GAME_DURATION_MS } = require('./shared/game-clock');
+const { calculatePoints } = require('./shared/scoring');
+
+function response(statusCode, body) {
+  return {
+    statusCode,
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    body: JSON.stringify(body)
+  };
+}
+
+// --- Deterministic shuffle utilities (same as get-question) ---
+
+function seededRandom(seed) {
+  let s = seed;
+  return function () {
+    s = (s * 1664525 + 1013904223) & 0xFFFFFFFF;
+    return (s >>> 0) / 0xFFFFFFFF;
+  };
+}
+
+function seedFromString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function shuffleAnswers(gameId, questionNumber, correctAnswer, wrongAnswers, originalEliminateOrder) {
+  const answers = [
+    { text: correctAnswer, originalType: 'correct', originalWrongIdx: -1 },
+    ...wrongAnswers.map((wa, idx) => ({ text: wa, originalType: 'wrong', originalWrongIdx: idx }))
+  ];
+
+  const seed = seedFromString(`${gameId}${questionNumber}`);
+  const rng = seededRandom(seed);
+
+  for (let i = answers.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [answers[i], answers[j]] = [answers[j], answers[i]];
+  }
+
+  const shuffledAnswers = answers.map(a => a.text);
+  const correctIndex = answers.findIndex(a => a.originalType === 'correct');
+
+  const eliminateOrder = (originalEliminateOrder || []).map(origWrongIdx => {
+    return answers.findIndex(a => a.originalWrongIdx === origWrongIdx);
+  });
+
+  return { shuffledAnswers, correctIndex, eliminateOrder };
+}
+
+/**
+ * Aggregate answer records by playerId for a bar leaderboard.
+ */
+function aggregateBarScores(answers) {
+  const playerMap = {};
+
+  for (const a of answers) {
+    if (!playerMap[a.playerId]) {
+      playerMap[a.playerId] = {
+        playerId: a.playerId,
+        playerName: a.playerName || 'Anonymous',
+        score: 0
+      };
+    }
+    playerMap[a.playerId].score += a.pointsAwarded || 0;
+    if (a.playerName) {
+      playerMap[a.playerId].playerName = a.playerName;
+    }
+  }
+
+  const sorted = Object.values(playerMap)
+    .sort((a, b) => b.score - a.score);
+
+  let rank = 0;
+  let prevScore = -1;
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i].score !== prevScore) {
+      rank = i + 1;
+      prevScore = sorted[i].score;
+    }
+    sorted[i].rank = rank;
+  }
+
+  return sorted;
+}
+
+/**
+ * Build a bar leaderboard for a given game + barCode.
+ */
+async function getBarLeaderboard(gameId, barCode, limit) {
+  const answers = await query(TABLE.ANSWERS, {
+    IndexName: 'game-bar-index',
+    KeyConditionExpression: 'gameIdBarCode = :gbk',
+    ExpressionAttributeValues: { ':gbk': `${gameId}#${barCode}` }
+  });
+
+  const leaderboard = aggregateBarScores(answers);
+  return leaderboard.slice(0, limit || 10).map(e => ({
+    rank: e.rank,
+    playerName: e.playerName,
+    score: e.score
+  }));
+}
+
+/**
+ * Build a global leaderboard for a completed game.
+ */
+async function getGlobalLeaderboard(gameId, limit) {
+  const allAnswers = await query(TABLE.ANSWERS, {
+    IndexName: 'game-player-index',
+    KeyConditionExpression: 'gameId = :gid',
+    ExpressionAttributeValues: { ':gid': gameId }
+  });
+
+  const playerMap = {};
+  for (const a of allAnswers) {
+    if (!playerMap[a.playerId]) {
+      playerMap[a.playerId] = {
+        playerId: a.playerId,
+        playerName: a.playerName || 'Anonymous',
+        barCode: a.barCode || '',
+        score: 0
+      };
+    }
+    playerMap[a.playerId].score += a.pointsAwarded || 0;
+    if (a.playerName) playerMap[a.playerId].playerName = a.playerName;
+  }
+
+  const sorted = Object.values(playerMap).sort((a, b) => b.score - a.score);
+
+  let rank = 0;
+  let prevScore = -1;
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i].score !== prevScore) {
+      rank = i + 1;
+      prevScore = sorted[i].score;
+    }
+    sorted[i].rank = rank;
+  }
+
+  // Look up bar names for the top entries
+  const topEntries = sorted.slice(0, limit || 10);
+  const barCodeSet = new Set(topEntries.map(e => e.barCode).filter(Boolean));
+  const barNameMap = {};
+
+  for (const bc of barCodeSet) {
+    const bar = await get(TABLE.BARS, { PK: `BAR#${bc}` });
+    barNameMap[bc] = bar?.barName || bc;
+  }
+
+  return topEntries.map(e => ({
+    rank: e.rank,
+    playerName: e.playerName,
+    score: e.score,
+    barName: barNameMap[e.barCode] || ''
+  }));
+}
+
+exports.handler = async (event) => {
+  try {
+    const barCode = event.queryStringParameters?.barCode;
+
+    if (!barCode) {
+      return response(400, {
+        error: 'MISSING_BAR_CODE',
+        message: 'barCode query parameter is required',
+        statusCode: 400
+      });
+    }
+
+    // --- Update bar heartbeat and fetch bar info ---
+
+    let bar;
+    try {
+      bar = await update(
+        TABLE.BARS,
+        { PK: `BAR#${barCode}` },
+        'SET lastPollAt = :now',
+        { ':now': new Date().toISOString() }
+      );
+    } catch (err) {
+      // update returns null/error if item doesn't exist
+      console.warn('Bar heartbeat update failed:', err.message);
+    }
+
+    if (!bar) {
+      // Try a plain get in case the update didn't work on a non-existent item
+      bar = await get(TABLE.BARS, { PK: `BAR#${barCode}` });
+    }
+
+    if (!bar || bar.status !== 'active') {
+      return response(404, {
+        error: 'BAR_NOT_FOUND',
+        message: 'Bar not found or inactive',
+        statusCode: 404
+      });
+    }
+
+    const barName = bar.barName;
+    const activePlayers = bar.activePlayers || 0;
+
+    // --- Determine current/next game ---
+
+    const now = Date.now();
+
+    // --- Ad-hoc test game override ---
+    let game = null;
+    const adhocGame = await get(TABLE.GAMES, { PK: 'ADHOC_GAME' });
+    if (adhocGame) {
+      const adhocState = getGameState(adhocGame.startTimeEpoch, now);
+      if (adhocState.gamePhase === 'active' || adhocState.gamePhase === 'pre_game') {
+        game = adhocGame;
+      }
+    }
+
+    let gameStartEpoch;
+    if (!game) {
+      gameStartEpoch = getNextGameTime(now);
+      const pk = gameTimeslotPK(gameStartEpoch);
+      game = await get(TABLE.GAMES, { PK: pk });
+    } else {
+      gameStartEpoch = game.startTimeEpoch;
+    }
+
+    // --- No game found or pre-game state ---
+
+    if (!game) {
+      return response(200, {
+        state: 'break',
+        barCode,
+        barName,
+        activePlayers,
+        nextGameStartEpoch: gameStartEpoch,
+        secondsUntilNextGame: Math.ceil((gameStartEpoch - now) / 1000),
+        showBarCode: true,
+        playerAppUrl: process.env.PLAYER_APP_URL || 'https://localhost:3000',
+        lastGameBarLeaderboard: [],
+        lastGameGlobalLeaderboard: []
+      });
+    }
+
+    const gameState = getGameState(game.startTimeEpoch, now);
+
+    // --- PRE-GAME: game exists but hasn't started yet ---
+
+    if (gameState.gamePhase === 'pre_game') {
+      return response(200, {
+        state: 'break',
+        barCode,
+        barName,
+        activePlayers,
+        nextGameStartEpoch: game.startTimeEpoch,
+        secondsUntilNextGame: gameState.secondsUntilStart,
+        showBarCode: true,
+        playerAppUrl: process.env.PLAYER_APP_URL || 'https://localhost:3000',
+        lastGameBarLeaderboard: [],
+        lastGameGlobalLeaderboard: []
+      });
+    }
+
+    // --- POST-GAME: game is over ---
+
+    if (gameState.gamePhase === 'post_game') {
+      const barLeaderboard = await getBarLeaderboard(game.gameId, barCode, 10);
+      const globalLeaderboard = await getGlobalLeaderboard(game.gameId, 10);
+
+      // Check if there's a next game coming
+      const nextGameStart = getNextGameTime(now);
+      const secondsUntilNextGame = Math.ceil((nextGameStart - now) / 1000);
+
+      return response(200, {
+        state: 'game_over',
+        barCode,
+        barName,
+        activePlayers,
+        gameId: game.gameId,
+        totalQuestions: 15,
+        barLeaderboard,
+        globalLeaderboard,
+        nextGameStartEpoch: nextGameStart,
+        secondsUntilNextGame: secondsUntilNextGame > 0 ? secondsUntilNextGame : null,
+        showBarCode: true,
+        playerAppUrl: process.env.PLAYER_APP_URL || 'https://localhost:3000'
+      });
+    }
+
+    // --- ACTIVE GAME ---
+
+    const questionNumber = gameState.questionNumber;
+    const currentQ = game.questions[questionNumber - 1];
+
+    if (!currentQ) {
+      return response(200, {
+        state: 'active_game',
+        barCode,
+        barName,
+        activePlayers,
+        gameId: game.gameId,
+        questionNumber,
+        totalQuestions: 15,
+        phase: gameState.questionPhase,
+        question: null,
+        category: null,
+        difficulty: null,
+        answers: [],
+        eliminated: [],
+        correctAnswer: null,
+        currentPointsAvailable: 0,
+        elapsedSeconds: Math.floor(gameState.elapsedInQuestion / 1000),
+        barLeaderboard: []
+      });
+    }
+
+    // Build shuffled answers (same deterministic shuffle as get-question)
+    const { shuffledAnswers, correctIndex, eliminateOrder } = shuffleAnswers(
+      game.gameId,
+      questionNumber,
+      currentQ.answer,
+      currentQ.wrongAnswers || [],
+      currentQ.eliminateOrder || []
+    );
+
+    // Build eliminated array based on hints visible (spec format: {index, answer, display})
+    const eliminated = [];
+    if (gameState.hintsVisible && gameState.hintsVisible.length > 0) {
+      for (let i = 0; i < gameState.hintsVisible.length; i++) {
+        const idx = eliminateOrder[i];
+        if (idx !== undefined && shuffledAnswers[idx]) {
+          eliminated.push({
+            index: idx,
+            answer: shuffledAnswers[idx],
+            display: `NOT ${shuffledAnswers[idx]}`
+          });
+        }
+      }
+    }
+
+    // Determine correct answer visibility
+    const correctAnswer = gameState.correctRevealed ? currentQ.answer : null;
+
+    // Calculate current points available
+    const currentPointsAvailable = gameState.canAnswer
+      ? calculatePoints(gameState.elapsedInQuestion)
+      : 0;
+
+    // Get bar leaderboard for current game
+    const barLeaderboard = await getBarLeaderboard(game.gameId, barCode, 10);
+
+    return response(200, {
+      state: 'active_game',
+      barCode,
+      barName,
+      activePlayers,
+      gameId: game.gameId,
+      gameStartEpoch: game.startTimeEpoch,
+      questionNumber,
+      totalQuestions: 15,
+      phase: gameState.questionPhase,
+      question: currentQ.question,
+      category: currentQ.category,
+      subcategory: currentQ.subcategory || '',
+      difficulty: currentQ.difficulty,
+      answers: shuffledAnswers,
+      eliminated,
+      correctAnswer,
+      currentPointsAvailable,
+      elapsedSeconds: Math.floor(gameState.elapsedInQuestion / 1000),
+      barLeaderboard
+    });
+  } catch (err) {
+    console.error('get-tv-state error:', err);
+    return response(500, {
+      error: 'INTERNAL_ERROR',
+      message: 'An unexpected error occurred',
+      statusCode: 500
+    });
+  }
+};

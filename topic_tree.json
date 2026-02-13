@@ -1,0 +1,1427 @@
+{
+  "_meta": {
+    "description": "60 trivia categories, 6 super categories (10 each), balanced ~16.7% per pillar",
+    "super_categories": ["Geography", "Entertainment", "History", "Art & Culture", "Science & Nature", "Sports & Leisure"],
+    "leaf_design": "Each leaf is broad enough to generate 20-30 unique questions across difficulty levels 1-5"
+  },
+
+  "World Geography & Capitals": {
+    "World Capitals & Major Cities": {
+      "European Capitals": [
+        "Capital cities of Western European countries and what they're famous for",
+        "Capital cities of Eastern European and Scandinavian countries",
+        "Most populous cities in Europe and their landmarks"
+      ],
+      "Asian & Middle Eastern Capitals": [
+        "Capital cities of major Asian countries and their significance",
+        "Middle Eastern capitals, oil states, and holy cities",
+        "Southeast Asian capitals and island nations"
+      ],
+      "Americas, Africa & Oceania Capitals": [
+        "Capital cities of Central and South American countries",
+        "African capitals and the most populous cities on the continent",
+        "Australia, New Zealand, and Pacific Island nations and capitals"
+      ]
+    },
+    "Countries & Continents": {
+      "Country Facts & Superlatives": [
+        "Largest and smallest countries by area and population",
+        "Countries that share borders with the most other countries",
+        "Countries with unusual shapes, enclaves, and exclaves",
+        "Newest countries and nations that have changed names"
+      ],
+      "Continents & Regions": [
+        "The seven continents — sizes, populations, and key facts",
+        "Regions, subregions, and how the world is divided geographically",
+        "Territories, dependencies, and disputed lands around the world"
+      ]
+    },
+    "Famous Islands & Peninsulas": {
+      "Islands of the World": [
+        "Largest islands in the world and which countries they belong to",
+        "Famous island chains — Hawaii, Caribbean, Greek Islands, Philippines",
+        "Island nations and their unique geography and cultures"
+      ]
+    }
+  },
+
+  "US States, Capitals & Landmarks": {
+    "State Capitals & Nicknames": {
+      "US State Capitals": [
+        "All 50 state capitals and common mix-ups people make",
+        "State capitals that are NOT the largest city in the state",
+        "State capitals with interesting history or founding stories"
+      ],
+      "State Nicknames & Mottos": [
+        "Official state nicknames and why they got them",
+        "State mottos, flowers, birds, and official symbols",
+        "Funny or surprising state laws and records"
+      ]
+    },
+    "Famous US Landmarks": {
+      "Iconic American Landmarks": [
+        "Statue of Liberty, Mount Rushmore, Golden Gate Bridge — history and facts",
+        "The National Mall monuments and memorials in Washington DC",
+        "Famous American bridges, dams, and engineering marvels"
+      ],
+      "Regional Landmarks": [
+        "Famous landmarks of the American South and Southeast",
+        "Iconic landmarks of the West Coast and Pacific Northwest",
+        "New England and Midwest landmarks and historical sites"
+      ]
+    },
+    "State Geography & Boundaries": {
+      "State Geography": [
+        "Largest and smallest US states by area and population",
+        "US states that border the most other states",
+        "States with coastlines, landlocked states, and border oddities",
+        "The Four Corners, Mason-Dixon Line, and other famous US boundaries"
+      ]
+    }
+  },
+
+  "US National Parks & Natural Wonders": {
+    "Famous National Parks": {
+      "Iconic Parks": [
+        "Yellowstone — geysers, wildlife, history as first national park",
+        "Grand Canyon — geology, size, exploration history, and rim facts",
+        "Yosemite — waterfalls, El Capitan, Half Dome, and Ansel Adams connection",
+        "Great Smoky Mountains, Zion, Glacier, and Acadia history and features"
+      ],
+      "Lesser Known Parks": [
+        "Hidden gem national parks and the least visited parks in America",
+        "National parks in Alaska and Hawaii and what makes them unique",
+        "National monuments, seashores, and the difference between park designations"
+      ]
+    },
+    "Natural Wonders of the US": {
+      "American Natural Wonders": [
+        "Niagara Falls, Mammoth Cave, and natural wonders east of the Mississippi",
+        "Natural wonders of the American West — canyons, arches, deserts, and hot springs",
+        "Unique geological formations — Carlsbad Caverns, Devils Tower, Crater Lake"
+      ]
+    }
+  },
+
+  "Maps, Flags & Borders": {
+    "World Flags": {
+      "Flag Design & Recognition": [
+        "Recognizing flags of major world countries — colors, symbols, and designs",
+        "Flags that look alike and commonly confused country flags",
+        "Meaning behind flag colors, stars, stripes, and symbols worldwide",
+        "US state flags — recognizable designs and unusual ones"
+      ]
+    },
+    "Borders & Boundaries": {
+      "International Borders": [
+        "Longest international borders and famous border disputes",
+        "Countries that are completely surrounded by one other country",
+        "Famous walls, fences, and border crossings around the world"
+      ],
+      "US Borders & Regions": [
+        "US state border oddities, panhandles, and geographic quirks",
+        "The US-Canada and US-Mexico borders — length, crossings, and facts",
+        "Time zones in the US and how they work across state lines"
+      ]
+    },
+    "Map Reading & Navigation": {
+      "Maps & Cartography": [
+        "Famous maps in history and how map projections distort reality",
+        "Latitude, longitude, the equator, prime meridian, and tropics",
+        "Map symbols, legends, and basic cartography knowledge"
+      ]
+    }
+  },
+
+  "Weather, Geology & Earth Science": {
+    "Weather & Climate": {
+      "Weather Phenomena": [
+        "Tornadoes — formation, Fujita scale, Tornado Alley, and famous outbreaks",
+        "Hurricanes — categories, naming conventions, famous storms, and storm surge",
+        "Blizzards, ice storms, heat waves, and extreme weather records in the US"
+      ],
+      "Climate & Seasons": [
+        "Climate zones, biomes, and why different regions have different weather",
+        "El Niño, La Niña, and how ocean patterns affect US weather",
+        "Record temperatures, rainfall records, and the hottest/coldest places"
+      ]
+    },
+    "Geology & Earth Structure": {
+      "Rocks, Minerals & Plate Tectonics": [
+        "Types of rocks, famous gemstones, and how minerals form",
+        "Plate tectonics, earthquakes, and the Ring of Fire",
+        "Volcanoes — types, famous eruptions, and active volcanoes in the US"
+      ],
+      "Fossils & Earth History": [
+        "Dinosaurs — major species, extinction theories, and famous fossil discoveries",
+        "Ice ages, continental drift, and how the Earth's surface has changed",
+        "Famous geological sites — Grand Canyon layers, Petrified Forest, fossils"
+      ]
+    }
+  },
+
+  "Famous Buildings & Architecture": {
+    "Iconic World Architecture": {
+      "Ancient & Historical Structures": [
+        "Ancient wonders — Pyramids, Colosseum, Great Wall, Parthenon, Machu Picchu",
+        "Medieval castles, cathedrals, and fortresses of Europe",
+        "Famous religious buildings — Notre Dame, Hagia Sophia, St. Peter's Basilica"
+      ],
+      "Modern Architecture": [
+        "World's tallest buildings, skyscrapers, and the race for height",
+        "Famous architects — Frank Lloyd Wright, Frank Gehry, I.M. Pei and their buildings",
+        "Iconic modern buildings — Sydney Opera House, Guggenheim, Burj Khalifa"
+      ]
+    },
+    "American Architecture": {
+      "Famous American Buildings": [
+        "The White House, Capitol Building, and iconic government architecture",
+        "Empire State Building, Chrysler Building, and NYC skyline history",
+        "Famous American homes — Monticello, Biltmore, Hearst Castle, Graceland",
+        "Famous bridges — Brooklyn Bridge, Golden Gate, Mackinac Bridge stories"
+      ]
+    }
+  },
+
+  "Rivers, Lakes, Mountains & Oceans": {
+    "Rivers & Lakes": {
+      "American Waterways": [
+        "Mississippi River system — length, tributaries, cities, and history",
+        "The Great Lakes — names, sizes, bordering states, and facts",
+        "Colorado River, Columbia River, and rivers of the American West",
+        "Famous American lakes — Lake Tahoe, Crater Lake, Finger Lakes, Lake Okeechobee"
+      ],
+      "World Rivers & Lakes": [
+        "World's longest and largest rivers — Nile, Amazon, Yangtze, Danube",
+        "Famous lakes around the world — Baikal, Titicaca, Victoria, Caspian Sea"
+      ]
+    },
+    "Mountains & Ranges": {
+      "Mountain Geography": [
+        "Tallest mountains in the world and on each continent",
+        "US mountain ranges — Rockies, Appalachians, Sierra Nevada, Cascades",
+        "Famous mountain peaks — Everest, K2, Denali, Rainier, and their climbing history"
+      ]
+    },
+    "Oceans & Seas": {
+      "Ocean Facts": [
+        "The five oceans — sizes, depths, and what borders them",
+        "Ocean trenches, currents, tides, and deep sea facts",
+        "Famous seas, straits, and gulfs around the world"
+      ]
+    }
+  },
+
+  "Road Trips & Americana Landmarks": {
+    "Classic American Road Trips": {
+      "Famous Routes": [
+        "Route 66 — history, famous stops, cities, and cultural legacy",
+        "Pacific Coast Highway, Blue Ridge Parkway, and scenic American drives",
+        "Famous American highways — Interstate system history and notable routes"
+      ],
+      "Roadside Attractions": [
+        "Quirky roadside attractions — World's Largest Ball of Twine, Cadillac Ranch, etc.",
+        "Classic American diners, drive-ins, and roadside restaurant culture",
+        "Ghost towns, abandoned places, and forgotten American landmarks"
+      ]
+    },
+    "Americana & Regional Culture": {
+      "Regional American Culture": [
+        "The American South — culture, phrases, cuisine, and regional identity",
+        "New England, the Midwest, and Pacific Northwest cultural identities",
+        "Texas, Alaska, and Hawaii — unique state cultures within America"
+      ]
+    }
+  },
+
+  "World Travel & Famous Cities": {
+    "World's Most Famous Cities": {
+      "European Cities": [
+        "Paris, London, Rome — famous landmarks, neighborhoods, and cultural facts",
+        "Barcelona, Amsterdam, Berlin, Prague — tourist knowledge and city facts",
+        "European cities Americans visit most and what they're known for"
+      ],
+      "Cities Beyond Europe": [
+        "Tokyo, Dubai, Sydney, Rio — iconic cities and their landmarks",
+        "Mexico City, Havana, Buenos Aires — Latin American city culture",
+        "Bangkok, Singapore, Hong Kong — Asian cities and their global fame"
+      ]
+    },
+    "Travel Knowledge": {
+      "Travel Facts & Culture": [
+        "World's most visited countries and tourist destinations",
+        "Famous airports, airlines, and air travel facts",
+        "Currency, tipping customs, and travel etiquette around the world",
+        "UNESCO World Heritage Sites — the most famous ones and why they matter"
+      ]
+    }
+  },
+
+  "Weird Geography & Extreme Places": {
+    "Geographic Extremes": {
+      "Record-Setting Places": [
+        "Hottest, coldest, wettest, driest, and most extreme places on Earth",
+        "Highest and lowest elevation points on each continent and in each US state",
+        "Most remote, most isolated, and least populated places on Earth"
+      ],
+      "Unusual Geography": [
+        "Geographic oddities — towns in two states, four corners, border anomalies",
+        "Unusual place names in America and around the world",
+        "Man-made geographic features — canals, tunnels, artificial islands"
+      ]
+    },
+    "Geographic Records & Superlatives": {
+      "Earth's Extremes": [
+        "Largest deserts, deepest canyons, longest caves, and biggest craters",
+        "Unusual natural phenomena — bioluminescence, Northern Lights, sinkholes",
+        "Places with extreme conditions — Death Valley, Antarctica research stations, deep ocean"
+      ]
+    }
+  },
+
+  "Classic Movies & Hollywood History": {
+    "Golden Age of Hollywood": {
+      "Classic Films & Stars": [
+        "Greatest classic films — Citizen Kane, Casablanca, Gone with the Wind, Wizard of Oz",
+        "Golden Age Hollywood stars — Humphrey Bogart, Marilyn Monroe, James Dean, Audrey Hepburn",
+        "Alfred Hitchcock films, techniques, and most famous scenes",
+        "Classic musicals — Singin' in the Rain, Sound of Music, West Side Story"
+      ]
+    },
+    "Hollywood History & The Academy Awards": {
+      "Oscar History": [
+        "Academy Awards history — first winners, biggest upsets, and memorable moments",
+        "Most nominated and most awarded films and actors in Oscar history",
+        "Famous Oscar speeches, snubs, and controversies"
+      ],
+      "Hollywood Legends": [
+        "Legendary directors — Spielberg, Scorsese, Kubrick, Coppola and their filmographies",
+        "Hollywood studios — history of Warner Bros, Disney, Universal, Paramount, MGM",
+        "Famous movie quotes and the films they came from"
+      ]
+    },
+    "70s & 80s Cinema": {
+      "Blockbuster Era": [
+        "1970s cinema — The Godfather, Jaws, Star Wars, Rocky, and the New Hollywood era",
+        "1980s blockbusters — Indiana Jones, Back to the Future, Top Gun, Ghostbusters",
+        "Iconic 80s teen movies — John Hughes films, Ferris Bueller, Breakfast Club, Pretty in Pink"
+      ]
+    }
+  },
+
+  "Modern Movies & Blockbusters": {
+    "90s & 2000s Films": {
+      "Modern Classics": [
+        "1990s iconic films — Pulp Fiction, Forrest Gump, Titanic, Shawshank Redemption, Fight Club",
+        "2000s blockbusters — Lord of the Rings trilogy, Dark Knight, Pirates of the Caribbean",
+        "Romantic comedies and dramas of the 90s and 2000s that everyone knows"
+      ]
+    },
+    "Franchise & Superhero Films": {
+      "Major Franchises": [
+        "Marvel Cinematic Universe — films, characters, actors, timeline, and box office records",
+        "DC Universe films — Batman, Superman, Wonder Woman, and the DC vs Marvel rivalry",
+        "Star Wars franchise — original trilogy, prequels, sequels, characters, and lore",
+        "Harry Potter films — cast, box office, differences from books, and behind the scenes"
+      ]
+    },
+    "Modern Box Office & Streaming": {
+      "Box Office & Modern Film": [
+        "Highest grossing films of all time and box office milestones",
+        "Streaming era films — Netflix, Disney+, and how movies changed after 2020",
+        "Recent Best Picture winners and the biggest films of the last 5 years"
+      ]
+    }
+  },
+
+  "Animated & Disney Movies": {
+    "Disney Animated Classics": {
+      "Classic Disney": [
+        "Disney princess films — Snow White through Moana, characters, songs, and voice actors",
+        "Classic Disney villains — names, films, motivations, and iconic moments",
+        "Disney Renaissance era — Little Mermaid, Beauty and the Beast, Lion King, Aladdin",
+        "Early Disney films — Bambi, Dumbo, Pinocchio, Fantasia, and their legacy"
+      ]
+    },
+    "Pixar & Modern Animation": {
+      "Pixar Films": [
+        "Pixar filmography — Toy Story through present, characters, and hidden Easter eggs",
+        "Pixar's cultural impact, box office records, and most beloved films"
+      ],
+      "Other Animation Studios": [
+        "DreamWorks animated films — Shrek, Kung Fu Panda, How to Train Your Dragon",
+        "Illumination and other studios — Despicable Me, Minions, and animated hits",
+        "Japanese animation (anime) that crossed over to mainstream American audiences"
+      ]
+    },
+    "Animated TV": {
+      "Animated Series": [
+        "The Simpsons — characters, episodes, cultural references, and records",
+        "Adult animated shows — South Park, Family Guy, Rick and Morty, Bob's Burgers, Futurama",
+        "Classic cartoons — Looney Tunes, Scooby-Doo, Tom and Jerry, Flintstones, Jetsons"
+      ]
+    }
+  },
+
+  "Classic Television": {
+    "Golden Age & 70s TV": {
+      "Early Television": [
+        "Pioneering TV shows — I Love Lucy, The Honeymooners, Twilight Zone, Andy Griffith Show",
+        "1970s sitcoms — All in the Family, M*A*S*H, Happy Days, The Jeffersons, Good Times",
+        "1970s dramas — Dallas, Charlie's Angels, The Waltons, and TV event programming"
+      ]
+    },
+    "80s & 90s Television": {
+      "Iconic Series": [
+        "1980s sitcoms — Cheers, Cosby Show, Golden Girls, Family Ties, Growing Pains",
+        "1980s dramas — Miami Vice, Magnum P.I., A-Team, Knight Rider, Dynasty",
+        "1990s sitcoms — Seinfeld, Friends, Frasier, Fresh Prince, Home Improvement",
+        "1990s dramas — ER, X-Files, Law & Order, NYPD Blue, Twin Peaks, Buffy"
+      ]
+    },
+    "Talk Shows & Late Night": {
+      "TV Personalities": [
+        "Late night TV history — Carson, Letterman, Leno, Conan, Fallon, Colbert, Kimmel",
+        "Daytime talk shows — Oprah, Ellen, Dr. Phil, Jerry Springer, and their cultural impact"
+      ]
+    }
+  },
+
+  "Modern Television & Streaming": {
+    "Prestige TV & Drama": {
+      "Modern Dramas": [
+        "Breaking Bad, Better Call Saul — characters, plot, and cultural phenomenon",
+        "Game of Thrones — characters, houses, plot twists, and controversial ending",
+        "The Sopranos, The Wire, and shows that launched the prestige TV era",
+        "Recent hit dramas — Succession, Yellowstone, The Last of Us, Stranger Things"
+      ]
+    },
+    "Streaming Era Shows": {
+      "Streaming Originals": [
+        "Netflix originals — Squid Game, Wednesday, Bridgerton, Tiger King, and breakout hits",
+        "Disney+, Hulu, HBO Max, and Apple TV+ original series and their impact",
+        "True crime documentaries and docuseries that became cultural moments"
+      ]
+    },
+    "Modern Comedy & Reality": {
+      "Modern Sitcoms & Comedy": [
+        "Modern sitcoms — The Office, Parks and Rec, Brooklyn Nine-Nine, Schitt's Creek, Ted Lasso",
+        "Comedy specials and stand-up comedians who defined modern comedy"
+      ]
+    }
+  },
+
+  "Reality TV & Game Shows": {
+    "Classic Game Shows": {
+      "Iconic Game Shows": [
+        "Jeopardy! — history, famous champions, Alex Trebek legacy, and format rules",
+        "Wheel of Fortune, The Price is Right, and long-running game show history",
+        "Who Wants to Be a Millionaire, Deal or No Deal, and prime-time game show revivals",
+        "Family Feud, Match Game, and celebrity game show moments"
+      ]
+    },
+    "Reality TV": {
+      "Reality Competition Shows": [
+        "Survivor — seasons, winners, memorable players, and iconic moments",
+        "The Amazing Race, Big Brother, and competition reality show formats",
+        "American Idol, The Voice, and music competition show history and winners",
+        "The Bachelor/Bachelorette franchise — famous couples, drama, and cultural impact"
+      ],
+      "Reality TV Culture": [
+        "Keeping Up with the Kardashians and celebrity reality TV empire",
+        "Real Housewives, Jersey Shore, and reality TV cultural phenomena",
+        "Cooking competition shows — Top Chef, MasterChef, Chopped, Hell's Kitchen"
+      ]
+    }
+  },
+
+  "Celebrities & Pop Culture": {
+    "Celebrity Culture": {
+      "A-List Celebrities": [
+        "Hollywood power couples, famous marriages, and celebrity divorces",
+        "Celebrity net worth, business empires, and famous brand deals",
+        "Celebrity feuds, controversies, and tabloid moments that went viral",
+        "Famous celebrity families and Hollywood dynasties"
+      ],
+      "Pop Culture Moments": [
+        "Viral celebrity moments — award show incidents, red carpet drama, social media blowups",
+        "Celebrity transformations, name changes, and career reinventions",
+        "Famous celebrity quotes and the stories behind them"
+      ]
+    },
+    "Internet & Meme Culture": {
+      "Viral Moments": [
+        "Famous memes, viral videos, and internet moments that crossed into mainstream culture",
+        "YouTube stars, TikTok creators, and influencers who became household names"
+      ]
+    }
+  },
+
+  "Classic Music (Pre-1990)": {
+    "Rock & Roll Origins & 60s": {
+      "Birth of Rock": [
+        "Rock and roll pioneers — Elvis Presley, Chuck Berry, Little Richard, Buddy Holly",
+        "The Beatles — albums, members, breakup, solo careers, and cultural revolution",
+        "The Rolling Stones, The Who, The Kinks, and the British Invasion bands",
+        "Woodstock, Monterey Pop, and the music festival revolution of the 1960s"
+      ]
+    },
+    "1970s Rock & Beyond": {
+      "70s Rock": [
+        "Led Zeppelin, Pink Floyd, Queen, and 1970s arena rock legends",
+        "Eagles, Fleetwood Mac, and the singer-songwriter movement of the 70s",
+        "Punk rock explosion — The Ramones, Sex Pistols, The Clash, and CBGBs",
+        "Disco era — Bee Gees, Donna Summer, Saturday Night Fever, and the disco backlash"
+      ],
+      "Soul, Funk & R&B Classics": [
+        "Motown Records — The Supremes, Temptations, Stevie Wonder, Marvin Gaye",
+        "James Brown, Aretha Franklin, and the soul and funk legends",
+        "Classic R&B and the crossover between soul, funk, and pop"
+      ]
+    },
+    "1980s Music": {
+      "80s Icons & Genres": [
+        "Michael Jackson — Thriller, music videos, career milestones, and cultural impact",
+        "Prince, Madonna, Whitney Houston, and the superstars of the 1980s",
+        "New Wave and synthpop — Depeche Mode, Duran Duran, Tears for Fears, The Cure",
+        "Hair metal and glam rock — Bon Jovi, Def Leppard, Guns N' Roses, Mötley Crüe",
+        "MTV launch, music videos, and how the 80s changed the music industry"
+      ]
+    },
+    "Country Music Legends": {
+      "Classic Country": [
+        "Country music legends — Johnny Cash, Dolly Parton, Willie Nelson, Hank Williams",
+        "Nashville history, the Grand Ole Opry, and country music's roots",
+        "Outlaw country movement — Waylon Jennings, Merle Haggard, Kris Kristofferson"
+      ]
+    }
+  },
+
+  "Modern Music (1990-Present)": {
+    "1990s Music": {
+      "90s Genres & Artists": [
+        "Grunge and alternative rock — Nirvana, Pearl Jam, Soundgarden, Alice in Chains",
+        "90s hip-hop golden age — Tupac, Notorious B.I.G., Wu-Tang Clan, Nas, Jay-Z",
+        "90s pop — Britney Spears, Backstreet Boys, *NSYNC, Spice Girls, boy band era",
+        "90s R&B — TLC, Boyz II Men, Mary J. Blige, Aaliyah, and the new jack swing era"
+      ]
+    },
+    "2000s & 2010s Music": {
+      "Modern Music": [
+        "2000s pop and R&B — Beyoncé, Usher, Rihanna, Kanye West, Eminem",
+        "Emo, pop-punk, and indie rock of the 2000s — Fall Out Boy, My Chemical Romance, Arctic Monkeys",
+        "EDM explosion — Skrillex, Deadmau5, Calvin Harris, and festival culture",
+        "2010s pop dominance — Taylor Swift, Drake, Ed Sheeran, Adele, Bruno Mars"
+      ]
+    },
+    "Current Music Landscape": {
+      "Modern Artists & Trends": [
+        "Modern country music — Luke Bryan, Morgan Wallen, Zach Bryan, Chris Stapleton",
+        "Modern hip-hop and rap — Kendrick Lamar, Travis Scott, Lil Nas X, Megan Thee Stallion",
+        "Streaming era — how Spotify, Apple Music, and TikTok changed the music industry",
+        "Music industry records — most streamed songs, fastest to a billion streams, chart milestones"
+      ]
+    }
+  },
+
+  "Song Lyrics, Albums & Music History": {
+    "Famous Song Lyrics": {
+      "Iconic Lyrics": [
+        "Most famous song opening lines and identifying songs from their lyrics",
+        "Songs with commonly misheard lyrics (mondegreens) in popular music",
+        "Famous one-hit wonders — the songs everyone knows from artists they can't name"
+      ]
+    },
+    "Albums & Records": {
+      "Legendary Albums": [
+        "Best-selling albums of all time — worldwide and in the US",
+        "Albums that defined their decade — from Sgt. Pepper to Nevermind to 21",
+        "Famous album covers and the stories behind their artwork"
+      ],
+      "Chart History & Records": [
+        "Billboard Hot 100 records — longest #1 streaks, most weeks on chart, debut records",
+        "Grammy Awards history — most wins, famous snubs, controversial moments, record holders",
+        "Rock and Roll Hall of Fame — notable inductees, snubs, and induction ceremony moments"
+      ]
+    },
+    "Music Festivals & Tours": {
+      "Live Music": [
+        "Famous music festivals — Coachella, Lollapalooza, Bonnaroo, Burning Man, SXSW",
+        "Most legendary concerts and live performances in music history",
+        "Highest-grossing tours and concert records of all time"
+      ]
+    }
+  },
+
+  "American Presidents & First Ladies": {
+    "Early Presidents": {
+      "Founding Era": [
+        "George Washington — presidency, precedents set, personal life, and legacy",
+        "John Adams, Thomas Jefferson, and the founding era presidents",
+        "Abraham Lincoln — Civil War leadership, speeches, assassination, and legacy",
+        "Notable pre-Civil War presidents and their accomplishments or controversies"
+      ]
+    },
+    "Modern Presidents": {
+      "20th Century Presidents": [
+        "Theodore Roosevelt, FDR, and the Roosevelt presidencies",
+        "JFK — Camelot, Cuban Missile Crisis, assassination, and legacy",
+        "Nixon, Watergate, and the most controversial presidential moments",
+        "Reagan era, Clinton era, and the late 20th century presidents"
+      ],
+      "21st Century Presidents": [
+        "George W. Bush presidency — 9/11, wars, and domestic policy",
+        "Barack Obama — historic election, policies, and cultural significance",
+        "Donald Trump and Joe Biden presidencies and their defining moments"
+      ]
+    },
+    "Presidential Facts & First Ladies": {
+      "Presidential Trivia": [
+        "Presidential firsts, lasts, youngest, oldest, and record-setting facts",
+        "Presidential deaths in office, assassination attempts, and succession",
+        "Famous First Ladies — their causes, personalities, and impact on the role",
+        "Presidential pets, hobbies, quirks, and fun facts"
+      ]
+    }
+  },
+
+  "US History: Colonial Era through Civil War": {
+    "Colonial America & Revolution": {
+      "Colonial Period": [
+        "Jamestown, Plymouth, and the founding of the original 13 colonies",
+        "Colonial life, economy, and the relationship with Great Britain",
+        "Native American history — major tribes, conflicts, and cultural impact on America"
+      ],
+      "American Revolution": [
+        "Causes of the American Revolution — taxes, tea party, Declaration of Independence",
+        "Revolutionary War battles, strategies, and key figures beyond the founders",
+        "The Constitution, Bill of Rights, and the founding of the US government"
+      ]
+    },
+    "Expansion & Civil War": {
+      "Westward Expansion": [
+        "Louisiana Purchase, Lewis and Clark, and the opening of the American West",
+        "Manifest Destiny, the Oregon Trail, Gold Rush, and pioneer life",
+        "The Trail of Tears, Indian Removal Act, and westward expansion's impact on Native Americans"
+      ],
+      "Civil War": [
+        "Causes of the Civil War — slavery, states' rights, key compromises that failed",
+        "Major Civil War battles — Gettysburg, Antietam, Bull Run, Vicksburg",
+        "Civil War generals — Grant, Lee, Sherman, and their strategies",
+        "Emancipation Proclamation, Reconstruction, and the aftermath of the war"
+      ]
+    }
+  },
+
+  "US History: 20th Century": {
+    "Early 1900s": {
+      "Progressive Era & WWI": [
+        "Industrial Revolution in America — robber barons, railroads, labor unions",
+        "World War I — America's entry, key battles, and the Treaty of Versailles",
+        "The Roaring Twenties — jazz age, prohibition, flappers, and cultural change",
+        "The Great Depression — causes, Dust Bowl, Hoovervilles, and the New Deal"
+      ]
+    },
+    "World War II & Cold War": {
+      "WWII America": [
+        "America in World War II — Pearl Harbor, D-Day, major battles, and the home front",
+        "The atomic bomb — Manhattan Project, Hiroshima, Nagasaki, and the decision to drop it",
+        "WWII figures — Eisenhower, Patton, MacArthur, Rosie the Riveter"
+      ],
+      "Cold War Era": [
+        "The Cold War — origins, Iron Curtain, nuclear arms race, and proxy wars",
+        "Space Race — Sputnik, Mercury, Gemini, Apollo missions, and the Moon landing",
+        "Korean War, Vietnam War, and America's Cold War military engagements",
+        "McCarthyism, Red Scare, and Cold War domestic politics"
+      ]
+    }
+  },
+
+  "US History: Modern Era": {
+    "Late 20th Century": {
+      "Post-Vietnam to End of Century": [
+        "Civil Rights Movement — key events, leaders, legislation, and legacy",
+        "Watergate scandal, Nixon resignation, and its impact on American trust",
+        "The fall of the Berlin Wall, end of the Cold War, and the 1990s boom",
+        "Culture wars, technology revolution, and America at the turn of the millennium"
+      ]
+    },
+    "21st Century America": {
+      "Major Events": [
+        "September 11, 2001 — the attacks, aftermath, War on Terror, and lasting impact",
+        "The 2008 financial crisis — causes, bailouts, and effects on American life",
+        "Social movements of the 2010s-2020s — BLM, #MeToo, and cultural shifts",
+        "COVID-19 pandemic — timeline, response, vaccines, and impact on American life"
+      ],
+      "Technology & Society": [
+        "Rise of social media and how it transformed American politics and culture",
+        "The smartphone revolution — iPhone launch and how it changed daily life",
+        "Major technology milestones — Google, Facebook, Amazon, and the tech giants"
+      ]
+    }
+  },
+
+  "US Government, Laws & Constitution": {
+    "The Constitution & Bill of Rights": {
+      "Constitutional Knowledge": [
+        "The Constitution — structure, articles, and how government is organized",
+        "The Bill of Rights — all 10 amendments and what each one protects",
+        "Famous Constitutional amendments beyond the Bill of Rights — 13th through 27th",
+        "Checks and balances — how the three branches keep each other in check"
+      ]
+    },
+    "Government Structure": {
+      "How Government Works": [
+        "Congress — House vs Senate, how bills become laws, filibuster, and key procedures",
+        "The Supreme Court — famous cases, current justices, and how nominations work",
+        "The Electoral College — how it works, why it exists, and controversial elections",
+        "Federal agencies — FBI, CIA, NASA, IRS, and what they actually do"
+      ]
+    },
+    "Famous Laws & Court Cases": {
+      "Landmark Moments": [
+        "Landmark Supreme Court cases — Brown v Board, Roe v Wade, Miranda, Marbury v Madison",
+        "Famous pieces of legislation — Civil Rights Act, Social Security, Patriot Act",
+        "Constitutional crises and moments that tested American democracy"
+      ]
+    }
+  },
+
+  "World History: Ancient & Medieval": {
+    "Ancient Civilizations": {
+      "Ancient World": [
+        "Ancient Egypt — pharaohs, pyramids, hieroglyphics, Cleopatra, and the Nile",
+        "Ancient Greece — democracy, philosophy, mythology, Sparta vs Athens, Alexander the Great",
+        "The Roman Empire — rise and fall, famous emperors, roads, aqueducts, and legacy",
+        "Ancient civilizations of Mesopotamia, China, India, and the Americas"
+      ]
+    },
+    "Medieval World": {
+      "Middle Ages": [
+        "Medieval Europe — feudalism, knights, castles, the Black Plague, and the Crusades",
+        "The Viking age — exploration, conquest, and Norse culture",
+        "The Byzantine Empire and the Islamic Golden Age",
+        "The Renaissance — art, science, exploration, and the transition to the modern world"
+      ]
+    }
+  },
+
+  "World History: Modern": {
+    "Empire & Revolution": {
+      "Age of Empires": [
+        "The British Empire — scope, colonies, and impact on the modern world",
+        "The French Revolution, Napoleon, and the reshaping of Europe",
+        "Colonialism, imperialism, and the scramble for Africa"
+      ]
+    },
+    "20th Century World Events": {
+      "World Wars & Aftermath": [
+        "World War I — causes, alliances, trench warfare, and the Treaty of Versailles",
+        "World War II from the global perspective — Holocaust, Pacific Theater, key leaders",
+        "The United Nations, NATO, and the post-WWII world order"
+      ],
+      "Modern World History": [
+        "Fall of the Soviet Union and the end of the Cold War",
+        "Major world events of the 21st century — Arab Spring, Brexit, global conflicts",
+        "Famous world leaders — Churchill, Gandhi, Mandela, and their defining moments"
+      ]
+    }
+  },
+
+  "Decades Trivia: Nostalgia Rounds": {
+    "1950s & 1960s": {
+      "Mid-Century America": [
+        "1950s culture — rock and roll, drive-ins, suburbia, and the baby boom",
+        "1960s culture — counterculture, hippies, Woodstock, and the Summer of Love",
+        "1960s politics — JFK, MLK, Vietnam protests, and the moon landing"
+      ]
+    },
+    "1970s & 1980s": {
+      "Disco to Reagan": [
+        "1970s pop culture — disco, Star Wars, muscle cars, and Watergate",
+        "1980s pop culture — MTV, video games, Rubik's Cube, mall culture, and Reaganomics",
+        "1980s technology — personal computers, Walkman, VHS vs Betamax, and early internet"
+      ]
+    },
+    "1990s & 2000s": {
+      "End of Century": [
+        "1990s pop culture — Beanie Babies, Tamagotchi, grunge, and the dot-com boom",
+        "1990s technology — AOL, early internet, Y2K panic, and the birth of Google",
+        "2000s pop culture — iPod, MySpace, emo culture, reality TV explosion, and post-9/11 America",
+        "2000s and 2010s nostalgia — things millennials remember that Gen Z doesn't"
+      ]
+    }
+  },
+
+  "True Crime & Infamous Cases": {
+    "Famous Criminal Cases": {
+      "High-Profile Crimes": [
+        "O.J. Simpson trial — the case, the chase, the verdict, and cultural impact",
+        "Ted Bundy, Jeffrey Dahmer, John Wayne Gacy, and America's most notorious serial killers",
+        "JFK assassination — conspiracy theories, the Warren Commission, and key evidence",
+        "Famous kidnappings — Lindbergh baby, Patty Hearst, Elizabeth Smart"
+      ]
+    },
+    "Organized Crime & Heists": {
+      "Crime History": [
+        "The Mafia in America — famous mob bosses, Five Families, and RICO takedowns",
+        "Famous heists and robberies — D.B. Cooper, Brink's, Lufthansa, and art thefts",
+        "Al Capone, prohibition-era crime, and the bootlegging underworld"
+      ]
+    },
+    "Modern True Crime": {
+      "Recent Cases & Pop Culture": [
+        "True crime cases that became Netflix documentaries and podcasts",
+        "Cold cases that were solved with DNA and modern forensic technology",
+        "Famous wrongful convictions and the Innocence Project"
+      ]
+    }
+  },
+
+  "Holidays, Traditions & Americana": {
+    "American Holidays": {
+      "Major Holidays": [
+        "Thanksgiving — origin story, traditions, Macy's parade, and football",
+        "Fourth of July — history, traditions, fireworks, and founding father connections",
+        "Christmas in America — traditions, music, movies, and commercial history",
+        "Halloween — origins, trick-or-treating history, and costume culture in America"
+      ],
+      "Other Holidays": [
+        "Memorial Day, Veterans Day, Labor Day — origins and what they actually celebrate",
+        "Valentine's Day, St. Patrick's Day, and the commercialization of holidays",
+        "Martin Luther King Jr. Day, Presidents' Day, and other federal holidays"
+      ]
+    },
+    "American Traditions & Culture": {
+      "Americana": [
+        "American wedding traditions, birthday customs, and social traditions",
+        "State fairs, county fairs, and American festival culture",
+        "American superstitions, old wives' tales, and folk wisdom"
+      ]
+    }
+  },
+
+  "Literature & Famous Authors": {
+    "Classic Literature": {
+      "American Classics": [
+        "Mark Twain, F. Scott Fitzgerald, Hemingway, Steinbeck, and the Great American Novel",
+        "Harper Lee, J.D. Salinger, Toni Morrison, and landmark American novels",
+        "Edgar Allan Poe, Nathaniel Hawthorne, and early American literature"
+      ],
+      "World Classics": [
+        "Shakespeare — major plays, famous quotes, characters, and cultural legacy",
+        "Charles Dickens, Jane Austen, the Brontës, and classic British literature",
+        "World literature everyone knows — Don Quixote, Les Misérables, War and Peace, 1984, Brave New World"
+      ]
+    },
+    "Modern & Popular Literature": {
+      "Modern Authors & Books": [
+        "Stephen King, John Grisham, and the most popular American authors of the last 50 years",
+        "Harry Potter books vs movies, J.K. Rowling, and the young adult fiction boom",
+        "Modern bestsellers — Gone Girl, The Da Vinci Code, Hunger Games, and books-to-movies",
+        "Children's books everyone grew up with — Dr. Seuss, Roald Dahl, Shel Silverstein, Judy Blume"
+      ]
+    }
+  },
+
+  "Language, Words & Phrases": {
+    "English Language": {
+      "Word Origins & Meanings": [
+        "Common English words with surprising origins and etymologies",
+        "Words borrowed from other languages that Americans use every day",
+        "Commonly misspelled, misused, and mispronounced English words"
+      ],
+      "Phrases & Idioms": [
+        "Famous English idioms and where they actually came from",
+        "American slang by decade — from groovy to GOAT",
+        "Proverbs, sayings, and their original meanings"
+      ]
+    },
+    "World Languages": {
+      "Languages of the World": [
+        "Most spoken languages in the world and which countries speak them",
+        "Foreign words and phrases that English speakers commonly use — bon voyage, schadenfreude, etc.",
+        "Alphabets, writing systems, and how different languages work",
+        "Sign language, Braille, Morse code, and alternative communication systems"
+      ]
+    }
+  },
+
+  "Mythology & Folklore": {
+    "Greek & Roman Mythology": {
+      "Classical Mythology": [
+        "Greek gods and goddesses — names, domains, relationships, and famous stories",
+        "Greek heroes — Hercules, Odysseus, Achilles, Perseus, and their quests",
+        "Roman mythology — how it adapted Greek myths and the Roman names for Greek gods",
+        "Famous myths — Trojan War, Pandora's Box, King Midas, Icarus, Medusa"
+      ]
+    },
+    "World Mythology & Folklore": {
+      "Global Myths": [
+        "Norse mythology — Thor, Odin, Loki, Ragnarok, and Viking legends",
+        "Egyptian mythology — Ra, Isis, Osiris, Anubis, and the afterlife beliefs",
+        "Folklore and fairy tales — Brothers Grimm, Aesop's Fables, and stories everyone knows",
+        "Urban legends, American folklore — Paul Bunyan, Johnny Appleseed, Bigfoot, Loch Ness"
+      ]
+    }
+  },
+
+  "The Bible & Religion": {
+    "Biblical Knowledge": {
+      "Old & New Testament": [
+        "Major Old Testament stories — Creation, Noah, Moses, David and Goliath, Ten Commandments",
+        "Major New Testament stories — birth of Jesus, parables, Last Supper, crucifixion, resurrection",
+        "Famous biblical figures — Abraham, Solomon, Samson, Mary, Paul, and their stories",
+        "The Ten Commandments, Beatitudes, and famous biblical passages everyone knows"
+      ]
+    },
+    "World Religions": {
+      "Major Religions": [
+        "Christianity — denominations, history, major figures, and basic beliefs",
+        "Islam, Judaism, Buddhism, and Hinduism — core beliefs, holy books, and practices",
+        "Religious holidays across faiths — Christmas, Hanukkah, Ramadan, Diwali, Easter",
+        "Famous religious sites — Vatican, Mecca, Jerusalem, and their significance"
+      ]
+    }
+  },
+
+  "Fashion & Trends": {
+    "Fashion Through the Decades": {
+      "Fashion History": [
+        "1950s through 1970s fashion — poodle skirts, bell bottoms, disco, and hippie style",
+        "1980s and 1990s fashion trends — power suits, grunge, hip-hop style, and preppy looks",
+        "2000s through today — fast fashion, athleisure, streetwear, and current trends"
+      ]
+    },
+    "Designers & Fashion Culture": {
+      "Fashion World": [
+        "Famous fashion designers — Coco Chanel, Ralph Lauren, Versace, Gucci, Calvin Klein",
+        "Fashion magazines, supermodels, and the modeling industry",
+        "Met Gala, Fashion Week, and major fashion events and their memorable moments",
+        "Iconic fashion moments — red carpet looks, celebrity style, and fashion firsts"
+      ]
+    }
+  },
+
+  "Brands, Logos & Advertising": {
+    "Famous Brands & Logos": {
+      "Brand Recognition": [
+        "Recognizing famous logos — Nike swoosh, Apple, McDonald's arches, and their design stories",
+        "Brand slogans — 'Just Do It,' 'I'm Lovin' It,' and matching slogans to brands",
+        "Origin stories of famous American brands — how they started and got their names",
+        "Brand mascots — Tony the Tiger, Geico Gecko, Energizer Bunny, and their histories"
+      ]
+    },
+    "Advertising & Marketing": {
+      "Ad Culture": [
+        "Most famous TV commercials in American history — Super Bowl ads, 'Where's the beef?'",
+        "Advertising jingles everyone knows and the brands behind them",
+        "Famous advertising campaigns that changed marketing — Got Milk?, Think Different, etc.",
+        "Product naming, rebranding, and famous brand failures and comebacks"
+      ]
+    }
+  },
+
+  "Social Media & Internet Culture": {
+    "Social Media Platforms": {
+      "Platform Knowledge": [
+        "Facebook, Instagram, Twitter/X, TikTok — founding stories, founders, and key milestones",
+        "YouTube history — first viral videos, biggest channels, and platform evolution",
+        "Snapchat, Reddit, LinkedIn, Pinterest — what each platform is known for",
+        "Social media records — most followed accounts, most liked posts, fastest to milestones"
+      ]
+    },
+    "Internet Culture & History": {
+      "Online Culture": [
+        "Internet history — the World Wide Web, AOL, dial-up era, and early websites",
+        "Viral moments, famous memes, and internet challenges that went mainstream",
+        "Internet slang, acronyms, and the language of the online world",
+        "Famous internet controversies, hoaxes, and moments that broke the internet"
+      ]
+    }
+  },
+
+  "American Business & Entrepreneurs": {
+    "Famous American Companies": {
+      "Corporate America": [
+        "America's biggest companies — Apple, Amazon, Walmart, Google, and their histories",
+        "Famous American founders — Steve Jobs, Jeff Bezos, Walt Disney, Henry Ford, Sam Walton",
+        "Famous business rivalries — Coke vs Pepsi, Apple vs Microsoft, Burger King vs McDonald's",
+        "Companies that failed spectacularly — Enron, Blockbuster, Toys R Us, Lehman Brothers"
+      ]
+    },
+    "Business & Economics": {
+      "Business Knowledge": [
+        "Wall Street, the stock market, and famous financial events — crashes, booms, and bubbles",
+        "Shark Tank, business TV, and famous entrepreneurial success stories",
+        "American inventions and the entrepreneurs who brought them to market",
+        "Famous CEOs, business leaders, and the richest Americans in history"
+      ]
+    }
+  },
+
+  "Art, Photography & Famous Works": {
+    "Famous Artworks & Artists": {
+      "Iconic Art": [
+        "The Mona Lisa, Starry Night, The Scream, and the world's most famous paintings",
+        "Leonardo da Vinci, Michelangelo, Rembrandt, and the Old Masters",
+        "Impressionists — Monet, Renoir, Degas, and how they changed art",
+        "Modern art movements — Picasso and Cubism, Warhol and Pop Art, Dalí and Surrealism"
+      ]
+    },
+    "American Art & Photography": {
+      "American Art": [
+        "Famous American artists — Norman Rockwell, Georgia O'Keeffe, Jackson Pollock, Basquiat",
+        "Famous photographs that changed the world and the stories behind them",
+        "Museums and galleries — the Met, MoMA, Louvre, Smithsonian, and what they're known for"
+      ]
+    },
+    "Sculpture & Architecture as Art": {
+      "Three-Dimensional Art": [
+        "Famous sculptures — David, The Thinker, Venus de Milo, and Mount Rushmore as art",
+        "Street art, graffiti culture, and Banksy's anonymous impact on art"
+      ]
+    }
+  },
+
+  "Theater, Broadway & Performing Arts": {
+    "Broadway & Musical Theater": {
+      "Famous Musicals": [
+        "Hamilton — the show, its cultural impact, and key songs and characters",
+        "Classic Broadway musicals — Phantom of the Opera, Les Misérables, West Side Story, Cats",
+        "Disney on Broadway — Lion King, Wicked, Aladdin, and their box office records",
+        "Modern Broadway hits — Dear Evan Hansen, Book of Mormon, Come From Away"
+      ]
+    },
+    "Performing Arts": {
+      "Stage & Performance": [
+        "Famous playwrights — Shakespeare, Arthur Miller, Tennessee Williams, August Wilson",
+        "Tony Awards — history, famous winners, and memorable performances",
+        "Famous comedians and stand-up comedy history — from Pryor to Chappelle",
+        "Cirque du Soleil, Blue Man Group, and unique performance art"
+      ]
+    }
+  },
+
+  "Animals & Wildlife": {
+    "Animal Kingdom": {
+      "Mammals": [
+        "Big cats — lions, tigers, cheetahs, leopards, and what makes each unique",
+        "Dogs — breeds, famous dogs in history and movies, and canine facts",
+        "Cats — breeds, behavior, famous cats, and why the internet loves them",
+        "Whales, dolphins, elephants, and the largest animals on Earth"
+      ],
+      "Other Animals": [
+        "Birds — famous species, migration, eagles, penguins, and bird facts Americans know",
+        "Reptiles and amphibians — snakes, turtles, frogs, alligators vs crocodiles",
+        "Ocean life — sharks, octopuses, coral reefs, and deep sea creatures",
+        "Insects and arachnids — bees, butterflies, spiders, and their roles in nature"
+      ]
+    },
+    "Animal Facts & Records": {
+      "Animal Trivia": [
+        "Fastest, largest, smallest, longest-living, and most dangerous animals",
+        "Animal group names, baby animal names, and fun animal vocabulary",
+        "Extinct animals — dodo, woolly mammoth, passenger pigeon, and why they disappeared",
+        "Famous animals in history, movies, and pop culture"
+      ]
+    }
+  },
+
+  "Biology & The Human Body": {
+    "Human Body": {
+      "Anatomy & Physiology": [
+        "Major organs — heart, brain, lungs, liver, kidneys, and what each one does",
+        "The skeletal system — bones, joints, and how many bones humans have",
+        "The five senses — how sight, hearing, taste, smell, and touch work",
+        "Blood, the circulatory system, blood types, and how the heart works"
+      ],
+      "Health & Body Facts": [
+        "The immune system, vaccines, and how the body fights disease",
+        "Human body records and fascinating facts — hair growth, cell replacement, etc.",
+        "DNA, genetics, heredity, and why family members look alike"
+      ]
+    },
+    "Biology Basics": {
+      "Life Sciences": [
+        "Cells, photosynthesis, ecosystems, and basic biology concepts",
+        "Evolution, natural selection, and Charles Darwin's contributions",
+        "Plant biology — trees, flowers, crops, and how plants sustain life"
+      ]
+    }
+  },
+
+  "Chemistry & Physics": {
+    "Chemistry": {
+      "Chemical World": [
+        "The periodic table — famous elements, their symbols, and what they're used for",
+        "Chemical reactions people encounter daily — rust, combustion, baking soda and vinegar",
+        "Famous chemists and their discoveries — Marie Curie, Mendeleev, Nobel Prize winners",
+        "Atoms, molecules, compounds, and the basic building blocks of matter"
+      ]
+    },
+    "Physics": {
+      "Physical World": [
+        "Newton's laws of motion and gravity — what they mean in plain English",
+        "Einstein, relativity, and famous physics concepts everyone has heard of",
+        "Light, sound, electricity, and magnetism — everyday physics people experience",
+        "Famous physics experiments, thought experiments, and discoveries that changed science"
+      ]
+    }
+  },
+
+  "Space & Astronomy": {
+    "The Solar System": {
+      "Planets & Moons": [
+        "The eight planets — order, sizes, characteristics, and memorable facts about each",
+        "The Sun — size, temperature, solar flares, and why it's a star",
+        "The Moon — phases, tides, lunar eclipses, and the Apollo moon landings",
+        "Pluto's reclassification, dwarf planets, asteroids, and comets"
+      ]
+    },
+    "Space Exploration": {
+      "NASA & Beyond": [
+        "NASA history — Mercury, Gemini, Apollo, Space Shuttle, and the ISS",
+        "Famous astronauts — Neil Armstrong, Buzz Aldrin, John Glenn, Sally Ride, Mae Jemison",
+        "SpaceX, Blue Origin, and the modern private space race",
+        "Mars exploration — rovers, plans for human missions, and what we've discovered"
+      ]
+    },
+    "The Universe": {
+      "Deep Space": [
+        "Stars, galaxies, black holes, and the scale of the universe",
+        "The Big Bang theory, the age of the universe, and how we know what we know",
+        "Constellations, zodiac, and stargazing knowledge"
+      ]
+    }
+  },
+
+  "Math, Numbers & Logic": {
+    "Everyday Math": {
+      "Numbers People Know": [
+        "Famous numbers — pi, golden ratio, infinity, and why they matter",
+        "Roman numerals, prime numbers, and number systems",
+        "Percentages, fractions, and probability in everyday life — tipping, odds, discounts",
+        "Famous math problems, paradoxes, and puzzles — Monty Hall, birthday problem, etc."
+      ]
+    },
+    "Math History & Concepts": {
+      "Math World": [
+        "Famous mathematicians — Pythagoras, Euclid, Newton, Euler, Turing, and their contributions",
+        "Geometry basics — shapes, angles, the Pythagorean theorem, and area formulas people learned",
+        "Statistics, averages, and how numbers can be misleading or manipulated"
+      ]
+    }
+  },
+
+  "Inventions & Technology": {
+    "Famous Inventions": {
+      "World-Changing Inventions": [
+        "The printing press, light bulb, telephone, automobile, and airplane — who invented them and when",
+        "Television, radio, and the inventions that created mass media",
+        "The internet — who invented it, when, ARPANET, and how it grew into what we know",
+        "Medical inventions — vaccines, antibiotics, X-rays, and technologies that save lives"
+      ]
+    },
+    "Modern Technology": {
+      "Tech Revolution": [
+        "The personal computer revolution — Apple, Microsoft, IBM, and how PCs went mainstream",
+        "Smartphones — the iPhone launch, how mobile technology transformed daily life",
+        "AI, robotics, and emerging technologies that are shaping the future",
+        "Famous tech failures — Google Glass, Segway, HD DVD, and inventions that flopped"
+      ]
+    }
+  },
+
+  "Weird Facts & World Records": {
+    "Guinness World Records": {
+      "Record Holders": [
+        "Human world records — tallest, shortest, oldest, fastest, and most unusual",
+        "Food world records — largest pizza, most hot dogs eaten, biggest cake",
+        "Animal world records — fastest, largest, most venomous, loudest, and longest-living"
+      ]
+    },
+    "Weird & Wonderful Facts": {
+      "Strange But True": [
+        "Bizarre facts about the human body that sound made up but are true",
+        "Strange facts about everyday objects and products — who invented them and why",
+        "Unusual laws, customs, and traditions from around the world",
+        "Mind-blowing statistics and comparisons that put things in perspective"
+      ]
+    }
+  },
+
+  "Medicine & Health": {
+    "Medical History": {
+      "Breakthroughs": [
+        "History of vaccines — smallpox, polio, COVID, and the scientists behind them",
+        "Famous medical discoveries — penicillin, X-rays, anesthesia, DNA structure",
+        "Epidemics and pandemics throughout history — Black Plague, Spanish Flu, HIV/AIDS, COVID-19",
+        "Famous doctors and medical pioneers — Hippocrates, Florence Nightingale, Jonas Salk"
+      ]
+    },
+    "Health & Nutrition": {
+      "Common Knowledge": [
+        "Vitamins, minerals, and nutrition basics everyone should know",
+        "Common medical terminology — what basic medical terms and abbreviations mean",
+        "Mental health awareness — basic psychology terms and famous contributions to the field",
+        "First aid basics and common health knowledge"
+      ]
+    }
+  },
+
+  "Planet Earth & Environment": {
+    "Earth Systems": {
+      "How Earth Works": [
+        "Atmosphere, ozone layer, greenhouse effect, and how Earth maintains life",
+        "Ecosystems, biomes, and the food chain — rainforests, deserts, tundra, oceans",
+        "Water cycle, rock cycle, carbon cycle, and the systems that keep Earth functioning"
+      ]
+    },
+    "Environment & Conservation": {
+      "Environmental Issues": [
+        "Climate change — causes, effects, key data points, and the global response",
+        "Endangered species, extinction, and major conservation efforts worldwide",
+        "Pollution, deforestation, and environmental challenges facing the planet",
+        "Famous environmentalists, organizations, and landmarks in the environmental movement"
+      ]
+    },
+    "Natural Disasters": {
+      "Disasters": [
+        "Famous earthquakes, tsunamis, and volcanic eruptions throughout history",
+        "Major hurricanes, tornadoes, and floods that devastated American communities",
+        "Famous wildfires, droughts, and natural disasters of the 21st century"
+      ]
+    }
+  },
+
+  "Computers, Internet & Tech": {
+    "Computer History": {
+      "Computing Evolution": [
+        "History of computers — from ENIAC to laptops to smartphones",
+        "Microsoft, Apple, Google, and the companies that built the tech world",
+        "Bill Gates, Steve Jobs, Mark Zuckerberg, and the tech visionaries"
+      ]
+    },
+    "Internet & Digital Life": {
+      "Online World": [
+        "The history of the internet — from ARPANET to broadband to mobile",
+        "Email, search engines, browsers, and the tools that define online life",
+        "Cybersecurity basics — hacking, viruses, phishing, and famous breaches",
+        "Cryptocurrency, blockchain, Bitcoin, and the digital currency revolution"
+      ]
+    }
+  },
+
+  "NFL Football": {
+    "Super Bowl & Championships": {
+      "Super Bowl History": [
+        "Super Bowl history — most wins by team, MVP awards, and memorable games",
+        "Famous Super Bowl moments — plays, performances, halftime shows, and upsets",
+        "Super Bowl commercials, halftime performers, and the spectacle beyond the game"
+      ]
+    },
+    "Teams, Players & Records": {
+      "NFL Legends": [
+        "Greatest NFL quarterbacks — Brady, Montana, Manning, Marino, Elway and their records",
+        "NFL rushing leaders, receiving records, and all-time statistical leaders",
+        "Famous NFL teams and dynasties — Patriots, Steelers, Cowboys, 49ers, Packers",
+        "NFL Draft history — famous picks, biggest busts, and Heisman winners who went pro"
+      ],
+      "NFL Rules & Culture": [
+        "NFL rules, positions, and basic football knowledge",
+        "NFL rivalries — Bears vs Packers, Cowboys vs Eagles, and the biggest grudge matches",
+        "Monday Night Football, NFL on Thanksgiving, and football traditions in American culture"
+      ]
+    }
+  },
+
+  "NBA Basketball": {
+    "NBA Legends & Championships": {
+      "Basketball Greats": [
+        "Michael Jordan — career stats, championships, famous moments, and legacy",
+        "LeBron James vs Michael Jordan debate — stats, championships, and arguments for each",
+        "NBA legends — Kobe, Magic, Bird, Shaq, Duncan, Kareem, Wilt and their achievements",
+        "NBA championship history — most titles by team, dynasties, and famous Finals series"
+      ]
+    },
+    "Teams, Records & Culture": {
+      "NBA World": [
+        "NBA records — most points in a game, triple-doubles, career milestones",
+        "Famous NBA rivalries — Lakers vs Celtics, Bulls vs Pistons, and heated matchups",
+        "NBA All-Star Game, Slam Dunk Contest, and basketball entertainment",
+        "Basketball rules, positions, and basic knowledge — shot clock, traveling, lane violations"
+      ]
+    }
+  },
+
+  "MLB Baseball": {
+    "Baseball History & Legends": {
+      "All-Time Greats": [
+        "Babe Ruth, Hank Aaron, Willie Mays, and baseball's all-time legends",
+        "Baseball records — home runs, hits, strikeouts, and the milestones that matter",
+        "Famous baseball moments — perfect games, walk-off home runs, and World Series drama",
+        "Baseball Hall of Fame — famous inductees, snubs, and controversies"
+      ]
+    },
+    "Teams & Culture": {
+      "America's Pastime": [
+        "Yankees, Red Sox, Dodgers, Cardinals, and baseball's most storied franchises",
+        "World Series history — memorable championships, upsets, and dynasties",
+        "Baseball rules, positions, and the basics everyone should know",
+        "Steroids era, scandals, and controversies that shaped modern baseball"
+      ]
+    }
+  },
+
+  "NHL Hockey": {
+    "Hockey Legends & History": {
+      "NHL Greats": [
+        "Wayne Gretzky — records, career highlights, and why he's 'The Great One'",
+        "Hockey legends — Gordie Howe, Bobby Orr, Mario Lemieux, Sidney Crosby, Ovechkin",
+        "Stanley Cup history — most championships by team, famous playoff runs, and traditions"
+      ]
+    },
+    "Teams & Rules": {
+      "Hockey World": [
+        "Original Six teams and the expansion of the NHL",
+        "Famous NHL rivalries and playoff moments",
+        "Hockey rules, positions, penalties, and basic knowledge — icing, offsides, power plays",
+        "Olympic hockey — Miracle on Ice 1980, famous international moments"
+      ]
+    }
+  },
+
+  "NCAA College Sports": {
+    "College Football": {
+      "CFB": [
+        "College football traditions — fight songs, rivalry games, mascots, and tailgating culture",
+        "Heisman Trophy winners and the most famous college football players",
+        "College football championships, bowl games, and the playoff system",
+        "Famous college football programs — Alabama, Ohio State, Notre Dame, USC, Michigan"
+      ]
+    },
+    "College Basketball & Other Sports": {
+      "March Madness & More": [
+        "March Madness — tournament format, Cinderella stories, buzzer beaters, and famous upsets",
+        "Famous college basketball programs — Duke, Kentucky, UNC, Kansas, UCLA",
+        "College baseball, softball, and other NCAA sports Americans follow",
+        "NIL deals, transfer portal, and how college sports have changed recently"
+      ]
+    }
+  },
+
+  "Golf, Tennis & Olympics": {
+    "Golf": {
+      "Golf World": [
+        "Tiger Woods — career achievements, majors, comeback story, and cultural impact",
+        "The Masters, US Open, British Open, PGA Championship — the four majors and their history",
+        "Golf legends — Jack Nicklaus, Arnold Palmer, Ben Hogan, and all-time greats",
+        "Famous golf courses, Ryder Cup, and golf traditions"
+      ]
+    },
+    "Tennis": {
+      "Tennis World": [
+        "Serena and Venus Williams — careers, Grand Slams, and dominance of women's tennis",
+        "Men's tennis legends — Federer, Nadal, Djokovic, Sampras, Agassi and the GOAT debate",
+        "Grand Slam tournaments — Wimbledon, US Open, French Open, Australian Open and their quirks"
+      ]
+    },
+    "Olympics": {
+      "Olympic Games": [
+        "Summer Olympics history — host cities, famous moments, and record-breaking performances",
+        "Winter Olympics — famous events, host cities, and iconic American performances",
+        "Famous American Olympians — Jesse Owens, Michael Phelps, Simone Biles, Usain Bolt",
+        "Olympic sports, the modern pentathlon, and sports that have been added or removed"
+      ]
+    }
+  },
+
+  "NASCAR, Wrestling & Combat Sports": {
+    "NASCAR & Auto Racing": {
+      "Racing World": [
+        "NASCAR history — Daytona 500, famous drivers, and the sport's Southern roots",
+        "Dale Earnhardt, Richard Petty, Jeff Gordon, and racing legends",
+        "Indianapolis 500, Formula 1 basics, and auto racing Americans follow"
+      ]
+    },
+    "Wrestling": {
+      "Pro Wrestling": [
+        "WWE legends — Hulk Hogan, The Rock, Stone Cold, John Cena, Undertaker",
+        "WrestleMania history — famous matches, moments, and celebrity appearances",
+        "Wrestling terminology, famous moves, and the business of pro wrestling"
+      ]
+    },
+    "Combat Sports": {
+      "Fighting": [
+        "Boxing legends — Muhammad Ali, Mike Tyson, Floyd Mayweather, and famous fights",
+        "UFC and MMA — rise of the sport, famous fighters, and landmark fights",
+        "Famous combat sports moments — Rumble in the Jungle, Tyson's ear bite, McGregor era"
+      ]
+    }
+  },
+
+  "Beer, Wine & Cocktails": {
+    "Beer": {
+      "Beer World": [
+        "Types of beer — lager, ale, IPA, stout, pilsner, and what makes each different",
+        "Famous American beer brands — Budweiser, Coors, Miller and the history of American brewing",
+        "Craft beer revolution — famous craft breweries, beer styles, and the IPA explosion",
+        "Beer culture — brewing basics, homebrewing, beer pong, and bar games"
+      ]
+    },
+    "Wine & Spirits": {
+      "Wine & Liquor": [
+        "Wine basics — red vs white, grape varieties, famous wine regions, and Napa Valley",
+        "Bourbon, whiskey, scotch — what's the difference and famous American distillers",
+        "Tequila, rum, vodka, gin — spirits basics and what they're made from"
+      ]
+    },
+    "Cocktails & Bar Culture": {
+      "Mixed Drinks": [
+        "Classic cocktails — Martini, Old Fashioned, Margarita, Manhattan, and their recipes",
+        "Famous cocktails and the stories behind their creation",
+        "Bar terminology, bartending basics, and cocktail culture in America",
+        "Famous bars, speakeasies, and drinking culture throughout American history"
+      ]
+    }
+  },
+
+  "American Food & Dining": {
+    "American Cuisine": {
+      "Regional Food": [
+        "Southern food — BBQ styles, fried chicken, cornbread, and regional specialties",
+        "Tex-Mex, Cajun/Creole, New England clam chowder, and regional American cuisines",
+        "Pizza styles — New York, Chicago deep dish, Detroit, and the great pizza debates",
+        "American comfort food — burgers, hot dogs, mac and cheese, and their histories"
+      ]
+    },
+    "Restaurants & Food Culture": {
+      "Dining America": [
+        "Fast food history — McDonald's, KFC, Taco Bell, Chick-fil-A, and how they started",
+        "Famous restaurants, celebrity chefs, and the American fine dining scene",
+        "Food TV — Iron Chef, Chopped, Diners Drive-Ins & Dives, and cooking show culture",
+        "Food trends, food holidays, and eating competitions in America"
+      ]
+    }
+  },
+
+  "Video Games, Toys & Board Games": {
+    "Video Game History": {
+      "Gaming Evolution": [
+        "Video game consoles — Atari, Nintendo, PlayStation, Xbox, and the console wars",
+        "Most famous video games of all time — Mario, Zelda, Pac-Man, Tetris, Minecraft, GTA",
+        "Video game characters everyone knows — Mario, Sonic, Master Chief, Pikachu, Link, Lara Croft",
+        "Esports, Twitch streaming, and how gaming became mainstream entertainment"
+      ]
+    },
+    "Board Games & Toys": {
+      "Classic Games": [
+        "Classic board games — Monopoly, Scrabble, Clue, Risk, Trivial Pursuit, and their rules",
+        "Card games — Poker, Blackjack, Uno, and games Americans play at gatherings",
+        "Classic American toys — Barbie, G.I. Joe, LEGO, Hot Wheels, Nerf, and their histories",
+        "Toy fads and crazes — Cabbage Patch Kids, Beanie Babies, Furby, Tickle Me Elmo"
+      ]
+    }
+  }
+}

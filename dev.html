@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TapTrivia — Dev View</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Fredoka:wght@600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0218;
+    color: #f0f0f0;
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── Top Bar ─────────────────────────────────────── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    background: rgba(0,0,0,0.5);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-logo {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .topbar-logo .tap { color: #fff; }
+  .topbar-logo .trivia {
+    background: linear-gradient(135deg, #f7971e, #ffd200);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .topbar-env {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .env-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.6);
+  }
+  .env-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #00d4aa;
+    box-shadow: 0 0 6px rgba(0,212,170,0.5);
+  }
+  .env-dot.local { background: #ffd200; box-shadow: 0 0 6px rgba(255,210,0,0.5); }
+
+  .reload-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    color: rgba(255,255,255,0.7);
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .reload-btn:hover {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+  }
+
+  /* ─── Layout ──────────────────────────────────────── */
+  .dev-layout {
+    display: flex;
+    gap: 32px;
+    padding: 24px 32px;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: calc(100vh - 56px);
+  }
+
+  /* ─── Frame Wrapper ───────────────────────────────── */
+  .frame-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .frame-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .frame-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+  }
+  .frame-dimensions {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.2);
+  }
+
+  /* ─── TV Frame ────────────────────────────────────── */
+  .tv-frame {
+    width: 880px;
+    height: 495px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    background: #0a0218;
+  }
+  .tv-frame iframe {
+    width: 1920px;
+    height: 1080px;
+    border: none;
+    transform: scale(0.458333);
+    transform-origin: 0 0;
+  }
+
+  /* ─── Phone Frame ─────────────────────────────────── */
+  .phone-outer {
+    width: 320px;
+    padding: 12px;
+    background: linear-gradient(145deg, #1a1a2e, #16162a);
+    border-radius: 44px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .phone-notch {
+    width: 120px;
+    height: 28px;
+    background: #0a0218;
+    border-radius: 0 0 16px 16px;
+    margin: 0 auto 0;
+    position: relative;
+    top: -1px;
+    z-index: 2;
+  }
+  .phone-screen {
+    width: 296px;
+    height: 640px;
+    border-radius: 32px;
+    overflow: hidden;
+    background: #0a0218;
+    position: relative;
+    margin-top: -14px;
+  }
+  .phone-screen iframe {
+    width: 390px;
+    height: 844px;
+    border: none;
+    transform: scale(0.7590);
+    transform-origin: 0 0;
+  }
+  .phone-homebar {
+    width: 134px;
+    height: 5px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+    margin: 8px auto 0;
+  }
+
+  /* ─── Source indicator ────────────────────────────── */
+  .source-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .source-url {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 300px;
+  }
+  .source-url a {
+    color: rgba(255,255,255,0.3);
+    text-decoration: none;
+  }
+  .source-url a:hover {
+    color: rgba(255,255,255,0.6);
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <span class="tap">Tap</span><span class="trivia">Trivia</span>
+      <span style="font-family:'Outfit';font-size:12px;font-weight:600;color:rgba(255,255,255,0.2);margin-left:8px;">DEV</span>
+    </div>
+    <div class="topbar-env">
+      <div class="env-badge">
+        <span class="env-dot" id="env-dot"></span>
+        <span id="env-label">CloudFront</span>
+      </div>
+      <button class="reload-btn" onclick="reloadAll()">Reload Both</button>
+      <button class="reload-btn" onclick="toggleSource()">Toggle Local / Cloud</button>
+    </div>
+  </div>
+
+  <!-- Side-by-Side Layout -->
+  <div class="dev-layout">
+
+    <!-- TV App -->
+    <div class="frame-wrap">
+      <div class="frame-label">
+        <span class="frame-title">Bar TV &mdash; 16:9</span>
+        <span class="frame-dimensions">1920 &times; 1080 @ 46%</span>
+      </div>
+      <div class="tv-frame">
+        <iframe id="tv-iframe" src="" allow="autoplay"></iframe>
+      </div>
+      <div class="source-row">
+        <span class="source-url"><a id="tv-link" href="#" target="_blank"></a></span>
+      </div>
+    </div>
+
+    <!-- Player App (Phone) -->
+    <div class="frame-wrap">
+      <div class="frame-label">
+        <span class="frame-title">Mobile Player &mdash; iPhone 14</span>
+        <span class="frame-dimensions">390 &times; 844 @ 76%</span>
+      </div>
+      <div class="phone-outer">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <iframe id="player-iframe" src="" allow="autoplay"></iframe>
+        </div>
+        <div class="phone-homebar"></div>
+      </div>
+      <div class="source-row">
+        <span class="source-url"><a id="player-link" href="#" target="_blank"></a></span>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  const SOURCES = {
+    cloud: {
+      tv: 'https://d2lthscxe93vr.cloudfront.net',
+      player: 'https://d1qwd1uvh2tnf5.cloudfront.net'
+    },
+    local: {
+      tv: 'http://localhost:8090',
+      player: 'http://localhost:8091'
+    }
+  };
+
+  let currentSource = 'cloud';
+
+  function loadIframes() {
+    const src = SOURCES[currentSource];
+    document.getElementById('tv-iframe').src = src.tv;
+    document.getElementById('player-iframe').src = src.player;
+    document.getElementById('tv-link').href = src.tv;
+    document.getElementById('tv-link').textContent = src.tv;
+    document.getElementById('player-link').href = src.player;
+    document.getElementById('player-link').textContent = src.player;
+
+    const dot = document.getElementById('env-dot');
+    const label = document.getElementById('env-label');
+    if (currentSource === 'cloud') {
+      dot.className = 'env-dot';
+      label.textContent = 'CloudFront';
+    } else {
+      dot.className = 'env-dot local';
+      label.textContent = 'Local Dev';
+    }
+  }
+
+  function reloadAll() {
+    const tvIframe = document.getElementById('tv-iframe');
+    const playerIframe = document.getElementById('player-iframe');
+    tvIframe.src = tvIframe.src;
+    playerIframe.src = playerIframe.src;
+  }
+
+  function toggleSource() {
+    currentSource = currentSource === 'cloud' ? 'local' : 'cloud';
+    loadIframes();
+  }
+
+  // Init
+  loadIframes();
+</script>
+</body>
+</html>
