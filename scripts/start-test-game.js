@@ -51,24 +51,6 @@ async function getAllCategories() {
   return items.map(item => item.PK.replace('USAGE#', ''));
 }
 
-async function loadCategoryUsage() {
-  const items = await scan(TABLE.QUESTION_USAGE);
-  const usageMap = new Map();
-  for (const item of items) {
-    const category = item.PK.replace('USAGE#', '');
-    let usedIds;
-    if (item.usedQuestionIds instanceof Set) {
-      usedIds = item.usedQuestionIds;
-    } else if (Array.isArray(item.usedQuestionIds)) {
-      usedIds = new Set(item.usedQuestionIds);
-    } else {
-      usedIds = new Set();
-    }
-    usageMap.set(category, usedIds);
-  }
-  return usageMap;
-}
-
 function formatET(epoch) {
   return new Date(epoch).toLocaleTimeString('en-US', {
     timeZone: 'America/New_York',
@@ -107,12 +89,11 @@ async function start() {
     process.exit(1);
   }
 
-  const usageMap = await loadCategoryUsage();
-  const gameUsedIds = new Set();
+  const tonightUsedIds = new Set();
   const questionCache = new Map();
 
   const questions = await selectQuestionsForGame(
-    allCategories, usageMap, gameUsedIds, questionCache
+    allCategories, tonightUsedIds, questionCache
   );
 
   const categories = new Set(questions.map(q => q.category));

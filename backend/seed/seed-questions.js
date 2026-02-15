@@ -1,10 +1,12 @@
 /**
  * Tap Trivia — Seed Questions Script
  * Reads trivia_questions.json from project root and loads into DynamoDB.
+ * Supports incremental loading (skips existing questions to preserve usage data).
  *
  * Usage:
- *   node seed-questions.js --local       (DynamoDB Local on port 8000)
- *   node seed-questions.js --stage prod  (AWS DynamoDB)
+ *   node seed-questions.js --local             (DynamoDB Local on port 8000)
+ *   node seed-questions.js --stage prod        (AWS DynamoDB, full overwrite)
+ *   node seed-questions.js --stage prod --incremental  (skip existing questions)
  */
 
 const path = require('path');
@@ -13,6 +15,7 @@ const fs = require('fs');
 // Parse args
 const args = process.argv.slice(2);
 const isLocal = args.includes('--local');
+const isIncremental = args.includes('--incremental');
 const stageIdx = args.indexOf('--stage');
 const stage = stageIdx >= 0 ? args[stageIdx + 1] : 'prod';
 
@@ -20,13 +23,14 @@ if (isLocal) {
   process.env.DYNAMODB_LOCAL = 'true';
 }
 
-const { TABLE, batchWrite, put } = require('../shared/dynamo');
+const { TABLE, batchWrite, get, put } = require('../shared/dynamo');
 
 const QUESTIONS_FILE = path.resolve(__dirname, '../../trivia_questions.json');
 
 async function seed() {
   console.log(`\nTap Trivia — Seed Questions`);
   console.log(`Mode: ${isLocal ? 'DynamoDB Local' : `AWS (${stage})`}`);
+  console.log(`Incremental: ${isIncremental ? 'YES (skip existing)' : 'NO (overwrite)'}`);
   console.log(`Source: ${QUESTIONS_FILE}\n`);
 
   // Read questions file
@@ -39,8 +43,7 @@ async function seed() {
   console.log(`Found ${raw.length} questions in file\n`);
 
   // Transform to DynamoDB format
-  const items = raw.map(q => {
-    // wrong_answers might be a JSON string or already an array
+  const allItems = raw.map(q => {
     let wrongAnswers = q.wrong_answers;
     if (typeof wrongAnswers === 'string') {
       wrongAnswers = JSON.parse(wrongAnswers);
@@ -56,42 +59,94 @@ async function seed() {
       subcategory: q.subcategory || '',
       topicLeaf: q.topic_leaf || '',
       difficulty: q.difficulty,
-      // Composite sort key for GSI: "difficulty#questionId"
       difficultySort: `${q.difficulty}#${q.id}`,
       sourceType: q.source_type || 'static',
       shelfLife: q.shelf_life || 'permanent',
       expired: q.expired || 0,
-      createdAt: q.created_at || new Date().toISOString()
+      createdAt: q.created_at || new Date().toISOString(),
+      lastUsedEpoch: 0,
+      usageCount: 0
     };
   });
 
-  // Batch write to Questions table
-  console.log(`Writing ${items.length} questions to ${TABLE.QUESTIONS}...`);
-  await batchWrite(TABLE.QUESTIONS, items);
-  console.log(`Done!\n`);
+  // In incremental mode, check which questions already exist and skip them
+  let itemsToWrite = allItems;
+  if (isIncremental) {
+    console.log('Checking for existing questions...');
+    const toSkip = new Set();
+    let checked = 0;
 
-  // Initialize QuestionUsage per category
+    // Check in batches of 100 (parallel gets)
+    for (let i = 0; i < allItems.length; i += 100) {
+      const batch = allItems.slice(i, i + 100);
+      const results = await Promise.all(
+        batch.map(item => get(TABLE.QUESTIONS, { PK: item.PK }))
+      );
+      results.forEach((existing, idx) => {
+        if (existing) toSkip.add(batch[idx].PK);
+      });
+      checked += batch.length;
+      if (checked % 1000 === 0 || checked === allItems.length) {
+        console.log(`  Checked ${checked}/${allItems.length} — ${toSkip.size} existing`);
+      }
+    }
+
+    itemsToWrite = allItems.filter(item => !toSkip.has(item.PK));
+    console.log(`\nSkipping ${toSkip.size} existing questions, writing ${itemsToWrite.length} new\n`);
+  }
+
+  // Batch write questions
+  if (itemsToWrite.length > 0) {
+    console.log(`Writing ${itemsToWrite.length} questions to ${TABLE.QUESTIONS}...`);
+    let written = 0;
+    const chunkSize = 25;
+    for (let i = 0; i < itemsToWrite.length; i += chunkSize) {
+      const chunk = itemsToWrite.slice(i, i + chunkSize);
+      await batchWrite(TABLE.QUESTIONS, chunk);
+      written += chunk.length;
+      if (written % 1000 === 0 || written === itemsToWrite.length) {
+        console.log(`  Written ${written}/${itemsToWrite.length}`);
+      }
+    }
+    console.log(`Done!\n`);
+  } else {
+    console.log('No new questions to write.\n');
+  }
+
+  // Initialize/update QuestionUsage per category (always recalculate from all items)
   const categories = {};
-  items.forEach(q => {
+  allItems.forEach(q => {
     if (!categories[q.category]) categories[q.category] = 0;
     categories[q.category]++;
   });
 
-  console.log(`Initializing QuestionUsage for ${Object.keys(categories).length} categories...`);
+  console.log(`Updating QuestionUsage for ${Object.keys(categories).length} categories...`);
   for (const [category, count] of Object.entries(categories)) {
-    await put(TABLE.QUESTION_USAGE, {
-      PK: `USAGE#${category}`,
-      usedQuestionIds: [],  // Empty list — DynamoDB doesn't allow empty Sets
-      totalInCategory: count,
-      cycleNumber: 0,
-      lastUpdated: new Date().toISOString()
-    });
+    const existing = await get(TABLE.QUESTION_USAGE, { PK: `USAGE#${category}` });
+    if (existing && isIncremental) {
+      // Just update totalInCategory, preserve other fields
+      await put(TABLE.QUESTION_USAGE, {
+        ...existing,
+        totalInCategory: count,
+        lastUpdated: new Date().toISOString()
+      });
+    } else {
+      await put(TABLE.QUESTION_USAGE, {
+        PK: `USAGE#${category}`,
+        usedQuestionIds: [],
+        totalInCategory: count,
+        cycleNumber: 0,
+        lastUpdated: new Date().toISOString()
+      });
+    }
   }
   console.log(`Done!\n`);
 
   // Print summary
   console.log('=== SUMMARY ===');
-  console.log(`Total questions loaded: ${items.length}`);
+  console.log(`Total questions in file: ${allItems.length}`);
+  console.log(`Questions written: ${itemsToWrite.length}`);
+
   console.log('\nBy category:');
   Object.entries(categories)
     .sort((a, b) => b[1] - a[1])
@@ -100,7 +155,7 @@ async function seed() {
     });
 
   const byDifficulty = {};
-  items.forEach(q => {
+  allItems.forEach(q => {
     byDifficulty[q.difficulty] = (byDifficulty[q.difficulty] || 0) + 1;
   });
 

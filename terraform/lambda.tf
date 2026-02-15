@@ -345,8 +345,8 @@ resource "aws_lambda_function" "generate_games" {
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
-  memory_size      = 256
-  timeout          = 120
+  memory_size      = 512
+  timeout          = 300
   filename         = data.archive_file.generate_games.output_path
   source_code_hash = data.archive_file.generate_games.output_base64sha256
 

@@ -1,21 +1,21 @@
 /**
- * Tap Trivia — Question Selection Algorithm
+ * Tap Trivia — Question Selection Algorithm (LRU-based)
  * Used by generate-games Lambda to select questions for nightly games.
+ *
+ * Strategy: always prefer questions with the lowest lastUsedEpoch (never-used first).
+ * Picks randomly from the bottom 30% of least-recently-used to add variety.
  */
 
-const { TABLE, query, get, put } = require('./dynamo');
+const { TABLE, query } = require('./dynamo');
 const { DIFFICULTY_RAMP } = require('./game-clock');
 
-// Category rules: at least 8 different categories, max 2 per category per game
-const MIN_CATEGORIES_PER_GAME = 8;
 const MAX_PER_CATEGORY = 2;
 
 /**
- * Query available questions for a category + difficulty from the GSI.
- * Returns questions not in the usedIds set.
+ * Query all questions for a category + difficulty from the GSI (paginated).
  */
-async function getAvailableQuestions(category, difficulty, usedIds) {
-  const items = await query(TABLE.QUESTIONS, {
+async function queryQuestions(category, difficulty) {
+  return query(TABLE.QUESTIONS, {
     IndexName: 'category-difficulty-index',
     KeyConditionExpression: 'category = :cat AND begins_with(difficultySort, :diff)',
     ExpressionAttributeValues: {
@@ -23,49 +23,33 @@ async function getAvailableQuestions(category, difficulty, usedIds) {
       ':diff': `${difficulty}#`
     }
   });
-
-  return items.filter(q => !usedIds.has(q.questionId));
 }
 
 /**
- * Get all questions at a given difficulty level (any category).
+ * LRU pick: from a list of questions, exclude tonight's used IDs,
+ * sort by lastUsedEpoch ascending, then pick randomly from the bottom 30%.
  */
-async function getQuestionsByDifficulty(difficulty, usedIds) {
-  // Scan the GSI filtering by difficulty prefix
-  const items = await query(TABLE.QUESTIONS, {
-    IndexName: 'category-difficulty-index',
-    KeyConditionExpression: 'category = :cat AND begins_with(difficultySort, :diff)',
-    ExpressionAttributeValues: {
-      ':cat': '', // This won't work for scan across all categories
-      ':diff': `${difficulty}#`
-    }
-  });
-  return items.filter(q => !usedIds.has(q.questionId));
-}
+function lruPick(questions, tonightUsedIds) {
+  const available = questions.filter(q => !tonightUsedIds.has(q.questionId));
+  if (available.length === 0) return null;
 
-/**
- * Get the usage tracking for a category.
- */
-async function getCategoryUsage(category) {
-  const item = await get(TABLE.QUESTION_USAGE, { PK: `USAGE#${category}` });
-  return item || {
-    PK: `USAGE#${category}`,
-    usedQuestionIds: new Set(),
-    totalInCategory: 0,
-    cycleNumber: 0,
-    lastUpdated: new Date().toISOString()
-  };
+  // Sort by lastUsedEpoch ascending (0 = never used = highest priority)
+  available.sort((a, b) => (a.lastUsedEpoch || 0) - (b.lastUsedEpoch || 0));
+
+  // Pick randomly from the bottom 30% (at least 1)
+  const poolSize = Math.max(1, Math.ceil(available.length * 0.3));
+  const pool = available.slice(0, poolSize);
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 /**
  * Select 15 questions for one game following the difficulty ramp and category rules.
  *
  * @param {string[]} allCategories - All available categories
- * @param {Map<string, Set<number>>} usageMap - category -> set of used question IDs
- * @param {Set<number>} gameUsedIds - IDs already used in tonight's games
+ * @param {Set<number>} tonightUsedIds - IDs already used in tonight's games
  * @param {Map<string, object[]>} questionCache - category#difficulty -> questions array
  */
-async function selectQuestionsForGame(allCategories, usageMap, gameUsedIds, questionCache) {
+async function selectQuestionsForGame(allCategories, tonightUsedIds, questionCache) {
   const selected = [];
   const categoriesUsedInGame = {};
 
@@ -82,80 +66,54 @@ async function selectQuestionsForGame(allCategories, usageMap, gameUsedIds, ques
 
       const cacheKey = `${category}#${targetDifficulty}`;
       if (!questionCache.has(cacheKey)) {
-        const usedIds = usageMap.get(category) || new Set();
-        const combinedUsed = new Set([...usedIds, ...gameUsedIds]);
-        const available = await getAvailableQuestions(category, targetDifficulty, combinedUsed);
-        questionCache.set(cacheKey, available);
+        questionCache.set(cacheKey, await queryQuestions(category, targetDifficulty));
       }
 
-      const available = questionCache.get(cacheKey).filter(q => !gameUsedIds.has(q.questionId));
-      if (available.length > 0) {
-        question = available[Math.floor(Math.random() * available.length)];
-        break;
-      }
+      question = lruPick(questionCache.get(cacheKey), tonightUsedIds);
+      if (question) break;
     }
 
-    // Fallback: widen difficulty ±1
+    // Fallback: widen difficulty ±1, ±2
     if (!question) {
       for (const diffOffset of [-1, 1, -2, 2]) {
         const fallbackDiff = targetDifficulty + diffOffset;
-        if (fallbackDiff < 1 || fallbackDiff > 5) continue;
+        if (fallbackDiff < 1 || fallbackDiff > 3) continue;
 
         for (const category of shuffledCategories) {
           if ((categoriesUsedInGame[category] || 0) >= MAX_PER_CATEGORY) continue;
 
           const cacheKey = `${category}#${fallbackDiff}`;
           if (!questionCache.has(cacheKey)) {
-            const usedIds = usageMap.get(category) || new Set();
-            const combinedUsed = new Set([...usedIds, ...gameUsedIds]);
-            const available = await getAvailableQuestions(category, fallbackDiff, combinedUsed);
-            questionCache.set(cacheKey, available);
+            questionCache.set(cacheKey, await queryQuestions(category, fallbackDiff));
           }
 
-          const available = questionCache.get(cacheKey).filter(q => !gameUsedIds.has(q.questionId));
-          if (available.length > 0) {
-            question = available[Math.floor(Math.random() * available.length)];
-            break;
-          }
+          question = lruPick(questionCache.get(cacheKey), tonightUsedIds);
+          if (question) break;
         }
         if (question) break;
       }
     }
 
-    // Last resort: reset usage for exhausted categories and pick any
-    if (!question) {
-      for (const category of shuffledCategories) {
-        if ((categoriesUsedInGame[category] || 0) >= MAX_PER_CATEGORY) continue;
-
-        // Clear usage for this category and retry
-        usageMap.set(category, new Set());
-        const cacheKey = `${category}#${targetDifficulty}`;
-        const available = await getAvailableQuestions(category, targetDifficulty, gameUsedIds);
-        questionCache.set(cacheKey, available);
-
-        const filtered = available.filter(q => !gameUsedIds.has(q.questionId));
-        if (filtered.length > 0) {
-          question = filtered[Math.floor(Math.random() * filtered.length)];
-          break;
-        }
-      }
-    }
-
-    // Final fallback: allow reuse from previous games AND relax category limit
-    // (small pool graceful handling — only prevent duplicates within THIS game)
+    // Last resort: relax category limit to 4, any difficulty
     if (!question) {
       const thisGameIds = new Set(selected.map(q => q.questionId));
       for (const diffOffset of [0, -1, 1, -2, 2]) {
         const fallbackDiff = targetDifficulty + diffOffset;
-        if (fallbackDiff < 1 || fallbackDiff > 5) continue;
+        if (fallbackDiff < 1 || fallbackDiff > 3) continue;
 
         for (const category of shuffledCategories) {
-          // Relax MAX_PER_CATEGORY — allow up to 4 per category as last resort
           if ((categoriesUsedInGame[category] || 0) >= 4) continue;
 
-          const available = await getAvailableQuestions(category, fallbackDiff, thisGameIds);
+          const cacheKey = `${category}#${fallbackDiff}`;
+          if (!questionCache.has(cacheKey)) {
+            questionCache.set(cacheKey, await queryQuestions(category, fallbackDiff));
+          }
+
+          // Only exclude this game's questions (allow cross-night repeats as last resort)
+          const available = questionCache.get(cacheKey).filter(q => !thisGameIds.has(q.questionId));
           if (available.length > 0) {
-            question = available[Math.floor(Math.random() * available.length)];
+            available.sort((a, b) => (a.lastUsedEpoch || 0) - (b.lastUsedEpoch || 0));
+            question = available[0];
             break;
           }
         }
@@ -183,7 +141,7 @@ async function selectQuestionsForGame(allCategories, usageMap, gameUsedIds, ques
       eliminateOrder
     });
 
-    gameUsedIds.add(question.questionId);
+    tonightUsedIds.add(question.questionId);
     categoriesUsedInGame[question.category] = (categoriesUsedInGame[question.category] || 0) + 1;
   }
 
@@ -196,7 +154,6 @@ async function selectQuestionsForGame(allCategories, usageMap, gameUsedIds, ques
 function generateEliminateOrder(wrongCount) {
   if (wrongCount < 3) return [0, 1];
   const indices = [0, 1, 2];
-  // Shuffle
   for (let i = indices.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [indices[i], indices[j]] = [indices[j], indices[i]];
@@ -206,9 +163,8 @@ function generateEliminateOrder(wrongCount) {
 
 module.exports = {
   selectQuestionsForGame,
-  getAvailableQuestions,
-  getCategoryUsage,
+  queryQuestions,
+  lruPick,
   generateEliminateOrder,
-  MIN_CATEGORIES_PER_GAME,
   MAX_PER_CATEGORY
 };

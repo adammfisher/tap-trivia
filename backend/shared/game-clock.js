@@ -21,57 +21,66 @@ const PHASES = {
 };
 
 /**
- * Game schedule: every 15 minutes from 9:00 AM ET to 10:00 PM ET.
- * Returns the epoch of the next scheduled game start, or the current game
- * if one is active right now.
+ * Game schedule: every 15 minutes from 5:00 PM ET to 2:00 AM ET (crosses midnight).
+ * 36 slots per night. Returns the epoch of the current game if active,
+ * or the next scheduled game start.
  */
 function getNextGameTime(nowEpoch) {
   const INTERVAL_MS = 15 * 60 * 1000;
+  const WINDOW_START_MIN = 17 * 60; // 5 PM ET = 1020
+  const WINDOW_END_MIN = 2 * 60;    // 2 AM ET = 120
+  const WINDOW_DURATION_MIN = 9 * 60; // 540 minutes
 
-  // Convert to Date to work with ET hours
   const now = new Date(nowEpoch);
-
-  // Get current time in ET (America/New_York)
   const etStr = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
   const et = new Date(etStr);
+  const totalMinutesET = et.getHours() * 60 + et.getMinutes();
+  const etOffset = now.getTime() - et.getTime();
 
-  // Game window: 9:00 AM ET (09:00) to 10:00 PM ET (22:00)
-  const etHour = et.getHours();
-  const etMinutes = et.getMinutes();
-  const totalMinutesET = etHour * 60 + etMinutes;
-
-  // 9:00 AM ET = 540 minutes, 10:00 PM ET = 1320 minutes
-  const WINDOW_START = 9 * 60; // 540
-  const WINDOW_END = 22 * 60; // 1320
-
-  const inWindow = totalMinutesET >= WINDOW_START && totalMinutesET < WINDOW_END;
-
-  if (!inWindow) {
-    // Outside window — find today's (or tomorrow's) 9:00 AM ET
-    const todayET = new Date(etStr);
-    if (totalMinutesET >= WINDOW_END) {
-      // Past 10 PM — next window is tomorrow 9 AM
-      todayET.setDate(todayET.getDate() + 1);
-    }
-    todayET.setHours(9, 0, 0, 0);
-    // Convert back to UTC epoch
-    const etOffset = now.getTime() - et.getTime();
-    return todayET.getTime() + etOffset;
+  // Minutes since window start (handling midnight wrap)
+  let minsIntoWindow;
+  if (totalMinutesET >= WINDOW_START_MIN) {
+    minsIntoWindow = totalMinutesET - WINDOW_START_MIN;
+  } else if (totalMinutesET < WINDOW_END_MIN) {
+    minsIntoWindow = (1440 - WINDOW_START_MIN) + totalMinutesET;
+  } else {
+    minsIntoWindow = -1;
   }
 
-  // Inside window — find the current or next 15-min slot
-  // Align to 15-minute intervals
-  const slotMinutes = Math.floor(totalMinutesET / 15) * 15;
-  const slotET = new Date(etStr);
-  slotET.setHours(Math.floor(slotMinutes / 60), slotMinutes % 60, 0, 0);
-  const etOffset = now.getTime() - et.getTime();
-  const slotEpoch = slotET.getTime() + etOffset;
+  const inWindow = minsIntoWindow >= 0 && minsIntoWindow < WINDOW_DURATION_MIN;
 
-  // If we're past this slot's game end, move to next slot
+  if (!inWindow) {
+    // Outside window (2 AM – 5 PM ET) — next game is today at 5 PM
+    const nextStart = new Date(etStr);
+    nextStart.setHours(17, 0, 0, 0);
+    return nextStart.getTime() + etOffset;
+  }
+
+  // Inside window — find current 15-min slot
+  const slotMinsIntoWindow = Math.floor(minsIntoWindow / 15) * 15;
+
+  // Window start day: if we're after midnight, window started yesterday
+  const windowStartET = new Date(etStr);
+  if (totalMinutesET < WINDOW_END_MIN) {
+    windowStartET.setDate(windowStartET.getDate() - 1);
+  }
+  windowStartET.setHours(17, 0, 0, 0);
+
+  const slotEpoch = windowStartET.getTime() + etOffset + (slotMinsIntoWindow * 60 * 1000);
+
+  // If past this slot's game end, move to next slot
   if (nowEpoch >= slotEpoch + GAME_DURATION_MS) {
-    const nextSlotEpoch = slotEpoch + INTERVAL_MS;
-    // Check if next slot is still in window (before 3 AM ET)
-    return nextSlotEpoch;
+    const nextSlotMins = slotMinsIntoWindow + 15;
+    if (nextSlotMins >= WINDOW_DURATION_MIN) {
+      // Past last slot — next window is today at 5 PM
+      const nextWindowET = new Date(etStr);
+      if (totalMinutesET < WINDOW_END_MIN) {
+        // After midnight — next 5 PM is today
+      }
+      nextWindowET.setHours(17, 0, 0, 0);
+      return nextWindowET.getTime() + etOffset;
+    }
+    return slotEpoch + INTERVAL_MS;
   }
 
   return slotEpoch;
@@ -161,7 +170,7 @@ function questionStartEpoch(gameStartEpoch, questionNumber) {
 /**
  * Difficulty ramp: which difficulty for each question position (1-15).
  */
-const DIFFICULTY_RAMP = [1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5];
+const DIFFICULTY_RAMP = [1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3];
 
 function getDifficultyForQuestion(questionNumber) {
   return DIFFICULTY_RAMP[questionNumber - 1] || 1;

@@ -1,12 +1,9 @@
 'use strict';
 
 const crypto = require('crypto');
-const { TABLE, get, put, query, scan, batchWrite } = require('./shared/dynamo');
+const { TABLE, get, put, scan, batchWrite, update } = require('./shared/dynamo');
 const { QUESTION_DURATION_MS, DIFFICULTY_RAMP, gameTimeslotPK } = require('./shared/game-clock');
-const {
-  selectQuestionsForGame,
-  getCategoryUsage
-} = require('./shared/questions');
+const { selectQuestionsForGame } = require('./shared/questions');
 
 function response(statusCode, body) {
   return {
@@ -18,20 +15,17 @@ function response(statusCode, body) {
 
 /**
  * Determine whether US Eastern is in DST (UTC-4) or EST (UTC-5).
- * DST runs roughly March through November.
- * Returns 4 for EDT, 5 for EST.
  */
 function getETOffsetHours() {
   const now = new Date();
   const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-  const month = etNow.getMonth(); // 0-indexed: Jan=0, Dec=11
-  // DST is active Mar (2) through Nov (10) approximately
+  const month = etNow.getMonth();
   return (month >= 2 && month <= 10) ? 4 : 5;
 }
 
 /**
- * Generate 52 timeslots for today's games.
- * Starts at 9:00 AM ET, every 15 minutes, 52 slots (last at 9:45 PM ET).
+ * Generate 36 timeslots for tonight's games.
+ * 5:00 PM ET to 1:45 AM ET (crosses midnight), every 15 minutes.
  * Returns array of UTC epoch milliseconds.
  */
 function getTonightSlots() {
@@ -45,43 +39,20 @@ function getTonightSlots() {
   const day = etNow.getDate();
 
   const slots = [];
-  for (let i = 0; i < 52; i++) {
-    const minutesAfter9AM = i * 15;
-    const totalMinutes = 9 * 60 + minutesAfter9AM; // 09:00 + offset
-    const hour = Math.floor(totalMinutes / 60);
-    const minute = totalMinutes % 60;
+  for (let i = 0; i < 36; i++) {
+    const minutesAfter5PM = i * 15;
+    const totalMinutesET = 17 * 60 + minutesAfter5PM; // 5 PM + offset
 
-    // Create UTC time by adding ET offset
-    const utcEpoch = Date.UTC(year, month, day, hour + etOffsetHours, minute, 0, 0);
+    // Handle midnight crossing
+    const dayOffset = totalMinutesET >= 1440 ? 1 : 0;
+    const adjustedMinutes = totalMinutesET % 1440;
+    const hour = Math.floor(adjustedMinutes / 60);
+    const minute = adjustedMinutes % 60;
+
+    const utcEpoch = Date.UTC(year, month, day + dayOffset, hour + etOffsetHours, minute, 0, 0);
     slots.push(utcEpoch);
   }
   return slots;
-}
-
-/**
- * Load all category usage records from the QuestionUsage table.
- * Returns a Map of category -> Set of used question IDs.
- */
-async function loadCategoryUsage() {
-  const usageItems = await scan(TABLE.QUESTION_USAGE);
-  const usageMap = new Map();
-
-  for (const item of usageItems) {
-    // PK format: USAGE#CategoryName
-    const category = item.PK.replace('USAGE#', '');
-    // DynamoDB Sets come back as arrays or Sets depending on marshalling
-    let usedIds;
-    if (item.usedQuestionIds instanceof Set) {
-      usedIds = item.usedQuestionIds;
-    } else if (Array.isArray(item.usedQuestionIds)) {
-      usedIds = new Set(item.usedQuestionIds);
-    } else {
-      usedIds = new Set();
-    }
-    usageMap.set(category, usedIds);
-  }
-
-  return usageMap;
 }
 
 /**
@@ -91,13 +62,49 @@ async function getAllCategories() {
   const usageItems = await scan(TABLE.QUESTION_USAGE, {
     ProjectionExpression: 'PK'
   });
-
   return usageItems.map(item => item.PK.replace('USAGE#', ''));
 }
 
 /**
- * EventBridge triggered Lambda — runs daily at 8 AM ET.
- * Generates 52 games for today's schedule (9:00 AM - 9:45 PM ET).
+ * Batch update lastUsedEpoch and usageCount on selected questions.
+ */
+async function updateQuestionUsage(questionIds) {
+  const now = Date.now();
+  const chunks = [];
+  for (let i = 0; i < questionIds.length; i += 25) {
+    chunks.push(questionIds.slice(i, i + 25));
+  }
+
+  for (const chunk of chunks) {
+    await Promise.all(chunk.map(qId =>
+      update(TABLE.QUESTIONS, { PK: `Q#${qId}` },
+        'SET lastUsedEpoch = :now, usageCount = if_not_exists(usageCount, :zero) + :one',
+        { ':now': now, ':zero': 0, ':one': 1 }
+      )
+    ));
+  }
+}
+
+/**
+ * Update QuestionUsage monitoring records (category-level stats).
+ */
+async function updateCategoryStats(categoryQuestionsUsed) {
+  const promises = [];
+  for (const [category, questionIds] of categoryQuestionsUsed.entries()) {
+    if (questionIds.size === 0) continue;
+    promises.push(
+      update(TABLE.QUESTION_USAGE, { PK: `USAGE#${category}` },
+        'SET lastUpdated = :now, usedTonight = :count',
+        { ':now': new Date().toISOString(), ':count': questionIds.size }
+      ).catch(err => console.error(`Failed to update usage for "${category}":`, err.message))
+    );
+  }
+  await Promise.all(promises);
+}
+
+/**
+ * EventBridge triggered Lambda — runs daily at 4 PM ET.
+ * Generates 36 games for tonight's schedule (5:00 PM – 1:45 AM ET).
  */
 exports.handler = async (event) => {
   console.log('generate-games invoked', JSON.stringify(event));
@@ -106,7 +113,7 @@ exports.handler = async (event) => {
   const slots = getTonightSlots();
   console.log(`Generated ${slots.length} timeslots. First: ${new Date(slots[0]).toISOString()}, Last: ${new Date(slots[slots.length - 1]).toISOString()}`);
 
-  // Load all categories and usage data
+  // Load all categories
   const allCategories = await getAllCategories();
   if (allCategories.length === 0) {
     console.error('No categories found in QuestionUsage table. Aborting.');
@@ -114,12 +121,10 @@ exports.handler = async (event) => {
   }
   console.log(`Found ${allCategories.length} categories`);
 
-  const usageMap = await loadCategoryUsage();
-
   // Track all question IDs used across tonight's games
   const tonightUsedIds = new Set();
-  // Track question IDs used per category for usage update
-  const categoryQuestionsUsed = new Map(); // category -> Set of questionIds
+  // Track question IDs used per category for monitoring
+  const categoryQuestionsUsed = new Map();
 
   const games = [];
   let failedSlots = 0;
@@ -131,10 +136,8 @@ exports.handler = async (event) => {
     const slotEpoch = slots[i];
 
     try {
-      // Select 15 questions for this game
       const questions = await selectQuestionsForGame(
         allCategories,
-        usageMap,
         tonightUsedIds,
         questionCache
       );
@@ -155,7 +158,7 @@ exports.handler = async (event) => {
 
       games.push(gameItem);
 
-      // Track usage per category for post-generation update
+      // Track usage per category for monitoring
       for (const q of questions) {
         if (!categoryQuestionsUsed.has(q.category)) {
           categoryQuestionsUsed.set(q.category, new Set());
@@ -168,7 +171,7 @@ exports.handler = async (event) => {
     }
   }
 
-  // Batch write all games (in chunks of 25)
+  // Batch write all games
   if (games.length > 0) {
     try {
       await batchWrite(TABLE.GAMES, games);
@@ -179,58 +182,34 @@ exports.handler = async (event) => {
     }
   }
 
-  // Update QuestionUsage: add all used questionIds to each category's usedQuestionIds set
-  const usageUpdatePromises = [];
-  for (const [category, questionIds] of categoryQuestionsUsed.entries()) {
-    if (questionIds.size === 0) continue;
-
-    const usageUpdate = (async () => {
-      try {
-        const existing = await getCategoryUsage(category);
-        const existingIds = existing.usedQuestionIds instanceof Set
-          ? existing.usedQuestionIds
-          : new Set(Array.isArray(existing.usedQuestionIds) ? existing.usedQuestionIds : []);
-
-        // Merge new IDs into existing set
-        for (const id of questionIds) {
-          existingIds.add(id);
-        }
-
-        await put(TABLE.QUESTION_USAGE, {
-          PK: `USAGE#${category}`,
-          usedQuestionIds: Array.from(existingIds),
-          totalInCategory: existing.totalInCategory || 0,
-          cycleNumber: existing.cycleNumber || 0,
-          lastUpdated: new Date().toISOString()
-        });
-      } catch (err) {
-        console.error(`Failed to update usage for category "${category}":`, err.message);
-      }
-    })();
-
-    usageUpdatePromises.push(usageUpdate);
+  // Update lastUsedEpoch + usageCount on all selected questions
+  const allUsedIds = Array.from(tonightUsedIds);
+  console.log(`Updating LRU timestamps on ${allUsedIds.length} questions...`);
+  try {
+    await updateQuestionUsage(allUsedIds);
+    console.log('LRU timestamps updated');
+  } catch (err) {
+    console.error('Failed to update question usage:', err.message);
   }
 
-  await Promise.all(usageUpdatePromises);
+  // Update category-level monitoring stats
+  await updateCategoryStats(categoryQuestionsUsed);
 
   // Log summary
-  const totalQuestionsUsed = tonightUsedIds.size;
-  const categoriesHit = categoryQuestionsUsed.size;
   const elapsed = Date.now() - startTime;
-
   console.log(`=== Generate Games Summary ===`);
   console.log(`Games created: ${games.length}/${slots.length}`);
   console.log(`Failed slots: ${failedSlots}`);
-  console.log(`Total unique questions used: ${totalQuestionsUsed}`);
-  console.log(`Categories hit: ${categoriesHit}`);
+  console.log(`Total unique questions used: ${tonightUsedIds.size}`);
+  console.log(`Categories hit: ${categoryQuestionsUsed.size}`);
   console.log(`Execution time: ${elapsed}ms`);
 
   return response(200, {
     gamesCreated: games.length,
     totalSlots: slots.length,
     failedSlots,
-    questionsUsed: totalQuestionsUsed,
-    categoriesHit,
+    questionsUsed: tonightUsedIds.size,
+    categoriesHit: categoryQuestionsUsed.size,
     executionTimeMs: elapsed
   });
 };

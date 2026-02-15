@@ -1,6 +1,6 @@
 # TapTrivia
 
-Live trivia game platform for bars. Synchronized global gameplay every 15 minutes (9 AM–10 PM ET). Players play on mobile browsers, bars optionally display on TVs.
+Live trivia game platform for bars. Synchronized global gameplay every 15 minutes (5 PM–2 AM ET). Players play on mobile browsers, bars optionally display on TVs.
 
 ## Architecture
 
@@ -73,19 +73,21 @@ tap-trivia/
 │   └── components/       # React + React Native component libraries
 ├── docs/                 # 01-06 numbered spec documents + SETUP_GUIDE.md
 ├── scripts/
-│   ├── build-lambdas.sh  # Copies shared modules into each Lambda dir
-│   └── start-test-game.js # Create ad-hoc test games outside business hours
-├── trivia_questions.json # 100 seed questions (dev)
+│   ├── build-lambdas.sh    # Copies shared modules into each Lambda dir
+│   ├── start-test-game.js  # Create ad-hoc test games outside business hours
+│   └── reset-questions.js  # Reset all question usage data (for launch)
+├── trivia_questions.json   # Question bank (seed file)
 └── topic_tree.json       # Category/subcategory hierarchy
 ```
 
 ## Game Logic
 
 - **15 questions per game**, 60 seconds each (15 min total)
-- **Question phases:** category_splash (0–5s) → read_time (5–13s, 1000pts) → playing (13–50s, points decay) → reveal (45–50s) → scores (50–60s)
-- **Hint system:** 1st wrong eliminated at 15s, 2nd at 30s, correct revealed at 45s
-- **Points:** Exponential decay from 1000→0 (k=3.0, front-weighted)
-- **Difficulty ramp:** Q1-4=L1, Q5-9=L2, Q10-12=L3, Q13-14=L4, Q15=L5
+- **Game window:** 5:00 PM – 2:00 AM ET (36 games/night, crosses midnight)
+- **Question phases:** category_splash (0–5s) → read_time (5–14s, 1000pts) → all_answers (14–18s) → hint_1 (18–33s) → hint_2 (33–45s) → reveal (45–50s) → scores (50–60s)
+- **Points:** Speed bump 1000→800 (14–17s) then linear 800→0 (17–45s)
+- **Difficulty ramp:** Q1-4=L1, Q5-9=L2, Q10-15=L3 (3 levels only)
+- **Question rotation:** LRU-based — always prefer least-recently-used questions. 110K questions = ~6.8 months before any repeat
 
 ## DynamoDB Tables
 
@@ -124,6 +126,12 @@ cd terraform && terraform apply
 
 # Test game outside business hours
 node scripts/start-test-game.js start
+
+# Seed questions (incremental mode preserves existing usage data)
+node backend/seed/seed-questions.js --stage prod --incremental
+
+# Reset all question usage (clean slate for launch)
+node scripts/reset-questions.js --confirm
 ```
 
 ## Critical Rules

@@ -49,13 +49,29 @@ async function put(tableName, item, condition) {
 }
 
 async function query(tableName, params) {
-  const res = await docClient.send(new QueryCommand({ TableName: tableName, ...params }));
-  return res.Items || [];
+  const allItems = [];
+  let lastKey;
+  do {
+    const cmd = { TableName: tableName, ...params };
+    if (lastKey) cmd.ExclusiveStartKey = lastKey;
+    const res = await docClient.send(new QueryCommand(cmd));
+    if (res.Items) allItems.push(...res.Items);
+    lastKey = res.LastEvaluatedKey;
+  } while (lastKey);
+  return allItems;
 }
 
 async function scan(tableName, params = {}) {
-  const res = await docClient.send(new ScanCommand({ TableName: tableName, ...params }));
-  return res.Items || [];
+  const allItems = [];
+  let lastKey;
+  do {
+    const cmd = { TableName: tableName, ...params };
+    if (lastKey) cmd.ExclusiveStartKey = lastKey;
+    const res = await docClient.send(new ScanCommand(cmd));
+    if (res.Items) allItems.push(...res.Items);
+    lastKey = res.LastEvaluatedKey;
+  } while (lastKey);
+  return allItems;
 }
 
 async function update(tableName, key, updateExpression, expressionValues, expressionNames) {
@@ -72,20 +88,27 @@ async function update(tableName, key, updateExpression, expressionValues, expres
 }
 
 async function batchWrite(tableName, items) {
-  // DynamoDB batch write limit is 25 items
   const chunks = [];
   for (let i = 0; i < items.length; i += 25) {
     chunks.push(items.slice(i, i + 25));
   }
 
   for (const chunk of chunks) {
-    const requests = chunk.map(item => ({
+    let requests = chunk.map(item => ({
       PutRequest: { Item: item }
     }));
 
-    await docClient.send(new BatchWriteCommand({
-      RequestItems: { [tableName]: requests }
-    }));
+    let retries = 0;
+    while (requests.length > 0 && retries < 5) {
+      const res = await docClient.send(new BatchWriteCommand({
+        RequestItems: { [tableName]: requests }
+      }));
+      const unprocessed = res.UnprocessedItems && res.UnprocessedItems[tableName];
+      if (!unprocessed || unprocessed.length === 0) break;
+      requests = unprocessed;
+      retries++;
+      await new Promise(r => setTimeout(r, 100 * Math.pow(2, retries)));
+    }
   }
 }
 
