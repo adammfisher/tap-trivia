@@ -932,6 +932,7 @@
     }
 
     const gameState = translateApiState(state);
+    if (state.phase) console.log('[TV poll] phase:', state.phase, '→ screen:', gameState.screen, 'q:', gameState.questionNumber);
     renderScreen(gameState);
   }
 
