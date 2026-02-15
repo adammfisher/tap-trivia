@@ -303,6 +303,10 @@ body {
   background: linear-gradient(135deg, #ff4757, #ff6b81);
   animation: shake 0.4s ease-out;
 }
+.tt-answer--dimmed {
+  background: rgba(255,255,255,0.12);
+  opacity: 0.45;
+}
 .tt-answer--selected {
   background: linear-gradient(135deg, #667eea, #764ba2);
   animation: glowPulse 2s ease-in-out infinite;
@@ -331,6 +335,7 @@ body {
 }
 .tt-answer--correct .tt-answer__letter { background: #00d4aa; color: #fff; }
 .tt-answer--wrong .tt-answer__letter { background: #ff4757; color: #fff; }
+.tt-answer--dimmed .tt-answer__letter { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); }
 .tt-answer--selected .tt-answer__letter { background: rgba(255,255,255,0.2); color: #fff; }
 .tt-answer--eliminated .tt-answer__letter { background: rgba(255,255,255,0.2); color: #fff; }
 /* Answer text */
@@ -345,6 +350,7 @@ body {
 .tt-answer--correct .tt-answer__text,
 .tt-answer--wrong .tt-answer__text,
 .tt-answer--selected .tt-answer__text { color: #fff; }
+.tt-answer--dimmed .tt-answer__text { color: rgba(255,255,255,0.4); }
 .tt-answer--eliminated .tt-answer__text { color: rgba(255,255,255,0.3); }
 /* Correct emoji */
 .tt-answer__emoji { font-size: 40px; } /* 20×2 */
@@ -1140,6 +1146,21 @@ body {
 .tt-results .tt-lb-row__score { font-size: 22px; }
 /* Top 3 rank numbers in gold */
 .tt-lb-row__rank--gold { color: #ffd200; }
+
+/* Countdown to next game on results screen */
+.tt-results__countdown {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: #ffd200;
+  text-align: center;
+  margin: 8px 0;
+  animation: pulse 1s ease-in-out infinite;
+}
+.tt-results__countdown-num {
+  font-size: 40px;
+  font-weight: 700;
+}
 
 /* ═══════════════════════════════════════════════════════════════
    SCREEN: ERROR / DISCONNECTED OVERLAY

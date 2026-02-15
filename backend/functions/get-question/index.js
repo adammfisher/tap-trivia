@@ -1,6 +1,7 @@
 'use strict';
 
 const { TABLE, query } = require('./shared/dynamo');
+const { QUESTION_DURATION_MS } = require('./shared/game-clock');
 
 function response(statusCode, body) {
   return {
@@ -105,7 +106,7 @@ exports.handler = async (event) => {
     const game = games[0];
 
     // Calculate when this question becomes available
-    const questionStartEpoch = game.startTimeEpoch + (questionNumber - 1) * 60000;
+    const questionStartEpoch = game.startTimeEpoch + (questionNumber - 1) * QUESTION_DURATION_MS;
     const now = Date.now();
 
     if (now < questionStartEpoch) {
@@ -144,9 +145,10 @@ exports.handler = async (event) => {
       subcategory: q.subcategory || '',
       difficulty: q.difficulty,
       answers: shuffledAnswers,
+      correctIndex,
       eliminateOrder,
       questionStartEpoch,
-      questionEndEpoch: questionStartEpoch + 50000
+      questionEndEpoch: questionStartEpoch + 49000
     });
   } catch (err) {
     console.error('get-question error:', err);

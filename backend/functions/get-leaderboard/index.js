@@ -1,6 +1,7 @@
 'use strict';
 
 const { TABLE, get, query } = require('./shared/dynamo');
+const { GAME_DURATION_MS } = require('./shared/game-clock');
 
 function response(statusCode, body) {
   return {
@@ -138,7 +139,7 @@ exports.handler = async (event) => {
       }
 
       const game = games[0];
-      const gameEndEpoch = game.startTimeEpoch + 15 * 60000;
+      const gameEndEpoch = game.startTimeEpoch + GAME_DURATION_MS;
 
       if (Date.now() < gameEndEpoch) {
         return response(403, {

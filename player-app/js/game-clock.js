@@ -6,30 +6,30 @@
  * from a game's start epoch and the current time.
  */
 
-const QUESTION_DURATION_MS = 60000;
+const QUESTION_DURATION_MS = 59000;
 const TOTAL_QUESTIONS = 15;
 const GAME_DURATION_MS = TOTAL_QUESTIONS * QUESTION_DURATION_MS;
 
 const PHASES = {
   CATEGORY_SPLASH: { start: 0,     end: 5000  },
-  READ_TIME:       { start: 5000,  end: 14000 },
-  ALL_ANSWERS:     { start: 14000, end: 18000 },
-  HINT_1:          { start: 18000, end: 33000 },
-  HINT_2:          { start: 33000, end: 45000 },
-  REVEAL:          { start: 45000, end: 50000 },
-  SCORES:          { start: 50000, end: 60000 }
+  READ_TIME:       { start: 5000,  end: 13000 },
+  ALL_ANSWERS:     { start: 13000, end: 17000 },
+  HINT_1:          { start: 17000, end: 32000 },
+  HINT_2:          { start: 32000, end: 44000 },
+  REVEAL:          { start: 44000, end: 49000 },
+  SCORES:          { start: 49000, end: 59000 }
 };
 
 /**
- * Game schedule: every 15 minutes from 5:00 PM ET to 2:00 AM ET (crosses midnight).
- * 36 slots per night. Returns the epoch of the current game if active,
+ * Game schedule: every 15 minutes from 10:00 AM ET to 9:00 PM ET.
+ * 44 slots per day. Returns the epoch of the current game if active,
  * or the next scheduled game start.
  */
 function getNextGameTime(nowEpoch) {
   const INTERVAL_MS = 15 * 60 * 1000;
-  const WINDOW_START_MIN = 17 * 60; // 5 PM ET = 1020
-  const WINDOW_END_MIN = 2 * 60;    // 2 AM ET = 120
-  const WINDOW_DURATION_MIN = 9 * 60; // 540 minutes
+  const WINDOW_START_MIN = 10 * 60; // 10 AM ET = 600
+  const WINDOW_END_MIN = 21 * 60;   // 9 PM ET = 1260
+  const WINDOW_DURATION_MIN = 11 * 60; // 660 minutes
 
   const now = new Date(nowEpoch);
   const etStr = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
@@ -37,34 +37,24 @@ function getNextGameTime(nowEpoch) {
   const totalMinutesET = et.getHours() * 60 + et.getMinutes();
   const etOffset = now.getTime() - et.getTime();
 
-  // Minutes since window start (handling midnight wrap)
-  let minsIntoWindow;
-  if (totalMinutesET >= WINDOW_START_MIN) {
-    minsIntoWindow = totalMinutesET - WINDOW_START_MIN;
-  } else if (totalMinutesET < WINDOW_END_MIN) {
-    minsIntoWindow = (1440 - WINDOW_START_MIN) + totalMinutesET;
-  } else {
-    minsIntoWindow = -1;
-  }
-
-  const inWindow = minsIntoWindow >= 0 && minsIntoWindow < WINDOW_DURATION_MIN;
+  const inWindow = totalMinutesET >= WINDOW_START_MIN && totalMinutesET < WINDOW_END_MIN;
 
   if (!inWindow) {
-    // Outside window (2 AM – 5 PM ET) — next game is today at 5 PM
+    // Outside window — next game is today at 10 AM (or tomorrow if past 9 PM)
     const nextStart = new Date(etStr);
-    nextStart.setHours(17, 0, 0, 0);
+    if (totalMinutesET >= WINDOW_END_MIN) {
+      nextStart.setDate(nextStart.getDate() + 1);
+    }
+    nextStart.setHours(10, 0, 0, 0);
     return nextStart.getTime() + etOffset;
   }
 
   // Inside window — find current 15-min slot
+  const minsIntoWindow = totalMinutesET - WINDOW_START_MIN;
   const slotMinsIntoWindow = Math.floor(minsIntoWindow / 15) * 15;
 
-  // Window start day: if we're after midnight, window started yesterday
   const windowStartET = new Date(etStr);
-  if (totalMinutesET < WINDOW_END_MIN) {
-    windowStartET.setDate(windowStartET.getDate() - 1);
-  }
-  windowStartET.setHours(17, 0, 0, 0);
+  windowStartET.setHours(10, 0, 0, 0);
 
   const slotEpoch = windowStartET.getTime() + etOffset + (slotMinsIntoWindow * 60 * 1000);
 
@@ -72,12 +62,10 @@ function getNextGameTime(nowEpoch) {
   if (nowEpoch >= slotEpoch + GAME_DURATION_MS) {
     const nextSlotMins = slotMinsIntoWindow + 15;
     if (nextSlotMins >= WINDOW_DURATION_MIN) {
-      // Past last slot — next window is today at 5 PM
+      // Past last slot — next window is tomorrow at 10 AM
       const nextWindowET = new Date(etStr);
-      if (totalMinutesET < WINDOW_END_MIN) {
-        // After midnight — next 5 PM is today
-      }
-      nextWindowET.setHours(17, 0, 0, 0);
+      nextWindowET.setDate(nextWindowET.getDate() + 1);
+      nextWindowET.setHours(10, 0, 0, 0);
       return nextWindowET.getTime() + etOffset;
     }
     return slotEpoch + INTERVAL_MS;
@@ -130,13 +118,13 @@ function getGameState(gameStartEpoch, nowEpoch) {
     }
   }
 
-  const canAnswer = elapsedInQuestion >= 5000 && elapsedInQuestion < 50000;
+  const canAnswer = elapsedInQuestion >= 5000 && elapsedInQuestion < 49000;
 
   const hintsVisible = [];
-  if (elapsedInQuestion >= 18000) hintsVisible.push(0);
-  if (elapsedInQuestion >= 33000) hintsVisible.push(1);
+  if (elapsedInQuestion >= 17000) hintsVisible.push(0);
+  if (elapsedInQuestion >= 32000) hintsVisible.push(1);
 
-  const correctRevealed = elapsedInQuestion >= 50000;
+  const correctRevealed = elapsedInQuestion >= 44000;
 
   // calculatePoints is from scoring.js — available globally in browser,
   // or must be required separately in Node.js
@@ -156,7 +144,7 @@ function getGameState(gameStartEpoch, nowEpoch) {
     pointsAvailable,
     hintsVisible,
     correctRevealed,
-    questionSecondsRemaining: Math.max(0, Math.ceil((50000 - elapsedInQuestion) / 1000))
+    questionSecondsRemaining: Math.max(0, Math.ceil((49000 - elapsedInQuestion) / 1000))
   };
 }
 

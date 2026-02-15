@@ -157,7 +157,7 @@
     const letter = String.fromCharCode(64 + letterIndex); // A, B, C, D
     let letterContent = letter;
     if (state === 'correct') letterContent = '✓';
-    else if (state === 'wrong') letterContent = '✗';
+    else if (state === 'wrong' || state === 'dimmed') letterContent = '✗';
     const emoji = state === 'correct' ? '<span class="tt-answer__emoji">🎉</span>' : '';
     const delayClass = state === 'default' ? ` tt-answer--delay-${delay}` : '';
 
@@ -325,6 +325,7 @@
     if (screen === currentScreen && !questionChanged) {
       if (screen === 'playing') { updatePlayingDynamic(gameState); return; }
       if (screen === 'reveal') { updateRevealDynamic(gameState); return; }
+      if (screen === 'results') { updateResultsCountdown(gameState); return; }
       return; // All other screens: static, no update needed
     }
 
@@ -558,7 +559,7 @@
       const text = typeof a === 'string' ? a : (a.text || '');
       let ansState = 'default';
       if (i === correctIdx) ansState = 'correct';
-      else if (correctIdx !== undefined) ansState = 'wrong';
+      else if (correctIdx !== undefined) ansState = 'dimmed';
       answersHTML += answerCardHTML(text, i + 1, ansState, {
         pctPicked: answerPcts[i],
       });
@@ -666,6 +667,15 @@
     const totalQ = state.totalQuestions || 15;
     const playerCount = state.playerCount || scores.length;
 
+    // Countdown to next game
+    let countdownHTML = '';
+    if (state.nextGameStartEpoch) {
+      const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
+      if (secsLeft > 0 && secsLeft <= 120) {
+        countdownHTML = `<div class="tt-results__countdown">Next game in <span class="tt-results__countdown-num">${secsLeft}</span>s</div>`;
+      }
+    }
+
     screenEl.innerHTML = `
       ${confettiHTML(24)}
       <div class="tt-results">
@@ -674,6 +684,7 @@
           <div class="tt-results__trophy">🏆</div>
           <div class="tt-results__title">Game Over!</div>
           <div class="tt-results__subtitle">${totalQ} questions · ${playerCount} players</div>
+          ${countdownHTML}
           ${podiumHTML(scores, { avatarSizes: ['xl', '3xl', 'xl'] })}
         </div>
         <div class="tt-results__right">
@@ -755,6 +766,23 @@
     });
   }
 
+  function updateResultsCountdown(state) {
+    const el = document.querySelector('.tt-results__countdown-num');
+    if (!el && state.nextGameStartEpoch) {
+      // Countdown element doesn't exist yet — re-render the full results screen
+      const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
+      if (secsLeft > 0 && secsLeft <= 120) {
+        currentScreen = ''; // Force full re-render
+        renderScreen(state);
+      }
+      return;
+    }
+    if (el && state.nextGameStartEpoch) {
+      const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
+      el.textContent = secsLeft;
+    }
+  }
+
   function updateFooterScores(state) {
     const el = document.getElementById('tv-footer-scores');
     if (!el) return;
@@ -786,7 +814,7 @@
     const SIZE = 96, STROKE = 6;
     const r = (SIZE - STROKE * 2) / 2;
     const circ = 2 * Math.PI * r;
-    const TIMER_TOTAL = 45;
+    const TIMER_TOTAL = 44;
 
     function tick() {
       const cs = getGameState(localGameStartEpoch, Date.now());
@@ -944,9 +972,10 @@
       } else if (phase === 'countdown' || phase === 'get_ready') {
         gs.screen = 'getready';
         gs.countdown = apiState.countdown || 3;
-      } else if (phase === 'scores' || phase === 'between') {
+      } else if (phase === 'between') {
         gs.screen = 'leaderboard';
-      } else if (phase === 'reveal') {
+      } else if (phase === 'reveal' || phase === 'scores') {
+        // Both reveal (44-49s) and scores (49-59s) show the answer reveal screen
         gs.screen = 'reveal';
         gs.question = {
           text: apiState.question,
@@ -954,8 +983,13 @@
           category: apiState.category,
           categoryIcon: getCategoryIcon(apiState.category),
         };
-        gs.correctAnswerIndex = apiState.answers ? apiState.answers.indexOf(apiState.correctAnswer) : -1;
+        // Use correctIndex from backend (reliable), fall back to text match
+        gs.correctAnswerIndex = apiState.correctIndex !== undefined && apiState.correctIndex !== null
+          ? apiState.correctIndex
+          : (apiState.answers ? apiState.answers.indexOf(apiState.correctAnswer) : -1);
         gs.answerPercentages = apiState.answerPercentages || [];
+        gs.pctCorrect = apiState.pctCorrect;
+        gs.avgAnswerTimeSec = apiState.avgAnswerTimeSec;
       } else {
         // Playing phase (read_time, answer_time, etc.)
         gs.screen = 'playing';
@@ -967,8 +1001,8 @@
         };
         // Calculate timer (answer window: 5s–50s = 45s countdown)
         const elapsed = apiState.elapsedSeconds || 0;
-        const remaining = Math.max(0, 50 - elapsed);
-        gs.timer = { remaining, total: 45 };
+        const remaining = Math.max(0, 49 - elapsed);
+        gs.timer = { remaining, total: 44 };
         gs.pointsAvailable = apiState.currentPointsAvailable;
         gs.maxPoints = 1000;
         gs.eliminated = apiState.eliminated || [];
@@ -984,6 +1018,8 @@
         score: p.score || 0,
         rank: i + 1,
       }));
+      gs.secondsUntilNextGame = apiState.secondsUntilNextGame || null;
+      gs.nextGameStartEpoch = apiState.nextGameStartEpoch || null;
       return gs;
     }
 

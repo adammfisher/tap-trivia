@@ -2,6 +2,7 @@
 
 const { TABLE, get, put, query, docClient, PutCommand, QueryCommand } = require('./shared/dynamo');
 const { calculatePoints } = require('./shared/scoring');
+const { QUESTION_DURATION_MS } = require('./shared/game-clock');
 
 function response(statusCode, body) {
   return {
@@ -82,7 +83,7 @@ exports.handler = async (event) => {
 
     // --- Timing validation ---
 
-    const questionStartEpoch = game.startTimeEpoch + (qNum - 1) * 60000;
+    const questionStartEpoch = game.startTimeEpoch + (qNum - 1) * QUESTION_DURATION_MS;
     const serverTimestamp = Date.now();
     const elapsedMs = serverTimestamp - questionStartEpoch;
 
@@ -94,7 +95,7 @@ exports.handler = async (event) => {
       });
     }
 
-    if (elapsedMs > 50000) {
+    if (elapsedMs > 49000) {
       return response(403, {
         error: 'ANSWER_WINDOW_CLOSED',
         message: 'The answer window for this question has closed',
@@ -107,7 +108,7 @@ exports.handler = async (event) => {
     // so the points the player sees at tap time match what they receive.
     let scoringElapsedMs = elapsedMs;
     if (typeof clientElapsedMs === 'number' &&
-        clientElapsedMs >= 5000 && clientElapsedMs <= 50000 &&
+        clientElapsedMs >= 5000 && clientElapsedMs <= 49000 &&
         Math.abs(clientElapsedMs - elapsedMs) <= 2000) {
       scoringElapsedMs = clientElapsedMs;
     }

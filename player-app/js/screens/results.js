@@ -22,22 +22,17 @@ const ResultsScreen = {
       </div>
       <div class="results-header">
         <div class="results-gameover">GAME OVER</div>
-        <div class="results-score">${totalScore.toLocaleString()}</div>
+        <div class="results-score">${(totalScore || 0).toLocaleString()}</div>
         <div class="results-points-label">POINTS</div>
       </div>
       <div class="results-loading">Loading leaderboards...</div>
     `;
 
-    await this.loadLeaderboards();
-
-    // Auto-navigate after 15 seconds — go to lobby if bar joined, else home
-    this._autoNavTimer = setTimeout(() => {
-      if (Player.hasBar()) {
-        App.showScreen('lobby');
-      } else {
-        App.showScreen('home');
-      }
-    }, 15000);
+    try {
+      await this.loadLeaderboards();
+    } catch (err) {
+      console.error('Failed to load leaderboards:', err);
+    }
   },
 
   clearAutoNav() {

@@ -27,7 +27,7 @@ const App = {
     }
   },
 
-  showScreen(screenId) {
+  showScreen(screenId, ...args) {
     // Hide current screen
     if (this.currentScreen) {
       const currentModule = this.getScreenModule(this.currentScreen);
@@ -51,9 +51,9 @@ const App = {
 
     this.currentScreen = screenId;
 
-    // Trigger screen show
+    // Trigger screen show with any extra args passed through
     const module = this.getScreenModule(screenId);
-    if (module && module.show) module.show();
+    if (module && module.show) module.show(...args);
   },
 
   getScreenModule(screenId) {
@@ -70,8 +70,7 @@ const App = {
   },
 
   startGame(gameId, startTimeEpoch) {
-    this.showScreen('game');
-    QuestionScreen.show(gameId, startTimeEpoch);
+    this.showScreen('game', gameId, startTimeEpoch);
   }
 };
 

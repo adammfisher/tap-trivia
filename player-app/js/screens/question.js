@@ -16,6 +16,8 @@ const QuestionScreen = {
   submitting: false,
   _lastStructuralKey: null,
   _lastStateKey: null,
+  _breakCountdownInterval: null,
+  _pollingForNextGame: false,
 
   show(gameId, gameStartEpoch) {
     this.gameId = gameId;
@@ -35,12 +37,26 @@ const QuestionScreen = {
       cancelAnimationFrame(this.animFrame);
       this.animFrame = null;
     }
+    this._clearBreakCountdown();
+  },
+
+  _clearBreakCountdown() {
+    if (this._breakCountdownInterval) {
+      clearInterval(this._breakCountdownInterval);
+      this._breakCountdownInterval = null;
+    }
+    this._pollingForNextGame = false;
   },
 
   startGameLoop() {
     const loop = () => {
       this.update();
-      this.animFrame = requestAnimationFrame(loop);
+      // Only schedule next frame if hide() hasn't stopped the loop.
+      // update() is async but the post_game path runs synchronously,
+      // so this.animFrame is already null by the time we get here.
+      if (this.animFrame !== null) {
+        this.animFrame = requestAnimationFrame(loop);
+      }
     };
     this.animFrame = requestAnimationFrame(loop);
   },
@@ -49,9 +65,19 @@ const QuestionScreen = {
     const state = getGameState(this.gameStartEpoch, Date.now());
 
     if (state.gamePhase === 'post_game') {
+      // Check if another game is coming soon — stay in-game if so
+      const nextGameStart = getNextGameTime(Date.now());
+      const secsUntilNext = Math.ceil((nextGameStart - Date.now()) / 1000);
+
+      if (secsUntilNext > 0 && secsUntilNext <= 60) {
+        // Next game is imminent — show break countdown and auto-transition
+        this._showBreakCountdown(nextGameStart);
+        return;
+      }
+
+      // No game coming soon — go to results (end of night)
       this.hide();
-      App.showScreen('results');
-      ResultsScreen.show(this.gameId, this.totalGameScore);
+      App.showScreen('results', this.gameId, this.totalGameScore);
       return;
     }
 
@@ -81,9 +107,9 @@ const QuestionScreen = {
     // Render based on phase
     if (state.questionPhase === 'category_splash') {
       this.renderCategorySplash(state);
-    } else if (state.questionPhase === 'scores') {
-      this.renderScoresPhase(state);
     } else {
+      // During reveal (44-49s) and scores (49-59s) phases, keep showing
+      // the question screen so the correct answer highlight is visible
       this.renderQuestion(state);
     }
   },
@@ -131,9 +157,9 @@ const QuestionScreen = {
     const eliminatedIndices = (hintsVisible || []).map(h => q.eliminateOrder[h]);
     const points = canAnswer ? calculatePoints(elapsedInQuestion) : 0;
 
-    // Timer: 45-second countdown (5s–50s), synced with TV app
+    // Timer: 44-second countdown (5s–49s), synced with TV app
     const remainingSec = state.questionSecondsRemaining;
-    const timerPct = remainingSec / 45;
+    const timerPct = remainingSec / 44;
     const timerR = 30;
     const timerC = 2 * Math.PI * timerR;
     const timerOffset = timerC * (1 - timerPct);
@@ -305,13 +331,18 @@ const QuestionScreen = {
     let disabled = '';
     let letterContent = letters[i];
 
+    // Determine the correct answer index: prefer answerResult (from submit),
+    // fall back to correctIndex from question data (works even if user didn't answer)
+    const isCorrectAnswer = (this.answerResult && q.answers[i] === this.answerResult.correctAnswer)
+      || (q.correctIndex !== undefined && i === q.correctIndex);
+
     if (this.answerResult && this.answerResult.selectedIndex === i) {
       if (correctRevealed) {
         if (this.answerResult.correct) {
           cls += ' answer-correct';
           letterContent = '✓';
         } else {
-          cls += ' answer-wrong';
+          cls += ' answer-dimmed';
           letterContent = '✗';
         }
       } else {
@@ -324,9 +355,11 @@ const QuestionScreen = {
       text = `NOT ${q.answers[i]}`;
       disabled = ' disabled';
     } else if (correctRevealed) {
-      if (this.answerResult && q.answers[i] === this.answerResult.correctAnswer) {
+      if (isCorrectAnswer) {
         cls += ' answer-revealed';
         letterContent = '✓';
+      } else {
+        cls += ' answer-dimmed';
       }
       disabled = ' disabled';
     }
@@ -450,5 +483,81 @@ const QuestionScreen = {
       if (lower.includes(key)) return emoji;
     }
     return '🧠';
+  },
+
+  _showBreakCountdown(nextGameStartEpoch) {
+    // Already showing countdown — don't re-enter
+    if (this._breakCountdownInterval) return;
+
+    // Stop the RAF game loop (we're in break mode now)
+    if (this.animFrame) {
+      cancelAnimationFrame(this.animFrame);
+      this.animFrame = null;
+    }
+
+    const container = document.getElementById('game-content');
+    const barName = Player.getBarName();
+
+    const renderCountdown = () => {
+      const secsLeft = Math.max(0, Math.ceil((nextGameStartEpoch - Date.now()) / 1000));
+
+      container.innerHTML = `
+        <div class="p-break-countdown">
+          <div class="logo-small"><span class="logo__tap">Tap</span><span class="logo__trivia">Trivia</span></div>
+          ${barName ? `<div class="p-bar-name">${barName}</div>` : ''}
+          <div class="p-break-score">${this.totalGameScore.toLocaleString()}</div>
+          <div class="p-break-score-label">YOUR SCORE</div>
+          <div class="p-break-next-label">Next Game In</div>
+          <div class="p-break-timer">${secsLeft}</div>
+          <div class="p-break-hint">Stay here — auto-joining next game</div>
+        </div>
+      `;
+
+      // When countdown reaches 0, start polling for the new game
+      if (secsLeft <= 2 && !this._pollingForNextGame) {
+        this._pollingForNextGame = true;
+        this._pollForNextGame();
+      }
+    };
+
+    renderCountdown();
+    this._breakCountdownInterval = setInterval(renderCountdown, 1000);
+  },
+
+  async _pollForNextGame() {
+    const maxAttempts = 10;
+    let attempts = 0;
+
+    const poll = async () => {
+      attempts++;
+      const data = await apiCall('GET', '/game/current');
+
+      if (data && !data.error && data.status === 'active' && data.gameId !== this.gameId) {
+        // New game is active — transition seamlessly
+        this._clearBreakCountdown();
+        this.gameId = data.gameId;
+        this.gameStartEpoch = data.startTimeEpoch;
+        this.answerResult = null;
+        this.questionData = null;
+        this.currentQuestionNumber = null;
+        this.totalGameScore = 0;
+        this.submitting = false;
+        this._lastStructuralKey = null;
+        this._lastStateKey = null;
+        this.startGameLoop();
+        return;
+      }
+
+      if (attempts < maxAttempts) {
+        setTimeout(poll, 1500);
+      } else {
+        // Exhausted attempts — fall back to results screen
+        this._clearBreakCountdown();
+        this.hide();
+        App.showScreen('results', this.gameId, this.totalGameScore);
+      }
+    };
+
+    poll();
   }
 };

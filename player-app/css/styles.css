@@ -916,7 +916,20 @@ body::-webkit-scrollbar { display: none; }
   box-shadow: none;
 }
 
-/* Wrong */
+/* Wrong (dimmed / greyed out on reveal) */
+.p-answer-btn.answer-dimmed {
+  background: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.4);
+  box-shadow: none;
+  opacity: 0.5;
+}
+
+.p-answer-btn.answer-dimmed .p-answer-letter {
+  background: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.4);
+}
+
+/* Wrong (legacy, kept for compatibility) */
 .p-answer-btn.answer-wrong {
   background: var(--grad-wrong);
   color: #fff;
@@ -1783,4 +1796,56 @@ body::-webkit-scrollbar { display: none; }
     left: 50%;
     transform: translateX(-50%);
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BETWEEN-GAME BREAK COUNTDOWN
+   ═══════════════════════════════════════════════════════════════ */
+
+.p-break-countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 4px;
+  text-align: center;
+}
+
+.p-break-score {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.p-break-score-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: var(--sp-lg);
+}
+
+.p-break-next-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-top: var(--sp-md);
+}
+
+.p-break-timer {
+  font-family: var(--font-display);
+  font-size: 4rem;
+  font-weight: 700;
+  color: var(--green);
+  text-shadow: 0 0 20px rgba(0, 212, 170, 0.4);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.p-break-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: var(--sp-md);
 }

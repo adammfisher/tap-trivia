@@ -342,8 +342,9 @@ exports.handler = async (event) => {
       }
     }
 
-    // Determine correct answer visibility
-    const correctAnswer = gameState.correctRevealed ? currentQ.answer : null;
+    // Reveal correct answer during reveal AND scores phases
+    const isRevealOrScores = gameState.questionPhase === 'reveal' || gameState.questionPhase === 'scores';
+    const correctAnswer = isRevealOrScores ? currentQ.answer : null;
 
     // Calculate current points available
     const currentPointsAvailable = gameState.canAnswer
@@ -352,6 +353,43 @@ exports.handler = async (event) => {
 
     // Get bar leaderboard for current game
     const barLeaderboard = await getBarLeaderboard(game.gameId, barCode, 10);
+
+    // During reveal/scores, compute answer distribution percentages
+    let answerPercentages = null;
+    let pctCorrect = null;
+    let avgAnswerTimeSec = null;
+    if (isRevealOrScores) {
+      try {
+        const qAnswers = await query(TABLE.ANSWERS, {
+          KeyConditionExpression: 'PK = :pk',
+          ExpressionAttributeValues: { ':pk': `ANSWER#${game.gameId}#${questionNumber}` }
+        });
+        if (qAnswers && qAnswers.length > 0) {
+          // Count how many picked each shuffled answer
+          const counts = new Array(shuffledAnswers.length).fill(0);
+          let correctCount = 0;
+          let totalElapsed = 0;
+          let answeredCount = 0;
+          for (const a of qAnswers) {
+            const idx = shuffledAnswers.indexOf(a.selectedAnswer);
+            if (idx >= 0) counts[idx]++;
+            if (a.isCorrect) correctCount++;
+            if (a.elapsedMs) {
+              totalElapsed += a.elapsedMs;
+              answeredCount++;
+            }
+          }
+          const total = qAnswers.length;
+          answerPercentages = counts.map(c => Math.round((c / total) * 100));
+          pctCorrect = Math.round((correctCount / total) * 100);
+          avgAnswerTimeSec = answeredCount > 0
+            ? Math.round(((totalElapsed / answeredCount) / 1000) * 10) / 10
+            : null;
+        }
+      } catch (err) {
+        console.warn('Failed to compute answer percentages:', err.message);
+      }
+    }
 
     return response(200, {
       state: 'active_game',
@@ -368,8 +406,12 @@ exports.handler = async (event) => {
       subcategory: currentQ.subcategory || '',
       difficulty: currentQ.difficulty,
       answers: shuffledAnswers,
+      correctIndex: isRevealOrScores ? correctIndex : undefined,
       eliminated,
       correctAnswer,
+      answerPercentages,
+      pctCorrect,
+      avgAnswerTimeSec,
       currentPointsAvailable,
       elapsedSeconds: Math.floor(gameState.elapsedInQuestion / 1000),
       barLeaderboard
