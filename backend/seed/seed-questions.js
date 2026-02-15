@@ -42,9 +42,9 @@ async function seed() {
   const raw = JSON.parse(fs.readFileSync(QUESTIONS_FILE, 'utf-8'));
   console.log(`Found ${raw.length} questions in file\n`);
 
-  // Transform to DynamoDB format
+  // Transform to DynamoDB format (handles both old and new JSON schemas)
   const allItems = raw.map(q => {
-    let wrongAnswers = q.wrong_answers;
+    let wrongAnswers = q.wrongAnswers || q.wrong_answers;
     if (typeof wrongAnswers === 'string') {
       wrongAnswers = JSON.parse(wrongAnswers);
     }
@@ -57,13 +57,13 @@ async function seed() {
       wrongAnswers: wrongAnswers,
       category: q.category,
       subcategory: q.subcategory || '',
-      topicLeaf: q.topic_leaf || '',
+      topicLeaf: q.topicLeaf || q.topic_leaf || '',
       difficulty: q.difficulty,
       difficultySort: `${q.difficulty}#${q.id}`,
-      sourceType: q.source_type || 'static',
-      shelfLife: q.shelf_life || 'permanent',
+      sourceType: q.sourceType || q.source_type || 'static',
+      shelfLife: q.shelfLife || q.shelf_life || 'permanent',
       expired: q.expired || 0,
-      createdAt: q.created_at || new Date().toISOString(),
+      createdAt: q.createdAt || q.created_at || new Date().toISOString(),
       lastUsedEpoch: 0,
       usageCount: 0
     };
