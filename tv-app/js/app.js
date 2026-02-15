@@ -105,7 +105,7 @@
   function qrBadgeHTML(position = 'bl') {
     return `
       <div class="tt-qr-badge tt-qr-badge--${position}">
-        ${qrCodeHTML(144)}
+        ${qrCodeHTML(120)}
         <div class="tt-qr-badge__info">
           <div class="tt-qr-badge__title">Get the App!</div>
           <div class="tt-qr-badge__url">taptrivia.com</div>
@@ -325,6 +325,7 @@
     if (screen === currentScreen && !questionChanged) {
       if (screen === 'playing') { updatePlayingDynamic(gameState); return; }
       if (screen === 'reveal') { updateRevealDynamic(gameState); return; }
+      if (screen === 'between') { updateBetweenCountdown(gameState); return; }
       if (screen === 'results') { updateResultsCountdown(gameState); return; }
       return; // All other screens: static, no update needed
     }
@@ -365,8 +366,8 @@
       <div class="tt-idle">
         <div class="tt-idle__logo">${logoHTML('xl')}</div>
         ${barNameHTML('xl')}
-        <div class="tt-idle__cta">Ask your bartender to start a game!</div>
-        <div class="tt-idle__sub">Live trivia, right from your phone</div>
+        <div class="tt-idle__cta">Live trivia every 15 minutes!</div>
+        <div class="tt-idle__sub">Scan the QR code to play on your phone</div>
       </div>`;
   }
 
@@ -609,29 +610,32 @@
       </div>`;
   }
 
-  /** BETWEEN QUESTIONS / SCOREBOARD FLASH — new screen */
+  /** BETWEEN QUESTIONS / SCOREBOARD FLASH — left-half-only layout */
   function renderBetween(state) {
     const scores = state.scores || [];
     const num = state.questionNumber || 1;
     const totalQ = state.totalQuestions || 15;
     const nextIn = state.nextQuestionIn || 5;
-    // Show full list when fewer than 4 players, otherwise show positions 4-10
-    const listScores = scores.length < 4 ? scores.slice(0, 10) : scores.slice(3, 10);
+    const isLastQuestion = num >= totalQ;
+    // Show positions 4-5 below the podium (top 3 on podium, 4-5 in list = top 5)
+    const listScores = scores.length < 4 ? scores.slice(0, 5) : scores.slice(3, 5);
     const listStartRank = scores.length < 4 ? 1 : 4;
 
+    const countdownText = isLastQuestion
+      ? 'Final results coming...'
+      : `Next question in <span class="tt-between__countdown-num">${nextIn}</span>s...`;
+
     screenEl.innerHTML = `
-      <div class="tt-between">
-        <div class="tt-between__left">
-          ${logoHTML('md')}
-          ${barNameHTML('lg')}
-          <div class="tt-between__after">After Question ${num}</div>
-          ${podiumHTML(scores)}
-        </div>
-        <div class="tt-between__right">
-          <div class="tt-between__section-label">Top 10</div>
-          ${leaderboardRowsHTML(listScores, listStartRank)}
-          <div class="tt-between__next">Next question in ${nextIn}s...</div>
-          ${sidebarQRBadgeHTML()}
+      <div class="tt-between tt-between--half">
+        <div class="tt-between__panel">
+          ${logoHTML('sm')}
+          ${barNameHTML('md')}
+          <div class="tt-between__after">AFTER QUESTION ${num}</div>
+          ${podiumHTML(scores, { avatarSizes: ['lg', 'xl', 'lg'] })}
+          <div class="tt-between__section-label">Top 5</div>
+          ${leaderboardRowsHTML(listScores, listStartRank, { compact: true })}
+          <div id="tv-between-countdown" class="tt-between__next">${countdownText}</div>
+          ${qrBadgeHTML('inline')}
         </div>
       </div>`;
   }
@@ -661,36 +665,34 @@
       </div>`;
   }
 
-  /** RESULTS / GAME OVER SCREEN — v4 lines 640-678 */
+  /** RESULTS / GAME OVER SCREEN — left-half-only layout */
   function renderResults(state) {
     const scores = state.scores || [];
     const totalQ = state.totalQuestions || 15;
     const playerCount = state.playerCount || scores.length;
 
     // Countdown to next game
-    let countdownHTML = '';
+    let countdownText = '';
     if (state.nextGameStartEpoch) {
       const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
       if (secsLeft > 0 && secsLeft <= 120) {
-        countdownHTML = `<div class="tt-results__countdown">Next game in <span class="tt-results__countdown-num">${secsLeft}</span>s</div>`;
+        countdownText = `<div class="tt-results__countdown">Next game in <span class="tt-results__countdown-num">${secsLeft}</span>s</div>`;
       }
     }
 
     screenEl.innerHTML = `
       ${confettiHTML(24)}
-      <div class="tt-results">
-        <div class="tt-results__left">
-          ${barNameHTML('lg')}
+      <div class="tt-results tt-results--half">
+        <div class="tt-results__panel">
+          ${barNameHTML('md')}
           <div class="tt-results__trophy">🏆</div>
           <div class="tt-results__title">Game Over!</div>
           <div class="tt-results__subtitle">${totalQ} questions · ${playerCount} players</div>
-          ${countdownHTML}
-          ${podiumHTML(scores, { avatarSizes: ['xl', '3xl', 'xl'] })}
-        </div>
-        <div class="tt-results__right">
-          <div class="tt-results__standings-label">Final Standings</div>
-          ${leaderboardRowsHTML(scores.slice(0, 10), 1, { compact: true })}
-          ${sidebarQRBadgeHTML()}
+          ${countdownText}
+          ${podiumHTML(scores, { avatarSizes: ['lg', 'xl', 'lg'] })}
+          <div class="tt-results__standings-label">Top 5</div>
+          ${leaderboardRowsHTML(scores.length < 4 ? scores.slice(0, 5) : scores.slice(3, 5), scores.length < 4 ? 1 : 4, { compact: true })}
+          ${qrBadgeHTML('inline')}
         </div>
       </div>`;
   }
@@ -780,6 +782,19 @@
     if (el && state.nextGameStartEpoch) {
       const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
       el.textContent = secsLeft;
+    }
+  }
+
+  function updateBetweenCountdown(state) {
+    const el = document.getElementById('tv-between-countdown');
+    if (!el) return;
+    const nextIn = state.nextQuestionIn || 5;
+    const num = state.questionNumber || 1;
+    const totalQ = state.totalQuestions || 15;
+    if (num >= totalQ) {
+      el.innerHTML = 'Final results coming...';
+    } else {
+      el.innerHTML = `Next question in <span class="tt-between__countdown-num">${nextIn}</span>s...`;
     }
   }
 
@@ -974,8 +989,7 @@
         gs.countdown = apiState.countdown || 3;
       } else if (phase === 'between') {
         gs.screen = 'leaderboard';
-      } else if (phase === 'reveal' || phase === 'scores') {
-        // Both reveal (44-49s) and scores (49-59s) show the answer reveal screen
+      } else if (phase === 'reveal') {
         gs.screen = 'reveal';
         gs.question = {
           text: apiState.question,
@@ -983,13 +997,16 @@
           category: apiState.category,
           categoryIcon: getCategoryIcon(apiState.category),
         };
-        // Use correctIndex from backend (reliable), fall back to text match
         gs.correctAnswerIndex = apiState.correctIndex !== undefined && apiState.correctIndex !== null
           ? apiState.correctIndex
           : (apiState.answers ? apiState.answers.indexOf(apiState.correctAnswer) : -1);
         gs.answerPercentages = apiState.answerPercentages || [];
         gs.pctCorrect = apiState.pctCorrect;
         gs.avgAnswerTimeSec = apiState.avgAnswerTimeSec;
+      } else if (phase === 'scores') {
+        gs.screen = 'between';
+        const elapsed = apiState.elapsedSeconds || 49;
+        gs.nextQuestionIn = Math.max(1, Math.ceil(59 - elapsed));
       } else {
         // Playing phase (read_time, answer_time, etc.)
         gs.screen = 'playing';
@@ -1118,9 +1135,10 @@
       scores: DEMO_PLAYERS,
     },
     {
-      screen: 'leaderboard',
+      screen: 'between',
       questionNumber: 7,
       totalQuestions: 15,
+      nextQuestionIn: 8,
       scores: DEMO_PLAYERS,
     },
     {

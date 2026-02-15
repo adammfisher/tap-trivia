@@ -206,6 +206,11 @@ body {
 }
 .tt-qr-badge--bl { bottom: 28px; left: 40px; } /* 14,20 × 2 */
 .tt-qr-badge--br { bottom: 28px; right: 40px; }
+.tt-qr-badge--inline {
+  position: relative;
+  bottom: auto; left: auto;
+  margin-top: 8px;
+}
 .tt-qr-badge__info { display: flex; flex-direction: column; }
 .tt-qr-badge__title {
   font-family: 'Fredoka', sans-serif;
@@ -1019,6 +1024,50 @@ body {
   padding: 0 20px;
   animation: pulse 2s infinite;
 }
+/* ─── Half-width between screen (left 960px) ─────────────────── */
+.tt-between--half {
+  width: 960px;
+  height: 100%;
+  padding: 24px 48px;
+  flex-direction: column;
+}
+.tt-between__panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.tt-between__countdown-num {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+  font-size: 28px;
+  color: #ffd200;
+}
+/* Compact podium for half-width */
+.tt-between--half .tt-podium { gap: 20px; }
+.tt-between--half .tt-podium__bar--1st { width: 150px; height: 160px; }
+.tt-between--half .tt-podium__bar--2nd { width: 120px; height: 120px; }
+.tt-between--half .tt-podium__bar--3rd { width: 120px; height: 100px; }
+.tt-between--half .tt-podium__name { font-size: 22px; margin-top: 8px; }
+.tt-between--half .tt-podium__name--first { font-size: 24px; }
+.tt-between--half .tt-podium__score--first { font-size: 32px; }
+.tt-between--half .tt-podium__score--other { font-size: 26px; }
+.tt-between--half .tt-podium__rank { font-size: 40px; }
+.tt-between--half .tt-podium__bar { padding-top: 20px; margin-top: 12px; }
+/* Compact leaderboard rows for half-width */
+.tt-between--half .tt-lb-row { gap: 10px; padding: 0 12px; }
+.tt-between--half .tt-lb-row__rank { font-size: 22px; width: 30px; }
+.tt-between--half .tt-lb-row__name { font-size: 22px; }
+.tt-between--half .tt-lb-row__score { font-size: 22px; }
+/* Compact inline QR badge for half-width */
+.tt-between--half .tt-qr-badge--inline { padding: 16px 24px 16px 20px; gap: 20px; }
+.tt-between--half .tt-qr-badge__title { font-size: 26px; }
+.tt-between--half .tt-qr-badge__url { font-size: 20px; }
+.tt-between--half .tt-qr-badge__code { font-size: 24px; }
+
 /* Movement indicators */
 .tt-lb-row__movement {
   font-size: 20px;
@@ -1146,6 +1195,47 @@ body {
 .tt-results .tt-lb-row__score { font-size: 22px; }
 /* Top 3 rank numbers in gold */
 .tt-lb-row__rank--gold { color: #ffd200; }
+
+/* ─── Half-width results screen (left 960px) ─────────────────── */
+.tt-results--half {
+  width: 960px;
+  height: 100%;
+  padding: 32px 48px;
+  flex-direction: column;
+}
+.tt-results__panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.tt-results--half .tt-results__trophy { font-size: 80px; margin-bottom: 8px; }
+.tt-results--half .tt-results__title { font-size: 48px; margin-bottom: 4px; }
+.tt-results--half .tt-results__subtitle { margin-bottom: 16px; }
+/* Compact podium for half-width results */
+.tt-results--half .tt-podium { gap: 20px; }
+.tt-results--half .tt-podium__bar--1st { width: 150px; height: 160px; }
+.tt-results--half .tt-podium__bar--2nd { width: 120px; height: 120px; }
+.tt-results--half .tt-podium__bar--3rd { width: 120px; height: 100px; }
+.tt-results--half .tt-podium__name { font-size: 22px; margin-top: 8px; }
+.tt-results--half .tt-podium__name--first { font-size: 24px; }
+.tt-results--half .tt-podium__score--first { font-size: 32px; }
+.tt-results--half .tt-podium__score--other { font-size: 26px; }
+.tt-results--half .tt-podium__rank { font-size: 40px; }
+.tt-results--half .tt-podium__bar { padding-top: 20px; margin-top: 12px; }
+/* Compact leaderboard rows for half-width results */
+.tt-results--half .tt-lb-row { gap: 10px; padding: 0 12px; }
+.tt-results--half .tt-lb-row__rank { font-size: 22px; width: 30px; }
+.tt-results--half .tt-lb-row__name { font-size: 22px; }
+.tt-results--half .tt-lb-row__score { font-size: 22px; }
+/* Compact inline QR badge for half-width results */
+.tt-results--half .tt-qr-badge--inline { padding: 16px 24px 16px 20px; gap: 20px; }
+.tt-results--half .tt-qr-badge__title { font-size: 26px; }
+.tt-results--half .tt-qr-badge__url { font-size: 20px; }
+.tt-results--half .tt-qr-badge__code { font-size: 24px; }
 
 /* Countdown to next game on results screen */
 .tt-results__countdown {
