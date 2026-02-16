@@ -730,9 +730,9 @@ body {
   gap: 8px; /* 4×2 */
 }
 .tt-lobby__player-name {
-  font-size: 22px; /* 11×2 */
+  font-size: 30px; /* 15×2 */
   font-weight: 600;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.7);
 }
 .tt-lobby__waiting {
   margin-top: 48px; /* 24×2 */
@@ -1523,4 +1523,693 @@ body {
   0% { background: rgba(255,71,87,0); }
   30% { background: rgba(255,71,87,0.08); }
   100% { background: rgba(255,71,87,0); }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SIGNAGE — Full-screen & In-game Panel
+   ═══════════════════════════════════════════════════════════════ */
+
+/* --- Signage Full-Screen Container --- */
+.tt-signage-fs {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+  font-family: 'Outfit', sans-serif;
+}
+
+/* --- Signage Header (bar logo + name + TapTrivia) --- */
+.tt-signage-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 28px 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tt-signage-header__bar {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.tt-signage-header__bar-logo {
+  width: 88px;
+  height: 88px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #2a1a4e, #3d2266);
+  border: 4px solid rgba(255,255,255,.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.tt-signage-header__bar-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tt-signage-header__bar-initial {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: #ffd200;
+}
+.tt-signage-header__bar-name {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+.tt-signage-header__bar-loc {
+  font-size: 20px;
+  color: rgba(255,255,255,.35);
+  font-weight: 500;
+}
+
+/* --- Full-Screen Signage Slide Types --- */
+.tt-signage-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  z-index: 5;
+  padding-top: 140px;
+}
+.tt-signage-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 5;
+  text-align: center;
+  padding: 0 80px;
+}
+.tt-signage-label {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.tt-signage-headline {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 88px;
+  font-weight: 700;
+  color: #f0f0f0;
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+.tt-signage-headline--gold {
+  background: linear-gradient(135deg, #f7971e 0%, #ffd200 50%, #ffe066 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.tt-signage-subtitle {
+  font-size: 36px;
+  color: rgba(255,255,255,.5);
+  font-weight: 500;
+  margin-bottom: 48px;
+}
+.tt-signage-big-emoji {
+  font-size: 128px;
+  margin-bottom: 40px;
+}
+
+/* Featured item box (specials) */
+.tt-signage-featured {
+  background: rgba(255,255,255,.06);
+  border-radius: 40px;
+  padding: 40px 48px;
+  border: 2px solid rgba(255,255,255,.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 760px;
+  width: 100%;
+}
+.tt-signage-featured__name {
+  font-size: 44px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+.tt-signage-featured__desc {
+  font-size: 26px;
+  color: rgba(255,255,255,.4);
+  margin-top: 8px;
+}
+.tt-signage-featured__price {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 72px;
+  font-weight: 700;
+  color: #00d4aa;
+}
+
+/* Menu item row (specials) */
+.tt-signage-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 28px 36px;
+  background: rgba(255,255,255,.04);
+  border-radius: 28px;
+  border: 2px solid rgba(255,255,255,.04);
+}
+.tt-signage-menu-item__icon { font-size: 56px; }
+.tt-signage-menu-item__name { font-size: 32px; font-weight: 700; color: #f0f0f0; }
+.tt-signage-menu-item__desc { font-size: 24px; color: rgba(255,255,255,.4); }
+.tt-signage-menu-item__price {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  color: #00d4aa;
+  margin-left: auto;
+}
+
+/* Deal cards (happy hour) */
+.tt-signage-deals {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+}
+.tt-signage-deal {
+  background: rgba(255,255,255,.06);
+  border-radius: 36px;
+  padding: 48px 56px;
+  border: 2px solid rgba(255,255,255,.06);
+  text-align: center;
+  min-width: 320px;
+}
+.tt-signage-deal__value {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 64px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.tt-signage-deal__item {
+  font-size: 28px;
+  font-weight: 600;
+  color: rgba(255,255,255,.6);
+}
+
+/* Prize cards (events) */
+.tt-signage-prizes {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+}
+.tt-signage-prize {
+  background: rgba(255,255,255,.06);
+  border-radius: 32px;
+  padding: 32px 44px;
+  border: 2px solid rgba(255,255,255,.06);
+  text-align: center;
+}
+.tt-signage-prize__emoji { font-size: 56px; margin-bottom: 8px; }
+.tt-signage-prize__place {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffd200;
+}
+.tt-signage-prize__name {
+  font-size: 24px;
+  color: rgba(255,255,255,.5);
+  margin-top: 4px;
+}
+
+/* Hours rows (brand) */
+.tt-signage-hours {
+  display: flex;
+  gap: 64px;
+  justify-content: center;
+}
+.tt-signage-hours__label {
+  font-size: 26px;
+  font-weight: 700;
+  color: rgba(255,255,255,.5);
+  margin-bottom: 8px;
+}
+.tt-signage-hours__value {
+  font-size: 30px;
+  font-weight: 600;
+  color: #ffd200;
+}
+
+/* Promo box (sports) */
+.tt-signage-promo {
+  background: rgba(255,255,255,.06);
+  border-radius: 32px;
+  padding: 32px 64px;
+  border: 2px solid rgba(255,255,255,.06);
+  font-size: 36px;
+  font-weight: 700;
+  color: #ffd200;
+  margin-top: 48px;
+}
+.tt-signage-tagline {
+  font-size: 28px;
+  color: rgba(255,255,255,.3);
+  margin-top: 32px;
+  font-style: italic;
+}
+
+/* Custom items */
+.tt-signage-items {
+  display: flex;
+  gap: 28px;
+  margin-top: 56px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.tt-signage-item {
+  background: rgba(255,255,255,.06);
+  border-radius: 28px;
+  padding: 28px 40px;
+  border: 2px solid rgba(255,255,255,.06);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.tt-signage-item__emoji { font-size: 48px; }
+.tt-signage-item__text {
+  font-size: 30px;
+  font-weight: 600;
+  color: rgba(255,255,255,.7);
+}
+
+/* Body text (announcements, custom) */
+.tt-signage-body {
+  font-size: 40px;
+  color: rgba(255,255,255,.55);
+  font-weight: 500;
+  line-height: 1.5;
+  max-width: 1200px;
+}
+.tt-signage-subtext {
+  font-size: 28px;
+  color: rgba(255,255,255,.3);
+  margin-top: 40px;
+}
+
+/* Divider line (brand) */
+.tt-signage-divider {
+  width: 120px;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #f7971e, #ffd200);
+  margin: 48px auto;
+}
+
+/* TapTrivia footer badge (brand slide) */
+.tt-signage-powered {
+  position: absolute;
+  bottom: 32px;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+}
+.tt-signage-powered__inner {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(12px);
+  border-radius: 32px;
+  padding: 20px 48px;
+  border: 2px solid rgba(255,255,255,.06);
+}
+.tt-signage-powered__sep {
+  width: 2px;
+  height: 40px;
+  background: rgba(255,255,255,.1);
+}
+.tt-signage-powered__text {
+  font-size: 24px;
+  color: rgba(255,255,255,.4);
+}
+
+/* --- In-Game Signage Panel --- */
+.tt-signage-panel {
+  width: 680px;
+  background: rgba(0,0,0,.15);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  animation: panelSlide .4s ease-out;
+}
+@keyframes panelSlide {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.tt-signage-panel__inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 36px;
+}
+
+/* Panel header (bar logo + name) */
+.tt-signage-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+.tt-signage-panel__bar-logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2a1a4e, #3d2266);
+  border: 4px solid rgba(255,255,255,.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.tt-signage-panel__bar-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tt-signage-panel__bar-initial {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffd200;
+}
+.tt-signage-panel__bar-name {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+.tt-signage-panel__bar-loc {
+  font-size: 16px;
+  color: rgba(255,255,255,.3);
+}
+
+/* Panel content shared styles */
+.tt-signage-panel__label {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.tt-signage-panel__headline {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  color: #f0f0f0;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+.tt-signage-panel__subtitle {
+  font-size: 22px;
+  color: rgba(255,255,255,.4);
+  margin-bottom: 28px;
+}
+.tt-signage-panel__emoji {
+  font-size: 80px;
+  margin-bottom: 20px;
+}
+.tt-signage-panel__body {
+  font-size: 24px;
+  color: rgba(255,255,255,.5);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+.tt-signage-panel__muted {
+  font-size: 20px;
+  color: rgba(255,255,255,.3);
+  margin-top: 24px;
+}
+
+/* Panel featured box (specials) */
+.tt-signage-panel__featured {
+  background: linear-gradient(135deg, rgba(245,158,11,.12), rgba(245,158,11,.04));
+  border-radius: 24px;
+  padding: 24px 28px;
+  border: 2px solid rgba(245,158,11,.15);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tt-signage-panel__featured-name {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #f0f0f0;
+  line-height: 1.1;
+}
+.tt-signage-panel__featured-desc {
+  font-size: 18px;
+  color: rgba(255,255,255,.4);
+  margin-top: 4px;
+}
+.tt-signage-panel__featured-price {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: #00d4aa;
+}
+
+/* Panel menu items (specials) */
+.tt-signage-panel__menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  background: rgba(255,255,255,.03);
+  border-radius: 18px;
+  border: 2px solid rgba(255,255,255,.03);
+  margin-bottom: 10px;
+}
+.tt-signage-panel__menu-icon { font-size: 32px; }
+.tt-signage-panel__menu-name { font-size: 22px; font-weight: 700; color: #f0f0f0; }
+.tt-signage-panel__menu-desc { font-size: 16px; color: rgba(255,255,255,.35); }
+.tt-signage-panel__menu-price {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #00d4aa;
+  margin-left: auto;
+}
+
+/* Panel deals (happy hour) */
+.tt-signage-panel__deal {
+  background: rgba(255,255,255,.04);
+  border-radius: 24px;
+  padding: 28px 32px;
+  border: 2px solid rgba(255,255,255,.04);
+  text-align: center;
+  margin-bottom: 16px;
+}
+.tt-signage-panel__deal-value {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+}
+.tt-signage-panel__deal-item {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(255,255,255,.5);
+  margin-top: 4px;
+}
+
+/* Panel prizes (events) */
+.tt-signage-panel__prize {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255,255,255,.04);
+  border-radius: 18px;
+  padding: 16px 24px;
+  border: 2px solid rgba(255,255,255,.04);
+  margin-bottom: 12px;
+}
+.tt-signage-panel__prize-emoji { font-size: 36px; }
+.tt-signage-panel__prize-place {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffd200;
+}
+.tt-signage-panel__prize-name {
+  font-size: 18px;
+  color: rgba(255,255,255,.4);
+}
+
+/* Panel hours (brand) */
+.tt-signage-panel__hours-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 24px;
+  margin-bottom: 16px;
+}
+.tt-signage-panel__hours-label {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(255,255,255,.5);
+}
+.tt-signage-panel__hours-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffd200;
+}
+
+/* Panel promo (sports) */
+.tt-signage-panel__promo {
+  background: rgba(255,255,255,.06);
+  border-radius: 24px;
+  padding: 24px 40px;
+  border: 2px solid rgba(255,255,255,.06);
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffd200;
+  text-align: center;
+  margin-top: 28px;
+}
+
+/* Panel custom items */
+.tt-signage-panel__item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255,255,255,.04);
+  border-radius: 16px;
+  padding: 14px 20px;
+  border: 2px solid rgba(255,255,255,.04);
+  margin-bottom: 10px;
+}
+.tt-signage-panel__item-emoji { font-size: 32px; }
+.tt-signage-panel__item-text {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(255,255,255,.6);
+  text-align: left;
+}
+
+/* Panel QR badge */
+.tt-signage-panel__qr {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(0,0,0,.3);
+  border-radius: 22px;
+  padding: 18px 24px;
+  margin-top: auto;
+  border: 2px solid rgba(255,255,255,.05);
+}
+.tt-signage-panel__qr-text {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+.tt-signage-panel__qr-url {
+  font-size: 18px;
+  color: #ffd200;
+  font-weight: 600;
+}
+.tt-signage-panel__qr-code-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+.tt-signage-panel__qr-code-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,.3);
+  letter-spacing: 2px;
+}
+.tt-signage-panel__qr-code {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffd200;
+  letter-spacing: 4px;
+}
+
+/* Bar logo (brand full-screen, reuse) */
+.tt-signage-brand-logo {
+  width: 280px;
+  height: 280px;
+  border-radius: 56px;
+  background: linear-gradient(135deg, #2a1a4e, #3d2266);
+  border: 4px solid rgba(255,255,255,.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 40px;
+  animation: breathe 5s ease-in-out infinite;
+}
+.tt-signage-brand-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tt-signage-brand-logo__initial {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 100px;
+  font-weight: 800;
+  color: #ffd200;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: .7; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+@keyframes neonPulse {
+  0%, 100% { filter: drop-shadow(0 0 16px rgba(245,158,11,.4)); }
+  50% { filter: drop-shadow(0 0 40px rgba(245,158,11,.7)); }
+}
+
+/* Signage transition */
+.tt-signage-fade-in {
+  animation: fadeIn .6s ease-out;
+}
+
+/* Left-right split for leaderboard + panel */
+.tt-leaderboard--with-panel {
+  display: flex;
+}
+.tt-leaderboard--with-panel .tt-leaderboard__left {
+  flex: 1;
+}
+.tt-between--with-panel {
+  display: flex;
+  height: 100%;
+}
+.tt-between--with-panel .tt-between__panel {
+  flex: 1;
+}
+.tt-results--with-panel {
+  display: flex;
+  height: 100%;
+}
+.tt-results--with-panel .tt-results__panel {
+  flex: 1;
+}
+
+/* Panel divider line */
+.tt-signage-panel-divider {
+  width: 2px;
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,.08), rgba(255,255,255,.08), transparent);
+  margin: 56px 0;
 }
