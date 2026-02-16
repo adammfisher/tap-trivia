@@ -430,6 +430,7 @@
 
     screenEl.innerHTML = `
       <div class="tt-lobby">
+        ${countdownHTML}
         <div class="tt-lobby__left">
           <div class="tt-lobby__logo">${logoHTML('xl')}</div>
           ${barNameHTML('lg')}
@@ -444,7 +445,6 @@
         <div class="tt-lobby__right">
           <div class="tt-lobby__player-label">${count} Players Ready</div>
           <div class="tt-lobby__player-grid">${playerGrid}</div>
-          ${countdownHTML}
         </div>
       </div>`;
   }
