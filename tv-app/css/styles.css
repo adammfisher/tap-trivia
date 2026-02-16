@@ -924,7 +924,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  padding-top: 15px;
+  padding-top: 35px;
 }
 .tt-play__cat-row {
   display: flex;
