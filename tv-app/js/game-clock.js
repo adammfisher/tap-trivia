@@ -6,9 +6,10 @@
  * from a game's start epoch and the current time.
  */
 
-const QUESTION_DURATION_MS = 59000;
+const QUESTION_DURATION_MS = 54000;
 const TOTAL_QUESTIONS = 15;
 const GAME_DURATION_MS = TOTAL_QUESTIONS * QUESTION_DURATION_MS;
+const RESULTS_DURATION_MS = 30000;
 
 const PHASES = {
   CATEGORY_SPLASH: { start: 0,     end: 5000  },
@@ -17,7 +18,7 @@ const PHASES = {
   HINT_1:          { start: 17000, end: 32000 },
   HINT_2:          { start: 32000, end: 44000 },
   REVEAL:          { start: 44000, end: 49000 },
-  SCORES:          { start: 49000, end: 59000 }
+  SCORES:          { start: 49000, end: 54000 }
 };
 
 /**
@@ -170,6 +171,7 @@ if (typeof module !== 'undefined' && module.exports) {
     QUESTION_DURATION_MS,
     TOTAL_QUESTIONS,
     GAME_DURATION_MS,
+    RESULTS_DURATION_MS,
     PHASES,
     DIFFICULTY_RAMP,
     getGameState,

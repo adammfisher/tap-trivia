@@ -65,7 +65,7 @@ body {
   font-family: var(--font-body);
   background: #0a0218;
   color: var(--text-primary);
-  min-height: 100vh;
+  min-height: 100dvh;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
@@ -115,8 +115,8 @@ body::-webkit-scrollbar { display: none; }
 .screen {
   display: none;
   flex-direction: column;
-  height: 100vh;
-  max-height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   overflow: hidden;
   padding-bottom: 70px;
   position: relative;
@@ -434,6 +434,14 @@ body::-webkit-scrollbar { display: none; }
   align-items: center;
   justify-content: space-between;
   padding: var(--sp-lg) var(--sp-lg) 0;
+}
+
+.lobby-countdown {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gold);
+  white-space: nowrap;
 }
 
 .lobby-player-badge {
@@ -1544,6 +1552,62 @@ body::-webkit-scrollbar { display: none; }
   gap: var(--sp-sm);
   font-size: 0.95rem;
   font-weight: 500;
+}
+
+.profile-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-bar-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-glass);
+  border: 1px solid var(--surface-glass-border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+}
+
+.profile-bar-card--active {
+  border-color: var(--blue);
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.profile-bar-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profile-bar-card__name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.profile-bar-card__code {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+.profile-bar-card__join {
+  background: var(--grad-selected);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 16px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.profile-bar-card__badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--green);
 }
 
 .profile-stats {

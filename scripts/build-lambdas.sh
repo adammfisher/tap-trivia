@@ -19,6 +19,9 @@ if [ ! -d "$BACKEND_DIR/node_modules" ]; then
   cd "$BACKEND_DIR" && npm install
 fi
 
+# Dashboard functions that need auth.js
+DASHBOARD_FUNCTIONS="get-dashboard save-signage upload-logo"
+
 # For each Lambda function directory
 for func_dir in "$FUNCTIONS_DIR"/*/; do
   func_name=$(basename "$func_dir")
@@ -27,11 +30,19 @@ for func_dir in "$FUNCTIONS_DIR"/*/; do
   # Create shared directory inside function
   mkdir -p "$func_dir/shared"
 
-  # Copy shared modules
+  # Copy shared modules (all functions get dynamo.js)
   cp "$SHARED_DIR/dynamo.js" "$func_dir/shared/"
   cp "$SHARED_DIR/scoring.js" "$func_dir/shared/"
   cp "$SHARED_DIR/game-clock.js" "$func_dir/shared/"
   cp "$SHARED_DIR/questions.js" "$func_dir/shared/"
+
+  # Copy auth.js to dashboard functions that need it
+  for df in $DASHBOARD_FUNCTIONS; do
+    if [ "$func_name" = "$df" ]; then
+      cp "$SHARED_DIR/auth.js" "$func_dir/shared/"
+      echo "  + auth.js"
+    fi
+  done
 
   # Copy node_modules (AWS SDK for DynamoDB)
   if [ ! -d "$func_dir/node_modules" ]; then

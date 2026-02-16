@@ -27,3 +27,38 @@ output "generate_games_function" {
   description = "generate-games Lambda function name"
   value       = aws_lambda_function.generate_games.function_name
 }
+
+output "player_app_url" {
+  description = "Player app custom domain URL"
+  value       = "https://play.taptrivia.tv"
+}
+
+output "tv_app_url" {
+  description = "TV app custom domain URL"
+  value       = "https://tv.taptrivia.tv"
+}
+
+output "api_custom_url" {
+  description = "API custom domain URL"
+  value       = "https://api.taptrivia.tv"
+}
+
+output "root_url" {
+  description = "Root domain URL"
+  value       = "https://taptrivia.tv"
+}
+
+output "dashboard_cf_domain" {
+  description = "Dashboard app CloudFront domain name"
+  value       = aws_cloudfront_distribution.dashboard_app.domain_name
+}
+
+output "dashboard_cf_dist_id" {
+  description = "Dashboard app CloudFront distribution ID"
+  value       = aws_cloudfront_distribution.dashboard_app.id
+}
+
+output "dashboard_app_url" {
+  description = "Dashboard app custom domain URL"
+  value       = "https://dashboard.taptrivia.tv"
+}

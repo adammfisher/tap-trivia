@@ -136,3 +136,107 @@ resource "aws_s3_bucket_policy" "tv_app" {
 
   depends_on = [aws_s3_bucket_public_access_block.tv_app]
 }
+
+# =============================================================================
+# 4. Logos Bucket
+# =============================================================================
+resource "aws_s3_bucket" "logos" {
+  bucket = "taptrivia-logos"
+
+  tags = {
+    Environment = var.stage
+    Project     = "TapTrivia"
+    Purpose     = "Bar logo images"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "logos" {
+  bucket = aws_s3_bucket.logos.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_policy" "logos" {
+  bucket = aws_s3_bucket.logos.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowCloudFrontOAC"
+        Effect    = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.logos.arn}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.tv_app.arn
+          }
+        }
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket_public_access_block.logos]
+}
+
+# =============================================================================
+# 5. Dashboard Web App Bucket
+# =============================================================================
+resource "aws_s3_bucket" "dashboard_app" {
+  bucket = "taptrivia-dashboard"
+
+  tags = {
+    Environment = var.stage
+    Project     = "TapTrivia"
+    Purpose     = "Dashboard web app static files"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "dashboard_app" {
+  bucket = aws_s3_bucket.dashboard_app.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "dashboard_app" {
+  bucket = aws_s3_bucket.dashboard_app.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_policy" "dashboard_app" {
+  bucket = aws_s3_bucket.dashboard_app.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowCloudFrontOAC"
+        Effect    = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.dashboard_app.arn}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.dashboard_app.arn
+          }
+        }
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket_public_access_block.dashboard_app]
+}

@@ -36,6 +36,8 @@ const ProfileScreen = {
         }
       </div>
 
+      ${this._buildBarHistoryHtml(barCode)}
+
       <div class="profile-section">
         <label class="profile-label">STATS</label>
         <div class="profile-stats">
@@ -91,5 +93,41 @@ const ProfileScreen = {
 
   toggleHowToPlay() {
     document.getElementById('how-to-play').classList.toggle('hidden');
+  },
+
+  _buildBarHistoryHtml(currentBarCode) {
+    const history = Player.getBarHistory();
+    if (history.length === 0) return '';
+
+    const cards = history.map(bar => {
+      const isActive = bar.code === currentBarCode;
+      return `
+        <div class="profile-bar-card ${isActive ? 'profile-bar-card--active' : ''}">
+          <div class="profile-bar-card__info">
+            <div class="profile-bar-card__name">${bar.name}</div>
+            <div class="profile-bar-card__code">${bar.code}</div>
+          </div>
+          ${isActive
+            ? '<span class="profile-bar-card__badge">Current</span>'
+            : `<button class="profile-bar-card__join" onclick="ProfileScreen.joinBar('${bar.code}')">Join</button>`
+          }
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="profile-section">
+        <label class="profile-label">MY BARS</label>
+        <div class="profile-bars">${cards}</div>
+      </div>
+    `;
+  },
+
+  async joinBar(code) {
+    const result = await apiCall('POST', '/bar/join', { barCode: code });
+    if (result && !result.error) {
+      Player.setBar(result.barCode, result.barName);
+      App.showScreen('lobby');
+    }
   }
 };

@@ -20,7 +20,7 @@ const path = require('path');
 const { TABLE, get, put, scan, docClient, DeleteCommand } = require(
   path.resolve(__dirname, '../backend/shared/dynamo')
 );
-const { getGameState, GAME_DURATION_MS } = require(
+const { getGameState, GAME_DURATION_MS, RESULTS_DURATION_MS } = require(
   path.resolve(__dirname, '../backend/shared/game-clock')
 );
 const { selectQuestionsForGame } = require(
@@ -69,10 +69,14 @@ async function start() {
   const existing = await getAdhocGame();
   if (existing) {
     const state = getGameState(existing.startTimeEpoch, Date.now());
-    if (state.gamePhase === 'active' || state.gamePhase === 'pre_game') {
+    // Check if the game is still active, in pre-game, or in the results window
+    const inResultsWindow = state.gamePhase === 'post_game'
+      && (Date.now() - (existing.startTimeEpoch + GAME_DURATION_MS)) < RESULTS_DURATION_MS;
+
+    if (state.gamePhase === 'active' || state.gamePhase === 'pre_game' || inResultsWindow) {
       console.log('  An ad-hoc game is already running!');
       console.log(`  Game ID:    ${existing.gameId}`);
-      console.log(`  Phase:      ${state.gamePhase}`);
+      console.log(`  Phase:      ${inResultsWindow ? 'results_screen' : state.gamePhase}`);
       if (state.questionNumber) console.log(`  Question:   ${state.questionNumber}/15`);
       console.log('\n  Run "node scripts/start-test-game.js stop" first.\n');
       process.exit(1);
@@ -130,8 +134,8 @@ async function start() {
     console.log(`    Q${String(q.num).padStart(2, ' ')}: [${q.difficulty}] ${q.category} -- ${truncated}`);
   }
   console.log('');
-  console.log('  Player app: https://d1qwd1uvh2tnf5.cloudfront.net');
-  console.log('  TV app:     https://d2lthscxe93vr.cloudfront.net');
+  console.log('  Player app: https://play.taptrivia.tv');
+  console.log('  TV app:     https://tv.taptrivia.tv');
   console.log('');
   console.log('  To stop early: node scripts/start-test-game.js stop\n');
 }

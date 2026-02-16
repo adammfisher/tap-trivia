@@ -18,6 +18,7 @@ locals {
     TABLE_ANSWERS        = aws_dynamodb_table.answers.name
     TABLE_PLAYERS        = aws_dynamodb_table.players.name
     TABLE_BARS           = aws_dynamodb_table.bars.name
+    TABLE_SESSIONS       = aws_dynamodb_table.sessions.name
   }
 }
 
@@ -308,7 +309,7 @@ resource "aws_lambda_function" "get_leaderboard" {
 # 9. get-tv-state
 #    Returns the current state for the TV display at a bar.
 #    DynamoDB: Read Games, Read Answers (game-bar-index), Read/Write Bars
-#    Extra env: PLAYER_APP_URL (CloudFront distribution URL)
+#    Extra env: PLAYER_APP_URL (custom domain)
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "get_tv_state" {
   function_name    = "TapTrivia-get-tv-state"
@@ -322,7 +323,7 @@ resource "aws_lambda_function" "get_tv_state" {
 
   environment {
     variables = merge(local.common_environment_variables, {
-      PLAYER_APP_URL = "https://${aws_cloudfront_distribution.player_app.domain_name}"
+      PLAYER_APP_URL = "https://play.taptrivia.tv"
     })
   }
 
@@ -485,4 +486,220 @@ resource "aws_lambda_permission" "generate_games_eventbridge" {
   function_name = aws_lambda_function.generate_games.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.generate_games.arn
+}
+
+# =============================================================================
+# Dashboard Lambda Functions (5 new)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Deployment Packages
+# -----------------------------------------------------------------------------
+
+data "archive_file" "send_otp" {
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/functions/send-otp"
+  output_path = "${path.module}/zip/send-otp.zip"
+}
+
+data "archive_file" "verify_otp" {
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/functions/verify-otp"
+  output_path = "${path.module}/zip/verify-otp.zip"
+}
+
+data "archive_file" "get_dashboard" {
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/functions/get-dashboard"
+  output_path = "${path.module}/zip/get-dashboard.zip"
+}
+
+data "archive_file" "save_signage" {
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/functions/save-signage"
+  output_path = "${path.module}/zip/save-signage.zip"
+}
+
+data "archive_file" "upload_logo" {
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/functions/upload-logo"
+  output_path = "${path.module}/zip/upload-logo.zip"
+}
+
+# -----------------------------------------------------------------------------
+# 12. send-otp
+#     Sends a 6-digit OTP to bar owner's email for dashboard login.
+#     DynamoDB: Read/Write Bars
+#     SES: Send email
+# -----------------------------------------------------------------------------
+resource "aws_lambda_function" "send_otp" {
+  function_name    = "TapTrivia-send-otp"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  memory_size      = 128
+  timeout          = 10
+  filename         = data.archive_file.send_otp.output_path
+  source_code_hash = data.archive_file.send_otp.output_base64sha256
+
+  environment {
+    variables = local.common_environment_variables
+  }
+
+  tags = {
+    Environment = var.stage
+    Project     = "TapTrivia"
+    Function    = "send-otp"
+  }
+}
+
+# -----------------------------------------------------------------------------
+# 13. verify-otp
+#     Verifies OTP and creates a dashboard session token.
+#     DynamoDB: Read/Write Bars, Write Sessions
+# -----------------------------------------------------------------------------
+resource "aws_lambda_function" "verify_otp" {
+  function_name    = "TapTrivia-verify-otp"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  memory_size      = 128
+  timeout          = 10
+  filename         = data.archive_file.verify_otp.output_path
+  source_code_hash = data.archive_file.verify_otp.output_base64sha256
+
+  environment {
+    variables = local.common_environment_variables
+  }
+
+  tags = {
+    Environment = var.stage
+    Project     = "TapTrivia"
+    Function    = "verify-otp"
+  }
+}
+
+# -----------------------------------------------------------------------------
+# 14. get-dashboard
+#     Returns bar profile, signage config, and analytics for dashboard.
+#     DynamoDB: Read Bars, Read Sessions
+# -----------------------------------------------------------------------------
+resource "aws_lambda_function" "get_dashboard" {
+  function_name    = "TapTrivia-get-dashboard"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  memory_size      = 128
+  timeout          = 10
+  filename         = data.archive_file.get_dashboard.output_path
+  source_code_hash = data.archive_file.get_dashboard.output_base64sha256
+
+  environment {
+    variables = local.common_environment_variables
+  }
+
+  tags = {
+    Environment = var.stage
+    Project     = "TapTrivia"
+    Function    = "get-dashboard"
+  }
+}
+
+# -----------------------------------------------------------------------------
+# 15. save-signage
+#     Saves bar's digital signage configuration.
+#     DynamoDB: Read/Write Bars, Read Sessions
+# -----------------------------------------------------------------------------
+resource "aws_lambda_function" "save_signage" {
+  function_name    = "TapTrivia-save-signage"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  memory_size      = 128
+  timeout          = 10
+  filename         = data.archive_file.save_signage.output_path
+  source_code_hash = data.archive_file.save_signage.output_base64sha256
+
+  environment {
+    variables = local.common_environment_variables
+  }
+
+  tags = {
+    Environment = var.stage
+    Project     = "TapTrivia"
+    Function    = "save-signage"
+  }
+}
+
+# -----------------------------------------------------------------------------
+# 16. upload-logo
+#     Processes and uploads bar logo with background removal via Bedrock.
+#     DynamoDB: Read/Write Bars, Read Sessions
+#     S3: Write to taptrivia-logos bucket
+#     Bedrock: Invoke Titan Image Generator
+#     Higher memory (256MB) and timeout (30s) for image processing.
+# -----------------------------------------------------------------------------
+resource "aws_lambda_function" "upload_logo" {
+  function_name    = "TapTrivia-upload-logo"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  memory_size      = 256
+  timeout          = 30
+  filename         = data.archive_file.upload_logo.output_path
+  source_code_hash = data.archive_file.upload_logo.output_base64sha256
+
+  environment {
+    variables = local.common_environment_variables
+  }
+
+  tags = {
+    Environment = var.stage
+    Project     = "TapTrivia"
+    Function    = "upload-logo"
+  }
+}
+
+# -----------------------------------------------------------------------------
+# Dashboard Lambda Permissions — API Gateway Invocation
+# -----------------------------------------------------------------------------
+
+resource "aws_lambda_permission" "send_otp_apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.send_otp.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "verify_otp_apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.verify_otp.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "get_dashboard_apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_dashboard.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "save_signage_apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.save_signage.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "upload_logo_apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.upload_logo.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }

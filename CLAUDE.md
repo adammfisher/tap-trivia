@@ -5,18 +5,20 @@ Live trivia game platform for bars. Synchronized global gameplay every 15 minute
 ## Architecture
 
 ```
-player-app/  → Vanilla JS SPA (mobile web, hosted on CloudFront/S3)
-tv-app/      → Vanilla JS SPA (1920x1080 bar display, CloudFront/S3)
-backend/     → 11 AWS Lambda functions (Node.js 18, DynamoDB)
-terraform/   → All infrastructure as code (10 .tf files)
+player-app/     → Vanilla JS SPA (mobile web, hosted on CloudFront/S3)
+tv-app/         → Vanilla JS SPA (1920x1080 bar display, CloudFront/S3)
+dashboard-app/  → Vanilla JS SPA (bar owner dashboard, CloudFront/S3)
+backend/        → 16 AWS Lambda functions (Node.js 18, DynamoDB)
+terraform/      → All infrastructure as code (11 .tf files)
 ```
 
-**No frameworks. No WebSockets.** Clock-sync + REST polling only (TV polls every 2s, player every 5s). No login — UUID stored in localStorage, sent via `X-Player-ID` header.
+**No frameworks. No WebSockets.** Clock-sync + REST polling only (TV polls every 2s, player every 5s). Players have no login — UUID stored in localStorage, sent via `X-Player-ID` header. Bar owners authenticate via passwordless email OTP.
 
 ## Key URLs
 
-- **API:** `https://rb72ldqh8g.execute-api.us-east-1.amazonaws.com`
-- **Player App:** `https://d1qwd1uvh2tnf5.cloudfront.net`
+- **Player App:** `https://play.taptrivia.tv` (also `https://taptrivia.tv`)
+- **TV App:** `https://tv.taptrivia.tv`
+- **API:** `https://api.taptrivia.tv`
 
 ## Project Structure
 

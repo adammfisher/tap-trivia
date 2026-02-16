@@ -14,7 +14,9 @@ const App = {
     // Bottom nav
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const screen = btn.dataset.screen;
+        let screen = btn.dataset.screen;
+        // "Play" button is context-aware: lobby if at a bar, home otherwise
+        if (screen === 'home' && Player.hasBar()) screen = 'lobby';
         if (screen) App.showScreen(screen);
       });
     });
@@ -22,6 +24,23 @@ const App = {
     // Determine initial screen
     if (!Player.hasName()) {
       this.showScreen('welcome');
+      return;
+    }
+
+    // Check for active game in localStorage (instant rejoin on refresh)
+    const activeGame = Player.getActiveGame();
+    if (activeGame) {
+      const state = getGameState(activeGame.startTimeEpoch, Date.now());
+      if (state.gamePhase === 'active') {
+        this.startGame(activeGame.gameId, activeGame.startTimeEpoch);
+        return;
+      }
+      // Game is over — clear it
+      Player.clearActiveGame();
+    }
+
+    if (Player.hasBar()) {
+      this.showScreen('lobby');
     } else {
       this.showScreen('home');
     }
@@ -44,10 +63,10 @@ const App = {
     const navBtn = document.querySelector(`.nav-btn[data-screen="${screenId}"]`);
     if (navBtn) navBtn.classList.add('active');
 
-    // Show bottom nav only on main screens
+    // Show bottom nav on all screens except onboarding flows
     const nav = document.getElementById('bottom-nav');
-    const mainScreens = ['home', 'results', 'profile'];
-    nav.classList.toggle('hidden', !mainScreens.includes(screenId));
+    const hideNavScreens = ['welcome', 'join-bar'];
+    nav.classList.toggle('hidden', hideNavScreens.includes(screenId));
 
     this.currentScreen = screenId;
 
@@ -70,6 +89,7 @@ const App = {
   },
 
   startGame(gameId, startTimeEpoch) {
+    Player.setActiveGame(gameId, startTimeEpoch);
     this.showScreen('game', gameId, startTimeEpoch);
   }
 };

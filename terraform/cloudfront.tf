@@ -25,6 +25,7 @@ resource "aws_cloudfront_distribution" "player_app" {
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
   comment             = "Tap Trivia - Player App"
+  aliases             = ["play.taptrivia.tv", "taptrivia.tv"]
 
   origin {
     domain_name              = aws_s3_bucket.player_app.bucket_regional_domain_name
@@ -65,7 +66,9 @@ resource "aws_cloudfront_distribution" "player_app" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn      = aws_acm_certificate_validation.main.certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   tags = {
@@ -83,6 +86,7 @@ resource "aws_cloudfront_distribution" "tv_app" {
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
   comment             = "Tap Trivia - TV App"
+  aliases             = ["tv.taptrivia.tv"]
 
   origin {
     domain_name              = aws_s3_bucket.tv_app.bucket_regional_domain_name
@@ -90,8 +94,27 @@ resource "aws_cloudfront_distribution" "tv_app" {
     origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac.id
   }
 
+  origin {
+    domain_name              = aws_s3_bucket.logos.bucket_regional_domain_name
+    origin_id                = "S3-logos"
+    origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac.id
+  }
+
   default_cache_behavior {
     target_origin_id       = "S3-tv-app"
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    compress               = true
+
+    # AWS Managed CachingOptimized policy
+    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+  }
+
+  # Serve logos from the logos S3 bucket via /logos/* path
+  ordered_cache_behavior {
+    path_pattern           = "/logos/*"
+    target_origin_id       = "S3-logos"
     viewer_protocol_policy = "redirect-to-https"
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
@@ -123,12 +146,75 @@ resource "aws_cloudfront_distribution" "tv_app" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn      = aws_acm_certificate_validation.main.certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   tags = {
     Environment = var.stage
     Project     = "TapTrivia"
     App         = "TVApp"
+  }
+}
+
+# =============================================================================
+# 3. Dashboard App Distribution
+# =============================================================================
+resource "aws_cloudfront_distribution" "dashboard_app" {
+  enabled             = true
+  default_root_object = "index.html"
+  price_class         = "PriceClass_100"
+  comment             = "Tap Trivia - Dashboard App"
+  aliases             = ["dashboard.taptrivia.tv"]
+
+  origin {
+    domain_name              = aws_s3_bucket.dashboard_app.bucket_regional_domain_name
+    origin_id                = "S3-dashboard-app"
+    origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac.id
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "S3-dashboard-app"
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    compress               = true
+
+    # AWS Managed CachingOptimized policy
+    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+  }
+
+  # SPA routing: serve index.html for paths that don't match S3 objects
+  custom_error_response {
+    error_code            = 403
+    response_code         = 200
+    response_page_path    = "/index.html"
+    error_caching_min_ttl = 0
+  }
+
+  custom_error_response {
+    error_code            = 404
+    response_code         = 200
+    response_page_path    = "/index.html"
+    error_caching_min_ttl = 0
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn      = aws_acm_certificate_validation.main.certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
+
+  tags = {
+    Environment = var.stage
+    Project     = "TapTrivia"
+    App         = "DashboardApp"
   }
 }

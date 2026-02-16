@@ -8,7 +8,10 @@ const STORAGE_KEYS = {
   PLAYER_NAME: 'tt_player_name',
   BAR_CODE: 'tt_bar_code',
   BAR_NAME: 'tt_bar_name',
-  MUTED: 'tt_muted'
+  MUTED: 'tt_muted',
+  ACTIVE_GAME_ID: 'tt_active_game_id',
+  ACTIVE_GAME_START: 'tt_active_game_start',
+  BAR_HISTORY: 'tt_bar_history'
 };
 
 const Player = {
@@ -40,6 +43,7 @@ const Player = {
   setBar(code, name) {
     localStorage.setItem(STORAGE_KEYS.BAR_CODE, code);
     localStorage.setItem(STORAGE_KEYS.BAR_NAME, name);
+    this.addBarToHistory(code, name);
   },
 
   clearBar() {
@@ -57,5 +61,38 @@ const Player = {
 
   hasBar() {
     return !!localStorage.getItem(STORAGE_KEYS.BAR_CODE);
+  },
+
+  setActiveGame(gameId, startEpoch) {
+    localStorage.setItem(STORAGE_KEYS.ACTIVE_GAME_ID, gameId);
+    localStorage.setItem(STORAGE_KEYS.ACTIVE_GAME_START, String(startEpoch));
+  },
+
+  getActiveGame() {
+    const id = localStorage.getItem(STORAGE_KEYS.ACTIVE_GAME_ID);
+    const start = localStorage.getItem(STORAGE_KEYS.ACTIVE_GAME_START);
+    if (id && start) return { gameId: id, startTimeEpoch: Number(start) };
+    return null;
+  },
+
+  clearActiveGame() {
+    localStorage.removeItem(STORAGE_KEYS.ACTIVE_GAME_ID);
+    localStorage.removeItem(STORAGE_KEYS.ACTIVE_GAME_START);
+  },
+
+  getBarHistory() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.BAR_HISTORY)) || [];
+    } catch { return []; }
+  },
+
+  addBarToHistory(code, name) {
+    let history = this.getBarHistory();
+    // Remove existing entry for this code (will re-add at front)
+    history = history.filter(b => b.code !== code);
+    history.unshift({ code, name, joinedAt: Date.now() });
+    // Cap at 20 bars
+    if (history.length > 20) history = history.slice(0, 20);
+    localStorage.setItem(STORAGE_KEYS.BAR_HISTORY, JSON.stringify(history));
   }
 };

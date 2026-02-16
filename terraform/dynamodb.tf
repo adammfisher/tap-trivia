@@ -287,3 +287,31 @@ resource "aws_dynamodb_table" "game_stats" {
     Table       = "GameStats"
   }
 }
+
+# -----------------------------------------------------------------------------
+# 8. TapTrivia-Sessions
+#    Dashboard session tokens for bar owner authentication.
+#    TTL enabled for automatic session expiry cleanup.
+#    No GSIs needed — sessions are only looked up by token (PK).
+# -----------------------------------------------------------------------------
+resource "aws_dynamodb_table" "sessions" {
+  name         = "TapTrivia-Sessions"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "PK"
+
+  attribute {
+    name = "PK"
+    type = "S"
+  }
+
+  ttl {
+    enabled        = true
+    attribute_name = "ttl"
+  }
+
+  tags = {
+    Environment = var.stage
+    Project     = "TapTrivia"
+    Table       = "Sessions"
+  }
+}

@@ -6,6 +6,8 @@
 
 const LobbyScreen = {
   pollInterval: null,
+  _countdownInterval: null,
+  _nextGameEpoch: null,
 
   show() {
     const barCode = Player.getBarCode();
@@ -34,13 +36,16 @@ const LobbyScreen = {
 
     // Game status
     document.getElementById('lobby-game-status').textContent = 'Waiting for the next game to start...';
+    document.getElementById('lobby-countdown').textContent = '';
 
     // Start polling for game state
     this.startPolling();
+    this._startCountdownTick();
   },
 
   hide() {
     this.stopPolling();
+    this._stopCountdownTick();
   },
 
   startPolling() {
@@ -67,12 +72,50 @@ const LobbyScreen = {
         App.startGame(game.gameId, game.startTimeEpoch);
         return;
       }
+      if (state.gamePhase === 'pre_game') {
+        const statusEl = document.getElementById('lobby-game-status');
+        if (statusEl) {
+          statusEl.textContent = `Next game starts in ${state.secondsUntilStart}s...`;
+        }
+      }
+    }
+
+    // Store next game epoch for the 1-second countdown tick
+    if (game && game.nextGameStartEpoch) {
+      this._nextGameEpoch = game.nextGameStartEpoch;
+    } else if (game && game.startTimeEpoch && game.status !== 'active') {
+      // pre_game: the start time IS the next game
+      this._nextGameEpoch = game.startTimeEpoch;
     }
 
     // Update player count if bar info is available
     if (game && game.activePlayers !== undefined) {
       document.getElementById('lobby-player-count').innerHTML =
         `👥 ${game.activePlayers} player${game.activePlayers !== 1 ? 's' : ''}`;
+    }
+  },
+
+  _startCountdownTick() {
+    this._stopCountdownTick();
+    this._countdownInterval = setInterval(() => this._tickCountdown(), 1000);
+  },
+
+  _stopCountdownTick() {
+    if (this._countdownInterval) {
+      clearInterval(this._countdownInterval);
+      this._countdownInterval = null;
+    }
+  },
+
+  _tickCountdown() {
+    const el = document.getElementById('lobby-countdown');
+    if (!el || !this._nextGameEpoch) return;
+
+    const secsLeft = Math.max(0, Math.ceil((this._nextGameEpoch - Date.now()) / 1000));
+    if (secsLeft > 0) {
+      el.textContent = `Next game in ${secsLeft}s`;
+    } else {
+      el.textContent = 'Starting...';
     }
   }
 };

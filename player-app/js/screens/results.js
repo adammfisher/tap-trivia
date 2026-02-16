@@ -117,7 +117,7 @@ const ResultsScreen = {
       <div id="tab-global" class="tab-content">
         ${globalLeaderHtml}
       </div>
-      <button class="btn-next-game" onclick="App.showScreen('home')">
+      <button class="btn-next-game" onclick="App.showScreen(Player.hasBar() ? 'lobby' : 'home')">
         Next Game →
       </button>
     `;

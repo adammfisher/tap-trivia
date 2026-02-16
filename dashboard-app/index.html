@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TapTrivia — Bar Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fredoka:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=20260215a">
+</head>
+<body>
+
+  <!-- Auth screens (login flow) -->
+  <section id="screen-login" class="screen"></section>
+
+  <!-- Dashboard layout (sidebar + content) -->
+  <div id="dashboard-layout" class="dashboard-layout hidden">
+    <aside id="sidebar" class="sidebar"></aside>
+    <main id="main-content" class="main-content">
+      <div id="screen-dashboard" class="dash-screen"></div>
+      <div id="screen-signage" class="dash-screen"></div>
+      <div id="screen-logo" class="dash-screen"></div>
+    </main>
+  </div>
+
+  <script src="js/config.js?v=20260215a"></script>
+  <script src="js/api.js?v=20260215a"></script>
+  <script src="js/auth.js?v=20260215a"></script>
+  <script src="js/screens/login.js?v=20260215a"></script>
+  <script src="js/screens/dashboard.js?v=20260215a"></script>
+  <script src="js/screens/signage-editor.js?v=20260215a"></script>
+  <script src="js/screens/logo-upload.js?v=20260215a"></script>
+  <script src="js/app.js?v=20260215a"></script>
+</body>
+</html>

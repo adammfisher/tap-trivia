@@ -29,6 +29,14 @@
   let localQuestionNumber = null;
   let rafId = null;
 
+  // Signage state
+  let signageSlides = [];
+  let signageRotationSpeed = 15;
+  let signageCurrentIndex = 0;
+  let signageRotationTimer = null;
+  let barLogoUrl = null;
+  let barLogoHash = null;
+
   // DOM refs
   const screenEl = document.getElementById('tt-screen');
   const errorOverlay = document.getElementById('tt-error-overlay');
@@ -308,6 +316,407 @@
   }
 
   // ═══════════════════════════════════════════════════════════════
+  // SIGNAGE — Full-Screen & In-Game Panel Renderers
+  // ═══════════════════════════════════════════════════════════════
+
+  /** Bar logo HTML for signage contexts */
+  function signageBarLogoHTML(context) {
+    if (barLogoUrl) {
+      return `<img src="${barLogoUrl}" alt="${barName}">`;
+    }
+    const initial = barName ? barName.charAt(0).toUpperCase() : 'B';
+    const cls = context === 'panel' ? 'tt-signage-panel__bar-initial' : 'tt-signage-header__bar-initial';
+    return `<span class="${cls}">${initial}</span>`;
+  }
+
+  /** Full-screen signage header (bar logo + name + TapTrivia logo) */
+  function signageHeaderHTML() {
+    return `
+      <div class="tt-signage-header">
+        <div class="tt-signage-header__bar">
+          <div class="tt-signage-header__bar-logo">${signageBarLogoHTML('header')}</div>
+          <div>
+            <div class="tt-signage-header__bar-name">${barName}</div>
+          </div>
+        </div>
+        ${logoHTML('sm')}
+      </div>`;
+  }
+
+  /** Panel header for in-game signage */
+  function signagePanelHeaderHTML() {
+    return `
+      <div class="tt-signage-panel__header">
+        <div class="tt-signage-panel__bar-logo">${signageBarLogoHTML('panel')}</div>
+        <div>
+          <div class="tt-signage-panel__bar-name">${barName}</div>
+        </div>
+      </div>`;
+  }
+
+  /** Panel QR badge */
+  function signagePanelQRHTML() {
+    return `
+      <div class="tt-signage-panel__qr">
+        ${qrCodeHTML(88)}
+        <div>
+          <div class="tt-signage-panel__qr-text">Join Trivia!</div>
+          <div class="tt-signage-panel__qr-url">taptrivia.com</div>
+          <div class="tt-signage-panel__qr-code-row">
+            <span class="tt-signage-panel__qr-code-label">CODE</span>
+            <span class="tt-signage-panel__qr-code">${barCode}</span>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  /** Get active signage slides filtered by day-of-week */
+  function getActiveSlides() {
+    const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const today = days[new Date().getDay()];
+    return signageSlides.filter(s => {
+      if (!s.enabled) return false;
+      if (s.days && s.days.length > 0 && !s.days.includes(today)) return false;
+      return true;
+    });
+  }
+
+  /** Start signage rotation timer */
+  function startSignageRotation() {
+    stopSignageRotation();
+    const active = getActiveSlides();
+    if (active.length <= 1) return;
+    signageRotationTimer = setInterval(() => {
+      signageCurrentIndex = (signageCurrentIndex + 1) % getActiveSlides().length;
+      if (currentScreen === 'idle') renderIdle();
+    }, signageRotationSpeed * 1000);
+  }
+
+  /** Stop signage rotation */
+  function stopSignageRotation() {
+    if (signageRotationTimer) {
+      clearInterval(signageRotationTimer);
+      signageRotationTimer = null;
+    }
+  }
+
+  // --- Full-Screen Signage Renderers (7 templates, all at 2×) ---
+
+  const SIGNAGE_FS = {
+    specials(d) {
+      const items = (d.menuItems || []).map(item => `
+        <div class="tt-signage-menu-item">
+          <span class="tt-signage-menu-item__icon">${item.icon || ''}</span>
+          <div style="flex:1">
+            <div class="tt-signage-menu-item__name">${item.name || ''}</div>
+            <div class="tt-signage-menu-item__desc">${item.desc || ''}</div>
+          </div>
+          <div class="tt-signage-menu-item__price">${item.price || ''}</div>
+        </div>`).join('');
+      return `
+        <div class="tt-signage-fs tt-signage-fade-in">
+          ${signageHeaderHTML()}
+          <div class="tt-signage-content">
+            <div style="flex:1.1;display:flex;flex-direction:column;justify-content:center;padding:0 80px">
+              <div class="tt-signage-label" style="color:#f59e0b">${d.emoji || ''} ${d.label || "Today's Specials"}</div>
+              <div class="tt-signage-headline">${d.headline || ''}<br><span class="tt-signage-headline--gold">${d.subheadline || ''}</span></div>
+              <div class="tt-signage-featured">
+                <div>
+                  <div class="tt-signage-featured__name">${d.featuredName || ''}</div>
+                  <div class="tt-signage-featured__desc">${d.featuredDesc || ''}</div>
+                </div>
+                <div class="tt-signage-featured__price">${d.featuredPrice || ''}</div>
+              </div>
+            </div>
+            <div style="flex:0.9;display:flex;flex-direction:column;justify-content:center;padding:0 72px 0 0;gap:24px">
+              ${items}
+            </div>
+          </div>
+          ${qrBadgeHTML('br')}
+        </div>`;
+    },
+
+    happyhour(d) {
+      const deals = (d.deals || []).map(deal => `
+        <div class="tt-signage-deal">
+          <div class="tt-signage-deal__value" style="color:${deal.color || '#f59e0b'}">${deal.deal || ''}</div>
+          <div class="tt-signage-deal__item">${deal.item || ''}</div>
+        </div>`).join('');
+      return `
+        <div class="tt-signage-fs tt-signage-fade-in">
+          ${signageHeaderHTML()}
+          <div class="tt-signage-center">
+            <div class="tt-signage-label" style="color:#f59e0b;animation:neonPulse 2s ease-in-out infinite">${d.emoji || ''} Happy Hour</div>
+            <div class="tt-signage-headline">${d.timeRange || ''}</div>
+            <div class="tt-signage-subtitle">${d.frequency || ''}</div>
+            <div class="tt-signage-deals">${deals}</div>
+          </div>
+          ${qrBadgeHTML('bl')}
+        </div>`;
+    },
+
+    event(d) {
+      const prizes = (d.prizes || []).map(p => `
+        <div class="tt-signage-prize">
+          <div class="tt-signage-prize__emoji">${p.emoji || ''}</div>
+          <div class="tt-signage-prize__place">${p.place || ''}</div>
+          <div class="tt-signage-prize__name">${p.prize || ''}</div>
+        </div>`).join('');
+      return `
+        <div class="tt-signage-fs tt-signage-fade-in">
+          ${signageHeaderHTML()}
+          <div class="tt-signage-center">
+            <div class="tt-signage-big-emoji">${d.emoji || ''}</div>
+            <div class="tt-signage-label" style="color:#667eea">${d.when || ''}</div>
+            <div class="tt-signage-headline">${d.eventName || ''}</div>
+            <div class="tt-signage-subtitle">${d.details || ''}</div>
+            <div class="tt-signage-prizes">${prizes}</div>
+          </div>
+          ${qrBadgeHTML('bl')}
+        </div>`;
+    },
+
+    brand(d) {
+      const hours = (d.hours || []).map(h => `
+        <div style="text-align:center">
+          <div class="tt-signage-hours__label">${h.label || ''}</div>
+          <div class="tt-signage-hours__value">${h.hours || ''}</div>
+        </div>`).join('');
+      const logoInner = barLogoUrl
+        ? `<img src="${barLogoUrl}" alt="${barName}">`
+        : `<span class="tt-signage-brand-logo__initial">${barName ? barName.charAt(0).toUpperCase() : 'B'}</span>`;
+      return `
+        <div class="tt-signage-fs tt-signage-fade-in">
+          <div class="tt-signage-center">
+            <div class="tt-signage-brand-logo">${logoInner}</div>
+            <div class="tt-signage-headline">${barName}</div>
+            <div class="tt-signage-subtitle" style="letter-spacing:4px;text-transform:uppercase;font-size:32px">${d.tagline || ''}</div>
+            <div class="tt-signage-divider"></div>
+            <div class="tt-signage-hours">${hours}</div>
+          </div>
+          <div class="tt-signage-powered">
+            <div class="tt-signage-powered__inner">
+              ${logoHTML('sm')}
+              <div class="tt-signage-powered__sep"></div>
+              <span class="tt-signage-powered__text">Powered by TapTrivia</span>
+            </div>
+          </div>
+        </div>`;
+    },
+
+    announcement(d) {
+      return `
+        <div class="tt-signage-fs tt-signage-fade-in">
+          ${signageHeaderHTML()}
+          <div class="tt-signage-center">
+            <div class="tt-signage-big-emoji">${d.emoji || ''}</div>
+            <div class="tt-signage-headline">${d.headline || ''}</div>
+            <div class="tt-signage-body">${d.message || ''}</div>
+            ${d.subtext ? `<div class="tt-signage-subtext">${d.subtext}</div>` : ''}
+          </div>
+          ${qrBadgeHTML('bl')}
+        </div>`;
+    },
+
+    sports(d) {
+      return `
+        <div class="tt-signage-fs tt-signage-fade-in">
+          ${signageHeaderHTML()}
+          <div class="tt-signage-center">
+            <div class="tt-signage-big-emoji">${d.emoji || ''}</div>
+            <div class="tt-signage-label" style="color:#ff4757">${d.headline || 'Game Day'}</div>
+            <div class="tt-signage-headline">${d.matchup || ''}</div>
+            <div class="tt-signage-subtitle">${d.when || ''}</div>
+            <div class="tt-signage-promo">${d.promo || ''}</div>
+            ${d.tagline ? `<div class="tt-signage-tagline">${d.tagline}</div>` : ''}
+          </div>
+          ${qrBadgeHTML('bl')}
+        </div>`;
+    },
+
+    custom(d) {
+      const items = (d.items || []).map(item => `
+        <div class="tt-signage-item">
+          <span class="tt-signage-item__emoji">${item.emoji || ''}</span>
+          <span class="tt-signage-item__text">${item.text || ''}</span>
+        </div>`).join('');
+      return `
+        <div class="tt-signage-fs tt-signage-fade-in">
+          ${signageHeaderHTML()}
+          <div class="tt-signage-center">
+            <div class="tt-signage-big-emoji">${d.emoji || ''}</div>
+            <div class="tt-signage-headline">${d.headline || ''}</div>
+            <div class="tt-signage-body">${d.body || ''}</div>
+            ${items ? `<div class="tt-signage-items">${items}</div>` : ''}
+          </div>
+          ${qrBadgeHTML('bl')}
+        </div>`;
+    },
+  };
+
+  // --- In-Game Panel Renderers (7 templates, 680px at 2×) ---
+
+  const SIGNAGE_PANEL = {
+    specials(d) {
+      const items = (d.menuItems || []).map(item => `
+        <div class="tt-signage-panel__menu-item">
+          <span class="tt-signage-panel__menu-icon">${item.icon || ''}</span>
+          <div style="flex:1;min-width:0">
+            <div class="tt-signage-panel__menu-name">${item.name || ''}</div>
+            <div class="tt-signage-panel__menu-desc">${item.desc || ''}</div>
+          </div>
+          <div class="tt-signage-panel__menu-price">${item.price || ''}</div>
+        </div>`).join('');
+      return `
+        <div class="tt-signage-panel__inner">
+          ${signagePanelHeaderHTML()}
+          <div class="tt-signage-panel__label" style="color:#f59e0b">${d.emoji || ''} ${d.label || "Tonight's Specials"}</div>
+          <div class="tt-signage-panel__featured">
+            <div>
+              <div class="tt-signage-panel__featured-name">${d.featuredName || ''}</div>
+              <div class="tt-signage-panel__featured-desc">${d.featuredDesc || ''}</div>
+            </div>
+            <div class="tt-signage-panel__featured-price">${d.featuredPrice || ''}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;flex:1">${items}</div>
+          ${signagePanelQRHTML()}
+        </div>`;
+    },
+
+    happyhour(d) {
+      const deals = (d.deals || []).map(deal => `
+        <div class="tt-signage-panel__deal">
+          <div class="tt-signage-panel__deal-value" style="color:${deal.color || '#f59e0b'}">${deal.deal || ''}</div>
+          <div class="tt-signage-panel__deal-item">${deal.item || ''}</div>
+        </div>`).join('');
+      return `
+        <div class="tt-signage-panel__inner">
+          ${signagePanelHeaderHTML()}
+          <div class="tt-signage-panel__label" style="color:#e879f9">${d.emoji || ''} Happy Hour</div>
+          <div class="tt-signage-panel__headline">${d.timeRange || ''}</div>
+          <div class="tt-signage-panel__subtitle">${d.frequency || ''}</div>
+          <div style="display:flex;flex-direction:column;gap:16px;flex:1">${deals}</div>
+          ${signagePanelQRHTML()}
+        </div>`;
+    },
+
+    event(d) {
+      const prizes = (d.prizes || []).map(p => `
+        <div class="tt-signage-panel__prize">
+          <span class="tt-signage-panel__prize-emoji">${p.emoji || ''}</span>
+          <div style="flex:1;text-align:left">
+            <div class="tt-signage-panel__prize-place">${p.place || ''}</div>
+            <div class="tt-signage-panel__prize-name">${p.prize || ''}</div>
+          </div>
+        </div>`).join('');
+      return `
+        <div class="tt-signage-panel__inner">
+          ${signagePanelHeaderHTML()}
+          <div class="tt-signage-panel__label" style="color:#667eea">${d.emoji || ''} Coming Up</div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">
+            <div class="tt-signage-panel__emoji">${d.emoji || ''}</div>
+            <div class="tt-signage-panel__label" style="color:#667eea">${d.when || ''}</div>
+            <div class="tt-signage-panel__headline">${d.eventName || ''}</div>
+            <div class="tt-signage-panel__subtitle">${d.details || ''}</div>
+            <div style="display:flex;flex-direction:column;gap:12px;width:100%;padding:0 12px">${prizes}</div>
+          </div>
+          ${signagePanelQRHTML()}
+        </div>`;
+    },
+
+    brand(d) {
+      const hours = (d.hours || []).map(h => `
+        <div class="tt-signage-panel__hours-row">
+          <span class="tt-signage-panel__hours-label">${h.label || ''}</span>
+          <span class="tt-signage-panel__hours-value">${h.hours || ''}</span>
+        </div>`).join('');
+      const logoInner = barLogoUrl
+        ? `<img src="${barLogoUrl}" alt="${barName}" style="width:100%;height:100%;object-fit:cover">`
+        : `<span style="font-family:'Fredoka',sans-serif;font-size:48px;font-weight:800;color:#ffd200">${barName ? barName.charAt(0).toUpperCase() : 'B'}</span>`;
+      return `
+        <div class="tt-signage-panel__inner" style="align-items:center;justify-content:center;text-align:center">
+          <div class="tt-signage-brand-logo" style="width:160px;height:160px;border-radius:32px;margin-bottom:28px">${logoInner}</div>
+          <div class="tt-signage-panel__headline">${barName}</div>
+          <div class="tt-signage-panel__subtitle" style="letter-spacing:2px;text-transform:uppercase;font-size:20px">${d.tagline || ''}</div>
+          <div class="tt-signage-divider" style="width:80px;height:4px;margin:24px auto"></div>
+          <div style="width:100%">${hours}</div>
+          <div style="margin-top:auto">${signagePanelQRHTML()}</div>
+        </div>`;
+    },
+
+    announcement(d) {
+      return `
+        <div class="tt-signage-panel__inner">
+          ${signagePanelHeaderHTML()}
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">
+            <div class="tt-signage-panel__emoji">${d.emoji || ''}</div>
+            <div class="tt-signage-panel__headline">${d.headline || ''}</div>
+            <div class="tt-signage-panel__body">${d.message || ''}</div>
+            ${d.subtext ? `<div class="tt-signage-panel__muted">${d.subtext}</div>` : ''}
+          </div>
+          ${signagePanelQRHTML()}
+        </div>`;
+    },
+
+    sports(d) {
+      return `
+        <div class="tt-signage-panel__inner" style="text-align:center">
+          ${signagePanelHeaderHTML()}
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center">
+            <div class="tt-signage-panel__emoji">${d.emoji || ''}</div>
+            <div class="tt-signage-panel__label" style="color:#ff4757">${d.headline || 'Game Day'}</div>
+            <div class="tt-signage-panel__headline">${d.matchup || ''}</div>
+            <div class="tt-signage-panel__subtitle">${d.when || ''}</div>
+            <div class="tt-signage-panel__promo">${d.promo || ''}</div>
+            ${d.tagline ? `<div class="tt-signage-panel__muted" style="font-style:italic">${d.tagline}</div>` : ''}
+          </div>
+          ${signagePanelQRHTML()}
+        </div>`;
+    },
+
+    custom(d) {
+      const items = (d.items || []).map(item => `
+        <div class="tt-signage-panel__item">
+          <span class="tt-signage-panel__item-emoji">${item.emoji || ''}</span>
+          <span class="tt-signage-panel__item-text">${item.text || ''}</span>
+        </div>`).join('');
+      return `
+        <div class="tt-signage-panel__inner">
+          ${signagePanelHeaderHTML()}
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">
+            <div class="tt-signage-panel__emoji">${d.emoji || ''}</div>
+            <div class="tt-signage-panel__headline">${d.headline || ''}</div>
+            <div class="tt-signage-panel__body">${d.body || ''}</div>
+            ${items ? `<div style="display:flex;flex-direction:column;gap:10px;width:100%;padding:0 8px">${items}</div>` : ''}
+          </div>
+          ${signagePanelQRHTML()}
+        </div>`;
+    },
+  };
+
+  /** Render a full-screen signage slide */
+  function renderSignageFullScreen(slide) {
+    const renderer = SIGNAGE_FS[slide.template];
+    if (!renderer) return null;
+    return renderer(slide.data || {});
+  }
+
+  /** Get signage panel HTML with divider for in-game screens */
+  function signagePanelWrapHTML() {
+    const active = getActiveSlides();
+    if (active.length === 0) return '';
+    const idx = signageCurrentIndex % active.length;
+    const slide = active[idx];
+    const renderer = SIGNAGE_PANEL[slide.template];
+    if (!renderer) return '';
+    return `
+      <div class="tt-signage-panel-divider"></div>
+      <div class="tt-signage-panel">
+        ${renderer(slide.data || {})}
+      </div>`;
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   // SCREEN RENDERERS
   // ═══════════════════════════════════════════════════════════════
 
@@ -331,6 +740,8 @@
       return; // All other screens: static, no update needed
     }
 
+    // Stop signage rotation when leaving idle
+    if (currentScreen === 'idle' && screen !== 'idle') stopSignageRotation();
     // Stop local clock when leaving playing screen
     if (currentScreen === 'playing' && screen !== 'playing') stopLocalClock();
 
@@ -361,8 +772,19 @@
     }
   }
 
-  /** IDLE / ATTRACT SCREEN */
+  /** IDLE / ATTRACT SCREEN — shows signage slides when available */
   function renderIdle() {
+    const active = getActiveSlides();
+    if (active.length > 0) {
+      const idx = signageCurrentIndex % active.length;
+      const html = renderSignageFullScreen(active[idx]);
+      if (html) {
+        screenEl.innerHTML = html;
+        if (!signageRotationTimer && active.length > 1) startSignageRotation();
+        return;
+      }
+    }
+    stopSignageRotation();
     screenEl.innerHTML = `
       <div class="tt-idle">
         <div class="tt-idle__logo">${logoHTML('xl')}</div>
@@ -631,20 +1053,21 @@
       </div>`;
   }
 
-  /** BETWEEN QUESTIONS / SCOREBOARD FLASH — left-half-only layout */
+  /** BETWEEN QUESTIONS / SCOREBOARD FLASH — left-half + optional signage panel */
   function renderBetween(state) {
     const scores = state.scores || [];
     const num = state.questionNumber || 1;
     const totalQ = state.totalQuestions || 15;
     const nextIn = state.nextQuestionIn || 5;
     const isLastQuestion = num >= totalQ;
+    const panel = signagePanelWrapHTML();
 
     const countdownText = isLastQuestion
       ? 'Final results coming...'
       : `Next question in <span class="tt-between__countdown-num">${nextIn}</span>s...`;
 
     screenEl.innerHTML = `
-      <div class="tt-between tt-between--half">
+      <div class="tt-between tt-between--half${panel ? ' tt-between--with-panel' : ''}">
         <div class="tt-between__panel">
           ${logoHTML('sm')}
           ${barNameHTML('md')}
@@ -652,41 +1075,76 @@
           <div class="tt-between__section-label">Standings</div>
           ${leaderboardRowsHTML(scores.slice(0, 5), 1, { compact: true })}
           <div id="tv-between-countdown" class="tt-between__next">${countdownText}</div>
-          ${qrBadgeHTML('inline')}
+          ${panel ? '' : qrBadgeHTML('inline')}
         </div>
+        ${panel}
       </div>`;
   }
 
-  /** LEADERBOARD SCREEN — v4 lines 598-637 */
+  /** LEADERBOARD SCREEN — v4 lines 598-637 + signage panel */
   function renderLeaderboard(state) {
     const scores = state.scores || [];
     const num = state.questionNumber || 1;
-    // Show full list when fewer than 4 players, otherwise show positions 4-10
-    const listScores = scores.length < 4 ? scores.slice(0, 10) : scores.slice(3, 10);
-    const listStartRank = scores.length < 4 ? 1 : 4;
+    const panel = signagePanelWrapHTML();
 
-    screenEl.innerHTML = `
-      <div class="tt-leaderboard">
-        <div class="tt-leaderboard__left">
-          ${logoHTML('md')}
-          ${barNameHTML('lg')}
-          <div class="tt-leaderboard__after">After Question ${num}</div>
-          ${podiumHTML(scores)}
-        </div>
-        <div class="tt-leaderboard__right">
-          <div class="tt-leaderboard__top-label">Top 10</div>
-          ${leaderboardRowsHTML(listScores, listStartRank)}
-          <div class="tt-leaderboard__next">Next question in 5s...</div>
-          ${sidebarQRBadgeHTML()}
-        </div>
-      </div>`;
+    if (panel) {
+      // With signage: compact left side (podium + 4th/5th) + signage panel right
+      const runners = scores.slice(3, 5);
+      let runnersHTML = '';
+      if (runners.length > 0) {
+        runnersHTML = '<div style="display:flex;gap:20px;width:100%;max-width:760px;padding:0 16px;margin-top:8px">';
+        runners.forEach((p, i) => {
+          const name = p.name || p.playerName || 'Player';
+          runnersHTML += `
+            <div style="flex:1;display:flex;align-items:center;gap:12px;padding:12px 20px;background:rgba(255,255,255,.04);border-radius:16px;border:1px solid rgba(255,255,255,.04)">
+              <span style="font-family:'Fredoka',sans-serif;font-size:24px;font-weight:700;color:rgba(255,255,255,.25);width:28px">${i + 4}</span>
+              ${avatarHTML(name, { size: 'xs' })}
+              <span style="flex:1;font-size:20px;font-weight:500;color:rgba(255,255,255,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
+              <span style="font-family:'Fredoka',sans-serif;font-size:20px;font-weight:700;color:#ffd200">${(p.score || 0).toLocaleString()}</span>
+            </div>`;
+        });
+        runnersHTML += '</div>';
+      }
+      screenEl.innerHTML = `
+        <div class="tt-leaderboard tt-leaderboard--with-panel">
+          <div class="tt-leaderboard__left">
+            ${logoHTML('md')}
+            ${barNameHTML('lg')}
+            <div class="tt-leaderboard__after">After Question ${num}</div>
+            ${podiumHTML(scores)}
+            ${runnersHTML}
+            <div class="tt-leaderboard__next">Next question in 5s...</div>
+          </div>
+          ${panel}
+        </div>`;
+    } else {
+      // No signage: original layout with Top 10 sidebar
+      const listScores = scores.length < 4 ? scores.slice(0, 10) : scores.slice(3, 10);
+      const listStartRank = scores.length < 4 ? 1 : 4;
+      screenEl.innerHTML = `
+        <div class="tt-leaderboard">
+          <div class="tt-leaderboard__left">
+            ${logoHTML('md')}
+            ${barNameHTML('lg')}
+            <div class="tt-leaderboard__after">After Question ${num}</div>
+            ${podiumHTML(scores)}
+          </div>
+          <div class="tt-leaderboard__right">
+            <div class="tt-leaderboard__top-label">Top 10</div>
+            ${leaderboardRowsHTML(listScores, listStartRank)}
+            <div class="tt-leaderboard__next">Next question in 5s...</div>
+            ${sidebarQRBadgeHTML()}
+          </div>
+        </div>`;
+    }
   }
 
-  /** RESULTS / GAME OVER SCREEN — left-half-only layout */
+  /** RESULTS / GAME OVER SCREEN — left-half + optional signage panel */
   function renderResults(state) {
     const scores = state.scores || [];
     const totalQ = state.totalQuestions || 15;
     const playerCount = state.playerCount || scores.length;
+    const panel = signagePanelWrapHTML();
 
     // Countdown to next game
     let countdownText = '';
@@ -699,7 +1157,7 @@
 
     screenEl.innerHTML = `
       ${confettiHTML(24)}
-      <div class="tt-results tt-results--half">
+      <div class="tt-results tt-results--half${panel ? ' tt-results--with-panel' : ''}">
         <div class="tt-results__panel">
           ${barNameHTML('md')}
           <div class="tt-results__trophy">🏆</div>
@@ -708,8 +1166,9 @@
           ${countdownText}
           <div class="tt-results__standings-label">Final Standings</div>
           ${leaderboardRowsHTML(scores.slice(0, 5), 1, { compact: true })}
-          ${qrBadgeHTML('inline')}
+          ${panel ? '' : qrBadgeHTML('inline')}
         </div>
+        ${panel}
       </div>`;
   }
 
@@ -960,7 +1419,18 @@
     consecutiveErrors = 0;
     hideError();
 
-    // Translate API response → gameState object for renderScreen
+    // Capture signage configuration
+    if (state.signage) {
+      signageSlides = state.signage.slides || [];
+      signageRotationSpeed = state.signage.rotationSpeed || 15;
+    }
+
+    // Update logo if hash changed (avoids redundant downloads)
+    if (state.logoHash && state.logoHash !== barLogoHash) {
+      barLogoHash = state.logoHash;
+      barLogoUrl = state.logoUrl || null;
+    }
+
     // Capture gameStartEpoch for local clock
     if (state.gameStartEpoch) {
       localGameStartEpoch = state.gameStartEpoch;

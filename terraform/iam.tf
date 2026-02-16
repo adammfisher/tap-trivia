@@ -79,3 +79,72 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
     ]
   })
 }
+
+# -----------------------------------------------------------------------------
+# SES Policy
+# Allows Lambda functions to send emails via SES for OTP and welcome emails.
+# -----------------------------------------------------------------------------
+resource "aws_iam_role_policy" "lambda_ses" {
+  name = "TapTrivia-SES"
+  role = aws_iam_role.lambda_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ses:SendEmail",
+          "ses:SendRawEmail"
+        ]
+        Resource = "arn:aws:ses:us-east-1:*:identity/taptrivia.tv"
+      }
+    ]
+  })
+}
+
+# -----------------------------------------------------------------------------
+# S3 Logos Bucket Policy
+# Allows Lambda functions to read/write bar logos in the logos bucket.
+# -----------------------------------------------------------------------------
+resource "aws_iam_role_policy" "lambda_s3_logos" {
+  name = "TapTrivia-S3-Logos"
+  role = aws_iam_role.lambda_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject"
+        ]
+        Resource = "arn:aws:s3:::taptrivia-logos/*"
+      }
+    ]
+  })
+}
+
+# -----------------------------------------------------------------------------
+# Bedrock Policy
+# Allows Lambda functions to invoke Titan Image Generator for logo processing.
+# -----------------------------------------------------------------------------
+resource "aws_iam_role_policy" "lambda_bedrock" {
+  name = "TapTrivia-Bedrock"
+  role = aws_iam_role.lambda_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "bedrock:InvokeModel"
+        ]
+        Resource = "arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-image-generator-v2:0"
+      }
+    ]
+  })
+}

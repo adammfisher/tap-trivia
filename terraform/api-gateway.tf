@@ -219,3 +219,87 @@ resource "aws_apigatewayv2_route" "update_player" {
   route_key = "PUT /player/{playerId}"
   target    = "integrations/${aws_apigatewayv2_integration.get_player.id}"
 }
+
+# =============================================================================
+# Dashboard Routes
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# POST /dashboard/auth/otp → send-otp
+# -----------------------------------------------------------------------------
+resource "aws_apigatewayv2_integration" "send_otp" {
+  api_id                 = aws_apigatewayv2_api.main.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.send_otp.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "send_otp" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "POST /dashboard/auth/otp"
+  target    = "integrations/${aws_apigatewayv2_integration.send_otp.id}"
+}
+
+# -----------------------------------------------------------------------------
+# POST /dashboard/auth/verify → verify-otp
+# -----------------------------------------------------------------------------
+resource "aws_apigatewayv2_integration" "verify_otp" {
+  api_id                 = aws_apigatewayv2_api.main.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.verify_otp.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "verify_otp" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "POST /dashboard/auth/verify"
+  target    = "integrations/${aws_apigatewayv2_integration.verify_otp.id}"
+}
+
+# -----------------------------------------------------------------------------
+# GET /dashboard/data → get-dashboard
+# -----------------------------------------------------------------------------
+resource "aws_apigatewayv2_integration" "get_dashboard" {
+  api_id                 = aws_apigatewayv2_api.main.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.get_dashboard.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "get_dashboard" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "GET /dashboard/data"
+  target    = "integrations/${aws_apigatewayv2_integration.get_dashboard.id}"
+}
+
+# -----------------------------------------------------------------------------
+# PUT /dashboard/signage → save-signage
+# -----------------------------------------------------------------------------
+resource "aws_apigatewayv2_integration" "save_signage" {
+  api_id                 = aws_apigatewayv2_api.main.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.save_signage.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "save_signage" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "PUT /dashboard/signage"
+  target    = "integrations/${aws_apigatewayv2_integration.save_signage.id}"
+}
+
+# -----------------------------------------------------------------------------
+# POST /dashboard/logo → upload-logo
+# -----------------------------------------------------------------------------
+resource "aws_apigatewayv2_integration" "upload_logo" {
+  api_id                 = aws_apigatewayv2_api.main.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.upload_logo.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "upload_logo" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "POST /dashboard/logo"
+  target    = "integrations/${aws_apigatewayv2_integration.upload_logo.id}"
+}

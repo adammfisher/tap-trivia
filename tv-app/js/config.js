@@ -1,6 +1,6 @@
-// tv-app/js/config.js — updated after Terraform deploy with real values
+// tv-app/js/config.js
 const CONFIG = {
-  API_BASE: 'https://rb72ldqh8g.execute-api.us-east-1.amazonaws.com',
-  PLAYER_APP_URL: 'https://d1qwd1uvh2tnf5.cloudfront.net',
+  API_BASE: 'https://api.taptrivia.tv',
+  PLAYER_APP_URL: 'https://play.taptrivia.tv',
   POLL_INTERVAL: 2000  // 2 seconds
 };

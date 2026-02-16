@@ -65,11 +65,13 @@ const QuestionScreen = {
     const state = getGameState(this.gameStartEpoch, Date.now());
 
     if (state.gamePhase === 'post_game') {
+      Player.clearActiveGame();
+
       // Check if another game is coming soon — stay in-game if so
       const nextGameStart = getNextGameTime(Date.now());
       const secsUntilNext = Math.ceil((nextGameStart - Date.now()) / 1000);
 
-      if (secsUntilNext > 0 && secsUntilNext <= 60) {
+      if (secsUntilNext > 0 && secsUntilNext <= 120) {
         // Next game is imminent — show break countdown and auto-transition
         this._showBreakCountdown(nextGameStart);
         return;

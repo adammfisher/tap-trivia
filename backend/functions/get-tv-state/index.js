@@ -1,7 +1,7 @@
 'use strict';
 
 const { TABLE, get, query, update } = require('./shared/dynamo');
-const { getGameState, getNextGameTime, gameTimeslotPK, GAME_DURATION_MS } = require('./shared/game-clock');
+const { getGameState, getNextGameTime, gameTimeslotPK, GAME_DURATION_MS, RESULTS_DURATION_MS } = require('./shared/game-clock');
 const { calculatePoints } = require('./shared/scoring');
 
 function response(statusCode, body) {
@@ -212,11 +212,19 @@ exports.handler = async (event) => {
 
     // --- Ad-hoc test game override ---
     let game = null;
+    let isAdhocResultsWindow = false;
     const adhocGame = await get(TABLE.GAMES, { PK: 'ADHOC_GAME' });
     if (adhocGame) {
       const adhocState = getGameState(adhocGame.startTimeEpoch, now);
       if (adhocState.gamePhase === 'active' || adhocState.gamePhase === 'pre_game') {
         game = adhocGame;
+      } else if (adhocState.gamePhase === 'post_game') {
+        // Check if we're still within the results window (30s after game end)
+        const gameEndEpoch = adhocGame.startTimeEpoch + GAME_DURATION_MS;
+        if (now - gameEndEpoch < RESULTS_DURATION_MS) {
+          game = adhocGame;
+          isAdhocResultsWindow = true;
+        }
       }
     }
 
@@ -242,15 +250,51 @@ exports.handler = async (event) => {
         showBarCode: true,
         playerAppUrl: process.env.PLAYER_APP_URL || 'https://localhost:3000',
         lastGameBarLeaderboard: [],
-        lastGameGlobalLeaderboard: []
+        lastGameGlobalLeaderboard: [],
+        signage: bar.signage || null,
+        logoUrl: bar.logoUrl || null,
+        logoHash: bar.logoHash || null
       });
     }
 
     const gameState = getGameState(game.startTimeEpoch, now);
 
     // --- PRE-GAME: game exists but hasn't started yet ---
+    // Check if the PREVIOUS game ended within the results window (30s).
+    // If so, show the results/winner screen instead of the lobby.
 
     if (gameState.gamePhase === 'pre_game') {
+      // Look back one 15-min slot for the previous game
+      const SLOT_MS = 15 * 60 * 1000;
+      const prevSlotEpoch = game.startTimeEpoch - SLOT_MS;
+      const prevGameEndEpoch = prevSlotEpoch + GAME_DURATION_MS;
+
+      if (now - prevGameEndEpoch >= 0 && now - prevGameEndEpoch < RESULTS_DURATION_MS) {
+        // Within results window — fetch previous game and show game_over
+        const prevPK = gameTimeslotPK(prevSlotEpoch);
+        const prevGame = await get(TABLE.GAMES, { PK: prevPK });
+
+        if (prevGame) {
+          const barLeaderboard = await getBarLeaderboard(prevGame.gameId, barCode, 10);
+          const globalLeaderboard = await getGlobalLeaderboard(prevGame.gameId, 10);
+
+          return response(200, {
+            state: 'game_over',
+            barCode,
+            barName,
+            activePlayers,
+            gameId: prevGame.gameId,
+            totalQuestions: 15,
+            barLeaderboard,
+            globalLeaderboard,
+            nextGameStartEpoch: game.startTimeEpoch,
+            secondsUntilNextGame: gameState.secondsUntilStart,
+            showBarCode: true,
+            playerAppUrl: process.env.PLAYER_APP_URL || 'https://localhost:3000'
+          });
+        }
+      }
+
       return response(200, {
         state: 'break',
         barCode,
@@ -261,7 +305,10 @@ exports.handler = async (event) => {
         showBarCode: true,
         playerAppUrl: process.env.PLAYER_APP_URL || 'https://localhost:3000',
         lastGameBarLeaderboard: [],
-        lastGameGlobalLeaderboard: []
+        lastGameGlobalLeaderboard: [],
+        signage: bar.signage || null,
+        logoUrl: bar.logoUrl || null,
+        logoHash: bar.logoHash || null
       });
     }
 
@@ -414,7 +461,10 @@ exports.handler = async (event) => {
       avgAnswerTimeSec,
       currentPointsAvailable,
       elapsedSeconds: Math.floor(gameState.elapsedInQuestion / 1000),
-      barLeaderboard
+      barLeaderboard,
+      signage: bar.signage || null,
+      logoUrl: bar.logoUrl || null,
+      logoHash: bar.logoHash || null
     });
   } catch (err) {
     console.error('get-tv-state error:', err);
