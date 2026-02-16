@@ -327,6 +327,7 @@
       if (screen === 'reveal') { updateRevealDynamic(gameState); return; }
       if (screen === 'between') { updateBetweenCountdown(gameState); return; }
       if (screen === 'results') { updateResultsCountdown(gameState); return; }
+      if (screen === 'lobby') { updateLobbyCountdown(gameState); return; }
       return; // All other screens: static, no update needed
     }
 
@@ -334,7 +335,7 @@
     if (currentScreen === 'playing' && screen !== 'playing') stopLocalClock();
 
     currentScreen = screen;
-    if (qNum) localQuestionNumber = qNum;
+    localQuestionNumber = qNum;
 
     switch (screen) {
       case 'idle':
@@ -404,6 +405,29 @@
         </div>`;
     });
 
+    // Countdown to next game
+    let countdownHTML = '';
+    if (state.nextGameStartEpoch) {
+      const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
+      if (secsLeft > 0) {
+        const mins = Math.floor(secsLeft / 60);
+        const secs = secsLeft % 60;
+        const display = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${secs}s`;
+        countdownHTML = `
+          <div class="tt-lobby__countdown">
+            <span class="tt-lobby__countdown-label">Next game in</span>
+            <span class="tt-lobby__countdown-num" id="tv-lobby-countdown">${display}</span>
+          </div>`;
+      }
+    }
+    if (!countdownHTML) {
+      countdownHTML = `
+        <div class="tt-lobby__waiting">
+          <span class="tt-lobby__waiting-text">Waiting for host</span>
+          ${waitingDotsHTML()}
+        </div>`;
+    }
+
     screenEl.innerHTML = `
       <div class="tt-lobby">
         <div class="tt-lobby__left">
@@ -420,10 +444,7 @@
         <div class="tt-lobby__right">
           <div class="tt-lobby__player-label">${count} Players Ready</div>
           <div class="tt-lobby__player-grid">${playerGrid}</div>
-          <div class="tt-lobby__waiting">
-            <span class="tt-lobby__waiting-text">Waiting for host</span>
-            ${waitingDotsHTML()}
-          </div>
+          ${countdownHTML}
         </div>
       </div>`;
   }
@@ -617,9 +638,6 @@
     const totalQ = state.totalQuestions || 15;
     const nextIn = state.nextQuestionIn || 5;
     const isLastQuestion = num >= totalQ;
-    // Show positions 4-5 below the podium (top 3 on podium, 4-5 in list = top 5)
-    const listScores = scores.length < 4 ? scores.slice(0, 5) : scores.slice(3, 5);
-    const listStartRank = scores.length < 4 ? 1 : 4;
 
     const countdownText = isLastQuestion
       ? 'Final results coming...'
@@ -631,9 +649,8 @@
           ${logoHTML('sm')}
           ${barNameHTML('md')}
           <div class="tt-between__after">AFTER QUESTION ${num}</div>
-          ${podiumHTML(scores, { avatarSizes: ['lg', 'xl', 'lg'] })}
-          <div class="tt-between__section-label">Top 5</div>
-          ${leaderboardRowsHTML(listScores, listStartRank, { compact: true })}
+          <div class="tt-between__section-label">Standings</div>
+          ${leaderboardRowsHTML(scores.slice(0, 5), 1, { compact: true })}
           <div id="tv-between-countdown" class="tt-between__next">${countdownText}</div>
           ${qrBadgeHTML('inline')}
         </div>
@@ -689,9 +706,8 @@
           <div class="tt-results__title">Game Over!</div>
           <div class="tt-results__subtitle">${totalQ} questions · ${playerCount} players</div>
           ${countdownText}
-          ${podiumHTML(scores, { avatarSizes: ['lg', 'xl', 'lg'] })}
-          <div class="tt-results__standings-label">Top 5</div>
-          ${leaderboardRowsHTML(scores.length < 4 ? scores.slice(0, 5) : scores.slice(3, 5), scores.length < 4 ? 1 : 4, { compact: true })}
+          <div class="tt-results__standings-label">Final Standings</div>
+          ${leaderboardRowsHTML(scores.slice(0, 5), 1, { compact: true })}
           ${qrBadgeHTML('inline')}
         </div>
       </div>`;
@@ -782,6 +798,25 @@
     if (el && state.nextGameStartEpoch) {
       const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
       el.textContent = secsLeft;
+    }
+  }
+
+  function updateLobbyCountdown(state) {
+    const el = document.getElementById('tv-lobby-countdown');
+    if (!el && state.nextGameStartEpoch) {
+      // Countdown element doesn't exist yet — re-render
+      const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
+      if (secsLeft > 0) {
+        currentScreen = ''; // Force full re-render
+        renderScreen(state);
+      }
+      return;
+    }
+    if (el && state.nextGameStartEpoch) {
+      const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
+      const mins = Math.floor(secsLeft / 60);
+      const secs = secsLeft % 60;
+      el.textContent = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${secs}s`;
     }
   }
 
@@ -960,6 +995,8 @@
         name: p.name || p.playerName,
         score: p.score || 0,
       }));
+      gs.nextGameStartEpoch = apiState.nextGameStartEpoch || null;
+      gs.secondsUntilNextGame = apiState.secondsUntilNextGame || null;
       return gs;
     }
 
@@ -1007,7 +1044,7 @@
       } else if (phase === 'scores') {
         gs.screen = 'between';
         const elapsed = apiState.elapsedSeconds || 49;
-        gs.nextQuestionIn = Math.max(1, Math.ceil(59 - elapsed));
+        gs.nextQuestionIn = Math.max(1, Math.ceil(QUESTION_DURATION_MS / 1000 - elapsed));
       } else {
         // Playing phase (read_time, answer_time, etc.)
         gs.screen = 'playing';
