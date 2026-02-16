@@ -18,7 +18,7 @@ terraform/      → All infrastructure as code (11 .tf files)
 
 - **Player App:** `https://play.taptrivia.tv` (also `https://taptrivia.tv`)
 - **TV App:** `https://tv.taptrivia.tv`
-- **Dashboard:** `https://dashboard.taptrivia.tv`
+- **Dashboard:** `https://admin.taptrivia.tv`
 - **API:** `https://api.taptrivia.tv`
 
 ## Project Structure

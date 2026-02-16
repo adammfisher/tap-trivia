@@ -43,11 +43,359 @@ let signageState = {
   editing: null,       // { templateId, data, editIdx } or null
   selectedDay: 'All Days',
   previewSlide: 0,
+  previewMode: 'offhours',  // 'offhours' or 'ingame'
   saving: false,
   dirty: false,
   error: '',
   success: ''
 };
+
+// ================================================================
+// TV PREVIEW HELPERS
+// ================================================================
+
+function getBarInfo() {
+  const { bar } = getAuthState();
+  return {
+    name: bar ? bar.barName : 'Your Bar',
+    logoUrl: bar ? bar.logoUrl : null,
+    barCode: bar ? bar.barCode : 'XXXXX',
+    initial: (bar ? bar.barName : 'Y').charAt(0)
+  };
+}
+
+function tvBgHTML() {
+  return `
+    <div class="tvp-bg">
+      <div class="tvp-orb tvp-orb--blue"></div>
+      <div class="tvp-orb tvp-orb--red"></div>
+      <div class="tvp-orb tvp-orb--green"></div>
+    </div>
+  `;
+}
+
+function tvHeaderHTML() {
+  const b = getBarInfo();
+  return `
+    <div class="tvp-header">
+      <div class="tvp-header__bar">
+        <div class="tvp-header__logo">${b.logoUrl ? `<img src="${b.logoUrl}" alt="">` : `<span>${b.initial}</span>`}</div>
+        <div class="tvp-header__name">${esc(b.name)}</div>
+      </div>
+      <div class="tvp-logo"><span class="tvp-logo__tap">Tap</span><span class="tvp-logo__trivia">Trivia</span></div>
+    </div>
+  `;
+}
+
+function tvQrBadgeHTML(pos) {
+  const b = getBarInfo();
+  return `
+    <div class="tvp-qr tvp-qr--${pos}">
+      <div class="tvp-qr__code-box"></div>
+      <div class="tvp-qr__info">
+        <div class="tvp-qr__title">Join Trivia!</div>
+        <div class="tvp-qr__url">play.taptrivia.tv</div>
+        <div class="tvp-qr__code-row"><span class="tvp-qr__label">CODE</span> <span class="tvp-qr__code">${b.barCode}</span></div>
+      </div>
+    </div>
+  `;
+}
+
+function tvPanelHeaderHTML() {
+  const b = getBarInfo();
+  return `
+    <div class="tvp-panel__header">
+      <div class="tvp-panel__logo">${b.logoUrl ? `<img src="${b.logoUrl}" alt="">` : `<span>${b.initial}</span>`}</div>
+      <div class="tvp-panel__name">${esc(b.name)}</div>
+    </div>
+  `;
+}
+
+function tvPanelQrHTML() {
+  const b = getBarInfo();
+  return `
+    <div class="tvp-panel__qr">
+      <div class="tvp-qr__code-box tvp-qr__code-box--sm"></div>
+      <div>
+        <div class="tvp-panel__qr-title">Join Trivia!</div>
+        <div class="tvp-panel__qr-url">play.taptrivia.tv</div>
+        <div class="tvp-panel__qr-code-row"><span class="tvp-panel__qr-label">CODE</span> <span class="tvp-panel__qr-code">${b.barCode}</span></div>
+      </div>
+    </div>
+  `;
+}
+
+// ================================================================
+// TV FULL-SCREEN RENDERERS (960x540 scale, half of 1920x1080)
+// ================================================================
+
+function tvFsSpecials(d) {
+  return `
+    <div class="tvp-content" style="padding-top:70px">
+      <div style="flex:1.1;display:flex;flex-direction:column;justify-content:center;padding:0 40px">
+        <div class="tvp-label" style="color:#f59e0b">${d.emoji || '\u{1F37A}'} ${d.label || "Today's Specials"}</div>
+        <div class="tvp-headline">${d.headline || ''}</div>
+        <div class="tvp-headline--gold">${d.subheadline || ''}</div>
+        <div class="tvp-featured">
+          <div><div class="tvp-featured__name">${d.featuredName || ''}</div><div class="tvp-featured__desc">${d.featuredDesc || ''}</div></div>
+          <div class="tvp-featured__price">${d.featuredPrice || ''}</div>
+        </div>
+      </div>
+      <div style="flex:0.9;display:flex;flex-direction:column;justify-content:center;padding:0 36px 0 0;gap:12px">
+        ${(d.menuItems || []).map(item => `
+          <div class="tvp-menu-item">
+            <span class="tvp-menu-item__icon">${item.icon || '\u{1F37D}'}</span>
+            <div style="flex:1"><div class="tvp-menu-item__name">${item.name}</div><div class="tvp-menu-item__desc">${item.desc}</div></div>
+            <div class="tvp-menu-item__price">${item.price}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function tvFsHappyHour(d) {
+  return `
+    <div class="tvp-center">
+      <div class="tvp-label" style="color:#f59e0b">${d.emoji || '\u{1F379}'} Happy Hour</div>
+      <div class="tvp-headline-lg">${d.timeRange || ''}</div>
+      <div class="tvp-subtitle">${d.frequency || ''}</div>
+      <div class="tvp-deals">
+        ${(d.deals || []).map(deal => `
+          <div class="tvp-deal">
+            <div class="tvp-deal__value" style="color:${deal.color || '#f59e0b'}">${deal.deal}</div>
+            <div class="tvp-deal__item">${deal.item}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function tvFsEvent(d) {
+  return `
+    <div class="tvp-center">
+      <div class="tvp-big-emoji">${d.emoji || '\u{1F3A7}'}</div>
+      <div class="tvp-label" style="color:#667eea">${d.when || ''}</div>
+      <div class="tvp-headline-lg">${d.eventName || ''}</div>
+      <div class="tvp-subtitle">${d.details || ''}</div>
+      <div class="tvp-prizes">
+        ${(d.prizes || []).map(p => `
+          <div class="tvp-prize">
+            <div class="tvp-prize__emoji">${p.emoji}</div>
+            <div class="tvp-prize__place">${p.place}</div>
+            <div class="tvp-prize__name">${p.prize}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function tvFsBrand(d) {
+  const b = getBarInfo();
+  return `
+    <div class="tvp-center">
+      <div class="tvp-brand-logo">${b.logoUrl ? `<img src="${b.logoUrl}" alt="">` : `<span>${b.initial}</span>`}</div>
+      <div class="tvp-headline-lg">${esc(b.name)}</div>
+      <div class="tvp-subtitle" style="letter-spacing:2px;text-transform:uppercase;font-size:16px">${d.tagline || ''}</div>
+      <div class="tvp-divider"></div>
+      <div class="tvp-hours">
+        ${(d.hours || []).map(h => `
+          <div class="tvp-hours-row"><span class="tvp-hours__label">${h.label}</span><span class="tvp-hours__value">${h.hours}</span></div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function tvFsAnnouncement(d) {
+  return `
+    <div class="tvp-center">
+      <div class="tvp-big-emoji">${d.emoji || '\u{1F4E2}'}</div>
+      <div class="tvp-headline-lg">${d.headline || ''}</div>
+      <div class="tvp-body">${d.message || ''}</div>
+      ${d.subtext ? `<div class="tvp-subtitle">${d.subtext}</div>` : ''}
+    </div>
+  `;
+}
+
+function tvFsSports(d) {
+  return `
+    <div class="tvp-center">
+      <div class="tvp-big-emoji">${d.emoji || '\u{1F3C8}'}</div>
+      <div class="tvp-label" style="color:#ff4757">${d.headline || ''}</div>
+      <div class="tvp-headline-lg">${d.matchup || ''}</div>
+      <div class="tvp-subtitle">${d.when || ''}</div>
+      <div class="tvp-promo">${d.promo || ''}</div>
+      ${d.tagline ? `<div class="tvp-tagline">${d.tagline}</div>` : ''}
+    </div>
+  `;
+}
+
+function tvFsCustom(d) {
+  return `
+    <div class="tvp-center">
+      <div class="tvp-big-emoji">${d.emoji || '\u{2728}'}</div>
+      <div class="tvp-headline-lg">${d.headline || ''}</div>
+      <div class="tvp-body">${d.body || ''}</div>
+      ${(d.items || []).length > 0 ? `
+        <div class="tvp-items">
+          ${d.items.map(item => `
+            <div class="tvp-item"><span>${item.emoji}</span> <span>${item.text}</span></div>
+          `).join('')}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+// ================================================================
+// TV PANEL CONTENT RENDERERS (for in-game right panel)
+// ================================================================
+
+function tvPanelContent(slide) {
+  const d = slide.data;
+  switch(slide.template) {
+    case 'specials':
+      return `
+        <div class="tvp-panel__label" style="color:#f59e0b">${d.emoji||'\u{1F37A}'} ${d.label||"Today's Specials"}</div>
+        <div class="tvp-panel__headline">${d.headline||''}</div>
+        <div class="tvp-panel__gold">${d.subheadline||''}</div>
+        ${d.featuredName ? `<div class="tvp-panel__featured"><div><div class="tvp-panel__feat-name">${d.featuredName}</div><div class="tvp-panel__feat-desc">${d.featuredDesc||''}</div></div><div class="tvp-panel__feat-price">${d.featuredPrice||''}</div></div>` : ''}
+        ${(d.menuItems||[]).slice(0,4).map(m => `<div class="tvp-panel__menu-item"><span>${m.icon||'\u{1F37D}'}</span><div style="flex:1"><div class="tvp-panel__mi-name">${m.name}</div></div><span class="tvp-panel__mi-price">${m.price}</span></div>`).join('')}
+      `;
+    case 'happyhour':
+      return `
+        <div class="tvp-panel__label" style="color:#f59e0b">${d.emoji||'\u{1F379}'} Happy Hour</div>
+        <div class="tvp-panel__headline">${d.timeRange||''}</div>
+        <div class="tvp-panel__muted">${d.frequency||''}</div>
+        <div class="tvp-panel__deals">${(d.deals||[]).map(dl => `<div class="tvp-panel__deal"><div class="tvp-panel__deal-val" style="color:${dl.color||'#f59e0b'}">${dl.deal}</div><div class="tvp-panel__deal-item">${dl.item}</div></div>`).join('')}</div>
+      `;
+    case 'event':
+      return `
+        <div class="tvp-panel__emoji">${d.emoji||'\u{1F3A7}'}</div>
+        <div class="tvp-panel__label" style="color:#667eea">${d.when||''}</div>
+        <div class="tvp-panel__headline">${d.eventName||''}</div>
+        <div class="tvp-panel__muted">${d.details||''}</div>
+      `;
+    case 'brand': {
+      const b = getBarInfo();
+      return `
+        <div class="tvp-panel__brand-logo">${b.logoUrl ? `<img src="${b.logoUrl}" alt="">` : `<span>${b.initial}</span>`}</div>
+        <div class="tvp-panel__headline">${esc(b.name)}</div>
+        <div class="tvp-panel__muted">${d.tagline||''}</div>
+      `;
+    }
+    case 'announcement':
+      return `
+        <div class="tvp-panel__emoji">${d.emoji||'\u{1F4E2}'}</div>
+        <div class="tvp-panel__headline">${d.headline||''}</div>
+        <div class="tvp-panel__body">${d.message||''}</div>
+      `;
+    case 'sports':
+      return `
+        <div class="tvp-panel__emoji">${d.emoji||'\u{1F3C8}'}</div>
+        <div class="tvp-panel__label" style="color:#ff4757">${d.headline||''}</div>
+        <div class="tvp-panel__headline">${d.matchup||''}</div>
+        <div class="tvp-panel__muted">${d.when||''}</div>
+      `;
+    case 'custom':
+      return `
+        <div class="tvp-panel__emoji">${d.emoji||'\u{2728}'}</div>
+        <div class="tvp-panel__headline">${d.headline||''}</div>
+        <div class="tvp-panel__body">${d.body||''}</div>
+        ${(d.items||[]).length > 0 ? d.items.slice(0,4).map(i => `<div class="tvp-panel__item"><span>${i.emoji}</span> <span>${i.text}</span></div>`).join('') : ''}
+      `;
+    default: return '';
+  }
+}
+
+// ================================================================
+// TV FRAME COMPOSITORS
+// ================================================================
+
+function tvFullScreenHTML(slide) {
+  const FS_RENDERERS = {
+    specials: tvFsSpecials, happyhour: tvFsHappyHour, event: tvFsEvent,
+    brand: tvFsBrand, announcement: tvFsAnnouncement, sports: tvFsSports, custom: tvFsCustom
+  };
+  const renderer = FS_RENDERERS[slide.template];
+  if (!renderer) return '';
+  const qrPos = slide.template === 'specials' ? 'br' : 'bl';
+  return `
+    <div class="tvp-signage-fs">
+      ${tvHeaderHTML()}
+      ${renderer(slide.data)}
+      ${tvQrBadgeHTML(qrPos)}
+    </div>
+  `;
+}
+
+function tvMockLeaderboardHTML() {
+  const b = getBarInfo();
+  const names = ['Alex','Jordan','Sam','Casey','Riley'];
+  const scores = [8400,7200,6100,4800,3500];
+  return `
+    <div class="tvp-lb">
+      <div class="tvp-lb__logo"><span class="tvp-logo"><span class="tvp-logo__tap">Tap</span><span class="tvp-logo__trivia">Trivia</span></span></div>
+      <div class="tvp-lb__bar">${esc(b.name)}</div>
+      <div class="tvp-lb__after">AFTER QUESTION 7</div>
+      <div class="tvp-lb__label">Standings</div>
+      <div class="tvp-lb__rows">
+        ${names.map((name, i) => `
+          <div class="tvp-lb__row">
+            <span class="tvp-lb__rank ${i < 3 ? 'tvp-lb__rank--gold' : ''}">${i+1}</span>
+            <div class="tvp-lb__avatar" style="background:hsl(${i*72},55%,45%)">${name.charAt(0)}</div>
+            <span class="tvp-lb__name">${name}</span>
+            <span class="tvp-lb__score">${scores[i].toLocaleString()}</span>
+          </div>
+        `).join('')}
+      </div>
+      <div class="tvp-lb__next">Next question in <span class="tvp-lb__countdown">8</span>s...</div>
+    </div>
+  `;
+}
+
+function tvInGameHTML(slide) {
+  return `
+    <div class="tvp-ingame">
+      <div class="tvp-ingame__left">
+        ${tvMockLeaderboardHTML()}
+      </div>
+      <div class="tvp-ingame__divider"></div>
+      <div class="tvp-panel">
+        <div class="tvp-panel__inner">
+          ${tvPanelHeaderHTML()}
+          <div class="tvp-panel__content">
+            ${tvPanelContent(slide)}
+          </div>
+          ${tvPanelQrHTML()}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function tvFrameHTML(slide, mode, size) {
+  const content = mode === 'ingame' ? tvInGameHTML(slide) : tvFullScreenHTML(slide);
+  const sizeClass = size === 'thumb' ? 'tvp-frame--thumb' : 'tvp-frame--lg';
+  return `
+    <div class="tvp-frame ${sizeClass}">
+      <div class="tvp-canvas">
+        ${tvBgHTML()}
+        ${content}
+      </div>
+    </div>
+  `;
+}
+
+function scaleTvFrames() {
+  document.querySelectorAll('.tvp-frame--lg').forEach(frame => {
+    const canvas = frame.querySelector('.tvp-canvas');
+    if (canvas) canvas.style.transform = `scale(${frame.offsetWidth / 960})`;
+  });
+}
 
 // ================================================================
 // MAIN RENDER
@@ -82,12 +430,13 @@ function renderSlideList(container) {
     ? slides
     : slides.filter(s => !s.schedule || !s.schedule.days || s.schedule.days.includes(signageState.selectedDay));
   const canAdd = slides.length < 10;
+  const mode = signageState.previewMode;
 
   container.innerHTML = `
     <div class="fade-in">
       <div class="page-header">
         <h1 class="page-title">Signage Creator</h1>
-        <p class="page-desc">Design what shows on your TV &mdash; full-screen during breaks, side panel during games</p>
+        <p class="page-desc">Design what shows on your TV &mdash; off-hours full-screen and in-game right panel</p>
       </div>
 
       ${signageState.error ? `<div class="auth-error">${signageState.error}</div>` : ''}
@@ -121,7 +470,7 @@ function renderSlideList(container) {
             <div class="section-header-right">
               <span class="rotation-label">Rotate every</span>
               <div class="speed-toggle">
-                ${[10,15,30,60].map(s => `<button class="speed-btn ${signageState.rotationSpeed === s ? 'active' : ''}" data-speed="${s}">${s}s</button>`).join('')}
+                ${[15,30,60].map(s => `<button class="speed-btn ${signageState.rotationSpeed === s ? 'active' : ''}" data-speed="${s}">${s}s</button>`).join('')}
               </div>
               ${signageState.dirty ? `<button class="btn-primary btn-save-signage" id="btn-save-signage">${signageState.saving ? 'Saving...' : 'Save Changes'}</button>` : ''}
             </div>
@@ -141,42 +490,92 @@ function renderSlideList(container) {
             <div class="empty-desc">Pick a template above to create your first slide</div>
           </div>
         ` : `
-          <div class="slide-list">
-            ${daySlides.map((slide, di) => {
-              const realIdx = slides.indexOf(slide);
-              const tmpl = TEMPLATES.find(t => t.id === slide.template);
-              return `
-                <div class="dash-card slide-row ${slide.enabled ? '' : 'slide-disabled'}" data-idx="${realIdx}">
-                  <div class="slide-thumb" style="background:${tmpl ? tmpl.color + '20' : 'rgba(255,255,255,.04)'}">
-                    <span class="slide-thumb-icon">${tmpl ? tmpl.icon : '\u{1F4FA}'}</span>
-                  </div>
-                  <div class="slide-info">
-                    <div class="slide-name-row">
-                      <span class="slide-icon">${slide.icon || (tmpl ? tmpl.icon : '')}</span>
-                      <span class="slide-name">${slide.name || (tmpl ? tmpl.name : 'Slide')}</span>
+          <div class="rotation-layout">
+            <div class="rotation-slides">
+              <div class="slide-list">
+                ${daySlides.map((slide, di) => {
+                  const realIdx = slides.indexOf(slide);
+                  const tmpl = TEMPLATES.find(t => t.id === slide.template);
+                  const isSelected = signageState.previewSlide === realIdx;
+                  return `
+                    <div class="dash-card slide-row ${slide.enabled ? '' : 'slide-disabled'} ${isSelected ? 'slide-selected' : ''}" data-idx="${realIdx}" data-preview="${realIdx}">
+                      <div class="tvp-frame tvp-frame--thumb">
+                        <div class="tvp-canvas">
+                          ${tvBgHTML()}
+                          ${tvFullScreenHTML(slide)}
+                        </div>
+                      </div>
+                      <div class="slide-info">
+                        <div class="slide-name-row">
+                          <span class="slide-icon">${slide.icon || (tmpl ? tmpl.icon : '')}</span>
+                          <span class="slide-name">${slide.name || (tmpl ? tmpl.name : 'Slide')}</span>
+                        </div>
+                        <div class="slide-days">
+                          ${WEEKDAYS.map(day => {
+                            const active = !slide.schedule || !slide.schedule.days || slide.schedule.days.includes(day);
+                            return `<span class="day-chip ${active ? 'active' : ''}" data-real="${realIdx}" data-day="${day}">${day}</span>`;
+                          }).join('')}
+                        </div>
+                      </div>
+                      <div class="slide-actions">
+                        <div class="toggle-wrap" data-toggle="${realIdx}">
+                          <div class="toggle-switch ${slide.enabled ? 'on' : ''}">
+                            <div class="toggle-knob"></div>
+                          </div>
+                          <span class="toggle-label">${slide.enabled ? 'ACTIVE' : 'OFF'}</span>
+                        </div>
+                        <button class="btn-ghost btn-sm" data-edit="${realIdx}">Edit</button>
+                        <button class="btn-danger btn-sm" data-remove="${realIdx}">&times;</button>
+                      </div>
                     </div>
-                    <div class="slide-days">
-                      ${WEEKDAYS.map(day => {
-                        const active = !slide.schedule || !slide.schedule.days || slide.schedule.days.includes(day);
-                        return `<span class="day-chip ${active ? 'active' : ''}" data-real="${realIdx}" data-day="${day}">${day}</span>`;
-                      }).join('')}
-                    </div>
-                  </div>
-                  <div class="slide-actions">
-                    <div class="toggle-switch ${slide.enabled ? 'on' : ''}" data-toggle="${realIdx}">
-                      <div class="toggle-knob"></div>
-                    </div>
-                    <button class="btn-ghost btn-sm" data-edit="${realIdx}">Edit</button>
-                    <button class="btn-danger btn-sm" data-remove="${realIdx}">&times;</button>
-                  </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+            <div class="rotation-preview">
+              <div class="tvp-mode-toggle">
+                <button class="tvp-mode-btn ${mode === 'offhours' ? 'active' : ''}" data-mode="offhours">
+                  \u{1F4FA} Off-Hours
+                </button>
+                <button class="tvp-mode-btn ${mode === 'ingame' ? 'active' : ''}" data-mode="ingame">
+                  \u{1F3AE} In-Game
+                </button>
+              </div>
+              <div id="list-preview-frame"></div>
+              <div class="tvp-caption">
+                ${mode === 'offhours' ? 'Full-screen slide \u2014 no game running' : 'Right panel \u2014 during trivia game'}
+              </div>
+              ${daySlides.length > 1 ? `
+                <div class="preview-nav">
+                  <button class="btn-ghost btn-sm" id="btn-preview-prev">&larr;</button>
+                  <span class="preview-nav-label">Slide ${daySlides.findIndex(s => slides.indexOf(s) === signageState.previewSlide) + 1} / ${daySlides.length}</span>
+                  <button class="btn-ghost btn-sm" id="btn-preview-next">&rarr;</button>
                 </div>
-              `;
-            }).join('')}
+              ` : `
+                <div class="preview-nav">
+                  <span class="preview-nav-label">Slide 1 / 1</span>
+                </div>
+              `}
+            </div>
           </div>
         `}
       </div>
     </div>
   `;
+
+  // Render the TV preview for the selected slide
+  if (slides.length > 0) {
+    const previewIdx = Math.min(signageState.previewSlide, slides.length - 1);
+    const previewSlide = slides[previewIdx];
+    if (previewSlide) {
+      const previewFrame = document.getElementById('list-preview-frame');
+      if (previewFrame) {
+        previewFrame.innerHTML = tvFrameHTML(previewSlide, signageState.previewMode, 'lg');
+      }
+    }
+    // Scale all TV frames
+    requestAnimationFrame(scaleTvFrames);
+  }
 
   // Event listeners
   container.querySelectorAll('.template-card:not(.disabled)').forEach(el => {
@@ -233,6 +632,45 @@ function renderSlideList(container) {
     });
   });
 
+  // Mode toggle
+  container.querySelectorAll('.tvp-mode-btn').forEach(el => {
+    el.addEventListener('click', () => {
+      signageState.previewMode = el.dataset.mode;
+      renderSignageEditor();
+    });
+  });
+
+  // Click slide row to preview
+  container.querySelectorAll('[data-preview]').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('.slide-actions') || e.target.closest('.day-chip')) return;
+      signageState.previewSlide = parseInt(el.dataset.preview);
+      renderSignageEditor();
+    });
+  });
+
+  // Preview navigation
+  const prevBtn = document.getElementById('btn-preview-prev');
+  const nextBtn = document.getElementById('btn-preview-next');
+  if (prevBtn) prevBtn.addEventListener('click', () => {
+    const daySlides = signageState.selectedDay === 'All Days'
+      ? signageState.slides
+      : signageState.slides.filter(s => !s.schedule || !s.schedule.days || s.schedule.days.includes(signageState.selectedDay));
+    const curDayIdx = daySlides.findIndex(s => signageState.slides.indexOf(s) === signageState.previewSlide);
+    const prevDayIdx = (curDayIdx - 1 + daySlides.length) % daySlides.length;
+    signageState.previewSlide = signageState.slides.indexOf(daySlides[prevDayIdx]);
+    renderSignageEditor();
+  });
+  if (nextBtn) nextBtn.addEventListener('click', () => {
+    const daySlides = signageState.selectedDay === 'All Days'
+      ? signageState.slides
+      : signageState.slides.filter(s => !s.schedule || !s.schedule.days || s.schedule.days.includes(signageState.selectedDay));
+    const curDayIdx = daySlides.findIndex(s => signageState.slides.indexOf(s) === signageState.previewSlide);
+    const nextDayIdx = (curDayIdx + 1) % daySlides.length;
+    signageState.previewSlide = signageState.slides.indexOf(daySlides[nextDayIdx]);
+    renderSignageEditor();
+  });
+
   const saveBtn = document.getElementById('btn-save-signage');
   if (saveBtn) saveBtn.addEventListener('click', saveSignage);
 }
@@ -244,6 +682,7 @@ function renderSlideList(container) {
 function renderSlideEditor(container) {
   const ed = signageState.editing;
   const tmpl = TEMPLATES.find(t => t.id === ed.templateId);
+  const mode = signageState.previewMode;
 
   container.innerHTML = `
     <div class="fade-in">
@@ -264,8 +703,18 @@ function renderSlideEditor(container) {
       <div class="editor-body">
         <div class="dash-card editor-form" id="editor-form"></div>
         <div class="editor-preview">
-          <div class="preview-label">PREVIEW</div>
-          <div class="dash-card preview-card" id="preview-card"></div>
+          <div class="tvp-mode-toggle">
+            <button class="tvp-mode-btn ${mode === 'offhours' ? 'active' : ''}" data-mode="offhours">
+              \u{1F4FA} Off-Hours
+            </button>
+            <button class="tvp-mode-btn ${mode === 'ingame' ? 'active' : ''}" data-mode="ingame">
+              \u{1F3AE} In-Game
+            </button>
+          </div>
+          <div id="preview-frame"></div>
+          <div class="tvp-caption">
+            ${mode === 'offhours' ? 'Full-screen slide \u2014 no game running' : 'Right panel \u2014 during trivia game'}
+          </div>
         </div>
       </div>
     </div>
@@ -274,6 +723,14 @@ function renderSlideEditor(container) {
   // Render the form for this template
   renderEditorForm(ed.templateId, ed.data);
   renderPreview(ed.templateId, ed.data);
+
+  // Mode toggle
+  container.querySelectorAll('.tvp-mode-btn').forEach(el => {
+    el.addEventListener('click', () => {
+      signageState.previewMode = el.dataset.mode;
+      renderSlideEditor(container);
+    });
+  });
 
   document.getElementById('btn-editor-back').addEventListener('click', () => { signageState.editing = null; renderSignageEditor(); });
   document.getElementById('btn-editor-cancel').addEventListener('click', () => { signageState.editing = null; renderSignageEditor(); });
@@ -510,168 +967,17 @@ function buildCustomForm(el, d) {
 }
 
 // ================================================================
-// PREVIEW RENDERER
+// PREVIEW RENDERER (editor view)
 // ================================================================
 
 function renderPreview(templateId, data) {
-  const card = document.getElementById('preview-card');
-  if (!card) return;
+  const frameEl = document.getElementById('preview-frame');
+  if (!frameEl) return;
 
-  const renderers = {
-    specials: previewSpecials,
-    happyhour: previewHappyHour,
-    event: previewEvent,
-    brand: previewBrand,
-    announcement: previewAnnouncement,
-    sports: previewSports,
-    custom: previewCustom,
-  };
-
-  const renderer = renderers[templateId];
-  if (renderer) card.innerHTML = renderer(data);
-}
-
-function previewSpecials(d) {
-  return `
-    <div class="tv-preview specials-preview">
-      <div class="tv-preview-header">
-        <span class="preview-label-text">${d.emoji || '\u{1F37A}'} ${d.label || "Today's Specials"}</span>
-      </div>
-      <div class="preview-headline">${d.headline || ''}</div>
-      <div class="preview-subheadline gold">${d.subheadline || ''}</div>
-      <div class="preview-featured">
-        <div class="preview-featured-info">
-          <div class="preview-featured-name">${d.featuredName || ''}</div>
-          <div class="preview-featured-desc">${d.featuredDesc || ''}</div>
-        </div>
-        <div class="preview-featured-price">${d.featuredPrice || ''}</div>
-      </div>
-      <div class="preview-menu">
-        ${(d.menuItems || []).map(item => `
-          <div class="preview-menu-item">
-            <span class="preview-menu-icon">${item.icon || '\u{1F37D}'}</span>
-            <div class="preview-menu-info"><span class="preview-menu-name">${item.name}</span><span class="preview-menu-desc">${item.desc}</span></div>
-            <span class="preview-menu-price">${item.price}</span>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-}
-
-function previewHappyHour(d) {
-  return `
-    <div class="tv-preview happyhour-preview">
-      <div class="preview-center">
-        <div class="preview-accent-label">${d.emoji || '\u{1F379}'} Happy Hour</div>
-        <div class="preview-headline-lg">${d.timeRange || ''}</div>
-        <div class="preview-muted">${d.frequency || ''}</div>
-        <div class="preview-deals">
-          ${(d.deals || []).map(deal => `
-            <div class="preview-deal" style="--deal-color:${deal.color || '#f59e0b'}">
-              <div class="preview-deal-value">${deal.deal}</div>
-              <div class="preview-deal-item">${deal.item}</div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function previewEvent(d) {
-  return `
-    <div class="tv-preview event-preview">
-      <div class="preview-center">
-        <div class="preview-big-emoji">${d.emoji || '\u{1F3A7}'}</div>
-        <div class="preview-accent-label blue">${d.when || ''}</div>
-        <div class="preview-headline-lg">${d.eventName || ''}</div>
-        <div class="preview-muted">${d.details || ''}</div>
-        <div class="preview-prizes">
-          ${(d.prizes || []).map(p => `
-            <div class="preview-prize">
-              <span class="preview-prize-emoji">${p.emoji}</span>
-              <span class="preview-prize-place">${p.place}</span>
-              <span class="preview-prize-name">${p.prize}</span>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function previewBrand(d) {
-  const { bar } = getAuthState();
-  const barName = bar ? bar.barName : 'Your Bar';
-  return `
-    <div class="tv-preview brand-preview">
-      <div class="preview-center">
-        <div class="preview-brand-logo">${barName.charAt(0)}</div>
-        <div class="preview-headline-lg">${barName}</div>
-        <div class="preview-muted">${d.tagline || ''}</div>
-        <div class="preview-divider"></div>
-        <div class="preview-hours">
-          ${(d.hours || []).map(h => `
-            <div class="preview-hours-row">
-              <span class="preview-hours-label">${h.label}</span>
-              <span class="preview-hours-value">${h.hours}</span>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function previewAnnouncement(d) {
-  return `
-    <div class="tv-preview announcement-preview">
-      <div class="preview-center">
-        <div class="preview-big-emoji">${d.emoji || '\u{1F4E2}'}</div>
-        <div class="preview-headline-lg">${d.headline || ''}</div>
-        <div class="preview-body">${d.message || ''}</div>
-        ${d.subtext ? `<div class="preview-muted" style="margin-top:12px">${d.subtext}</div>` : ''}
-      </div>
-    </div>
-  `;
-}
-
-function previewSports(d) {
-  return `
-    <div class="tv-preview sports-preview">
-      <div class="preview-center">
-        <div class="preview-big-emoji">${d.emoji || '\u{1F3C8}'}</div>
-        <div class="preview-accent-label red">${d.headline || ''}</div>
-        <div class="preview-headline-lg">${d.matchup || ''}</div>
-        <div class="preview-muted">${d.when || ''}</div>
-        <div class="preview-promo">${d.promo || ''}</div>
-        ${d.tagline ? `<div class="preview-tagline">${d.tagline}</div>` : ''}
-      </div>
-    </div>
-  `;
-}
-
-function previewCustom(d) {
-  return `
-    <div class="tv-preview custom-preview">
-      <div class="preview-center">
-        <div class="preview-big-emoji">${d.emoji || '\u{2728}'}</div>
-        <div class="preview-headline-lg">${d.headline || ''}</div>
-        <div class="preview-body">${d.body || ''}</div>
-        ${(d.items || []).length > 0 ? `
-          <div class="preview-custom-items">
-            ${d.items.map(item => `
-              <div class="preview-custom-item">
-                <span>${item.emoji}</span>
-                <span>${item.text}</span>
-              </div>
-            `).join('')}
-          </div>
-        ` : ''}
-      </div>
-    </div>
-  `;
+  // Build a temporary slide object for the renderer
+  const slide = { template: templateId, data: data };
+  frameEl.innerHTML = tvFrameHTML(slide, signageState.previewMode, 'lg');
+  requestAnimationFrame(scaleTvFrames);
 }
 
 // ================================================================
@@ -909,19 +1215,36 @@ function startEditSlide(idx) {
   renderSignageEditor();
 }
 
+function slideName(templateId, data) {
+  switch (templateId) {
+    case 'specials': return data.headline || data.label || 'Daily Specials';
+    case 'happyhour': return data.timeRange || 'Happy Hour';
+    case 'event': return data.eventName || 'Event Promo';
+    case 'brand': return getBarInfo().name;
+    case 'announcement': return data.headline || 'Announcement';
+    case 'sports': return data.matchup || data.headline || 'Game Day';
+    case 'custom': return data.headline || 'Custom Slide';
+    default: return 'Slide';
+  }
+}
+
 function saveSlide() {
   const ed = signageState.editing;
   if (!ed) return;
 
+  const name = slideName(ed.templateId, ed.data);
+  const icon = ed.data.emoji || TEMPLATES.find(t => t.id === ed.templateId).icon;
+
   if (ed.editIdx !== null) {
     signageState.slides[ed.editIdx].data = JSON.parse(JSON.stringify(ed.data));
+    signageState.slides[ed.editIdx].name = name;
+    signageState.slides[ed.editIdx].icon = icon;
   } else {
-    const tmpl = TEMPLATES.find(t => t.id === ed.templateId);
     signageState.slides.push({
       id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36),
       template: ed.templateId,
-      name: tmpl.name,
-      icon: tmpl.icon,
+      name: name,
+      icon: icon,
       enabled: true,
       data: JSON.parse(JSON.stringify(ed.data)),
       schedule: { days: null }
@@ -953,9 +1276,11 @@ async function saveSignage() {
 
   try {
     await apiCall('PUT', '/dashboard/signage', {
-      slides: signageState.slides,
-      rotationSpeed: signageState.rotationSpeed,
-      enabled: signageState.enabled
+      signage: {
+        slides: signageState.slides,
+        rotationSpeed: signageState.rotationSpeed,
+        enabled: signageState.enabled
+      }
     });
 
     // Update local state

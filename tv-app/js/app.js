@@ -37,6 +37,14 @@
   let barLogoUrl = null;
   let barLogoHash = null;
 
+  // Screen rotation state (cycles lobby/between/results during non-gameplay)
+  let cachedScreenData = {};
+  let rotationActive = false;
+  let rotationScreens = [];
+  let rotationIdx = 0;
+  let rotationTimer = null;
+  const ROTATION_INTERVAL_MS = 10000;
+
   // DOM refs
   const screenEl = document.getElementById('tt-screen');
   const errorOverlay = document.getElementById('tt-error-overlay');
@@ -80,28 +88,19 @@
     return `<div class="${cls}" style="background:linear-gradient(135deg,hsl(${h},65%,52%),hsl(${h2},65%,42%))" aria-label="${name}">${initial}${medal}</div>`;
   }
 
-  /** Build QR code SVG — v4 lines 164-187, size in px (already 2×) */
+  /** Build real QR code SVG pointing to play.taptrivia.tv */
   function qrCodeHTML(size, cssClass = '') {
-    const grid = 25;
-    const cellSize = size / grid;
-    // Deterministic pseudo-random QR pattern
-    let seed = 48271;
-    const inFinder = (cx, cy, x, y) => x >= cx && x < cx + 7 && y >= cy && y < cy + 7;
-    const inBorder = (cx, cy, x, y) => inFinder(cx, cy, x, y) && !(x > cx && x < cx + 6 && y > cy && y < cy + 6);
-    const inCore = (cx, cy, x, y) => x >= cx + 2 && x < cx + 5 && y >= cy + 2 && y < cy + 5;
+    const url = 'https://play.taptrivia.tv';
+    const qr = qrcode(0, 'M');
+    qr.addData(url);
+    qr.make();
+    const count = qr.getModuleCount();
+    const cellSize = size / count;
     let rects = '';
-    for (let y = 0; y < grid; y++) {
-      for (let x = 0; x < grid; x++) {
-        const isFilled = inBorder(0, 0, x, y) || inCore(0, 0, x, y) ||
-          inBorder(18, 0, x, y) || inCore(18, 0, x, y) ||
-          inBorder(0, 18, x, y) || inCore(0, 18, x, y);
-        if (isFilled) {
-          rects += `<rect x="${x * cellSize}" y="${y * cellSize}" width="${cellSize + 0.5}" height="${cellSize + 0.5}" rx="${cellSize * 0.12}"/>`;
-        } else if (!inFinder(0, 0, x, y) && !inFinder(18, 0, x, y) && !inFinder(0, 18, x, y)) {
-          seed = ((seed * 1103515245 + 12345) >>> 0);
-          if (seed % 100 < 42) {
-            rects += `<rect x="${x * cellSize}" y="${y * cellSize}" width="${cellSize + 0.5}" height="${cellSize + 0.5}" rx="${cellSize * 0.12}"/>`;
-          }
+    for (let y = 0; y < count; y++) {
+      for (let x = 0; x < count; x++) {
+        if (qr.isDark(y, x)) {
+          rects += `<rect x="${x * cellSize}" y="${y * cellSize}" width="${cellSize + 0.5}" height="${cellSize + 0.5}" rx="${cellSize * 0.1}"/>`;
         }
       }
     }
@@ -115,8 +114,8 @@
       <div class="tt-qr-badge tt-qr-badge--${position}">
         ${qrCodeHTML(120)}
         <div class="tt-qr-badge__info">
-          <div class="tt-qr-badge__title">Get the App!</div>
-          <div class="tt-qr-badge__url">taptrivia.com</div>
+          <div class="tt-qr-badge__title">Join Trivia!</div>
+          <div class="tt-qr-badge__url">play.taptrivia.tv</div>
           <div class="tt-qr-badge__code-row">
             <span class="tt-qr-badge__code-label">JOIN</span>
             <span class="tt-qr-badge__code">${barCode}</span>
@@ -131,8 +130,8 @@
       <div class="tt-glass" style="display:flex;align-items:center;gap:28px;margin-top:8px">
         ${qrCodeHTML(120)}
         <div>
-          <div style="font-family:'Fredoka',sans-serif;font-size:36px;font-weight:700;color:#f0f0f0;line-height:1.2">Get the App!</div>
-          <div style="font-size:26px;font-weight:600;color:#ffd200;margin-top:6px">taptrivia.com</div>
+          <div style="font-family:'Fredoka',sans-serif;font-size:36px;font-weight:700;color:#f0f0f0;line-height:1.2">Join Trivia!</div>
+          <div style="font-size:26px;font-weight:600;color:#ffd200;margin-top:6px">play.taptrivia.tv</div>
           <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
             <span style="font-size:20px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:2px">JOIN</span>
             <span style="font-family:'Fredoka',sans-serif;font-size:30px;font-weight:700;color:#ffd200;letter-spacing:4px">${barCode}</span>
@@ -361,7 +360,7 @@
         ${qrCodeHTML(88)}
         <div>
           <div class="tt-signage-panel__qr-text">Join Trivia!</div>
-          <div class="tt-signage-panel__qr-url">taptrivia.com</div>
+          <div class="tt-signage-panel__qr-url">play.taptrivia.tv</div>
           <div class="tt-signage-panel__qr-code-row">
             <span class="tt-signage-panel__qr-code-label">CODE</span>
             <span class="tt-signage-panel__qr-code">${barCode}</span>
@@ -376,7 +375,8 @@
     const today = days[new Date().getDay()];
     return signageSlides.filter(s => {
       if (!s.enabled) return false;
-      if (s.days && s.days.length > 0 && !s.days.includes(today)) return false;
+      const sDays = s.schedule && s.schedule.days;
+      if (sDays && sDays.length > 0 && !sDays.includes(today)) return false;
       return true;
     });
   }
@@ -388,7 +388,13 @@
     if (active.length <= 1) return;
     signageRotationTimer = setInterval(() => {
       signageCurrentIndex = (signageCurrentIndex + 1) % getActiveSlides().length;
-      if (currentScreen === 'idle') renderIdle();
+      // Re-render screens that display signage
+      if (currentScreen === 'idle') {
+        renderIdle();
+      } else {
+        // Update in-game signage panel in place
+        updateSignagePanel();
+      }
     }, signageRotationSpeed * 1000);
   }
 
@@ -398,6 +404,132 @@
       clearInterval(signageRotationTimer);
       signageRotationTimer = null;
     }
+  }
+
+  /** Ensure signage rotation is running when slides exist */
+  function ensureSignageRotation() {
+    const active = getActiveSlides();
+    if (active.length > 1 && !signageRotationTimer) {
+      startSignageRotation();
+    }
+  }
+
+  /** Update the signage panel content in place (no full re-render) */
+  function updateSignagePanel() {
+    const panelEl = document.querySelector('.tt-signage-panel');
+    if (!panelEl) return;
+    const active = getActiveSlides();
+    if (active.length === 0) return;
+    const idx = signageCurrentIndex % active.length;
+    const slide = active[idx];
+    const renderer = SIGNAGE_PANEL[slide.template];
+    if (!renderer) return;
+    panelEl.innerHTML = renderer(slide.data || {});
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // SCREEN ROTATION — cycle lobby/between/results during breaks
+  // ═══════════════════════════════════════════════════════════════
+
+  /** Cache a translated gameState for use in screen rotation */
+  function cacheForRotation(gameState, apiState) {
+    const screen = gameState.screen;
+    cachedScreenData[screen] = { ...gameState };
+
+    // Propagate nextGameStartEpoch to all cached states
+    const nextEpoch = apiState.nextGameStartEpoch || gameState.nextGameStartEpoch;
+    if (nextEpoch) {
+      Object.keys(cachedScreenData).forEach(k => {
+        if (cachedScreenData[k]) cachedScreenData[k].nextGameStartEpoch = nextEpoch;
+      });
+    }
+
+    // During game_over, ensure a lobby state exists for rotation
+    if (apiState.state === 'game_over' && !cachedScreenData.lobby) {
+      cachedScreenData.lobby = {
+        screen: 'lobby',
+        playerCount: gameState.playerCount || 0,
+        players: [],
+        nextGameStartEpoch: nextEpoch,
+      };
+    }
+  }
+
+  /** Build ordered list of screens available for rotation */
+  function buildRotationList() {
+    const screens = [];
+    if (cachedScreenData.lobby) screens.push('lobby');
+    if (cachedScreenData.between) screens.push('between');
+    if (cachedScreenData.results) screens.push('results');
+    return screens;
+  }
+
+  /** Enter or continue screen rotation mode */
+  function handleScreenRotation(currentGameState) {
+    const newList = buildRotationList();
+
+    if (!rotationActive) {
+      rotationActive = true;
+      rotationScreens = newList;
+      rotationIdx = Math.max(0, newList.indexOf(currentGameState.screen));
+      renderRotationScreen();
+      startRotationTimer();
+    } else {
+      // Already rotating — update list, preserve position
+      const current = rotationScreens[rotationIdx];
+      rotationScreens = newList;
+      const newIdx = newList.indexOf(current);
+      rotationIdx = newIdx >= 0 ? newIdx : 0;
+      updateCurrentRotatedScreen();
+    }
+  }
+
+  /** Render the current rotation screen */
+  function renderRotationScreen() {
+    if (rotationScreens.length === 0) return;
+    const screenName = rotationScreens[rotationIdx % rotationScreens.length];
+    const state = cachedScreenData[screenName];
+    if (!state) return;
+    currentScreen = '';
+    localQuestionNumber = null;
+    renderScreen(state);
+  }
+
+  /** Surgical update for the currently displayed rotation screen */
+  function updateCurrentRotatedScreen() {
+    if (rotationScreens.length === 0) return;
+    const screenName = rotationScreens[rotationIdx];
+    const state = cachedScreenData[screenName];
+    if (!state) return;
+    if (currentScreen === 'lobby') updateLobbyCountdown(state);
+    else if (currentScreen === 'results') updateResultsCountdown(state);
+  }
+
+  /** Start the screen rotation timer */
+  function startRotationTimer() {
+    stopRotationTimer();
+    if (rotationScreens.length <= 1) return;
+    rotationTimer = setInterval(() => {
+      rotationIdx = (rotationIdx + 1) % rotationScreens.length;
+      renderRotationScreen();
+    }, ROTATION_INTERVAL_MS);
+  }
+
+  /** Stop the screen rotation timer */
+  function stopRotationTimer() {
+    if (rotationTimer) {
+      clearInterval(rotationTimer);
+      rotationTimer = null;
+    }
+  }
+
+  /** Exit rotation mode when active gameplay resumes */
+  function exitRotationMode() {
+    if (!rotationActive) return;
+    rotationActive = false;
+    stopRotationTimer();
+    rotationScreens = [];
+    rotationIdx = 0;
   }
 
   // --- Full-Screen Signage Renderers (7 templates, all at 2×) ---
@@ -704,11 +836,15 @@
   /** Get signage panel HTML with divider for in-game screens */
   function signagePanelWrapHTML() {
     const active = getActiveSlides();
+    console.log('[Signage panel] active:', active.length, 'total:', signageSlides.length, 'screen:', currentScreen);
     if (active.length === 0) return '';
     const idx = signageCurrentIndex % active.length;
     const slide = active[idx];
     const renderer = SIGNAGE_PANEL[slide.template];
-    if (!renderer) return '';
+    if (!renderer) {
+      console.warn('[Signage panel] No renderer for template:', slide.template);
+      return '';
+    }
     return `
       <div class="tt-signage-panel-divider"></div>
       <div class="tt-signage-panel">
@@ -740,8 +876,6 @@
       return; // All other screens: static, no update needed
     }
 
-    // Stop signage rotation when leaving idle
-    if (currentScreen === 'idle' && screen !== 'idle') stopSignageRotation();
     // Stop local clock when leaving playing screen
     if (currentScreen === 'playing' && screen !== 'playing') stopLocalClock();
 
@@ -794,21 +928,34 @@
       </div>`;
   }
 
-  /** SETUP SCREEN — bar registration */
+  /** SETUP SCREEN — bar registration or join with existing code */
   function renderSetup() {
     screenEl.innerHTML = `
       <div class="tt-setup">
         ${logoHTML('xl')}
-        <div class="tt-setup__subtitle">Enter Your Bar Name</div>
+        <div class="tt-setup__subtitle">Register Your Bar</div>
         <input type="text" id="tt-setup-input" class="tt-setup__input" placeholder="Murphy's Pub" maxlength="50" autocomplete="off" aria-label="Bar name">
+        <input type="email" id="tt-setup-email" class="tt-setup__input tt-setup__input--email" placeholder="owner@email.com (optional)" maxlength="100" autocomplete="off" aria-label="Owner email">
         <button id="tt-setup-btn" class="tt-setup__btn">GET YOUR BAR CODE</button>
-        <div class="tt-setup__hint">Use your TV's remote to type or connect a USB keyboard</div>
+        <div class="tt-setup__divider"><span>or</span></div>
+        <div class="tt-setup__subtitle">Already have a bar code?</div>
+        <input type="text" id="tt-setup-code" class="tt-setup__input tt-setup__input--code" placeholder="ABC12" maxlength="5" autocomplete="off" aria-label="Bar code" style="text-transform:uppercase;letter-spacing:8px">
+        <button id="tt-setup-join-btn" class="tt-setup__btn tt-setup__btn--join">JOIN WITH CODE</button>
+        <div class="tt-setup__hint">Use your TV remote or USB keyboard to type.</div>
       </div>`;
-    // Bind events
+    // Bind events — register flow
     const input = document.getElementById('tt-setup-input');
+    const emailInput = document.getElementById('tt-setup-email');
     const btn = document.getElementById('tt-setup-btn');
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') registerBar(); });
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') emailInput.focus(); });
+    emailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') registerBar(); });
     btn.addEventListener('click', registerBar);
+    // Bind events — join with code flow
+    const codeInput = document.getElementById('tt-setup-code');
+    const joinBtn = document.getElementById('tt-setup-join-btn');
+    codeInput.addEventListener('input', () => { codeInput.value = codeInput.value.toUpperCase(); });
+    codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinWithCode(); });
+    joinBtn.addEventListener('click', joinWithCode);
     input.focus();
   }
 
@@ -816,6 +963,7 @@
   function renderLobby(state) {
     const players = state.players || [];
     const count = state.playerCount || players.length || 0;
+    const panel = signagePanelWrapHTML();
 
     let playerGrid = '';
     players.forEach((p, i) => {
@@ -851,7 +999,7 @@
     }
 
     screenEl.innerHTML = `
-      <div class="tt-lobby">
+      <div class="tt-lobby${panel ? ' tt-lobby--with-panel' : ''}">
         ${countdownHTML}
         <div class="tt-lobby__left">
           <div class="tt-lobby__logo">${logoHTML('xl')}</div>
@@ -861,14 +1009,16 @@
           <div class="tt-lobby__code-section">
             <div class="tt-lobby__code-label">Or Enter Code</div>
             <div class="tt-lobby__code">${barCode}</div>
-            <div class="tt-lobby__url">taptrivia.com/join</div>
+            <div class="tt-lobby__url">play.taptrivia.tv</div>
           </div>
         </div>
         <div class="tt-lobby__right">
           <div class="tt-lobby__player-label">${count} Players Ready</div>
           <div class="tt-lobby__player-grid">${playerGrid}</div>
         </div>
+        ${panel}
       </div>`;
+    if (panel) ensureSignageRotation();
   }
 
   /** GET READY SCREEN — v4 lines 524-537 */
@@ -1062,23 +1212,52 @@
     const isLastQuestion = num >= totalQ;
     const panel = signagePanelWrapHTML();
 
-    const countdownText = isLastQuestion
-      ? 'Final results coming...'
-      : `Next question in <span class="tt-between__countdown-num">${nextIn}</span>s...`;
+    let countdownLine = '';
+    if (rotationActive) {
+      // During screen rotation, no game-clock countdown — show next game countdown if available
+      if (state.nextGameStartEpoch) {
+        const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
+        if (secsLeft > 0) {
+          const mins = Math.floor(secsLeft / 60);
+          const secs = secsLeft % 60;
+          const display = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${secs}s`;
+          countdownLine = `<div class="tt-between__next">Next game in ${display}</div>`;
+        }
+      }
+    } else {
+      const countdownText = isLastQuestion
+        ? 'Final results coming...'
+        : `Next question in <span class="tt-between__countdown-num">${nextIn}</span>s...`;
+      countdownLine = `<div id="tv-between-countdown" class="tt-between__next">${countdownText}</div>`;
+    }
+
+    // Full-width glass bar rows for standings
+    let standingsHTML = '';
+    scores.slice(0, 5).forEach((p, i) => {
+      const rank = i + 1;
+      const name = p.name || p.playerName || 'Player';
+      const score = p.score || 0;
+      standingsHTML += `
+        <div class="tt-standing-row" style="animation:rankSlide .3s ease-out ${i * 0.06}s both">
+          <span class="tt-standing-row__rank">${rank}</span>
+          ${avatarHTML(name, { size: 'sm' })}
+          <span class="tt-standing-row__name">${name}</span>
+          <span class="tt-standing-row__score">${score.toLocaleString()}</span>
+        </div>`;
+    });
 
     screenEl.innerHTML = `
       <div class="tt-between tt-between--half${panel ? ' tt-between--with-panel' : ''}">
         <div class="tt-between__panel">
           ${logoHTML('sm')}
           ${barNameHTML('md')}
-          <div class="tt-between__after">AFTER QUESTION ${num}</div>
           <div class="tt-between__section-label">Standings</div>
-          ${leaderboardRowsHTML(scores.slice(0, 5), 1, { compact: true })}
-          <div id="tv-between-countdown" class="tt-between__next">${countdownText}</div>
-          ${panel ? '' : qrBadgeHTML('inline')}
+          <div class="tt-between__standings">${standingsHTML}</div>
+          ${countdownLine}
         </div>
         ${panel}
       </div>`;
+    if (panel) ensureSignageRotation();
   }
 
   /** LEADERBOARD SCREEN — v4 lines 598-637 + signage panel */
@@ -1137,39 +1316,79 @@
           </div>
         </div>`;
     }
+    if (panel) ensureSignageRotation();
   }
 
-  /** RESULTS / GAME OVER SCREEN — left-half + optional signage panel */
+  /** RESULTS / GAME OVER SCREEN — podium top 3 + 4th/5th runners + signage panel */
   function renderResults(state) {
     const scores = state.scores || [];
     const totalQ = state.totalQuestions || 15;
     const playerCount = state.playerCount || scores.length;
     const panel = signagePanelWrapHTML();
 
-    // Countdown to next game
-    let countdownText = '';
+    // Podium: top 3, display order 2nd → 1st → 3rd
+    const top3 = scores.slice(0, 3);
+    const podiumOrder = [top3[1] || null, top3[0] || null, top3[2] || null];
+    const podiumRanks = [2, 1, 3];
+    const podiumSizes = ['lg', 'xl', 'lg'];
+    let podiumInner = '';
+    podiumOrder.forEach((p, i) => {
+      if (!p) return;
+      const rank = podiumRanks[i];
+      const name = p.name || p.playerName || 'Player';
+      const score = p.score || 0;
+      const isFirst = rank === 1;
+      podiumInner += `
+        <div class="tt-results__podium-place${isFirst ? ' tt-results__podium-place--first' : ''}" style="animation:slideUp .5s ease-out ${i * 0.1}s both">
+          <div style="animation:medalDrop .5s ease-out ${i * 0.15 + 0.3}s both">
+            ${avatarHTML(name, { rank, size: podiumSizes[i] })}
+          </div>
+          <div class="tt-results__podium-name${isFirst ? ' tt-results__podium-name--first' : ''}">${name}</div>
+          <div class="tt-results__podium-score${isFirst ? ' tt-results__podium-score--first' : ''}">${score.toLocaleString()}</div>
+        </div>`;
+    });
+
+    // 4th and 5th place compact runner cards
+    const runners = scores.slice(3, 5);
+    let runnersHTML = '';
+    if (runners.length > 0) {
+      runnersHTML = '<div class="tt-results__runners">';
+      runners.forEach((p, i) => {
+        const name = p.name || p.playerName || 'Player';
+        const score = p.score || 0;
+        runnersHTML += `
+          <div class="tt-results__runner">
+            <span class="tt-results__runner-rank">${i + 4}</span>
+            ${avatarHTML(name, { size: 'sm' })}
+            <span class="tt-results__runner-name">${name}</span>
+            <span class="tt-results__runner-score">${score.toLocaleString()}</span>
+          </div>`;
+      });
+      runnersHTML += '</div>';
+    }
+
+    // Next game text
+    let nextText = 'Next game starts soon — stay tuned!';
     if (state.nextGameStartEpoch) {
       const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
       if (secsLeft > 0 && secsLeft <= 120) {
-        countdownText = `<div class="tt-results__countdown">Next game in <span class="tt-results__countdown-num">${secsLeft}</span>s</div>`;
+        nextText = `Next game in <span class="tt-results__countdown-num">${secsLeft}</span>s`;
       }
     }
 
     screenEl.innerHTML = `
-      ${confettiHTML(24)}
       <div class="tt-results tt-results--half${panel ? ' tt-results--with-panel' : ''}">
         <div class="tt-results__panel">
-          ${barNameHTML('md')}
           <div class="tt-results__trophy">🏆</div>
           <div class="tt-results__title">Game Over!</div>
           <div class="tt-results__subtitle">${totalQ} questions · ${playerCount} players</div>
-          ${countdownText}
-          <div class="tt-results__standings-label">Final Standings</div>
-          ${leaderboardRowsHTML(scores.slice(0, 5), 1, { compact: true })}
-          ${panel ? '' : qrBadgeHTML('inline')}
+          <div class="tt-results__podium">${podiumInner}</div>
+          ${runnersHTML}
+          <div class="tt-results__next-text" id="tv-results-next">${nextText}</div>
         </div>
         ${panel}
       </div>`;
+    if (panel) ensureSignageRotation();
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -1244,19 +1463,15 @@
   }
 
   function updateResultsCountdown(state) {
-    const el = document.querySelector('.tt-results__countdown-num');
-    if (!el && state.nextGameStartEpoch) {
-      // Countdown element doesn't exist yet — re-render the full results screen
+    const wrap = document.getElementById('tv-results-next');
+    if (!wrap) return;
+    if (state.nextGameStartEpoch) {
       const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
       if (secsLeft > 0 && secsLeft <= 120) {
-        currentScreen = ''; // Force full re-render
-        renderScreen(state);
+        wrap.innerHTML = `Next game in <span class="tt-results__countdown-num">${secsLeft}</span>s`;
+      } else {
+        wrap.textContent = 'Next game starts soon — stay tuned!';
       }
-      return;
-    }
-    if (el && state.nextGameStartEpoch) {
-      const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
-      el.textContent = secsLeft;
     }
   }
 
@@ -1375,13 +1590,18 @@
 
   async function registerBar() {
     const input = document.getElementById('tt-setup-input');
+    const emailInput = document.getElementById('tt-setup-email');
     const btn = document.getElementById('tt-setup-btn');
     const name = input ? input.value.trim() : '';
     if (!name) { if (input) input.focus(); return; }
 
+    const ownerEmail = emailInput ? emailInput.value.trim() : '';
+
     if (btn) { btn.textContent = 'REGISTERING...'; btn.disabled = true; }
 
-    const result = await apiCall('POST', '/bar/register', { barName: name, tvDeviceId });
+    const payload = { barName: name, tvDeviceId };
+    if (ownerEmail) payload.ownerEmail = ownerEmail;
+    const result = await apiCall('POST', '/bar/register', payload);
     if (result.error) {
       if (btn) { btn.textContent = 'GET YOUR BAR CODE'; btn.disabled = false; }
       return;
@@ -1389,6 +1609,33 @@
 
     barCode = result.barCode;
     barName = result.barName;
+    localStorage.setItem('tt_bar_code', barCode);
+    localStorage.setItem('tt_bar_name', barName);
+    startPolling();
+    renderScreen({ screen: 'lobby', playerCount: 0, players: [] });
+  }
+
+  async function joinWithCode() {
+    const codeInput = document.getElementById('tt-setup-code');
+    const joinBtn = document.getElementById('tt-setup-join-btn');
+    const code = codeInput ? codeInput.value.trim().toUpperCase() : '';
+    if (!code) { if (codeInput) codeInput.focus(); return; }
+
+    if (joinBtn) { joinBtn.textContent = 'JOINING...'; joinBtn.disabled = true; }
+
+    const bar = await apiCall('GET', `/bar/${code}`);
+    if (bar.error || bar.status !== 'active') {
+      if (joinBtn) { joinBtn.textContent = 'JOIN WITH CODE'; joinBtn.disabled = false; }
+      if (codeInput) {
+        codeInput.value = '';
+        codeInput.placeholder = 'Not found — try again';
+        codeInput.focus();
+      }
+      return;
+    }
+
+    barCode = bar.barCode;
+    barName = bar.barName;
     localStorage.setItem('tt_bar_code', barCode);
     localStorage.setItem('tt_bar_name', barName);
     startPolling();
@@ -1423,6 +1670,9 @@
     if (state.signage) {
       signageSlides = state.signage.slides || [];
       signageRotationSpeed = state.signage.rotationSpeed || 15;
+      console.log('[Signage] Loaded', signageSlides.length, 'slides from API, speed:', signageRotationSpeed);
+    } else {
+      console.log('[Signage] No signage in response, state:', state.state, 'keeping', signageSlides.length, 'cached slides');
     }
 
     // Update logo if hash changed (avoids redundant downloads)
@@ -1438,6 +1688,19 @@
 
     const gameState = translateApiState(state);
     if (state.phase) console.log('[TV poll] phase:', state.phase, '→ screen:', gameState.screen, 'q:', gameState.questionNumber);
+
+    // Cache for screen rotation
+    cacheForRotation(gameState, state);
+
+    // During break, cycle through lobby/between/results
+    // (game_over and active_game render normally — rotation only during breaks)
+    if (state.state === 'break') {
+      handleScreenRotation(gameState);
+      return;
+    }
+
+    // Active game or game_over — exit rotation, render normally
+    exitRotationMode();
     renderScreen(gameState);
   }
 

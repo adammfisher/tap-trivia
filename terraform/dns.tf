@@ -136,10 +136,10 @@ resource "aws_route53_record" "api" {
   }
 }
 
-# dashboard.taptrivia.tv → Dashboard App CloudFront
+# admin.taptrivia.tv → Dashboard App CloudFront
 resource "aws_route53_record" "dashboard_app" {
   zone_id = data.aws_route53_zone.main.zone_id
-  name    = "dashboard.taptrivia.tv"
+  name    = "admin.taptrivia.tv"
   type    = "A"
 
   alias {

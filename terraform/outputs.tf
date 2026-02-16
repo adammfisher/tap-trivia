@@ -60,5 +60,5 @@ output "dashboard_cf_dist_id" {
 
 output "dashboard_app_url" {
   description = "Dashboard app custom domain URL"
-  value       = "https://dashboard.taptrivia.tv"
+  value       = "https://admin.taptrivia.tv"
 }

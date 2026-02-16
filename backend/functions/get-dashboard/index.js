@@ -24,12 +24,12 @@ exports.handler = async (event) => {
           ownerEmail: bar.ownerEmail || '',
           emailVerified: bar.emailVerified || false,
           logoUrl: bar.logoUrl || null,
-          logoHash: bar.logoHash || null
-        },
-        signage: bar.signage || {
-          slides: [],
-          rotationSpeed: 15,
-          enabled: true
+          logoHash: bar.logoHash || null,
+          signage: bar.signage || {
+            slides: [],
+            rotationSpeed: 15,
+            enabled: true
+          }
         },
         analytics: {
           // TODO: Phase 4 — query Answers table for real analytics

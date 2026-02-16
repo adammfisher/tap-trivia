@@ -90,13 +90,13 @@ async function sendWelcomeEmail(email, barName, barCode) {
               <p>Enter this code in the TV app to activate your display.</p>
               <h3>Set Up Your Dashboard</h3>
               <p>Manage your digital signage, upload your logo, and view analytics:</p>
-              <p><a href="https://dashboard.taptrivia.tv" style="display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">Open Dashboard</a></p>
+              <p><a href="https://admin.taptrivia.tv" style="display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">Open Dashboard</a></p>
               <p style="color: #999; font-size: 12px; margin-top: 32px;">You'll use this email and bar code to log in. No password needed — we'll send you a one-time code each time.</p>
             </div>
           `
         },
         Text: {
-          Data: `Welcome to TapTrivia!\n\n${barName} is registered. Your bar code: ${barCode}\n\nEnter this code in the TV app to activate.\n\nDashboard: https://dashboard.taptrivia.tv\nLog in with this email + your bar code.\n`
+          Data: `Welcome to TapTrivia!\n\n${barName} is registered. Your bar code: ${barCode}\n\nEnter this code in the TV app to activate.\n\nDashboard: https://admin.taptrivia.tv\nLog in with this email + your bar code.\n`
         }
       }
     }
@@ -147,6 +147,10 @@ exports.handler = async (event) => {
       geo = await fetchGeoLocation(ip);
     }
 
+    // Validate owner email upfront
+    const validEmail = ownerEmail && typeof ownerEmail === 'string' && EMAIL_REGEX.test(ownerEmail.trim());
+    const cleanEmail = validEmail ? ownerEmail.trim().toLowerCase() : null;
+
     // Generate a unique bar code with retry on collision
     const now = new Date().toISOString();
     let barCode;
@@ -170,10 +174,8 @@ exports.handler = async (event) => {
         status: 'active'
       };
 
-      // Add owner email if provided and valid
-      const validEmail = ownerEmail && typeof ownerEmail === 'string' && EMAIL_REGEX.test(ownerEmail.trim());
-      if (validEmail) {
-        barItem.ownerEmail = ownerEmail.trim().toLowerCase();
+      if (cleanEmail) {
+        barItem.ownerEmail = cleanEmail;
         barItem.emailVerified = false;
       }
 
@@ -183,7 +185,6 @@ exports.handler = async (event) => {
         break;
       } catch (err) {
         if (err.name === 'ConditionalCheckFailedException') {
-          // Collision — retry with a new code
           continue;
         }
         throw err;
@@ -199,10 +200,10 @@ exports.handler = async (event) => {
     }
 
     // Send welcome email if owner email was provided
-    if (barItem.ownerEmail) {
+    if (cleanEmail) {
       try {
-        await sendWelcomeEmail(barItem.ownerEmail, barName, barCode);
-        console.log('Welcome email sent to:', barItem.ownerEmail);
+        await sendWelcomeEmail(cleanEmail, barName, barCode);
+        console.log('Welcome email sent to:', cleanEmail);
       } catch (emailErr) {
         console.error('Failed to send welcome email:', emailErr);
         // Don't fail the registration if email fails
@@ -218,7 +219,7 @@ exports.handler = async (event) => {
         city: geo.city,
         state: geo.state,
         isNew: true,
-        ownerEmail: barItem.ownerEmail || undefined
+        ownerEmail: cleanEmail || undefined
       })
     };
   } catch (err) {

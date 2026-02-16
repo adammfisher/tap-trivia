@@ -97,7 +97,7 @@ resource "aws_iam_role_policy" "lambda_ses" {
           "ses:SendEmail",
           "ses:SendRawEmail"
         ]
-        Resource = "arn:aws:ses:us-east-1:*:identity/taptrivia.tv"
+        Resource = "*"
       }
     ]
   })
@@ -144,6 +144,28 @@ resource "aws_iam_role_policy" "lambda_bedrock" {
           "bedrock:InvokeModel"
         ]
         Resource = "arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-image-generator-v2:0"
+      }
+    ]
+  })
+}
+
+# -----------------------------------------------------------------------------
+# CloudFront Invalidation Policy
+# Allows upload-logo Lambda to invalidate cached logos after replacement.
+# -----------------------------------------------------------------------------
+resource "aws_iam_role_policy" "lambda_cloudfront" {
+  name = "TapTrivia-CloudFront"
+  role = aws_iam_role.lambda_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "cloudfront:CreateInvalidation"
+        ]
+        Resource = "arn:aws:cloudfront::*:distribution/*"
       }
     ]
   })

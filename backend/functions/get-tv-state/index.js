@@ -290,7 +290,10 @@ exports.handler = async (event) => {
             nextGameStartEpoch: game.startTimeEpoch,
             secondsUntilNextGame: gameState.secondsUntilStart,
             showBarCode: true,
-            playerAppUrl: process.env.PLAYER_APP_URL || 'https://localhost:3000'
+            playerAppUrl: process.env.PLAYER_APP_URL || 'https://localhost:3000',
+            signage: bar.signage || null,
+            logoUrl: bar.logoUrl || null,
+            logoHash: bar.logoHash || null
           });
         }
       }
@@ -334,7 +337,10 @@ exports.handler = async (event) => {
         nextGameStartEpoch: nextGameStart,
         secondsUntilNextGame: secondsUntilNextGame > 0 ? secondsUntilNextGame : null,
         showBarCode: true,
-        playerAppUrl: process.env.PLAYER_APP_URL || 'https://localhost:3000'
+        playerAppUrl: process.env.PLAYER_APP_URL || 'https://localhost:3000',
+        signage: bar.signage || null,
+        logoUrl: bar.logoUrl || null,
+        logoHash: bar.logoHash || null
       });
     }
 

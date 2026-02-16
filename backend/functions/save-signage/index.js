@@ -8,8 +8,8 @@ const headers = {
   'Access-Control-Allow-Origin': '*'
 };
 
-const VALID_TEMPLATES = ['specials', 'happy_hour', 'event', 'brand', 'announcement', 'sports', 'custom'];
-const VALID_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+const VALID_TEMPLATES = ['specials', 'happyhour', 'event', 'brand', 'announcement', 'sports', 'custom'];
+const VALID_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MAX_SLIDES = 10;
 const MAX_SIGNAGE_SIZE = 50 * 1024; // 50KB
 

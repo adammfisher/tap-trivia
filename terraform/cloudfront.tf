@@ -166,7 +166,7 @@ resource "aws_cloudfront_distribution" "dashboard_app" {
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
   comment             = "Tap Trivia - Dashboard App"
-  aliases             = ["dashboard.taptrivia.tv"]
+  aliases             = ["admin.taptrivia.tv"]
 
   origin {
     domain_name              = aws_s3_bucket.dashboard_app.bucket_regional_domain_name
