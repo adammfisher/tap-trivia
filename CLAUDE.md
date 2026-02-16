@@ -18,6 +18,7 @@ terraform/      → All infrastructure as code (11 .tf files)
 
 - **Player App:** `https://play.taptrivia.tv` (also `https://taptrivia.tv`)
 - **TV App:** `https://tv.taptrivia.tv`
+- **Dashboard:** `https://dashboard.taptrivia.tv`
 - **API:** `https://api.taptrivia.tv`
 
 ## Project Structure
@@ -45,29 +46,48 @@ tap-trivia/
 │   ├── index.html
 │   ├── css/styles.css
 │   └── js/
-│       ├── app.js        # Screen renderers (idle/lobby/playing/reveal/leaderboard/results)
+│       ├── app.js        # Screen renderers + signage (idle/lobby/playing/reveal/leaderboard/results)
 │       ├── config.js     # API_BASE, POLL_INTERVAL (2s)
 │       ├── api.js
 │       ├── scoring.js
 │       └── game-clock.js
+├── dashboard-app/        # Bar owner dashboard
+│   ├── index.html
+│   ├── css/styles.css
+│   └── js/
+│       ├── app.js        # SPA router, sidebar navigation
+│       ├── config.js     # API_BASE, LOGO_BASE
+│       ├── api.js        # Bearer token auth, apiCall helper
+│       ├── auth.js       # Session state management, checkSession()
+│       └── screens/
+│           ├── login.js          # 3-step OTP login flow
+│           ├── dashboard.js      # Stats overview, quick actions
+│           ├── signage-editor.js # 7 templates, emoji pickers, slide management
+│           └── logo-upload.js    # Drag-drop upload with Bedrock bg removal
 ├── backend/
 │   ├── shared/           # Single source of truth, copied to each Lambda
 │   │   ├── dynamo.js     # DynamoDB client + CRUD helpers
+│   │   ├── auth.js       # Dashboard session auth (authenticate, unauthorized)
 │   │   ├── game-clock.js # Phase calculation + scheduling
 │   │   ├── scoring.js    # Points decay algorithm
 │   │   └── questions.js  # Question selection + rotation
-│   └── functions/        # 11 Lambda handlers
+│   └── functions/        # 16 Lambda handlers
 │       ├── register-bar/
 │       ├── get-bar/
 │       ├── join-bar/
 │       ├── reset-bar-code/
 │       ├── get-current-game/
 │       ├── get-question/
-│       ├── get-tv-state/     # TV polling endpoint
+│       ├── get-tv-state/     # TV polling endpoint (includes signage data)
 │       ├── get-player/
 │       ├── submit-answer/
 │       ├── get-leaderboard/
-│       └── generate-games/   # EventBridge scheduled
+│       ├── generate-games/   # EventBridge scheduled
+│       ├── send-otp/         # POST /dashboard/auth/otp
+│       ├── verify-otp/       # POST /dashboard/auth/verify
+│       ├── get-dashboard/    # GET /dashboard/data
+│       ├── save-signage/     # PUT /dashboard/signage
+│       └── upload-logo/      # POST /dashboard/logo (Bedrock bg removal)
 ├── terraform/            # AWS infra (DynamoDB, Lambda, API GW, S3, CloudFront)
 ├── taptrivia-design-kit/ # Design system source of truth
 │   ├── taptrivia-v4.jsx  # Interactive prototype (all screens + phone mockup)
@@ -101,6 +121,7 @@ tap-trivia/
 | TapTrivia-Answers | `ANSWER#{gameId}#{qNum}` |
 | TapTrivia-Players | `PLAYER#{playerId}` |
 | TapTrivia-Bars | `BAR#{barCode}` |
+| TapTrivia-Sessions | `SESSION#{sessionId}` (TTL-enabled) |
 | TapTrivia-GameStats | `STAT#{gameId}` |
 
 ## Design System (v4)
@@ -115,12 +136,21 @@ tap-trivia/
 - **TV scaling:** 2x from 960x540 prototype → 1920x1080 output
 - **TV-safe:** No pure #000 or #FFF
 
+## Dashboard & Signage
+
+- **Auth:** Passwordless OTP via email + bar code → 6-digit OTP → session token (60-day TTL, stored in localStorage/sessionStorage)
+- **Signage:** 7 templates (specials, happyhour, event, brand, announcement, sports, custom) with per-day scheduling, rotation speed, and enable/disable toggle
+- **TV rendering:** Full-screen signage during idle/breaks; in-game panel (680px at 2×) during leaderboard/between/results screens
+- **Logo upload:** Bedrock Titan Image Generator v2 removes background, stored in S3 `taptrivia-logos/`
+- **Shared auth module:** `backend/shared/auth.js` — copied by build script to dashboard Lambdas only
+
 ## Development
 
 ```bash
 # Local dev servers
 cd player-app && python3 -m http.server 8091
 cd tv-app && python3 -m http.server 8090
+cd dashboard-app && python3 -m http.server 8092
 
 # Build & deploy
 bash scripts/build-lambdas.sh
@@ -140,6 +170,8 @@ node scripts/reset-questions.js --confirm
 
 - **game-clock.js and scoring.js are shared** between frontend (player-app, tv-app) and backend (Lambda). Changes must be consistent across all copies.
 - **Backend shared modules** live in `backend/shared/` and are copied by `build-lambdas.sh` — never edit the copies in function dirs directly.
-- Player-app and tv-app are **vanilla JS with no build step** — just static files served from S3/CloudFront.
+- **auth.js is dashboard-only** — only copied to dashboard Lambda functions (send-otp, verify-otp, get-dashboard, save-signage, upload-logo).
+- Player-app, tv-app, and dashboard-app are **vanilla JS with no build step** — just static files served from S3/CloudFront.
 - The TV app is **display-only** (no player interaction). The player app is **fully standalone** (works without TV).
+- The dashboard-app uses **Bearer token auth** — session tokens stored in localStorage (trusted) or sessionStorage (untrusted).
 - All DynamoDB tables use **on-demand billing** (PAY_PER_REQUEST) for scale-to-zero cost.
