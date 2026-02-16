@@ -743,6 +743,27 @@ body {
   font-size: 26px; /* 13×2 */
   color: rgba(255,255,255,0.3);
 }
+.tt-lobby__countdown {
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.tt-lobby__countdown-label {
+  font-size: 26px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.tt-lobby__countdown-num {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 64px;
+  font-weight: 700;
+  color: #ffd200;
+  text-shadow: 0 4px 20px rgba(255,210,0,0.3);
+}
 
 /* ═══════════════════════════════════════════════════════════════
    SCREEN: GET READY
@@ -902,7 +923,7 @@ body {
   flex: 1.2;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
 }
 .tt-play__cat-row {
   display: flex;
@@ -918,7 +939,7 @@ body {
 }
 .tt-play__q-counter-sep { color: rgba(255,255,255,0.18); }
 .tt-play__question {
-  font-size: 64px; /* 32×2 */
+  font-size: 60px; /* 30×2 */
   font-weight: 800;
   color: #f0f0f0;
   line-height: 1.25;
