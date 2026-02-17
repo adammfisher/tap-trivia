@@ -41,6 +41,7 @@ const DashApp = {
 
     if (screenId === 'dashboard') renderDashboard();
     else if (screenId === 'signage') renderSignageEditor();
+    else if (screenId === 'analytics') renderAnalytics();
     else if (screenId === 'logo') renderLogoUpload();
   },
 
@@ -57,6 +58,7 @@ const DashApp = {
     const navItems = [
       { key: 'dashboard', icon: '\u{1F3E0}', label: 'Dashboard' },
       { key: 'signage', icon: '\u{1F4FA}', label: 'Signage Creator' },
+      { key: 'analytics', icon: '\u{1F4CA}', label: 'Analytics' },
       { key: 'logo', icon: '\u{1F5BC}', label: 'Logo & Branding' },
     ];
 

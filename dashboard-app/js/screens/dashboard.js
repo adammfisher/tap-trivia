@@ -10,6 +10,26 @@ function renderDashboard() {
   const slideCount = signage.slides ? signage.slides.filter(s => s.enabled).length : 0;
   const analytics = data && data.analytics ? data.analytics : {};
 
+  // Tonight's schedule — filter slides active today
+  const today = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
+  const todaySlides = (signage.slides || []).filter(s => {
+    if (!s.days || s.days.length === 0) return true;
+    return s.days.includes(today);
+  });
+
+  const scheduleHTML = todaySlides.length > 0
+    ? todaySlides.map(s => {
+        const statusClass = s.enabled ? 'schedule-active' : 'schedule-off';
+        const statusLabel = s.enabled ? 'ACTIVE' : 'OFF';
+        return `
+          <div class="schedule-row">
+            <span class="schedule-icon">${s.icon || '\u{1F4FA}'}</span>
+            <span class="schedule-name">${s.name || s.templateId || 'Slide'}</span>
+            <span class="schedule-status ${statusClass}">${statusLabel}</span>
+          </div>`;
+      }).join('')
+    : '<div class="schedule-empty">No slides scheduled for today</div>';
+
   container.innerHTML = `
     <div class="fade-in">
       <div class="page-header">
@@ -41,7 +61,7 @@ function renderDashboard() {
         </div>
         <div class="dash-card stat-card">
           <div class="stat-icon" style="background:rgba(245,158,11,.15)">&#x23F1;</div>
-          <div class="stat-value">${analytics.avgSession || '0m'}</div>
+          <div class="stat-value">${analytics.avgSessionMin ? analytics.avgSessionMin + 'm' : '0m'}</div>
           <div class="stat-label">Avg session</div>
         </div>
         <div class="dash-card stat-card">
@@ -51,28 +71,28 @@ function renderDashboard() {
         </div>
       </div>
 
-      <div class="dash-grid">
-        <div class="dash-card quick-actions-card">
-          <div class="card-title">Quick Actions</div>
-          <div class="quick-action" id="qa-signage">
-            <span class="qa-icon">&#x1F4FA;</span>
-            <div>
-              <div class="qa-title">Create Signage</div>
-              <div class="qa-desc">Design &amp; manage TV slides</div>
-            </div>
-          </div>
-          <div class="quick-action" id="qa-logo">
-            <span class="qa-icon">&#x1F5BC;</span>
-            <div>
-              <div class="qa-title">Upload Logo</div>
-              <div class="qa-desc">Brand your TV display</div>
-            </div>
-          </div>
+      <div class="dash-bottom-grid">
+        <div class="dash-card schedule-card">
+          <div class="card-title">Tonight's Schedule</div>
+          ${scheduleHTML}
         </div>
-        <div class="dash-card bar-code-card">
-          <div class="card-title">Your Bar Code</div>
-          <div class="bar-code-display">${bar ? bar.barCode : '-----'}</div>
-          <div class="bar-code-hint">Displayed on your TV for patrons to join</div>
+
+        <div class="dash-actions-col">
+          <div class="dash-card action-card" id="qa-signage">
+            <span class="action-card-icon">&#x1F4FA;</span>
+            <div class="action-card-title">Create Signage</div>
+            <div class="action-card-desc">Design &amp; manage TV slides</div>
+          </div>
+          <div class="dash-card action-card" id="qa-analytics">
+            <span class="action-card-icon">&#x1F4C8;</span>
+            <div class="action-card-title">View Analytics</div>
+            <div class="action-card-desc">Player trends, peak hours</div>
+          </div>
+          <div class="dash-card action-card" id="qa-logo">
+            <span class="action-card-icon">&#x1F5BC;</span>
+            <div class="action-card-title">Logo &amp; Branding</div>
+            <div class="action-card-desc">Upload your bar logo</div>
+          </div>
         </div>
       </div>
     </div>
@@ -80,5 +100,6 @@ function renderDashboard() {
 
   document.getElementById('btn-go-signage').addEventListener('click', () => DashApp.showScreen('signage'));
   document.getElementById('qa-signage').addEventListener('click', () => DashApp.showScreen('signage'));
+  document.getElementById('qa-analytics').addEventListener('click', () => DashApp.showScreen('analytics'));
   document.getElementById('qa-logo').addEventListener('click', () => DashApp.showScreen('logo'));
 }

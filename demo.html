@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>TapTrivia Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Fredoka:wght@600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #0a0218;
+    color: #f0f0f0;
+    font-family: 'Outfit', sans-serif;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .demo-layout {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 16px;
+    width: 100vw;
+    height: 100vh;
+    padding: 14px 12px;
+  }
+
+  .frame-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .frame-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.25);
+    padding-left: 4px;
+  }
+
+  /* ─── TV Frame ────────────────────────────────────── */
+  .tv-frame {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    background: #0a0218;
+  }
+  .tv-frame iframe {
+    width: 1920px;
+    height: 1080px;
+    border: none;
+    transform-origin: 0 0;
+  }
+
+  /* ─── Phone Frame ─────────────────────────────────── */
+  .phone-outer {
+    padding: 10px;
+    background: linear-gradient(145deg, #1a1a2e, #16162a);
+    border-radius: 36px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .phone-notch {
+    width: 100px;
+    height: 22px;
+    background: #0a0218;
+    border-radius: 0 0 14px 14px;
+    margin: 0 auto;
+    position: relative;
+    top: -1px;
+    z-index: 2;
+  }
+  .phone-screen {
+    border-radius: 26px;
+    overflow: hidden;
+    background: #0a0218;
+    position: relative;
+    margin-top: -10px;
+  }
+  .phone-screen iframe {
+    width: 390px;
+    height: 844px;
+    border: none;
+    transform-origin: 0 0;
+  }
+  .phone-homebar {
+    width: 110px;
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+    margin: 6px auto 0;
+  }
+</style>
+</head>
+<body>
+
+  <div class="demo-layout">
+    <!-- TV App -->
+    <div class="frame-wrap" id="tv-wrap">
+      <div class="frame-label">Bar TV</div>
+      <div class="tv-frame" id="tv-frame">
+        <iframe id="tv-iframe" src="https://tv.taptrivia.tv" allow="autoplay"></iframe>
+      </div>
+    </div>
+
+    <!-- Player App (Phone) -->
+    <div class="frame-wrap" id="phone-wrap">
+      <div class="frame-label">Player</div>
+      <div class="phone-outer" id="phone-outer">
+        <div class="phone-notch"></div>
+        <div class="phone-screen" id="phone-screen">
+          <iframe id="player-iframe" src="https://play.taptrivia.tv" allow="autoplay"></iframe>
+        </div>
+        <div class="phone-homebar"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  function fitToScreen() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const gap = 16;
+    const pad = 24; // total horizontal padding
+    const labelH = 18; // label + gap
+
+    // Phone is height-constrained: fill available height
+    // phone outer = screen + 20(pad) + 22(notch) - 10(neg margin) + 10(home) = screen + 42
+    const phoneChrome = 42;
+    const maxPhoneScreenH = vh - pad - labelH - phoneChrome;
+    const phoneScale = maxPhoneScreenH / 844;
+    const phoneScreenW = Math.floor(390 * phoneScale);
+    const phoneScreenH = Math.floor(844 * phoneScale);
+    const phoneOuterW = phoneScreenW + 20; // 10px padding each side
+
+    // TV gets remaining width, constrained to 16:9
+    const tvW = vw - pad - gap - phoneOuterW - 20;
+    const tvH = Math.floor(tvW * 9 / 16);
+    const tvScale = tvW / 1920;
+
+    // Apply TV sizing
+    const tvFrame = document.getElementById('tv-frame');
+    tvFrame.style.width = tvW + 'px';
+    tvFrame.style.height = tvH + 'px';
+    document.querySelector('.tv-frame iframe').style.transform = `scale(${tvScale})`;
+
+    // Apply phone sizing
+    const phoneScreen = document.getElementById('phone-screen');
+    phoneScreen.style.width = phoneScreenW + 'px';
+    phoneScreen.style.height = phoneScreenH + 'px';
+    document.querySelector('.phone-screen iframe').style.transform = `scale(${phoneScale})`;
+  }
+
+  fitToScreen();
+  window.addEventListener('resize', fitToScreen);
+</script>
+</body>
+</html>

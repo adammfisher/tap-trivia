@@ -11,6 +11,8 @@ const STORAGE_KEYS = {
   MUTED: 'tt_muted',
   ACTIVE_GAME_ID: 'tt_active_game_id',
   ACTIVE_GAME_START: 'tt_active_game_start',
+  LAST_GAME_ID: 'tt_last_game_id',
+  LAST_GAME_SCORE: 'tt_last_game_score',
   BAR_HISTORY: 'tt_bar_history'
 };
 
@@ -84,6 +86,18 @@ const Player = {
     try {
       return JSON.parse(localStorage.getItem(STORAGE_KEYS.BAR_HISTORY)) || [];
     } catch { return []; }
+  },
+
+  setLastGame(gameId, score) {
+    localStorage.setItem(STORAGE_KEYS.LAST_GAME_ID, gameId);
+    localStorage.setItem(STORAGE_KEYS.LAST_GAME_SCORE, String(score || 0));
+  },
+
+  getLastGame() {
+    const id = localStorage.getItem(STORAGE_KEYS.LAST_GAME_ID);
+    const score = localStorage.getItem(STORAGE_KEYS.LAST_GAME_SCORE);
+    if (id) return { gameId: id, score: Number(score) || 0 };
+    return null;
   },
 
   addBarToHistory(code, name) {

@@ -37,13 +37,13 @@
   let barLogoUrl = null;
   let barLogoHash = null;
 
-  // Screen rotation state (cycles lobby/between/results during non-gameplay)
+  // Screen rotation state (cycles results/lobby after game ends)
   let cachedScreenData = {};
   let rotationActive = false;
   let rotationScreens = [];
   let rotationIdx = 0;
   let rotationTimer = null;
-  const ROTATION_INTERVAL_MS = 10000;
+  const ROTATION_DURATIONS = { results: 30000, lobby: 60000 };
 
   // DOM refs
   const screenEl = document.getElementById('tt-screen');
@@ -186,13 +186,14 @@
   }
 
   /** Build difficulty dots — v4 lines 547-549 */
-  function difficultyHTML(level, maxLevel = 5) {
+  function difficultyHTML(level) {
+    const clamped = Math.min(Math.max(level, 1), 3);
+    const labels = ['', 'Easy', 'Medium', 'Hard'];
     let html = '<div class="tt-difficulty">';
-    for (let i = 1; i <= maxLevel; i++) {
-      html += `<div class="tt-difficulty__dot tt-difficulty__dot--${i <= level ? 'active' : 'inactive'}"></div>`;
+    for (let i = 1; i <= clamped; i++) {
+      html += '<div class="tt-difficulty__dot tt-difficulty__dot--active"></div>';
     }
-    const labels = ['', 'Easy', 'Easy', 'Medium', 'Hard', 'Expert'];
-    html += `<span class="tt-difficulty__label">${labels[level] || ''}</span>`;
+    html += `<span class="tt-difficulty__label">${labels[clamped]}</span>`;
     html += '</div>';
     return html;
   }
@@ -458,9 +459,8 @@
   /** Build ordered list of screens available for rotation */
   function buildRotationList() {
     const screens = [];
-    if (cachedScreenData.lobby) screens.push('lobby');
-    if (cachedScreenData.between) screens.push('between');
     if (cachedScreenData.results) screens.push('results');
+    if (cachedScreenData.lobby) screens.push('lobby');
     return screens;
   }
 
@@ -505,20 +505,23 @@
     else if (currentScreen === 'results') updateResultsCountdown(state);
   }
 
-  /** Start the screen rotation timer */
+  /** Start the screen rotation timer (per-screen durations) */
   function startRotationTimer() {
     stopRotationTimer();
     if (rotationScreens.length <= 1) return;
-    rotationTimer = setInterval(() => {
+    const currentScreenName = rotationScreens[rotationIdx % rotationScreens.length];
+    const duration = ROTATION_DURATIONS[currentScreenName] || 30000;
+    rotationTimer = setTimeout(() => {
       rotationIdx = (rotationIdx + 1) % rotationScreens.length;
       renderRotationScreen();
-    }, ROTATION_INTERVAL_MS);
+      startRotationTimer();
+    }, duration);
   }
 
   /** Stop the screen rotation timer */
   function stopRotationTimer() {
     if (rotationTimer) {
-      clearInterval(rotationTimer);
+      clearTimeout(rotationTimer);
       rotationTimer = null;
     }
   }
@@ -1246,8 +1249,18 @@
         </div>`;
     });
 
+    // Advance signage to next slide each time standings appears (no rotation while visible)
+    stopSignageRotation();
+    const activeSlides = getActiveSlides();
+    if (activeSlides.length > 1) {
+      signageCurrentIndex = (signageCurrentIndex + 1) % activeSlides.length;
+    }
+
+    // Re-get panel after advancing index
+    const panelFinal = signagePanelWrapHTML();
+
     screenEl.innerHTML = `
-      <div class="tt-between tt-between--half${panel ? ' tt-between--with-panel' : ''}">
+      <div class="tt-between tt-between--half${panelFinal ? ' tt-between--with-panel' : ''}">
         <div class="tt-between__panel">
           ${logoHTML('sm')}
           ${barNameHTML('md')}
@@ -1255,9 +1268,8 @@
           <div class="tt-between__standings">${standingsHTML}</div>
           ${countdownLine}
         </div>
-        ${panel}
+        ${panelFinal}
       </div>`;
-    if (panel) ensureSignageRotation();
   }
 
   /** LEADERBOARD SCREEN — v4 lines 598-637 + signage panel */
@@ -1316,7 +1328,11 @@
           </div>
         </div>`;
     }
-    if (panel) ensureSignageRotation();
+    // Advance signage one slide each time leaderboard appears (no rotation while visible)
+    stopSignageRotation();
+    if (getActiveSlides().length > 1) {
+      signageCurrentIndex = (signageCurrentIndex + 1) % getActiveSlides().length;
+    }
   }
 
   /** RESULTS / GAME OVER SCREEN — podium top 3 + 4th/5th runners + signage panel */
@@ -1388,7 +1404,11 @@
         </div>
         ${panel}
       </div>`;
-    if (panel) ensureSignageRotation();
+    // No signage rotation on results — advance one slide each render
+    stopSignageRotation();
+    if (getActiveSlides().length > 1) {
+      signageCurrentIndex = (signageCurrentIndex + 1) % getActiveSlides().length;
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════

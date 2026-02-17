@@ -1853,6 +1853,234 @@ body {
 .info-step-desc { font-size: 11px; color: rgba(255,255,255,.35); margin-top: 2px; }
 
 /* ================================================================
+   DASHBOARD — Schedule & Action Cards
+   ================================================================ */
+.dash-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+}
+.schedule-card { padding: 24px; }
+.schedule-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.schedule-row:last-child { border-bottom: none; }
+.schedule-icon { font-size: 18px; }
+.schedule-name { font-size: 14px; font-weight: 500; color: #fff; flex: 1; }
+.schedule-status {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+.schedule-active { color: #00d4aa; background: rgba(0,212,170,.12); }
+.schedule-off { color: rgba(255,255,255,.3); background: rgba(255,255,255,.04); }
+.schedule-empty { font-size: 13px; color: rgba(255,255,255,.25); padding: 20px 0; }
+
+.dash-actions-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.action-card {
+  padding: 20px;
+  cursor: pointer;
+  transition: background .15s, transform .15s;
+}
+.action-card:hover {
+  background: rgba(255,255,255,.06);
+  transform: translateY(-1px);
+}
+.action-card-icon { font-size: 28px; display: block; margin-bottom: 8px; }
+.action-card-title { font-size: 14px; font-weight: 600; color: #fff; }
+.action-card-desc { font-size: 12px; color: rgba(255,255,255,.35); margin-top: 2px; }
+
+/* ================================================================
+   ANALYTICS SCREEN
+   ================================================================ */
+.an-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.an-period-tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(255,255,255,.06);
+  border-radius: 10px;
+  padding: 3px;
+}
+.an-period-tab {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.4);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.an-period-tab:hover { color: rgba(255,255,255,.7); }
+.an-period-tab.active {
+  background: #667eea;
+  color: #fff;
+}
+
+.an-loading {
+  text-align: center;
+  padding: 32px;
+  color: rgba(255,255,255,.35);
+  font-size: 14px;
+}
+
+.an-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.an-chart-card { padding: 24px; }
+.an-chart-wide { grid-column: 1; }
+.an-chart-card .card-title { margin-bottom: 20px; }
+.an-empty { color: rgba(255,255,255,.2); font-size: 13px; text-align: center; padding: 24px 0; }
+
+/* Bar chart (players per day) */
+.an-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 180px;
+  padding-top: 16px;
+}
+.an-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+.an-bar-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,.6);
+  margin-bottom: 4px;
+}
+.an-bar {
+  width: 100%;
+  max-width: 48px;
+  min-height: 4px;
+  background: linear-gradient(180deg, #00d4aa, #00a888);
+  border-radius: 6px 6px 2px 2px;
+  transition: height .4s ease-out;
+}
+.an-bar-label {
+  font-size: 11px;
+  color: rgba(255,255,255,.3);
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* Horizontal bars (peak hours) */
+.an-hbar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.an-hbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.an-hbar-label {
+  font-size: 13px;
+  color: rgba(255,255,255,.5);
+  min-width: 70px;
+  font-weight: 500;
+}
+.an-hbar-track {
+  flex: 1;
+  height: 10px;
+  background: rgba(255,255,255,.06);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.an-hbar-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #00d4aa, #667eea);
+  transition: width .4s ease-out;
+}
+.an-hbar-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #00d4aa;
+  min-width: 36px;
+  text-align: right;
+}
+
+/* Category list */
+.an-cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.an-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.an-cat-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.an-cat-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  flex: 1;
+}
+.an-cat-pct {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,.5);
+}
+
+/* Retention */
+.an-retention {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.an-ret-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.an-ret-row:last-child { border-bottom: none; }
+.an-ret-label {
+  font-size: 14px;
+  color: rgba(255,255,255,.5);
+  font-weight: 500;
+}
+.an-ret-value {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #00d4aa;
+}
+
+/* ================================================================
    RESPONSIVE (tablet-ish)
    ================================================================ */
 @media (max-width: 1100px) {
@@ -1864,6 +2092,7 @@ body {
   .stat-row { flex-wrap: wrap; }
   .stat-card { min-width: 120px; }
   .dash-grid { flex-direction: column; }
+  .dash-bottom-grid { grid-template-columns: 1fr; }
   .bar-code-card { width: 100%; }
   .logo-upload-grid { flex-direction: column; }
   .logo-info-col { width: 100%; }
@@ -1871,4 +2100,7 @@ body {
   .editor-preview { width: 100%; }
   .rotation-layout { flex-direction: column; }
   .rotation-preview { width: 100%; position: static; }
+  .an-header { flex-direction: column; gap: 12px; }
+  .an-charts-grid { grid-template-columns: 1fr; }
+  .an-chart-wide { grid-column: 1; }
 }

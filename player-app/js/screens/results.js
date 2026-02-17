@@ -9,12 +9,47 @@ const ResultsScreen = {
   _autoNavTimer: null,
 
   async show(gameId, totalScore) {
-    this.gameId = gameId;
-    this.finalScore = totalScore;
     this.clearAutoNav();
+
+    // If called with a gameId (from game flow), save it as last game
+    if (gameId) {
+      this.gameId = gameId;
+      this.finalScore = totalScore || 0;
+      Player.setLastGame(gameId, this.finalScore);
+    } else {
+      // Called from nav button with no args — try last game
+      const last = Player.getLastGame();
+      if (last) {
+        this.gameId = last.gameId;
+        this.finalScore = last.score;
+      } else {
+        this.gameId = null;
+        this.finalScore = 0;
+      }
+    }
 
     const barName = Player.getBarName();
     const container = document.getElementById('results-content');
+
+    // No game to show
+    if (!this.gameId) {
+      container.innerHTML = `
+        <div class="results-top-bar">
+          <div class="logo-small"><span class="logo__tap">Tap</span><span class="logo__trivia">Trivia</span></div>
+          ${barName ? `<div class="p-bar-name">${barName}</div>` : ''}
+        </div>
+        <div class="results-empty">
+          <div class="results-empty-icon">🏆</div>
+          <div class="results-empty-title">No Recent Game</div>
+          <div class="results-empty-text">Play a game to see your results and leaderboards!</div>
+          <button class="btn-next-game" onclick="App.showScreen(Player.hasBar() ? 'lobby' : 'home')">
+            Find a Game →
+          </button>
+        </div>
+      `;
+      return;
+    }
+
     container.innerHTML = `
       <div class="results-top-bar">
         <div class="logo-small"><span class="logo__tap">Tap</span><span class="logo__trivia">Trivia</span></div>
@@ -22,7 +57,7 @@ const ResultsScreen = {
       </div>
       <div class="results-header">
         <div class="results-gameover">GAME OVER</div>
-        <div class="results-score">${(totalScore || 0).toLocaleString()}</div>
+        <div class="results-score">${this.finalScore.toLocaleString()}</div>
         <div class="results-points-label">POINTS</div>
       </div>
       <div class="results-loading">Loading leaderboards...</div>
@@ -103,10 +138,9 @@ const ResultsScreen = {
       </div>
       <div class="results-header">
         <div class="results-gameover">GAME OVER</div>
-        <div class="results-score">${this.finalScore.toLocaleString()}</div>
+        <div class="results-score">${(this.finalScore || 0).toLocaleString()}</div>
         <div class="results-points-label">POINTS</div>
       </div>
-      ${barLeaderHtml ? `<div class="results-bar-section"><h3>${_barName} Leaderboard</h3>${barLeaderHtml}</div>` : ''}
       <div class="results-tabs">
         <button class="tab-btn active" onclick="ResultsScreen.showTab('bar')">YOUR BAR</button>
         <button class="tab-btn" onclick="ResultsScreen.showTab('global')">GLOBAL</button>

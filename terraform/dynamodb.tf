@@ -149,6 +149,16 @@ resource "aws_dynamodb_table" "answers" {
     type = "N"
   }
 
+  attribute {
+    name = "barCode"
+    type = "S"
+  }
+
+  attribute {
+    name = "serverTimestamp"
+    type = "N"
+  }
+
   global_secondary_index {
     name            = "game-player-index"
     hash_key        = "gameId"
@@ -160,6 +170,13 @@ resource "aws_dynamodb_table" "answers" {
     name            = "game-bar-index"
     hash_key        = "gameIdBarCode"
     range_key       = "pointsAwarded"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "barCode-time-index"
+    hash_key        = "barCode"
+    range_key       = "serverTimestamp"
     projection_type = "ALL"
   }
 
