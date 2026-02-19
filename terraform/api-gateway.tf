@@ -303,3 +303,23 @@ resource "aws_apigatewayv2_route" "upload_logo" {
   route_key = "POST /dashboard/logo"
   target    = "integrations/${aws_apigatewayv2_integration.upload_logo.id}"
 }
+
+# =============================================================================
+# Feedback Route
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# POST /feedback → submit-feedback
+# -----------------------------------------------------------------------------
+resource "aws_apigatewayv2_integration" "submit_feedback" {
+  api_id                 = aws_apigatewayv2_api.main.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.submit_feedback.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "submit_feedback" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "POST /feedback"
+  target    = "integrations/${aws_apigatewayv2_integration.submit_feedback.id}"
+}

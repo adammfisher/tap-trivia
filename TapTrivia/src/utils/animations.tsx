@@ -1,0 +1,235 @@
+import { useEffect, useRef } from 'react';
+import { Animated, ViewStyle, StyleProp, TextStyle } from 'react-native';
+
+type Direction = 'up' | 'down' | 'left' | 'none';
+
+interface FadeInProps {
+  delay?: number;
+  duration?: number;
+  direction?: Direction;
+  style?: StyleProp<ViewStyle>;
+  children: React.ReactNode;
+}
+
+interface ZoomInProps {
+  delay?: number;
+  duration?: number;
+  spring?: boolean;
+  style?: StyleProp<ViewStyle>;
+  children: React.ReactNode;
+}
+
+interface FadeInTextProps {
+  delay?: number;
+  duration?: number;
+  direction?: Direction;
+  style?: StyleProp<TextStyle>;
+  children: React.ReactNode;
+}
+
+interface ZoomInTextProps {
+  delay?: number;
+  duration?: number;
+  spring?: boolean;
+  style?: StyleProp<TextStyle>;
+  children: React.ReactNode;
+}
+
+const TRANSLATE_DISTANCE = 20;
+
+export function FadeInView({
+  delay = 0,
+  duration = 400,
+  direction = 'up',
+  style,
+  children,
+}: FadeInProps) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translate = useRef(new Animated.Value(
+    direction === 'none' ? 0 : direction === 'down' ? -TRANSLATE_DISTANCE : TRANSLATE_DISTANCE,
+  )).current;
+
+  useEffect(() => {
+    const animations: Animated.CompositeAnimation[] = [
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration,
+        delay,
+        useNativeDriver: true,
+      }),
+    ];
+    if (direction !== 'none') {
+      animations.push(
+        Animated.timing(translate, {
+          toValue: 0,
+          duration,
+          delay,
+          useNativeDriver: true,
+        }),
+      );
+    }
+    Animated.parallel(animations).start();
+  }, []);
+
+  const transform: Animated.WithAnimatedObject<ViewStyle>['transform'] =
+    direction === 'left'
+      ? [{ translateX: translate }]
+      : direction !== 'none'
+        ? [{ translateY: translate }]
+        : [];
+
+  return (
+    <Animated.View style={[style, { opacity, transform }]}>
+      {children}
+    </Animated.View>
+  );
+}
+
+export function FadeInText({
+  delay = 0,
+  duration = 400,
+  direction = 'up',
+  style,
+  children,
+}: FadeInTextProps) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translate = useRef(new Animated.Value(
+    direction === 'none' ? 0 : direction === 'down' ? -TRANSLATE_DISTANCE : TRANSLATE_DISTANCE,
+  )).current;
+
+  useEffect(() => {
+    const animations: Animated.CompositeAnimation[] = [
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration,
+        delay,
+        useNativeDriver: true,
+      }),
+    ];
+    if (direction !== 'none') {
+      animations.push(
+        Animated.timing(translate, {
+          toValue: 0,
+          duration,
+          delay,
+          useNativeDriver: true,
+        }),
+      );
+    }
+    Animated.parallel(animations).start();
+  }, []);
+
+  const transform: Animated.WithAnimatedObject<TextStyle>['transform'] =
+    direction === 'left'
+      ? [{ translateX: translate }]
+      : direction !== 'none'
+        ? [{ translateY: translate }]
+        : [];
+
+  return (
+    <Animated.Text style={[style, { opacity, transform }]}>
+      {children}
+    </Animated.Text>
+  );
+}
+
+export function ZoomInView({
+  delay = 0,
+  duration = 600,
+  spring = false,
+  style,
+  children,
+}: ZoomInProps) {
+  const scale = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const opacityAnim = Animated.timing(opacity, {
+      toValue: 1,
+      duration: 150,
+      delay,
+      useNativeDriver: true,
+    });
+
+    const scaleAnim = spring
+      ? Animated.sequence([
+          Animated.delay(delay),
+          Animated.spring(scale, {
+            toValue: 1,
+            useNativeDriver: true,
+            damping: 12,
+            stiffness: 180,
+          }),
+        ])
+      : Animated.timing(scale, {
+          toValue: 1,
+          duration,
+          delay,
+          useNativeDriver: true,
+        });
+
+    Animated.parallel([opacityAnim, scaleAnim]).start();
+  }, []);
+
+  return (
+    <Animated.View style={[style, { opacity, transform: [{ scale }] }]}>
+      {children}
+    </Animated.View>
+  );
+}
+
+export function ZoomInText({
+  delay = 0,
+  duration = 600,
+  spring = false,
+  style,
+  children,
+}: ZoomInTextProps) {
+  const scale = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const opacityAnim = Animated.timing(opacity, {
+      toValue: 1,
+      duration: 150,
+      delay,
+      useNativeDriver: true,
+    });
+
+    const scaleAnim = spring
+      ? Animated.sequence([
+          Animated.delay(delay),
+          Animated.spring(scale, {
+            toValue: 1,
+            useNativeDriver: true,
+            damping: 12,
+            stiffness: 180,
+          }),
+        ])
+      : Animated.timing(scale, {
+          toValue: 1,
+          duration,
+          delay,
+          useNativeDriver: true,
+        });
+
+    Animated.parallel([opacityAnim, scaleAnim]).start();
+  }, []);
+
+  return (
+    <Animated.Text style={[style, { opacity, transform: [{ scale }] }]}>
+      {children}
+    </Animated.Text>
+  );
+}
+
+/** Shake an Animated.Value left-right (for error feedback) */
+export function triggerShake(shakeValue: Animated.Value) {
+  Animated.sequence([
+    Animated.timing(shakeValue, { toValue: -5, duration: 50, useNativeDriver: true }),
+    Animated.timing(shakeValue, { toValue: 5, duration: 50, useNativeDriver: true }),
+    Animated.timing(shakeValue, { toValue: -3, duration: 50, useNativeDriver: true }),
+    Animated.timing(shakeValue, { toValue: 3, duration: 50, useNativeDriver: true }),
+    Animated.timing(shakeValue, { toValue: 0, duration: 50, useNativeDriver: true }),
+  ]).start();
+}

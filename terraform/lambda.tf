@@ -19,6 +19,7 @@ locals {
     TABLE_PLAYERS        = aws_dynamodb_table.players.name
     TABLE_BARS           = aws_dynamodb_table.bars.name
     TABLE_SESSIONS       = aws_dynamodb_table.sessions.name
+    TABLE_FEEDBACK       = aws_dynamodb_table.feedback.name
   }
 }
 
@@ -700,6 +701,50 @@ resource "aws_lambda_permission" "upload_logo_apigw" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.upload_logo.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}
+
+# =============================================================================
+# Player Feedback Lambda
+# =============================================================================
+
+data "archive_file" "submit_feedback" {
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/functions/submit-feedback"
+  output_path = "${path.module}/zip/submit-feedback.zip"
+}
+
+# -----------------------------------------------------------------------------
+# 17. submit-feedback
+#     Stores player feedback from the mobile app.
+#     DynamoDB: Write Feedback
+# -----------------------------------------------------------------------------
+resource "aws_lambda_function" "submit_feedback" {
+  function_name    = "TapTrivia-submit-feedback"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  memory_size      = 128
+  timeout          = 10
+  filename         = data.archive_file.submit_feedback.output_path
+  source_code_hash = data.archive_file.submit_feedback.output_base64sha256
+
+  environment {
+    variables = local.common_environment_variables
+  }
+
+  tags = {
+    Environment = var.stage
+    Project     = "TapTrivia"
+    Function    = "submit-feedback"
+  }
+}
+
+resource "aws_lambda_permission" "submit_feedback_apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.submit_feedback.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }

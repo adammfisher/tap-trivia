@@ -144,6 +144,68 @@ tap-trivia/
 - **Logo upload:** Bedrock Titan Image Generator v2 removes background, stored in S3 `taptrivia-logos/`
 - **Shared auth module:** `backend/shared/auth.js` — copied by build script to dashboard Lambdas only
 
+## Implementation Progress (Dashboard, Auth & Signage — from CLAUDE-CODE-PROMPT.md)
+
+### Phase 1: Backend Infrastructure ✅ COMPLETE
+- `backend/shared/dynamo.js` — SESSIONS + FEEDBACK tables defined
+- `backend/shared/auth.js` — `authenticate()` / `unauthorized()` functions
+- `scripts/build-lambdas.sh` — copies auth.js to dashboard Lambda functions
+
+### Phase 2: Lambda Functions ✅ COMPLETE
+- `send-otp/` — validates email+barCode pair, rate-limits (60s), sends 6-digit OTP via SES
+- `verify-otp/` — validates OTP (max 5 attempts, 10min expiry), creates 60-day session
+- `get-dashboard/` — real analytics (playersPerDay, peakHours, popularCategories, retention)
+- `save-signage/` — validates signage structure (7 templates, max 50KB, day scheduling)
+- `upload-logo/` — Bedrock bg removal, S3 upload, CloudFront invalidation, MD5 hash
+- `register-bar/` — modified: accepts ownerEmail, sends welcome email via SES
+- `get-tv-state/` — modified: includes signage, logoUrl, logoHash in all response states
+
+### Phase 3: Dashboard Web App ✅ COMPLETE
+- `dashboard-app/js/screens/login.js` — 3-step flow (credentials → OTP → trust)
+- `dashboard-app/js/screens/dashboard.js` — stats cards, quick actions
+- `dashboard-app/js/screens/signage-editor.js` — full editor (1306 lines), all 7 templates, dual TV preview, emoji pickers
+- `dashboard-app/js/screens/analytics.js` — period selector, charts, retention funnel
+- `dashboard-app/js/screens/logo-upload.js` — drag-drop, Bedrock bg removal toggle
+- `dashboard-app/js/auth.js` — session state management
+- `dashboard-app/js/api.js` — Bearer token auth, auto-redirect on 401
+
+### Phase 4: TV App Signage Rendering ✅ COMPLETE
+- Signage renderers built inline in `tv-app/js/app.js` (lines 318-856)
+- `SIGNAGE_FS` — 7 full-screen renderers (specials, happyhour, event, brand, announcement, sports, custom)
+- `SIGNAGE_PANEL` — 7 in-game panel renderers
+- Day-of-week filtering via `getActiveSlides()`
+- Rotation logic with configurable speed
+- Integrated into idle, lobby, between, leaderboard, and results screens
+- Signage CSS in `tv-app/css/styles.css`
+- Poll handler captures signage config and logo hash from API
+
+### Phase 5: Terraform ✅ COMPLETE
+- Sessions DynamoDB table with TTL
+- SES configuration with DKIM/SPF
+- S3 logos bucket with CloudFront OAC
+- Dashboard S3 + CloudFront + Route53
+- 5 new Lambda functions with IAM policies
+- 5 API Gateway routes for dashboard endpoints
+- upload-logo at 256MB/30s timeout
+- Bedrock, S3, CloudFront IAM policies
+
+### Phase 6: Testing ✅ COMPLETE
+- `scripts/test-dashboard-auth.js` — end-to-end OTP flow test (8 tests)
+- `scripts/test-signage.js` — signage save/retrieve/render test (7 tests)
+
+### Manual Testing Checklist
+- [ ] Register a bar with email → receive welcome email
+- [ ] Request OTP → receive OTP email
+- [ ] Enter wrong OTP → get error, attempts increment
+- [ ] Enter correct OTP → get session token
+- [ ] Use token to fetch dashboard data → get bar info
+- [ ] Save signage with all 7 template types → round-trip check
+- [ ] Upload a logo → verify background removal and S3 storage
+- [ ] Poll tv-state → verify signage appears in break state
+- [ ] Poll tv-state → verify signage appears in active_game state
+- [ ] Wait for session expiry → verify 401 on next request
+- [ ] Rate limit: request OTP twice within 60s → second should be ignored
+
 ## Development
 
 ```bash

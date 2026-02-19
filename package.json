@@ -1,10 +1,14 @@
 {
   "name": "tap-trivia",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "TapTrivia monorepo — live bar trivia platform",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "private": true
+    "mobile": "cd TapTrivia && npx expo start --clear",
+    "mobile:ios": "cd TapTrivia && npx expo start --clear --ios",
+    "mobile:android": "cd TapTrivia && npx expo start --clear --android",
+    "player": "cd player-app && python3 -m http.server 8091",
+    "tv": "cd tv-app && python3 -m http.server 8090",
+    "dashboard": "cd dashboard-app && python3 -m http.server 8092"
+  }
 }

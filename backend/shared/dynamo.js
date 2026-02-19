@@ -35,7 +35,8 @@ const TABLE = {
   PLAYERS: process.env.TABLE_PLAYERS || 'TapTrivia-Players',
   BARS: process.env.TABLE_BARS || 'TapTrivia-Bars',
   GAME_STATS: process.env.TABLE_GAME_STATS || 'TapTrivia-GameStats',
-  SESSIONS: process.env.TABLE_SESSIONS || 'TapTrivia-Sessions'
+  SESSIONS: process.env.TABLE_SESSIONS || 'TapTrivia-Sessions',
+  FEEDBACK: process.env.TABLE_FEEDBACK || 'TapTrivia-Feedback'
 };
 
 async function get(tableName, key) {

@@ -332,3 +332,30 @@ resource "aws_dynamodb_table" "sessions" {
     Table       = "Sessions"
   }
 }
+
+# -----------------------------------------------------------------------------
+# 9. TapTrivia-Feedback
+#    Player feedback submissions from the mobile app.
+#    Simple key-value table with TTL for auto-expiry after 1 year.
+# -----------------------------------------------------------------------------
+resource "aws_dynamodb_table" "feedback" {
+  name         = "TapTrivia-Feedback"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "PK"
+
+  attribute {
+    name = "PK"
+    type = "S"
+  }
+
+  ttl {
+    enabled        = true
+    attribute_name = "ttl"
+  }
+
+  tags = {
+    Environment = var.stage
+    Project     = "TapTrivia"
+    Table       = "Feedback"
+  }
+}
