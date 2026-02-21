@@ -71,6 +71,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+  overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -115,9 +116,8 @@ body::-webkit-scrollbar { display: none; }
 .screen {
   display: none;
   flex-direction: column;
-  height: 100dvh;
-  max-height: 100dvh;
-  overflow: hidden;
+  min-height: 100dvh;
+  overflow-y: auto;
   padding-bottom: 70px;
   position: relative;
   z-index: 1;
