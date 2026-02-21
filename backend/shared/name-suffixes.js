@@ -1,118 +1,70 @@
 'use strict';
 
-const { TABLE, scan, update } = require('./dynamo');
+const { TABLE, scan } = require('./dynamo');
 
 /**
- * Curated list of fun, creative name suffixes.
- * Mix of bar/drink themed, trivia/game themed, silly superlatives, and fun adjectives.
- * Nothing offensive — all playful and lighthearted.
+ * Global name uniqueness with _N suffix.
+ * Scans the Players table for matching names and finds the lowest available number.
  */
-const SUFFIXES = [
-  // Bar & drink themed
-  'the Bartender', 'on the Rocks', 'with a Twist', 'Last Call', 'Happy Hour',
-  'Top Shelf', 'Neat', 'Double Shot', 'On Tap', 'No Ice',
-  'Stirred Not Shaken', 'the Regular', 'Tab Runner', 'the Designated Driver',
-
-  // Trivia & game themed
-  'the Brain', 'the Brainiac', 'Quiz Whiz', 'the Professor', 'the Scholar',
-  'the Mastermind', 'Big Brain', 'the Oracle', 'the Sage', 'the Riddler',
-  'Trivia Titan', 'the Fact Finder', 'Captain Obvious', 'the Wildcard',
-
-  // Silly superlatives
-  'the Great', 'the Magnificent', 'the Spectacular', 'the Legendary',
-  'the Unstoppable', 'the Incredible', 'the Mighty', 'the Fearless',
-  'the Bold', 'Supreme', 'the Majestic', 'the Glorious',
-
-  // Fun qualifiers
-  'the Original', 'Deluxe', 'Premium', 'Extra Crispy', 'Turbo',
-  'the Remix', 'Reloaded', 'the Sequel', 'After Dark',
-  'the Wise', 'the Swift', 'the Lucky', 'the Daring', 'Extraordinaire',
-  'MVP', 'the Champ', 'the Legend', 'the Ace', 'the Wizard',
-  'the Notorious', 'the Fantastic', 'the One and Only'
-];
 
 /**
- * Get all players currently at a specific bar/group.
- * Uses a Scan with FilterExpression (no GSI on currentBarCode).
- * Fine for this scale — the Players table is small.
+ * Find all players whose displayName matches the base name or baseName_N pattern.
+ * Case-insensitive. Returns just the matching displayNames (lowercased).
  */
-async function getPlayersAtBar(barCode, excludePlayerId) {
-  const result = await scan(TABLE.PLAYERS, {
-    FilterExpression: 'currentBarCode = :bc',
-    ExpressionAttributeValues: { ':bc': barCode }
+async function findMatchingNames(baseName, excludePlayerId) {
+  const lower = baseName.toLowerCase().trim();
+
+  // Scan Players table — only pull back displayName and playerId
+  const players = await scan(TABLE.PLAYERS, {
+    ProjectionExpression: 'playerId, displayName'
   });
-  // Exclude the requesting player from the collision check
-  return result.filter(p => p.playerId !== excludePlayerId);
+
+  const matches = new Set();
+  for (const p of players) {
+    if (p.playerId === excludePlayerId || !p.displayName) continue;
+    const pLower = p.displayName.toLowerCase().trim();
+    // Exact match or baseName_N pattern
+    if (pLower === lower) {
+      matches.add(pLower);
+    } else if (pLower.startsWith(lower + '_')) {
+      const suffix = pLower.slice(lower.length + 1);
+      if (/^\d+$/.test(suffix)) {
+        matches.add(pLower);
+      }
+    }
+  }
+  return matches;
 }
 
 /**
- * Check if a display name collides with any existing player at the bar.
- * Case-insensitive comparison.
+ * Check if a name is globally available (case-insensitive).
+ * Returns { available, suggestedName }.
+ *   - available=true:  name is free, suggestedName === desiredName
+ *   - available=false: name is taken, suggestedName = "name_N" (lowest N)
  */
-function hasNameCollision(desiredName, playersAtBar) {
+async function findAvailableName(desiredName, excludePlayerId) {
   const lower = desiredName.toLowerCase().trim();
-  return playersAtBar.some(p =>
-    p.displayName && p.displayName.toLowerCase().trim() === lower
-  );
-}
+  const matches = await findMatchingNames(desiredName, excludePlayerId);
 
-/**
- * Generate a unique suffixed display name.
- * Shuffles the suffix list and picks the first one that doesn't collide.
- * Returns the original name if no collision, or "Name the Great" etc. if collision found.
- */
-function deduplicateDisplayName(desiredName, playersAtBar) {
-  if (!hasNameCollision(desiredName, playersAtBar)) {
-    return desiredName;
+  // No collision — name is available
+  if (!matches.has(lower)) {
+    return { available: true, suggestedName: desiredName };
   }
 
-  // Shuffle suffixes for variety
-  const shuffled = [...SUFFIXES].sort(() => Math.random() - 0.5);
-  const existingNames = new Set(
-    playersAtBar
-      .filter(p => p.displayName)
-      .map(p => p.displayName.toLowerCase().trim())
-  );
-
-  for (const suffix of shuffled) {
-    const candidate = `${desiredName} ${suffix}`;
-    if (!existingNames.has(candidate.toLowerCase())) {
-      return candidate;
+  // Find the lowest available _N
+  for (let n = 1; n <= 999; n++) {
+    const candidate = `${lower}_${n}`;
+    if (!matches.has(candidate)) {
+      // Preserve the user's original casing for the base name
+      return { available: false, suggestedName: `${desiredName.trim()}_${n}` };
     }
   }
 
-  // Extremely unlikely fallback — all 55 suffixes taken by the same base name
-  return `${desiredName} #${Math.floor(Math.random() * 999) + 1}`;
-}
-
-/**
- * Full dedup flow: check for collision and update the player record if needed.
- * Returns the effective display name (original or suffixed).
- */
-async function deduplicateAndUpdate(playerId, desiredName, barCode) {
-  const playersAtBar = await getPlayersAtBar(barCode, playerId);
-  const effectiveName = deduplicateDisplayName(desiredName, playersAtBar);
-
-  // Update the player's displayName if it was suffixed
-  if (effectiveName !== desiredName) {
-    await update(
-      TABLE.PLAYERS,
-      { PK: `PLAYER#${playerId}` },
-      'SET displayName = :name, updatedAt = :now',
-      {
-        ':name': effectiveName,
-        ':now': new Date().toISOString()
-      }
-    );
-  }
-
-  return effectiveName;
+  // Extremely unlikely — 999 variants taken
+  return { available: false, suggestedName: `${desiredName.trim()}_${Date.now() % 10000}` };
 }
 
 module.exports = {
-  SUFFIXES,
-  getPlayersAtBar,
-  hasNameCollision,
-  deduplicateDisplayName,
-  deduplicateAndUpdate
+  findMatchingNames,
+  findAvailableName
 };

@@ -1,7 +1,7 @@
 'use strict';
 
 const { TABLE, get, put, update } = require('./shared/dynamo');
-const { deduplicateDisplayName, getPlayersAtBar } = require('./shared/name-suffixes');
+const { findAvailableName } = require('./shared/name-suffixes');
 
 function response(statusCode, body) {
   return {
@@ -12,12 +12,14 @@ function response(statusCode, body) {
 }
 
 /**
- * Validate displayName: 2-16 characters, alphanumeric + spaces only.
+ * Validate displayName: 2-20 characters, alphanumeric, spaces, and underscores.
+ * Allows up to 20 to accommodate system-generated _N suffixes.
  */
 function isValidDisplayName(name) {
   if (typeof name !== 'string') return false;
-  if (name.length < 2 || name.length > 16) return false;
-  return /^[a-zA-Z0-9 ]+$/.test(name);
+  const trimmed = name.trim();
+  if (trimmed.length < 2 || trimmed.length > 20) return false;
+  return /^[a-zA-Z0-9 _]+$/.test(trimmed);
 }
 
 /**
@@ -71,7 +73,7 @@ exports.handler = async (event) => {
       if (displayName !== undefined && !isValidDisplayName(displayName)) {
         return response(400, {
           error: 'INVALID_DISPLAY_NAME',
-          message: 'displayName must be 2-16 characters, alphanumeric and spaces only',
+          message: 'displayName must be 2-20 characters, alphanumeric, spaces, and underscores only',
           statusCode: 400
         });
       }
@@ -89,20 +91,16 @@ exports.handler = async (event) => {
           });
         }
 
-        // Dedup display name if player is at a bar
-        let effectiveName = displayName;
-        const barForDedup = currentBarCode || null;
-        if (barForDedup) {
-          const playersAtBar = await getPlayersAtBar(barForDedup, playerId);
-          effectiveName = deduplicateDisplayName(displayName, playersAtBar);
-        }
+        // Global name dedup
+        const { available, suggestedName } = await findAvailableName(displayName, playerId);
+        const effectiveName = suggestedName;
 
         const now = new Date().toISOString();
         const newPlayer = {
           PK: `PLAYER#${playerId}`,
           playerId,
           displayName: effectiveName,
-          currentBarCode: barForDedup,
+          currentBarCode: currentBarCode || null,
           gamesPlayed: 0,
           totalPoints: 0,
           createdAt: now,
@@ -118,7 +116,8 @@ exports.handler = async (event) => {
           gamesPlayed: newPlayer.gamesPlayed,
           totalPoints: newPlayer.totalPoints,
           createdAt: newPlayer.createdAt,
-          lastPlayedAt: newPlayer.lastPlayedAt
+          lastPlayedAt: newPlayer.lastPlayedAt,
+          nameWasAdjusted: !available
         });
       }
 
@@ -126,17 +125,14 @@ exports.handler = async (event) => {
       const expressionParts = [];
       const expressionValues = {};
       const expressionNames = {};
+      let nameWasAdjusted = false;
 
       if (displayName !== undefined) {
-        // Dedup the name if player is at a bar
-        let effectiveName = displayName;
-        const barForDedup = currentBarCode || existing.currentBarCode;
-        if (barForDedup) {
-          const playersAtBar = await getPlayersAtBar(barForDedup, playerId);
-          effectiveName = deduplicateDisplayName(displayName, playersAtBar);
-        }
+        // Global name dedup
+        const { available, suggestedName } = await findAvailableName(displayName, playerId);
+        nameWasAdjusted = !available;
         expressionParts.push('#displayName = :displayName');
-        expressionValues[':displayName'] = effectiveName;
+        expressionValues[':displayName'] = suggestedName;
         expressionNames['#displayName'] = 'displayName';
       }
 
@@ -176,7 +172,8 @@ exports.handler = async (event) => {
         gamesPlayed: updated.gamesPlayed || 0,
         totalPoints: updated.totalPoints || 0,
         createdAt: updated.createdAt,
-        lastPlayedAt: updated.lastPlayedAt || null
+        lastPlayedAt: updated.lastPlayedAt || null,
+        nameWasAdjusted
       });
     }
 

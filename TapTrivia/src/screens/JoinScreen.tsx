@@ -24,7 +24,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Join'>;
 
 export function JoinScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { nickname, deviceId, setBarCode, setNickname } = usePlayerIdentity();
+  const { nickname, deviceId, setBarCode } = usePlayerIdentity();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -49,7 +49,7 @@ export function JoinScreen({ navigation }: Props) {
     setError('');
     Keyboard.dismiss();
 
-    const result = await joinBar(codeToSubmit, deviceId, nickname || undefined);
+    const result = await joinBar(codeToSubmit, deviceId);
 
     setLoading(false);
 
@@ -60,11 +60,6 @@ export function JoinScreen({ navigation }: Props) {
     }
 
     await setBarCode(codeToSubmit);
-
-    // If server returned a (possibly deduped) displayName, update local nickname
-    if (result.displayName && result.displayName !== nickname) {
-      await setNickname(result.displayName);
-    }
 
     // If player already has a nickname, skip to Lobby; otherwise get their name first
     if (nickname) {

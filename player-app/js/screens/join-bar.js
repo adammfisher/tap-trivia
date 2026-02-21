@@ -61,23 +61,14 @@ const JoinBarScreen = {
     const errorEl = document.getElementById('join-bar-error');
     errorEl.textContent = '';
 
-    const payload = { barCode: code };
-    const playerName = Player.getName();
-    if (playerName) payload.playerName = playerName;
-
-    const result = await apiCall('POST', '/bar/join', payload);
+    const result = await apiCall('POST', '/bar/join', { barCode: code });
 
     if (result.error) {
-      errorEl.textContent = result.message || "That code doesn't match any active bar.";
+      errorEl.textContent = result.message || "That code doesn't match any active location or group.";
       const container = document.getElementById('code-input-container');
       container.classList.add('shake');
       setTimeout(() => container.classList.remove('shake'), 400);
       return;
-    }
-
-    // If server returned a deduped displayName, update local name
-    if (result.displayName && result.displayName !== playerName) {
-      Player.setName(result.displayName);
     }
 
     // Success — save bar and go to lobby

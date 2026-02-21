@@ -19,9 +19,10 @@ const ProfileScreen = {
         <label class="profile-label">DISPLAY NAME</label>
         <div class="profile-name-edit">
           <input type="text" id="profile-name-input" class="profile-name-input"
-            value="${name}" maxlength="16" pattern="[a-zA-Z0-9 ]+">
+            value="${name}" maxlength="20" pattern="[a-zA-Z0-9 _]+">
           <button id="btn-save-name" class="btn-save" onclick="ProfileScreen.saveName()">Save</button>
         </div>
+        <div id="profile-name-message" class="profile-name-message hidden"></div>
       </div>
 
       <div class="profile-section">
@@ -70,26 +71,41 @@ const ProfileScreen = {
 
   async saveName() {
     const input = document.getElementById('profile-name-input');
+    const msgEl = document.getElementById('profile-name-message');
     const name = input.value.trim();
 
-    if (name.length < 2 || name.length > 16 || !/^[a-zA-Z0-9 ]+$/.test(name)) {
+    if (name.length < 2 || name.length > 20 || !/^[a-zA-Z0-9 _]+$/.test(name)) {
       input.classList.add('shake');
       setTimeout(() => input.classList.remove('shake'), 400);
       return;
     }
 
     const result = await apiCall('PUT', `/player/${Player.getId()}`, { displayName: name });
-    // Use the server-returned displayName (may be deduped)
-    const effectiveName = (result && !result.error && result.displayName) ? result.displayName : name;
-    Player.setName(effectiveName);
-    // Update the input to show effective name if it was deduped
-    if (effectiveName !== name) {
-      input.value = effectiveName;
+
+    if (result && result.error) {
+      msgEl.textContent = result.message || 'Failed to save name.';
+      msgEl.className = 'profile-name-message profile-name-error';
+      return;
     }
 
+    const effectiveName = (result && result.displayName) ? result.displayName : name;
+    Player.setName(effectiveName);
+    input.value = effectiveName;
+
     const btn = document.getElementById('btn-save-name');
-    btn.textContent = 'Saved!';
-    setTimeout(() => { btn.textContent = 'Save'; }, 1500);
+
+    if (result && result.nameWasAdjusted) {
+      // Name was taken — show message and let user edit
+      msgEl.textContent = `That name was taken — saved as "${effectiveName}". Edit above if you'd like.`;
+      msgEl.className = 'profile-name-message profile-name-adjusted';
+      btn.textContent = 'Saved!';
+      setTimeout(() => { btn.textContent = 'Save'; }, 2000);
+    } else {
+      msgEl.textContent = '';
+      msgEl.className = 'profile-name-message hidden';
+      btn.textContent = 'Saved!';
+      setTimeout(() => { btn.textContent = 'Save'; }, 1500);
+    }
   },
 
   async leaveBar() {
@@ -130,16 +146,8 @@ const ProfileScreen = {
   },
 
   async joinBar(code) {
-    const payload = { barCode: code };
-    const playerName = Player.getName();
-    if (playerName) payload.playerName = playerName;
-
-    const result = await apiCall('POST', '/bar/join', payload);
+    const result = await apiCall('POST', '/bar/join', { barCode: code });
     if (result && !result.error) {
-      // Update local name if server deduped it
-      if (result.displayName && result.displayName !== playerName) {
-        Player.setName(result.displayName);
-      }
       Player.setBar(result.barCode, result.barName);
       App.showScreen('lobby');
     }

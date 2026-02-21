@@ -1,7 +1,6 @@
 'use strict';
 
 const { TABLE, get, update, docClient, UpdateCommand } = require('./shared/dynamo');
-const { deduplicateAndUpdate } = require('./shared/name-suffixes');
 
 const headers = {
   'Content-Type': 'application/json',
@@ -11,7 +10,7 @@ const headers = {
 exports.handler = async (event) => {
   try {
     const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
-    const { barCode, playerName } = body;
+    const { barCode } = body;
     const playerId = event.headers?.['x-player-id'] || event.headers?.['X-Player-ID'];
 
     if (!barCode) {
@@ -94,14 +93,8 @@ exports.handler = async (event) => {
       updatedBar = bar;
     }
 
-    // --- Name dedup: if player has a name, check for collision at this bar ---
+    // Return the player's current displayName (name uniqueness is handled by get-player)
     const updatedPlayer = await get(TABLE.PLAYERS, { PK: `PLAYER#${playerId}` });
-    const nameToCheck = playerName || updatedPlayer?.displayName;
-    let displayName = nameToCheck || null;
-
-    if (nameToCheck && barCode) {
-      displayName = await deduplicateAndUpdate(playerId, nameToCheck, barCode);
-    }
 
     return {
       statusCode: 200,
@@ -111,7 +104,7 @@ exports.handler = async (event) => {
         barName: bar.barName,
         activePlayers: updatedBar.activePlayers,
         type: bar.type || 'bar',
-        displayName
+        displayName: updatedPlayer?.displayName || null
       })
     };
   } catch (err) {

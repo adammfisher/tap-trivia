@@ -40,7 +40,7 @@ function useOffHoursCountdown() {
 export function WelcomeScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const { bars } = useSavedBars();
-  const { nickname, deviceId, setBarCode, setNickname } = usePlayerIdentity();
+  const { nickname, deviceId, setBarCode } = usePlayerIdentity();
   const offHours = useOffHoursCountdown();
 
   const handlePlaySolo = () => {
@@ -54,18 +54,13 @@ export function WelcomeScreen({ navigation }: Props) {
 
   const handleSavedBar = async (code: string, name: string) => {
     if (!deviceId) return;
-    // Re-join the bar via API (send nickname for dedup)
-    const result = await joinBar(code, deviceId, nickname || undefined);
+    const result = await joinBar(code, deviceId);
     if (isApiError(result)) {
       // Bar may no longer be active — just go to Join screen
       navigation.navigate('Join');
       return;
     }
     await setBarCode(code);
-    // If server returned a deduped displayName, update local nickname
-    if (result.displayName && result.displayName !== nickname) {
-      await setNickname(result.displayName);
-    }
     if (nickname) {
       navigation.navigate('Lobby', { barCode: result.barCode, barName: result.barName, playerId: deviceId });
     } else {

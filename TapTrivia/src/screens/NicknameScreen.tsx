@@ -20,8 +20,14 @@ export function NicknameScreen({ navigation, route }: Props) {
   const [name, setName] = useState(savedNickname || '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
 
-  const isValid = name.trim().length >= 2 && name.trim().length <= 16;
+  const isValid = name.trim().length >= 2 && name.trim().length <= 20;
+
+  const goToLobby = () => {
+    if (!deviceId) return;
+    navigation.navigate('Lobby', { barCode, barName, playerId: deviceId });
+  };
 
   const handleSubmit = async () => {
     if (!isValid || !deviceId) return;
@@ -29,18 +35,27 @@ export function NicknameScreen({ navigation, route }: Props) {
     const trimmed = name.trim();
     setLoading(true);
     setError('');
+    setSuggestion(null);
     Keyboard.dismiss();
 
     try {
-      // Call backend to set name with dedup at current bar
       const result = await updatePlayer(deviceId, trimmed, barCode);
       if (isApiError(result)) {
         setError(result.message || 'Failed to save nickname.');
         setLoading(false);
         return;
       }
-      // Use the server-returned displayName (may be suffixed if collision)
-      await setNickname(result.displayName || trimmed);
+
+      const effectiveName = result.displayName || trimmed;
+      await setNickname(effectiveName);
+
+      if (result.nameWasAdjusted) {
+        // Name was taken — show suggestion, pre-fill input, let user edit or accept
+        setSuggestion(effectiveName);
+        setName(effectiveName);
+        setLoading(false);
+        return;
+      }
     } catch {
       setError('Failed to save nickname.');
       setLoading(false);
@@ -48,12 +63,7 @@ export function NicknameScreen({ navigation, route }: Props) {
     }
 
     setLoading(false);
-
-    navigation.navigate('Lobby', {
-      barCode,
-      barName,
-      playerId: deviceId,
-    });
+    goToLobby();
   };
 
   return (
@@ -76,30 +86,41 @@ export function NicknameScreen({ navigation, route }: Props) {
           <Text style={styles.title}>What should we call you?</Text>
           <Text style={styles.subtitle}>This is shown on the leaderboard</Text>
 
+          {suggestion ? (
+            <View style={styles.suggestionBanner}>
+              <Text style={styles.suggestionText}>
+                That name was taken — we saved you as{' '}
+                <Text style={styles.suggestionName}>{suggestion}</Text>.
+                {'\n'}Change it below or tap Let's Go to keep it.
+              </Text>
+            </View>
+          ) : null}
+
           <View style={styles.inputContainer}>
             <TextInput
               value={name}
               onChangeText={(text) => {
                 setName(text);
                 setError('');
+                setSuggestion(null);
               }}
-              maxLength={16}
+              maxLength={20}
               autoCapitalize="words"
               autoCorrect={false}
-              autoFocus
+              autoFocus={!suggestion}
               placeholder="Your nickname"
               placeholderTextColor={w(0.25)}
               style={styles.input}
               returnKeyType="go"
               onSubmitEditing={handleSubmit}
             />
-            <Text style={styles.charCount}>{name.length}/16</Text>
+            <Text style={styles.charCount}>{name.length}/20</Text>
           </View>
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <Pressable
-            onPress={handleSubmit}
+            onPress={suggestion ? goToLobby : handleSubmit}
             disabled={!isValid || loading}
             style={({ pressed }) => [pressed && { opacity: 0.9 }]}
           >
@@ -159,6 +180,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: w(0.4),
     marginBottom: 32,
+  },
+  suggestionBanner: {
+    backgroundColor: w(0.06),
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.gold,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    width: '100%',
+  },
+  suggestionText: {
+    fontFamily: fonts.outfit.regular,
+    fontSize: 13,
+    color: w(0.6),
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  suggestionName: {
+    fontFamily: fonts.outfit.bold,
+    color: colors.gold,
   },
   inputContainer: {
     width: '100%',

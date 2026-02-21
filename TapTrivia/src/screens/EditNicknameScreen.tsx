@@ -17,26 +17,46 @@ export function EditNicknameScreen({ navigation }: Props) {
   const { nickname: savedNickname, deviceId, barCode, setNickname } = usePlayerIdentity();
   const [name, setName] = useState(savedNickname || '');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [suggestion, setSuggestion] = useState<string | null>(null);
 
-  const isValid = name.trim().length >= 2 && name.trim().length <= 16;
+  const isValid = name.trim().length >= 2 && name.trim().length <= 20;
   const hasChanged = name.trim() !== (savedNickname || '');
 
   const handleSave = async () => {
     if (!isValid || !hasChanged || !deviceId) return;
     setLoading(true);
+    setError('');
+    setSuggestion(null);
     Keyboard.dismiss();
+
     try {
-      // Call backend to set name with dedup at current bar
       const result = await updatePlayer(deviceId, name.trim(), barCode || undefined);
       if (isApiError(result)) {
+        setError(result.message || 'Failed to save nickname.');
         setLoading(false);
         return;
       }
-      await setNickname(result.displayName || name.trim());
+
+      const effectiveName = result.displayName || name.trim();
+
+      if (result.nameWasAdjusted) {
+        // Name was taken — show suggestion, pre-fill input, let user edit or accept
+        await setNickname(effectiveName);
+        setSuggestion(effectiveName);
+        setName(effectiveName);
+        setLoading(false);
+        return;
+      }
+
+      // Name was accepted as-is
+      await setNickname(effectiveName);
     } catch {
+      setError('Failed to save nickname.');
       setLoading(false);
       return;
     }
+
     setLoading(false);
     navigation.goBack();
   };
@@ -59,22 +79,38 @@ export function EditNicknameScreen({ navigation }: Props) {
         <View style={styles.center}>
           <Text style={styles.subtitle}>This is shown on the leaderboard</Text>
 
+          {suggestion ? (
+            <View style={styles.suggestionBanner}>
+              <Text style={styles.suggestionText}>
+                That name was taken — we saved you as{' '}
+                <Text style={styles.suggestionName}>{suggestion}</Text>.
+                {'\n'}Change it below or tap Save to keep it.
+              </Text>
+            </View>
+          ) : null}
+
           <View style={styles.inputContainer}>
             <TextInput
               value={name}
-              onChangeText={setName}
-              maxLength={16}
+              onChangeText={(t) => {
+                setName(t);
+                setError('');
+                setSuggestion(null);
+              }}
+              maxLength={20}
               autoCapitalize="words"
               autoCorrect={false}
-              autoFocus
+              autoFocus={!suggestion}
               placeholder="Your nickname"
               placeholderTextColor={w(0.25)}
               style={styles.input}
               returnKeyType="done"
               onSubmitEditing={handleSave}
             />
-            <Text style={styles.charCount}>{name.length}/16</Text>
+            <Text style={styles.charCount}>{name.length}/20</Text>
           </View>
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <Pressable
             onPress={handleSave}
@@ -131,6 +167,27 @@ const styles = StyleSheet.create({
     color: w(0.4),
     marginBottom: 24,
   },
+  suggestionBanner: {
+    backgroundColor: w(0.06),
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.gold,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    width: '100%',
+  },
+  suggestionText: {
+    fontFamily: fonts.outfit.regular,
+    fontSize: 13,
+    color: w(0.6),
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  suggestionName: {
+    fontFamily: fonts.outfit.bold,
+    color: colors.gold,
+  },
   inputContainer: {
     width: '100%',
     position: 'relative',
@@ -158,6 +215,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.outfit.regular,
     fontSize: 12,
     color: w(0.25),
+  },
+  error: {
+    fontFamily: fonts.outfit.medium,
+    fontSize: 13,
+    color: colors.red,
+    marginBottom: 4,
   },
   saveButton: {
     width: '100%',

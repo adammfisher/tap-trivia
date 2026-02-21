@@ -1639,6 +1639,30 @@ body::-webkit-scrollbar { display: none; }
 
 .btn-save:active { transform: scale(0.97); }
 
+.profile-name-message,
+.welcome-name-message {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  margin-top: 8px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.profile-name-adjusted,
+.welcome-name-adjusted {
+  color: var(--gold);
+  background: rgba(255,210,0,0.08);
+  border: 1px solid rgba(255,210,0,0.25);
+}
+
+.profile-name-error {
+  color: var(--red);
+  background: rgba(255,71,87,0.08);
+  border: 1px solid rgba(255,71,87,0.25);
+}
+
 .profile-bar {
   display: flex;
   flex-wrap: wrap;

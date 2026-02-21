@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { GradientBackground } from '../components/GradientBackground';
 import { Avatar } from '../components/Avatar';
@@ -18,8 +20,18 @@ export function SettingsScreen({ navigation }: Props) {
   const { bars } = useSavedBars();
   const { nickname } = usePlayerIdentity();
   const { gameState, resetGame } = useGame();
-  const playerName = nickname || 'Player';
   const inGame = gameState.gamePhase !== 'idle';
+
+  // Re-read nickname from AsyncStorage on screen focus (picks up changes from EditNickname)
+  const [freshNickname, setFreshNickname] = useState<string | null>(nickname);
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem('@taptrivia:nickname').then((val) => {
+        if (val !== null) setFreshNickname(val);
+      });
+    }, [])
+  );
+  const playerName = freshNickname || nickname || 'Player';
 
   // Auto-dismiss when game phase changes so we don't block navigation
   const initialPhaseRef = useRef(gameState.gamePhase);
