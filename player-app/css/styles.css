@@ -664,7 +664,7 @@ body::-webkit-scrollbar { display: none; }
   display: flex;
   flex-direction: column;
   padding: var(--sp-md);
-  padding-bottom: 0;
+  padding-bottom: var(--sp-md);
 }
 
 /* ─── Category Splash ───────────────────────────────────────── */
