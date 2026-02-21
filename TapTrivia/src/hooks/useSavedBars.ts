@@ -18,11 +18,11 @@ export function useSavedBars() {
     })();
   }, []);
 
-  const saveBar = useCallback(async (code: string, name: string) => {
+  const saveBar = useCallback(async (code: string, name: string, type?: 'bar' | 'group') => {
     setBars((prev) => {
       const filtered = prev.filter((b) => b.code !== code);
       const updated = [
-        { code, name, lastPlayed: 'Just now' },
+        { code, name, lastPlayed: 'Just now', type },
         ...filtered,
       ];
       AsyncStorage.setItem(SAVED_BARS_KEY, JSON.stringify(updated));

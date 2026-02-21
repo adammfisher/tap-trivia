@@ -17,10 +17,13 @@ import { SettingsScreen } from '../screens/SettingsScreen';
 import { TermsOfServiceScreen } from '../screens/TermsOfServiceScreen';
 import { PrivacyPolicyScreen } from '../screens/PrivacyPolicyScreen';
 import { FeedbackScreen } from '../screens/FeedbackScreen';
+import { EditNicknameScreen } from '../screens/EditNicknameScreen';
+import { CreateGroupScreen } from '../screens/CreateGroupScreen';
 
 export type RootStackParamList = {
   Welcome: undefined;
   Join: undefined;
+  CreateGroup: undefined;
   Nickname: { barCode: string; barName: string };
   Lobby: { barCode: string; barName: string; playerId: string };
   Countdown: { barCode: string; playerId: string; barName: string };
@@ -36,6 +39,7 @@ export type RootStackParamList = {
   TermsOfService: undefined;
   PrivacyPolicy: undefined;
   Feedback: undefined;
+  EditNickname: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -56,6 +60,7 @@ export function RootNavigator() {
         {/* Pre-Game Screens */}
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Join" component={JoinScreen} />
+        <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
         <Stack.Screen name="Nickname" component={NicknameScreen} />
 
         {/* Game Stack — no back gesture */}
@@ -93,6 +98,11 @@ export function RootNavigator() {
         <Stack.Screen
           name="Feedback"
           component={FeedbackScreen}
+          options={{ headerShown: false, presentation: 'modal' }}
+        />
+        <Stack.Screen
+          name="EditNickname"
+          component={EditNicknameScreen}
           options={{ headerShown: false, presentation: 'modal' }}
         />
       </Stack.Navigator>

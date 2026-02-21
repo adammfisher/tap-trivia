@@ -116,7 +116,7 @@ export function JoinScreen({ navigation }: Props) {
           {error ? (
             <Text style={styles.error}>{error}</Text>
           ) : (
-            <Text style={styles.hint}>Code shown on the bar TV</Text>
+            <Text style={styles.hint}>Enter a location or group code</Text>
           )}
 
           {/* Hidden input */}

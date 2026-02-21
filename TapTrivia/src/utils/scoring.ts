@@ -1,16 +1,16 @@
 /**
  * Scoring Engine — ported from backend/shared/scoring.js
  * 1000 points max per question.
- * 8-second read time (5s-13s): full 1000 points.
- * Speed bump (13s-16s): 1000->800 (fast linear drop).
- * Linear decay (16s-44s): 800->0 (steady ~28.6 pts/sec).
+ * 9-second read time (4s-13s): full 1000 points.
+ * Speed bump (13s-17s): 1000->800 (fast linear drop).
+ * Linear decay (17s-39s): 800->0 (steady ~36.4 pts/sec).
  */
 
-const ANSWER_START_MS = 5000;
+const ANSWER_START_MS = 4000;
 const READ_TIME_END_MS = 13000;
-const SPEED_BUMP_END_MS = 16000;
-const REVEAL_START_MS = 44000;
-const ANSWER_END_MS = 49000;
+const SPEED_BUMP_END_MS = 17000;
+const REVEAL_START_MS = 39000;
+const ANSWER_END_MS = 45000;
 
 export function calculatePoints(elapsedMs: number): number {
   if (elapsedMs < ANSWER_START_MS || elapsedMs > ANSWER_END_MS) return 0;

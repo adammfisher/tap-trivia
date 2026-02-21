@@ -1,7 +1,6 @@
+import { memo } from 'react';
 import { Text, StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { fonts } from '../theme/typography';
-import { gradients } from '../theme/colors';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -13,7 +12,7 @@ const sizes = {
   lg: 32,
 };
 
-export function Logo({ size = 'md' }: LogoProps) {
+export const Logo = memo(function Logo({ size = 'md' }: LogoProps) {
   const fontSize = sizes[size];
   return (
     <View style={styles.row}>
@@ -21,7 +20,7 @@ export function Logo({ size = 'md' }: LogoProps) {
       <Text style={[styles.trivia, { fontSize, color: '#ffd200' }]}>Trivia</Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: {

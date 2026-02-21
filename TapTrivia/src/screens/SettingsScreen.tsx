@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -19,6 +20,14 @@ export function SettingsScreen({ navigation }: Props) {
   const { gameState, resetGame } = useGame();
   const playerName = nickname || 'Player';
   const inGame = gameState.gamePhase !== 'idle';
+
+  // Auto-dismiss when game phase changes so we don't block navigation
+  const initialPhaseRef = useRef(gameState.gamePhase);
+  useEffect(() => {
+    if (gameState.gamePhase !== initialPhaseRef.current) {
+      navigation.goBack();
+    }
+  }, [gameState.gamePhase, navigation]);
 
   const handleLeaveGame = () => {
     resetGame();
@@ -49,7 +58,7 @@ export function SettingsScreen({ navigation }: Props) {
                 <Text style={styles.profileName}>{playerName}</Text>
                 <Text style={styles.profileSince}>Playing since Feb 2026</Text>
               </View>
-              <Pressable style={styles.editButton}>
+              <Pressable onPress={() => navigation.navigate('EditNickname')} style={styles.editButton}>
                 <Text style={styles.editText}>Edit</Text>
               </Pressable>
             </View>
@@ -57,7 +66,7 @@ export function SettingsScreen({ navigation }: Props) {
 
           {/* Saved Bars */}
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>Saved Bars</Text>
+            <Text style={styles.cardLabel}>Saved Games</Text>
             <View style={styles.barsList}>
               {bars.length === 0 ? (
                 <Text style={styles.emptyText}>No saved bars yet</Text>

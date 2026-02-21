@@ -93,15 +93,21 @@ function aggregateBarScores(answers) {
 
 /**
  * Build a bar leaderboard for a given game + barCode.
+ * If excludeQuestion is set, answers for that question number are excluded
+ * so scores don't update in real time while the question is active.
  */
-async function getBarLeaderboard(gameId, barCode, limit) {
+async function getBarLeaderboard(gameId, barCode, limit, excludeQuestion) {
   const answers = await query(TABLE.ANSWERS, {
     IndexName: 'game-bar-index',
     KeyConditionExpression: 'gameIdBarCode = :gbk',
     ExpressionAttributeValues: { ':gbk': `${gameId}#${barCode}` }
   });
 
-  const leaderboard = aggregateBarScores(answers);
+  const filtered = excludeQuestion
+    ? answers.filter(a => a.questionNumber !== excludeQuestion)
+    : answers;
+
+  const leaderboard = aggregateBarScores(filtered);
   return leaderboard.slice(0, limit || 10).map(e => ({
     rank: e.rank,
     playerName: e.playerName,
@@ -404,8 +410,12 @@ exports.handler = async (event) => {
       ? calculatePoints(gameState.elapsedInQuestion)
       : 0;
 
-    // Get bar leaderboard for current game
-    const barLeaderboard = await getBarLeaderboard(game.gameId, barCode, 10);
+    // During playing phases, exclude the current question's answers so
+    // scores stay frozen and don't reveal who answered correctly.
+    const barLeaderboard = await getBarLeaderboard(
+      game.gameId, barCode, 10,
+      isRevealOrScores ? null : questionNumber
+    );
 
     // During reveal/scores, compute answer distribution percentages
     let answerPercentages = null;

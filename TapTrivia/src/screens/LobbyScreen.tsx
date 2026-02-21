@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, Share } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -7,6 +7,7 @@ import { GradientBackground } from '../components/GradientBackground';
 import { Logo } from '../components/Logo';
 import { Avatar } from '../components/Avatar';
 import { LoadingDots } from '../components/LoadingDots';
+import { TimerRing } from '../components/TimerRing';
 import { useGame } from '../contexts/GameContext';
 import { usePlayerIdentity } from '../hooks/usePlayerIdentity';
 import { useSavedBars } from '../hooks/useSavedBars';
@@ -28,7 +29,7 @@ function formatCountdown(totalSecs: number): string {
 export function LobbyScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { barCode, barName, playerId } = route.params;
-  const { nickname, deviceId } = usePlayerIdentity();
+  const { nickname, deviceId, loaded: identityLoaded } = usePlayerIdentity();
   const { saveBar } = useSavedBars();
   const { startGame, gameState } = useGame();
 
@@ -118,14 +119,15 @@ export function LobbyScreen({ navigation, route }: Props) {
     }
   }, [barCode, barName, deviceId, playerId, playerName, navigation, startGame]);
 
-  // Poll every 5 seconds
+  // Poll every 5 seconds — wait for identity to load so nickname isn't "Player"
   useEffect(() => {
+    if (!identityLoaded) return;
     checkGameStatus();
     pollRef.current = setInterval(checkGameStatus, 5000);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [checkGameStatus]);
+  }, [checkGameStatus, identityLoaded]);
 
   // 1-second countdown tick
   useEffect(() => {
@@ -176,10 +178,12 @@ export function LobbyScreen({ navigation, route }: Props) {
           </View>
         </View>
 
-        <View style={styles.content}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* You're In! */}
           <View style={styles.heroSection}>
-            <Text style={styles.heroEmoji}>{barCode === 'SOLO' ? '\u{1F3AE}' : '\u{1F389}'}</Text>
+            <Text style={styles.heroEmoji}>
+              {barCode === 'SOLO' ? '\u{1F3AE}' : '\u{1F389}'}
+            </Text>
             <Text style={styles.heroTitle}>You're In!</Text>
             {barCode === 'SOLO' ? (
               <Text style={styles.barNameText}>Playing Solo</Text>
@@ -189,6 +193,16 @@ export function LobbyScreen({ navigation, route }: Props) {
                 {' \u00B7 '}
                 <Text style={styles.barCodeText}>{barCode}</Text>
               </Text>
+            )}
+            {barCode !== 'SOLO' && (
+              <Pressable
+                onPress={() => Share.share({
+                  message: `Join me on TapTrivia! Use code: ${barCode}\n\nhttps://taptrivia.tv`,
+                })}
+                style={styles.shareCodeButton}
+              >
+                <Text style={styles.shareCodeText}>Share Code</Text>
+              </Pressable>
             )}
           </View>
 
@@ -209,7 +223,13 @@ export function LobbyScreen({ navigation, route }: Props) {
             {showCountdown ? (
               <>
                 <Text style={styles.nextGameLabel}>NEXT GAME IN</Text>
-                <Text style={styles.countdownTimer}>{formatCountdown(countdownSecs)}</Text>
+                <TimerRing
+                  seconds={countdownSecs}
+                  totalSeconds={900}
+                  size={120}
+                  strokeWidth={4}
+                  label={formatCountdown(countdownSecs)}
+                />
                 <Text style={styles.waitingSubtext}>Hang tight — the game starts automatically</Text>
               </>
             ) : (
@@ -222,7 +242,15 @@ export function LobbyScreen({ navigation, route }: Props) {
               </>
             )}
           </View>
-        </View>
+
+          {/* Did you know? */}
+          <FadeInView duration={500} delay={300} direction="none" style={styles.didYouKnowBanner}>
+            <Text style={styles.didYouKnowTitle}>Did you know?</Text>
+            <Text style={styles.didYouKnowMessage}>
+              The TapTrivia TV app is available on most platforms like Fire TV, Samsung, and Roku. Ask your favorite bar to turn it on — it's free! Or download it and host your own trivia night.
+            </Text>
+          </FadeInView>
+        </ScrollView>
       </View>
     </GradientBackground>
   );
@@ -264,13 +292,14 @@ const styles = StyleSheet.create({
   playerCountEmoji: { fontSize: 12 },
   playerCountText: { fontFamily: fonts.outfit.bold, fontSize: 12, color: '#fff' },
   content: {
-    flex: 1,
+    flexGrow: 1,
     padding: 20,
     paddingHorizontal: 24,
+    paddingBottom: 32,
   },
   heroSection: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   heroEmoji: { fontSize: 36, marginBottom: 8 },
   heroTitle: { fontFamily: fonts.fredoka.bold, fontSize: 24, color: '#fff' },
@@ -285,6 +314,18 @@ const styles = StyleSheet.create({
     fontFamily: fonts.fredoka.bold,
     color: colors.gold,
     letterSpacing: 2,
+  },
+  shareCodeButton: {
+    marginTop: 10,
+    backgroundColor: w(0.08),
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  shareCodeText: {
+    fontFamily: fonts.outfit.semiBold,
+    fontSize: 12,
+    color: w(0.4),
   },
   playerCard: {
     flexDirection: 'row',
@@ -312,9 +353,9 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   waitingSection: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 20,
   },
   nextGameLabel: {
     fontFamily: fonts.outfit.semiBold,
@@ -322,12 +363,6 @@ const styles = StyleSheet.create({
     color: w(0.35),
     letterSpacing: 2,
     marginBottom: 8,
-  },
-  countdownTimer: {
-    fontFamily: fonts.fredoka.bold,
-    fontSize: 56,
-    color: '#fff',
-    marginBottom: 12,
   },
   waitingSubtext: {
     fontFamily: fonts.outfit.regular,
@@ -349,5 +384,27 @@ const styles = StyleSheet.create({
     fontFamily: fonts.outfit.regular,
     fontSize: 14,
     color: w(0.35),
+  },
+  didYouKnowBanner: {
+    backgroundColor: w(0.06),
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    width: '100%',
+    borderWidth: 1,
+    borderColor: w(0.08),
+  },
+  didYouKnowTitle: {
+    fontFamily: fonts.outfit.bold,
+    fontSize: 14,
+    color: colors.gold,
+    marginBottom: 8,
+  },
+  didYouKnowMessage: {
+    fontFamily: fonts.outfit.regular,
+    fontSize: 13,
+    color: w(0.4),
+    textAlign: 'center',
+    lineHeight: 19,
   },
 });

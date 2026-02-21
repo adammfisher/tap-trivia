@@ -217,33 +217,67 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     // Calculate countdown value for category_splash
     const countdownValue = clockState.questionPhase === 'category_splash'
-      ? Math.max(1, Math.ceil((5000 - (clockState.elapsedInQuestion || 0)) / 1000))
+      ? Math.max(1, Math.ceil((4000 - (clockState.elapsedInQuestion || 0)) / 1000))
       : 0;
 
     // Build the answer result with correctIndex from raw data during reveal
     let answerResult = g.answerResult;
-    if (answerResult && clockState.correctRevealed && g.rawQuestionData?.correctIndex !== undefined) {
-      answerResult = { ...answerResult, correctIndex: g.rawQuestionData.correctIndex };
+    if (clockState.correctRevealed && g.rawQuestionData?.correctIndex !== undefined) {
+      if (answerResult) {
+        // Player answered — attach correctIndex so correct card highlights green
+        answerResult = { ...answerResult, correctIndex: g.rawQuestionData.correctIndex };
+      } else {
+        // Player timed out (no answer) — synthesize a timeout result with correctIndex
+        // so WrongScreen can still highlight the correct answer green
+        answerResult = {
+          selectedIndex: -1,
+          correct: false,
+          pointsAwarded: 0,
+          lockedInPoints: 0,
+          correctAnswer: g.questionData?.answers[g.rawQuestionData.correctIndex] || '',
+          correctIndex: g.rawQuestionData.correctIndex,
+        };
+      }
     }
 
-    setGameState({
-      gamePhase: mobilePhase,
-      gameId: g.gameId,
-      questionNumber: clockState.questionNumber || 0,
-      totalQuestions: TOTAL_QUESTIONS,
-      timeRemaining: clockState.questionSecondsRemaining || 0,
-      pointsAvailable: points,
-      totalScore: g.totalScore,
-      rank: g.rank,
-      rankChange: g.rankChange,
-      question: g.questionData,
-      answerResult,
-      leaderboard: g.leaderboard,
-      playerStats: { ...g.playerStats },
-      barName: g.barName,
-      barCode: g.barCode,
-      countdownValue,
-      playerCount: g.playerCount,
+    // Functional update: skip re-render if nothing meaningful changed
+    setGameState(prev => {
+      const qNum = clockState.questionNumber || 0;
+      const timeRem = clockState.questionSecondsRemaining || 0;
+      if (
+        prev.gamePhase === mobilePhase &&
+        prev.questionNumber === qNum &&
+        prev.timeRemaining === timeRem &&
+        prev.pointsAvailable === points &&
+        prev.totalScore === g.totalScore &&
+        prev.rank === g.rank &&
+        prev.question === g.questionData &&
+        prev.answerResult === answerResult &&
+        prev.countdownValue === countdownValue &&
+        prev.playerCount === g.playerCount &&
+        prev.leaderboard === g.leaderboard
+      ) {
+        return prev; // Same reference → no re-render
+      }
+      return {
+        gamePhase: mobilePhase,
+        gameId: g.gameId,
+        questionNumber: qNum,
+        totalQuestions: TOTAL_QUESTIONS,
+        timeRemaining: timeRem,
+        pointsAvailable: points,
+        totalScore: g.totalScore,
+        rank: g.rank,
+        rankChange: g.rankChange,
+        question: g.questionData,
+        answerResult,
+        leaderboard: g.leaderboard,
+        playerStats: { ...g.playerStats },
+        barName: g.barName,
+        barCode: g.barCode,
+        countdownValue,
+        playerCount: g.playerCount,
+      };
     });
   }, []);
 
@@ -312,6 +346,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       correctIndex: -1,
     };
 
+    const effectiveBarCode = g.barCode === 'SOLO' ? '' : g.barCode;
     submitAnswer(
       g.gameId!,
       g.currentQuestionNumber,
@@ -319,6 +354,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       g.nickname,
       clockState.elapsedInQuestion || 0,
       g.deviceId,
+      effectiveBarCode,
     ).then((result) => {
       g.submitting = false;
       if (!isApiError(result)) {

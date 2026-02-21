@@ -12,6 +12,10 @@ const HomeScreen = {
         App.showScreen('join-bar');
       });
 
+      document.getElementById('btn-create-group').addEventListener('click', () => {
+        App.showScreen('create-group');
+      });
+
       document.getElementById('btn-how-it-works').addEventListener('click', () => {
         App.showScreen('profile');
       });

@@ -102,7 +102,7 @@ export function PlayingScreen({ navigation, route }: Props) {
 
           {/* Timer */}
           <View style={styles.timerRow}>
-            <TimerRing seconds={gameState.timeRemaining} totalSeconds={39} />
+            <TimerRing seconds={gameState.timeRemaining} totalSeconds={35} />
           </View>
 
           {/* Category + progress */}

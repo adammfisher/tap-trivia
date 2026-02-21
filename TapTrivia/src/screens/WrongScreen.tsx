@@ -46,9 +46,21 @@ export function WrongScreen({ navigation, route }: Props) {
 
   const question = gameState.question || lastQuestionRef.current;
   const result = gameState.answerResult || lastResultRef.current;
-  if (!question || !result) {
+
+  // No question data — show minimal fallback (shouldn't stay long, navigation will fire)
+  if (!question) {
     return <GradientBackground><View style={{ flex: 1 }} /></GradientBackground>;
   }
+
+  // No answer result means time ran out — build a timeout result
+  const displayResult = result || {
+    selectedIndex: -1,
+    correct: false,
+    pointsAwarded: 0,
+    lockedInPoints: 0,
+    correctAnswer: '',
+    correctIndex: -1,
+  };
 
   return (
     <GradientBackground>
@@ -65,7 +77,7 @@ export function WrongScreen({ navigation, route }: Props) {
           {/* +0 */}
           <ZoomInView spring style={styles.pointsSection}>
             <Text style={styles.zeroPoints}>+0</Text>
-            <Text style={styles.wrongLabel}>Wrong Answer</Text>
+            <Text style={styles.wrongLabel}>{displayResult.selectedIndex === -1 ? "Time's Up" : 'Wrong Answer'}</Text>
           </ZoomInView>
 
           {/* Total */}
@@ -106,9 +118,9 @@ export function WrongScreen({ navigation, route }: Props) {
                 label={answer}
                 letter={i + 1}
                 state={
-                  i === result.correctIndex
+                  i === displayResult.correctIndex
                     ? 'correct'
-                    : i === result.selectedIndex
+                    : i === displayResult.selectedIndex
                       ? 'wrong'
                       : question.eliminatedIndices.includes(i)
                         ? 'eliminated'
@@ -120,10 +132,14 @@ export function WrongScreen({ navigation, route }: Props) {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.answerWas}>
-              The answer was{' '}
-              <Text style={styles.correctAnswer}>{result.correctAnswer}</Text>
-            </Text>
+            {displayResult.correctAnswer ? (
+              <Text style={styles.answerWas}>
+                The answer was{' '}
+                <Text style={styles.correctAnswer}>{displayResult.correctAnswer}</Text>
+              </Text>
+            ) : (
+              <Text style={styles.answerWas}>Waiting for reveal...</Text>
+            )}
           </View>
         </ScrollView>
       </View>

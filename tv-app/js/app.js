@@ -43,7 +43,8 @@
   let rotationScreens = [];
   let rotationIdx = 0;
   let rotationTimer = null;
-  const ROTATION_DURATIONS = { results: 30000, lobby: 60000 };
+  let countdownTickTimer = null;
+  const ROTATION_DURATIONS = { results: 60000, lobby: 60000 };
 
   // DOM refs
   const screenEl = document.getElementById('tt-screen');
@@ -52,6 +53,22 @@
   // ═══════════════════════════════════════════════════════════════
   // HELPERS
   // ═══════════════════════════════════════════════════════════════
+
+  /** Get next game start time that's always in the future (client-side, like player-app) */
+  function getNextFutureGameTime(stateEpoch) {
+    const SLOT_MS = 15 * 60 * 1000;
+    const now = Date.now();
+    let nextEpoch = stateEpoch && stateEpoch > now ? stateEpoch : getNextGameTime(now);
+    while (nextEpoch <= now) nextEpoch += SLOT_MS;
+    return nextEpoch;
+  }
+
+  /** Format seconds into countdown display string */
+  function formatCountdown(secsLeft) {
+    const mins = Math.floor(secsLeft / 60);
+    const secs = secsLeft % 60;
+    return mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${secs}s`;
+  }
 
   /** Generate a deterministic hue from a name string (v4 line 130) */
   function nameHue(name) {
@@ -329,8 +346,38 @@
     return `<span class="${cls}">${initial}</span>`;
   }
 
-  /** Full-screen signage header (bar logo + name + TapTrivia logo) */
+  /** Get minutes until the next game starts using reliable Intl ET conversion */
+  function minutesUntilNextGame() {
+    var WINDOW_START = 600;  // 10:00 AM ET in minutes
+    var WINDOW_END = 1260;   // 9:00 PM ET in minutes
+    var parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York', hour: 'numeric', minute: 'numeric', hour12: false,
+    }).formatToParts(new Date());
+    var h = 0, m = 0;
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i].type === 'hour') h = parseInt(parts[i].value, 10);
+      if (parts[i].type === 'minute') m = parseInt(parts[i].value, 10);
+    }
+    // Intl hour12:false returns 24 for midnight in some browsers
+    if (h === 24) h = 0;
+    var nowMin = h * 60 + m;
+    if (nowMin < WINDOW_START) return WINDOW_START - nowMin;
+    if (nowMin >= WINDOW_END) return (1440 - nowMin) + WINDOW_START;
+    return 15 - (nowMin - WINDOW_START) % 15;
+  }
+
+  /** Full-screen signage header (bar logo + name + countdown + TapTrivia logo) */
   function signageHeaderHTML() {
+    var totalMins = minutesUntilNextGame();
+    var hours = Math.floor(totalMins / 60);
+    var mins = totalMins % 60;
+    var countdownText;
+    if (hours > 0) {
+      countdownText = hours + '<span class="tt-signage-header__countdown-unit">h</span> ' + mins + '<span class="tt-signage-header__countdown-unit">m</span>';
+    } else {
+      countdownText = mins + '<span class="tt-signage-header__countdown-unit">m</span>';
+    }
+
     return `
       <div class="tt-signage-header">
         <div class="tt-signage-header__bar">
@@ -339,7 +386,14 @@
             <div class="tt-signage-header__bar-name">${barName}</div>
           </div>
         </div>
-        ${logoHTML('sm')}
+        <div class="tt-signage-header__right">
+          <div class="tt-signage-header__countdown">
+            <div class="tt-signage-header__countdown-label">Trivia starts in</div>
+            <div class="tt-signage-header__countdown-value">${countdownText}</div>
+          </div>
+          <div class="tt-signage-header__divider"></div>
+          ${logoHTML('sm')}
+        </div>
       </div>`;
   }
 
@@ -474,6 +528,7 @@
       rotationIdx = Math.max(0, newList.indexOf(currentGameState.screen));
       renderRotationScreen();
       startRotationTimer();
+      startCountdownTick();
     } else {
       // Already rotating — update list, preserve position
       const current = rotationScreens[rotationIdx];
@@ -526,11 +581,24 @@
     }
   }
 
+  /** 1-second tick to keep rotation countdown displays live */
+  function startCountdownTick() {
+    stopCountdownTick();
+    countdownTickTimer = setInterval(() => {
+      if (!rotationActive) { stopCountdownTick(); return; }
+      updateCurrentRotatedScreen();
+    }, 1000);
+  }
+  function stopCountdownTick() {
+    if (countdownTickTimer) { clearInterval(countdownTickTimer); countdownTickTimer = null; }
+  }
+
   /** Exit rotation mode when active gameplay resumes */
   function exitRotationMode() {
     if (!rotationActive) return;
     rotationActive = false;
     stopRotationTimer();
+    stopCountdownTick();
     rotationScreens = [];
     rotationIdx = 0;
   }
@@ -549,7 +617,7 @@
           <div class="tt-signage-menu-item__price">${item.price || ''}</div>
         </div>`).join('');
       return `
-        <div class="tt-signage-fs tt-signage-fade-in">
+        <div class="tt-signage-fs tt-signage-fade-in" style="background:linear-gradient(150deg,#0a0612,#1a0f30 30%,#2d1550 60%,#1a0f30)">
           ${signageHeaderHTML()}
           <div class="tt-signage-content">
             <div style="flex:1.1;display:flex;flex-direction:column;justify-content:center;padding:0 80px">
@@ -567,7 +635,6 @@
               ${items}
             </div>
           </div>
-          ${qrBadgeHTML('br')}
         </div>`;
     },
 
@@ -578,7 +645,7 @@
           <div class="tt-signage-deal__item">${deal.item || ''}</div>
         </div>`).join('');
       return `
-        <div class="tt-signage-fs tt-signage-fade-in">
+        <div class="tt-signage-fs tt-signage-fade-in" style="background:linear-gradient(150deg,#0f0a00,#1a1000 30%,#2a1a00 50%,#1a1000)">
           ${signageHeaderHTML()}
           <div class="tt-signage-center">
             <div class="tt-signage-label" style="color:#f59e0b;animation:neonPulse 2s ease-in-out infinite">${d.emoji || ''} Happy Hour</div>
@@ -586,7 +653,6 @@
             <div class="tt-signage-subtitle">${d.frequency || ''}</div>
             <div class="tt-signage-deals">${deals}</div>
           </div>
-          ${qrBadgeHTML('bl')}
         </div>`;
     },
 
@@ -598,7 +664,7 @@
           <div class="tt-signage-prize__name">${p.prize || ''}</div>
         </div>`).join('');
       return `
-        <div class="tt-signage-fs tt-signage-fade-in">
+        <div class="tt-signage-fs tt-signage-fade-in" style="background:linear-gradient(150deg,#06060f,#0e0824 30%,#1e1050 50%,#0e0824)">
           ${signageHeaderHTML()}
           <div class="tt-signage-center">
             <div class="tt-signage-big-emoji">${d.emoji || ''}</div>
@@ -607,7 +673,6 @@
             <div class="tt-signage-subtitle">${d.details || ''}</div>
             <div class="tt-signage-prizes">${prizes}</div>
           </div>
-          ${qrBadgeHTML('bl')}
         </div>`;
     },
 
@@ -621,7 +686,7 @@
         ? `<img src="${barLogoUrl}" alt="${barName}">`
         : `<span class="tt-signage-brand-logo__initial">${barName ? barName.charAt(0).toUpperCase() : 'B'}</span>`;
       return `
-        <div class="tt-signage-fs tt-signage-fade-in">
+        <div class="tt-signage-fs tt-signage-fade-in" style="background:linear-gradient(150deg,#08060e,#120e22 30%,#1e1440 50%,#120e22)">
           <div class="tt-signage-center">
             <div class="tt-signage-brand-logo">${logoInner}</div>
             <div class="tt-signage-headline">${barName}</div>
@@ -641,7 +706,7 @@
 
     announcement(d) {
       return `
-        <div class="tt-signage-fs tt-signage-fade-in">
+        <div class="tt-signage-fs tt-signage-fade-in" style="background:linear-gradient(150deg,#040812,#0a1628 30%,#122040 50%,#0a1628)">
           ${signageHeaderHTML()}
           <div class="tt-signage-center">
             <div class="tt-signage-big-emoji">${d.emoji || ''}</div>
@@ -649,13 +714,12 @@
             <div class="tt-signage-body">${d.message || ''}</div>
             ${d.subtext ? `<div class="tt-signage-subtext">${d.subtext}</div>` : ''}
           </div>
-          ${qrBadgeHTML('bl')}
         </div>`;
     },
 
     sports(d) {
       return `
-        <div class="tt-signage-fs tt-signage-fade-in">
+        <div class="tt-signage-fs tt-signage-fade-in" style="background:linear-gradient(150deg,#0a0400,#1a0e00 30%,#2a1400 50%,#1a0e00)">
           ${signageHeaderHTML()}
           <div class="tt-signage-center">
             <div class="tt-signage-big-emoji">${d.emoji || ''}</div>
@@ -665,7 +729,6 @@
             <div class="tt-signage-promo">${d.promo || ''}</div>
             ${d.tagline ? `<div class="tt-signage-tagline">${d.tagline}</div>` : ''}
           </div>
-          ${qrBadgeHTML('bl')}
         </div>`;
     },
 
@@ -676,7 +739,7 @@
           <span class="tt-signage-item__text">${item.text || ''}</span>
         </div>`).join('');
       return `
-        <div class="tt-signage-fs tt-signage-fade-in">
+        <div class="tt-signage-fs tt-signage-fade-in" style="background:linear-gradient(150deg,#040a12,#0a1420 30%,#0e1e35 50%,#0a1420)">
           ${signageHeaderHTML()}
           <div class="tt-signage-center">
             <div class="tt-signage-big-emoji">${d.emoji || ''}</div>
@@ -684,7 +747,6 @@
             <div class="tt-signage-body">${d.body || ''}</div>
             ${items ? `<div class="tt-signage-items">${items}</div>` : ''}
           </div>
-          ${qrBadgeHTML('bl')}
         </div>`;
     },
   };
@@ -881,6 +943,8 @@
 
     // Stop local clock when leaving playing screen
     if (currentScreen === 'playing' && screen !== 'playing') stopLocalClock();
+    // Stop signage rotation when leaving idle (full-screen signage)
+    if (currentScreen === 'idle' && screen !== 'idle') stopSignageRotation();
 
     currentScreen = screen;
     localQuestionNumber = qNum;
@@ -978,28 +1042,14 @@
         </div>`;
     });
 
-    // Countdown to next game
-    let countdownHTML = '';
-    if (state.nextGameStartEpoch) {
-      const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
-      if (secsLeft > 0) {
-        const mins = Math.floor(secsLeft / 60);
-        const secs = secsLeft % 60;
-        const display = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${secs}s`;
-        countdownHTML = `
-          <div class="tt-lobby__countdown">
-            <span class="tt-lobby__countdown-label">Next game in</span>
-            <span class="tt-lobby__countdown-num" id="tv-lobby-countdown">${display}</span>
-          </div>`;
-      }
-    }
-    if (!countdownHTML) {
-      countdownHTML = `
-        <div class="tt-lobby__waiting">
-          <span class="tt-lobby__waiting-text">Waiting for host</span>
-          ${waitingDotsHTML()}
-        </div>`;
-    }
+    // Countdown to next game (always compute client-side like player-app)
+    const nextEpoch = getNextFutureGameTime(state.nextGameStartEpoch);
+    const secsLeft = Math.max(0, Math.ceil((nextEpoch - Date.now()) / 1000));
+    const countdownHTML = `
+      <div class="tt-lobby__countdown">
+        <span class="tt-lobby__countdown-label">Next game in</span>
+        <span class="tt-lobby__countdown-num" id="tv-lobby-countdown">${formatCountdown(secsLeft)}</span>
+      </div>`;
 
     screenEl.innerHTML = `
       <div class="tt-lobby${panel ? ' tt-lobby--with-panel' : ''}">
@@ -1090,6 +1140,7 @@
       answersHTML += answerCardHTML(text, i + 1, 'default', { delay: i });
     });
 
+    // Don't show scores during question — it gives away who answered correctly
     let footerPlayers = '';
     scores.slice(0, 5).forEach((p, i) => {
       const name = p.name || p.playerName || 'Player';
@@ -1098,7 +1149,6 @@
           ${avatarHTML(name, { rank: i + 1, size: 'sm' })}
           <div>
             <div class="tt-play__footer-name">${name}</div>
-            <div class="tt-play__footer-score">${(p.score || 0).toLocaleString()}</div>
           </div>
         </div>`;
     });
@@ -1383,24 +1433,24 @@
       runnersHTML += '</div>';
     }
 
-    // Next game text
-    let nextText = 'Next game starts soon — stay tuned!';
-    if (state.nextGameStartEpoch) {
-      const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
-      if (secsLeft > 0 && secsLeft <= 120) {
-        nextText = `Next game in <span class="tt-results__countdown-num">${secsLeft}</span>s`;
-      }
-    }
+    // Next game countdown (always compute client-side like player-app)
+    const nextEpoch = getNextFutureGameTime(state.nextGameStartEpoch);
+    const secsLeft = Math.max(0, Math.ceil((nextEpoch - Date.now()) / 1000));
+    const countdownHTML = `
+      <div class="tt-results__countdown">
+        <span class="tt-results__countdown-label">Next game in</span>
+        <span class="tt-results__countdown-num" id="tv-results-countdown">${formatCountdown(secsLeft)}</span>
+      </div>`;
 
     screenEl.innerHTML = `
       <div class="tt-results tt-results--half${panel ? ' tt-results--with-panel' : ''}">
         <div class="tt-results__panel">
+          ${countdownHTML}
           <div class="tt-results__trophy">🏆</div>
           <div class="tt-results__title">Game Over!</div>
           <div class="tt-results__subtitle">${totalQ} questions · ${playerCount} players</div>
           <div class="tt-results__podium">${podiumInner}</div>
           ${runnersHTML}
-          <div class="tt-results__next-text" id="tv-results-next">${nextText}</div>
         </div>
         ${panel}
       </div>`;
@@ -1435,8 +1485,8 @@
     // Eliminated answer hints
     updateAnswerHints(state);
 
-    // Footer scores
-    updateFooterScores(state);
+    // Do NOT update footer scores during playing — scores update and correct
+    // indicators would reveal the answer before the reveal phase.
   }
 
   function updateRevealDynamic(state) {
@@ -1451,7 +1501,7 @@
     if (!timerWrap) return;
     const timer = state.timer || {};
     const remaining = timer.remaining || 0;
-    const total = timer.total || 45;
+    const total = timer.total || 34;
     const sec = Math.ceil(remaining);
     timerWrap.innerHTML = timerHTML(sec, total, 96, 6);
   }
@@ -1483,35 +1533,29 @@
   }
 
   function updateResultsCountdown(state) {
-    const wrap = document.getElementById('tv-results-next');
-    if (!wrap) return;
-    if (state.nextGameStartEpoch) {
-      const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
-      if (secsLeft > 0 && secsLeft <= 120) {
-        wrap.innerHTML = `Next game in <span class="tt-results__countdown-num">${secsLeft}</span>s`;
-      } else {
-        wrap.textContent = 'Next game starts soon — stay tuned!';
-      }
+    const el = document.getElementById('tv-results-countdown');
+    if (!el) {
+      // Countdown element doesn't exist yet — force re-render
+      currentScreen = '';
+      renderScreen(state);
+      return;
     }
+    const nextEpoch = getNextFutureGameTime(state.nextGameStartEpoch);
+    const secsLeft = Math.max(0, Math.ceil((nextEpoch - Date.now()) / 1000));
+    el.textContent = formatCountdown(secsLeft);
   }
 
   function updateLobbyCountdown(state) {
     const el = document.getElementById('tv-lobby-countdown');
-    if (!el && state.nextGameStartEpoch) {
-      // Countdown element doesn't exist yet — re-render
-      const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
-      if (secsLeft > 0) {
-        currentScreen = ''; // Force full re-render
-        renderScreen(state);
-      }
+    if (!el) {
+      // Countdown element doesn't exist yet — force re-render
+      currentScreen = '';
+      renderScreen(state);
       return;
     }
-    if (el && state.nextGameStartEpoch) {
-      const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
-      const mins = Math.floor(secsLeft / 60);
-      const secs = secsLeft % 60;
-      el.textContent = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${secs}s`;
-    }
+    const nextEpoch = getNextFutureGameTime(state.nextGameStartEpoch);
+    const secsLeft = Math.max(0, Math.ceil((nextEpoch - Date.now()) / 1000));
+    el.textContent = formatCountdown(secsLeft);
   }
 
   function updateBetweenCountdown(state) {
@@ -1558,7 +1602,7 @@
     const SIZE = 96, STROKE = 6;
     const r = (SIZE - STROKE * 2) / 2;
     const circ = 2 * Math.PI * r;
-    const TIMER_TOTAL = 44;
+    const TIMER_TOTAL = 34;
 
     function tick() {
       const cs = getGameState(localGameStartEpoch, Date.now());
@@ -1712,14 +1756,26 @@
     // Cache for screen rotation
     cacheForRotation(gameState, state);
 
-    // During break, cycle through lobby/between/results
-    // (game_over and active_game render normally — rotation only during breaks)
+    // During break: full-screen signage if available, otherwise lobby rotation
     if (state.state === 'break') {
+      const activeSlides = getActiveSlides();
+      if (activeSlides.length > 0) {
+        // Full-screen signage takes over during off-hours
+        exitRotationMode();
+        renderScreen({ ...gameState, screen: 'idle' });
+        return;
+      }
       handleScreenRotation(gameState);
       return;
     }
 
-    // Active game or game_over — exit rotation, render normally
+    // Game over — rotate between results and lobby (countdown to next game)
+    if (state.state === 'game_over') {
+      handleScreenRotation(gameState);
+      return;
+    }
+
+    // Active game — exit rotation, render normally
     exitRotationMode();
     renderScreen(gameState);
   }
@@ -1732,11 +1788,11 @@
     const gs = {
       screen: 'lobby',
       gameCode: barCode,
-      playerCount: apiState.activePlayers || 0,
+      playerCount: (apiState.barLeaderboard || []).length || apiState.activePlayers || 0,
       players: [],
       scores: [],
       question: {},
-      timer: { remaining: 0, total: 20 },
+      timer: { remaining: 0, total: 35 },
       questionNumber: apiState.questionNumber || 0,
       totalQuestions: apiState.totalQuestions || 15,
     };
@@ -1796,7 +1852,7 @@
         gs.avgAnswerTimeSec = apiState.avgAnswerTimeSec;
       } else if (phase === 'scores') {
         gs.screen = 'between';
-        const elapsed = apiState.elapsedSeconds || 49;
+        const elapsed = apiState.elapsedSeconds || 37;
         gs.nextQuestionIn = Math.max(1, Math.ceil(QUESTION_DURATION_MS / 1000 - elapsed));
       } else {
         // Playing phase (read_time, answer_time, etc.)
@@ -1807,10 +1863,10 @@
           category: apiState.category,
           categoryIcon: getCategoryIcon(apiState.category),
         };
-        // Calculate timer (answer window: 5s–50s = 45s countdown)
+        // Calculate timer (answer window: 4s–39s = 35s countdown)
         const elapsed = apiState.elapsedSeconds || 0;
-        const remaining = Math.max(0, 49 - elapsed);
-        gs.timer = { remaining, total: 44 };
+        const remaining = Math.max(0, 39 - elapsed);
+        gs.timer = { remaining, total: 35 };
         gs.pointsAvailable = apiState.currentPointsAvailable;
         gs.maxPoints = 1000;
         gs.eliminated = apiState.eliminated || [];
@@ -1862,12 +1918,118 @@
   }
 
   const DEMO_PLAYERS = [
-    { name: 'Sarah M', score: 12450 }, { name: 'Jake', score: 10875 },
-    { name: 'Chris K', score: 9640 }, { name: 'Mike D', score: 8920 },
+    { name: 'Sarah M', score: 12450 }, { name: 'Chris K', score: 10875 },
+    { name: 'Jake', score: 9640 }, { name: 'Mike D', score: 8920 },
     { name: 'Lisa P', score: 7350 }, { name: 'Tom W', score: 6800 },
     { name: 'Amy R', score: 5920 }, { name: 'Dan B', score: 5100 },
     { name: 'Nicole S', score: 4800 }, { name: 'Ryan T', score: 4200 },
     { name: 'Emma L', score: 3900 }, { name: 'Josh P', score: 3400 },
+  ];
+
+  const DEMO_SIGNAGE_SLIDES = [
+    {
+      template: 'specials',
+      enabled: true,
+      schedule: { days: [] },
+      data: {
+        emoji: '🍺',
+        label: "Tonight's Specials",
+        headline: 'Thirsty Thursday',
+        subheadline: 'All Day Deals',
+        featuredName: 'Margarita Pitcher',
+        featuredDesc: 'House lime, Cointreau, fresh squeeze',
+        featuredPrice: '$18',
+        menuItems: [
+          { icon: '🍺', name: 'Draft Beers', desc: 'All domestics', price: '$3' },
+          { icon: '🍸', name: 'Well Drinks', desc: 'Vodka, rum, whiskey', price: '$4' },
+          { icon: '🍗', name: 'Wings Basket', desc: '12 ct. buffalo or BBQ', price: '$8' },
+          { icon: '🌮', name: 'Loaded Nachos', desc: 'Beef, cheese, jalapeños', price: '$10' },
+        ],
+      },
+    },
+    {
+      template: 'happyhour',
+      enabled: true,
+      schedule: { days: [] },
+      data: {
+        emoji: '🍹',
+        timeRange: '4 PM – 7 PM',
+        frequency: 'Every Weekday',
+        deals: [
+          { deal: '50% OFF', item: 'All Draft Beers', color: '#f59e0b' },
+          { deal: '$5', item: 'House Wine & Sangria', color: '#e879f9' },
+          { deal: '$6', item: 'Any Appetizer', color: '#00d4aa' },
+        ],
+      },
+    },
+    {
+      template: 'event',
+      enabled: true,
+      schedule: { days: [] },
+      data: {
+        emoji: '🧠',
+        eventName: 'TapTrivia Night',
+        when: 'Every Thursday · 8 PM',
+        details: 'Free to play · Win prizes · Teams welcome',
+        prizes: [
+          { place: '1st Place', prize: '$50 Bar Tab', emoji: '🥇' },
+          { place: '2nd Place', prize: '$25 Bar Tab', emoji: '🥈' },
+          { place: '3rd Place', prize: 'Free Appetizer', emoji: '🥉' },
+        ],
+      },
+    },
+    {
+      template: 'brand',
+      enabled: true,
+      schedule: { days: [] },
+      data: {
+        tagline: 'Cold Drinks · Good Times · Live Trivia',
+        hours: [
+          { label: 'Mon – Thu', hours: '4 PM – 12 AM' },
+          { label: 'Fri – Sat', hours: '4 PM – 2 AM' },
+          { label: 'Sunday', hours: '12 PM – 10 PM' },
+        ],
+      },
+    },
+    {
+      template: 'announcement',
+      enabled: true,
+      schedule: { days: [] },
+      data: {
+        emoji: '🎉',
+        headline: 'Patio Season Is Here!',
+        message: 'We just expanded our outdoor seating — 20 new spots with string lights, fire pits, and full bar service. Come check it out this weekend!',
+        subtext: 'Grand opening Saturday at noon · Live music all day',
+      },
+    },
+    {
+      template: 'sports',
+      enabled: true,
+      schedule: { days: [] },
+      data: {
+        emoji: '🏈',
+        headline: 'Game Day Sunday',
+        matchup: 'Panthers vs Falcons',
+        when: 'This Sunday · 1:00 PM Kickoff',
+        promo: '$3 Bud Light · $5 Wings · $8 Pitchers',
+        tagline: 'Every screen. Every game. Best seat in Brevard.',
+      },
+    },
+    {
+      template: 'custom',
+      enabled: true,
+      schedule: { days: [] },
+      data: {
+        emoji: '🎶',
+        headline: 'Live Music Friday',
+        body: 'Local favorite Jake Morrison is back with acoustic covers and originals. Grab a drink, grab a seat — it\'s going to be a good one.',
+        items: [
+          { emoji: '🎸', text: 'Starts at 9 PM' },
+          { emoji: '🍻', text: '$4 craft pints all night' },
+          { emoji: '🎟️', text: 'No cover charge' },
+        ],
+      },
+    },
   ];
 
   const DEMO_SCREENS = [
@@ -1899,7 +2061,7 @@
         category: 'Entertainment',
         categoryIcon: '🎬',
       },
-      timer: { remaining: 14, total: 20 },
+      timer: { remaining: 14, total: 34 },
       pointsAvailable: 700,
       maxPoints: 1000,
       scores: DEMO_PLAYERS,
@@ -1922,14 +2084,20 @@
       },
       correctAnswerIndex: 0,
       answerPercentages: [68, 18, 8, 6],
-      timer: { remaining: 0, total: 20 },
+      timer: { remaining: 0, total: 35 },
+      scores: DEMO_PLAYERS,
+    },
+    {
+      screen: 'leaderboard',
+      questionNumber: 7,
+      totalQuestions: 15,
       scores: DEMO_PLAYERS,
     },
     {
       screen: 'between',
       questionNumber: 7,
       totalQuestions: 15,
-      nextQuestionIn: 8,
+      nextQuestionIn: 5,
       scores: DEMO_PLAYERS,
     },
     {
@@ -1940,14 +2108,43 @@
     },
   ];
 
-  function runDemoMode() {
-    barCode = 'BR7X';
-    barName = barName || 'Murphy\'s Pub';
-    let idx = 0;
-
-    // Check for specific screen in URL: ?demo&screen=playing
+  async function runDemoMode() {
     const params = new URLSearchParams(window.location.search);
     const screenParam = params.get('screen');
+    const barParam = params.get('bar');
+
+    // Use bar param, or localStorage, or fallback
+    const demoBarCode = barParam || barCode || '9CK6T';
+
+    // Fetch real bar data from API
+    const barData = await apiCall('GET', `/bar/${demoBarCode}`);
+    if (barData && !barData.error) {
+      barCode = barData.barCode || demoBarCode;
+      barName = barData.barName || barName || "Mo's Tavern";
+    } else {
+      barCode = demoBarCode;
+      barName = barName || "Mo's Tavern";
+    }
+
+    // Fetch real signage from TV state API
+    const tvState = await apiCall('GET', `/game/tv-state?barCode=${barCode}`);
+    if (tvState && !tvState.error && tvState.signage) {
+      signageSlides = tvState.signage.slides || [];
+      signageRotationSpeed = tvState.signage.rotationSpeed || 15;
+      if (tvState.logoHash) {
+        barLogoHash = tvState.logoHash;
+        barLogoUrl = tvState.logoUrl || null;
+      }
+      console.log('[Demo] Loaded', signageSlides.length, 'real signage slides for', barName);
+    } else {
+      // Fallback to mock data if API fails
+      signageSlides = DEMO_SIGNAGE_SLIDES;
+      signageRotationSpeed = 15;
+      console.log('[Demo] API unavailable, using mock signage');
+    }
+    signageCurrentIndex = 0;
+
+    let idx = 0;
     if (screenParam) {
       const found = DEMO_SCREENS.findIndex(s => s.screen === screenParam);
       if (found >= 0) idx = found;
@@ -1966,6 +2163,18 @@
     if (!screenParam) {
       setInterval(showNext, 6000);
     }
+
+    // Listen for screen-switch messages from parent (demo.html toggle)
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'tt-demo-screen') {
+        const found = DEMO_SCREENS.find(s => s.screen === e.data.screen);
+        if (found) {
+          currentScreen = '';
+          localQuestionNumber = null;
+          renderScreen(found);
+        }
+      }
+    });
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -1982,6 +2191,14 @@
     if (isDemoMode()) {
       runDemoMode();
       return;
+    }
+
+    // Accept ?bar=CODE param to set bar code (used by demo.html embed)
+    const urlParams = new URLSearchParams(window.location.search);
+    const barParam = urlParams.get('bar');
+    if (barParam && barParam !== barCode) {
+      barCode = barParam.toUpperCase();
+      localStorage.setItem('tt_bar_code', barCode);
     }
 
     // If we have a stored bar code, verify and enter lobby
@@ -2009,6 +2226,35 @@
   } else {
     init();
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // EMBED TOGGLE — demo.html can force idle (signage) or live (real polling)
+  // ═══════════════════════════════════════════════════════════════
+  let embedOverrideIdle = false;
+
+  window.addEventListener('message', (e) => {
+    if (!e.data || e.data.type !== 'tt-demo-screen') return;
+
+    if (e.data.screen === 'idle') {
+      // Force signage mode — pause polling, show signage
+      embedOverrideIdle = true;
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+      exitRotationMode();
+      currentScreen = '';
+      const active = getActiveSlides();
+      if (active.length > 0) {
+        renderScreen({ screen: 'idle' });
+        startSignageRotation();
+      } else {
+        renderScreen({ screen: 'lobby', playerCount: 0, players: [] });
+      }
+    } else if (e.data.screen === 'live') {
+      // Resume real polling
+      embedOverrideIdle = false;
+      currentScreen = '';
+      startPolling();
+    }
+  });
 
   // Expose renderScreen globally for testing
   window.TapTrivia = { renderScreen };

@@ -1,0 +1,1213 @@
+/* ================================================================
+   tv-signage.css — TapTrivia TV App Signage Styles
+   ================================================================
+   All signage classes prefixed with ts- to avoid collision
+   with existing tv-app styles.
+   
+   Design system: "Dark cocktail lounge, not sports bar neon"
+   Fonts: Fredoka (display), Outfit (body)
+   All sizes are at 960x540 (2x to 1920x1080 via CSS scale)
+   ================================================================ */
+
+/* ----- ANIMATIONS ----- */
+
+@keyframes ts-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ts-slideUp {
+  from { transform: translateY(14px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes ts-orb1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(50px, -30px) scale(1.15); }
+  66% { transform: translate(-25px, 25px) scale(0.9); }
+}
+
+@keyframes ts-orb2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-35px, 45px) scale(0.85); }
+  66% { transform: translate(35px, -25px) scale(1.1); }
+}
+
+@keyframes ts-neonPulse {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.4)); }
+  50% { filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.7)); }
+}
+
+@keyframes ts-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+@keyframes ts-categoryZoom {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes ts-panelSlide {
+  from { transform: translateX(12px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+
+/* ----- ANIMATION UTILITY CLASSES ----- */
+
+.ts-neon-pulse { animation: ts-neonPulse 2s ease-in-out infinite; }
+.ts-anim-breathe { animation: ts-breathe 5s ease-in-out infinite; }
+.ts-anim-zoom { animation: ts-categoryZoom 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.ts-anim-panel-slide { animation: ts-panelSlide 0.4s ease-out; }
+
+
+/* ----- COLOR UTILITY CLASSES ----- */
+
+.ts-color-amber { color: #f59e0b; }
+.ts-color-blue { color: #667eea; }
+.ts-color-red { color: #ff4757; }
+.ts-color-green { color: #00d4aa; }
+.ts-color-gold { color: #ffd200; }
+.ts-color-purple { color: #764ba2; }
+
+.ts-gold-text {
+  background: linear-gradient(135deg, #f7971e 0%, #ffd200 50%, #ffe066 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+
+/* ================================================================
+   ORBS — Ambient floating background elements
+   ================================================================ */
+
+.ts-orbs {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ts-orb {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.ts-orb-blue {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.12) 0%, transparent 70%);
+  top: -8%;
+  right: 8%;
+  animation: ts-orb1 22s ease-in-out infinite;
+}
+
+.ts-orb-red {
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(168, 51, 74, 0.1) 0%, transparent 70%);
+  bottom: 8%;
+  left: 3%;
+  animation: ts-orb2 28s ease-in-out infinite;
+}
+
+.ts-orb-amber {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.1), transparent 70%);
+  top: -10%;
+  right: 5%;
+  animation: ts-orb1 20s ease-in-out infinite;
+}
+
+
+/* ================================================================
+   BAR LOGO
+   ================================================================ */
+
+.ts-bar-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.ts-bar-logo-fallback {
+  background: linear-gradient(135deg, #2a1a4e, #3d2266);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  gap: 2px;
+}
+
+.ts-logo-name {
+  font-weight: 800;
+  color: #ffd200;
+  font-family: 'Fredoka', sans-serif;
+  line-height: 1;
+}
+
+.ts-logo-sub {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+
+/* ================================================================
+   FULL-SCREEN: SHARED ELEMENTS
+   ================================================================ */
+
+.ts-fullscreen {
+  width: 960px;
+  height: 540px;
+  overflow: hidden;
+  position: relative;
+  font-family: 'Outfit', sans-serif;
+  transition: opacity 0.3s ease;
+}
+
+/* Background layers per template */
+.ts-fs-bg {
+  position: absolute;
+  inset: 0;
+}
+
+.ts-bg-specials { background: linear-gradient(150deg, #0a0612, #1a0f30 30%, #2d1550 60%, #1a0f30); }
+.ts-bg-happyhour { background: linear-gradient(150deg, #0f0a00, #1a1000 30%, #2a1a00 50%, #1a1000); }
+.ts-bg-event { background: linear-gradient(150deg, #06060f, #0e0824 30%, #1e1050 50%, #0e0824); }
+.ts-bg-brand { background: linear-gradient(150deg, #08060e, #120e22 30%, #1e1440 50%, #120e22); }
+.ts-bg-announcement { background: linear-gradient(150deg, #040812, #0a1628 30%, #122040 50%, #0a1628); }
+.ts-bg-sports { background: linear-gradient(150deg, #0a0400, #1a0e00 30%, #2a1400 50%, #1a0e00); }
+.ts-bg-custom { background: linear-gradient(150deg, #040a12, #0a1420 30%, #0e1e35 50%, #0a1420); }
+
+
+/* ----- Signage Header (top bar with logo + TapTrivia) ----- */
+
+.ts-signage-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 14px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ts-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ts-header-name {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ts-header-loc {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 500;
+}
+
+
+/* ----- QR Badge (bottom corner) ----- */
+
+.ts-qr-badge {
+  position: absolute;
+  bottom: 14px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 12px 18px 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ts-qr-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.ts-qr-url {
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffd200;
+  margin-top: 3px;
+  letter-spacing: 0.5px;
+}
+
+.ts-qr-code {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.ts-qr-code-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 1px;
+}
+
+.ts-qr-code-value {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffd200;
+  letter-spacing: 2px;
+}
+
+
+/* ----- Powered By (brand template footer) ----- */
+
+.ts-powered-by {
+  position: absolute;
+  bottom: 16px;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+}
+
+.ts-powered-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 10px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ts-powered-sep {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ts-powered-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+
+/* ================================================================
+   FULL-SCREEN: CONTENT LAYOUTS
+   ================================================================ */
+
+.ts-fs-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  z-index: 5;
+  padding-top: 70px; /* below header */
+}
+
+.ts-fs-center {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.ts-fs-padded {
+  padding-left: 80px;
+  padding-right: 80px;
+}
+
+.ts-fs-split {
+  /* Two-column layout for specials */
+}
+
+.ts-fs-left {
+  flex: 1.1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 40px;
+}
+
+.ts-fs-right {
+  flex: 0.9;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 36px 0 0;
+  gap: 12px;
+}
+
+
+/* ----- Shared Typography ----- */
+
+.ts-fs-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.ts-fs-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: 20px;
+}
+
+.ts-fs-subtitle {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+  margin-bottom: 32px;
+}
+
+.ts-fs-hero-text {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 64px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.1;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.ts-fs-big-emoji {
+  font-size: 56px;
+  margin-bottom: 20px;
+}
+
+
+/* ----- Specials Template ----- */
+
+.ts-fs-featured-card {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 20px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  max-width: 380px;
+}
+
+.ts-fs-featured-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #f59e0b;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.ts-fs-featured-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ts-fs-featured-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ts-fs-featured-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 4px;
+}
+
+.ts-fs-featured-price {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: #00d4aa;
+}
+
+.ts-fs-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.ts-fs-menu-icon {
+  font-size: 28px;
+}
+
+.ts-fs-menu-info {
+  flex: 1;
+}
+
+.ts-fs-menu-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ts-fs-menu-desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.ts-fs-menu-price {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #00d4aa;
+}
+
+
+/* ----- Happy Hour Template ----- */
+
+.ts-fs-deals-row {
+  display: flex;
+  gap: 20px;
+}
+
+.ts-fs-deal-card {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  padding: 24px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: center;
+  min-width: 160px;
+}
+
+.ts-fs-deal-amount {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.ts-fs-deal-item {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+
+/* ----- Event Template ----- */
+
+.ts-fs-event-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  line-height: 1.15;
+  margin-bottom: 10px;
+}
+
+.ts-fs-prizes-row {
+  display: flex;
+  gap: 16px;
+}
+
+.ts-fs-prize-card {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 16px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: center;
+}
+
+.ts-fs-prize-emoji {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.ts-fs-prize-place {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffd200;
+}
+
+.ts-fs-prize-desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 2px;
+}
+
+
+/* ----- Brand Template ----- */
+
+.ts-fs-brand-name {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 52px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.ts-fs-brand-tagline {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.ts-fs-brand-divider {
+  width: 60px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(135deg, #f7971e 0%, #ffd200 50%, #ffe066 100%);
+  margin: 24px 0;
+}
+
+.ts-fs-hours-row {
+  display: flex;
+  gap: 32px;
+}
+
+.ts-fs-hours-item {
+  text-align: center;
+}
+
+.ts-fs-hours-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 4px;
+}
+
+.ts-fs-hours-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffd200;
+}
+
+
+/* ----- Announcement Template ----- */
+
+.ts-fs-announce-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+
+.ts-fs-announce-body {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 500;
+  line-height: 1.5;
+  max-width: 600px;
+}
+
+.ts-fs-announce-sub {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 20px;
+}
+
+
+/* ----- Sports Template ----- */
+
+.ts-fs-sports-matchup {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 52px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+
+.ts-fs-promo-card {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 16px 32px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ts-fs-promo-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffd200;
+}
+
+.ts-fs-sports-tagline {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 16px;
+  font-style: italic;
+}
+
+
+/* ----- Custom Template ----- */
+
+.ts-fs-custom-headline {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+
+.ts-fs-custom-body {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+  line-height: 1.5;
+  max-width: 580px;
+}
+
+.ts-fs-custom-items {
+  display: flex;
+  gap: 14px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.ts-fs-custom-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 14px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ts-fs-custom-pill-emoji {
+  font-size: 24px;
+}
+
+.ts-fs-custom-pill-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+
+/* ================================================================
+   PANEL RENDERERS (~340px wide, in-game sidebar)
+   ================================================================ */
+
+.ts-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px;
+  font-family: 'Outfit', sans-serif;
+}
+
+.ts-panel-brand-center {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.ts-panel-sports-center {
+  text-align: center;
+}
+
+
+/* ----- Panel Header ----- */
+
+.ts-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+
+.ts-panel-header-name {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ts-panel-header-loc {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+
+/* ----- Panel QR ----- */
+
+.ts-panel-qr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 11px;
+  padding: 9px 12px;
+  margin-top: auto;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ts-panel-qr-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ts-panel-qr-url {
+  font-size: 9px;
+  color: #ffd200;
+  font-weight: 600;
+}
+
+.ts-panel-qr-code {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 1px;
+}
+
+.ts-panel-qr-label {
+  font-size: 7px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 1px;
+}
+
+.ts-panel-qr-value {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffd200;
+  letter-spacing: 2px;
+}
+
+
+/* ----- Panel Shared Typography ----- */
+
+.ts-pn-eyebrow {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.ts-pn-eyebrow-sm {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.ts-pn-subtitle {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 14px;
+}
+
+.ts-pn-hero-sm {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.1;
+  margin-bottom: 3px;
+}
+
+.ts-pn-big-emoji {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+
+/* ----- Panel: Specials ----- */
+
+.ts-pn-featured {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.04));
+  border-radius: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  margin-bottom: 10px;
+}
+
+.ts-pn-featured-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ts-pn-featured-name {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.ts-pn-featured-desc {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 2px;
+}
+
+.ts-pn-featured-price {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #00d4aa;
+}
+
+.ts-pn-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.ts-pn-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.ts-pn-menu-icon {
+  font-size: 16px;
+}
+
+.ts-pn-menu-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ts-pn-menu-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ts-pn-menu-desc {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.ts-pn-menu-price {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #00d4aa;
+}
+
+
+/* ----- Panel: Happy Hour ----- */
+
+.ts-pn-deals-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.ts-pn-deal {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  text-align: center;
+}
+
+.ts-pn-deal-amount {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.ts-pn-deal-item {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 2px;
+}
+
+
+/* ----- Panel: Event ----- */
+
+.ts-pn-event-center {
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ts-pn-event-name {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: 4px;
+}
+
+.ts-pn-event-details {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 16px;
+}
+
+.ts-pn-prizes-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 6px;
+}
+
+.ts-pn-prize-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 9px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.ts-pn-prize-emoji {
+  font-size: 18px;
+}
+
+.ts-pn-prize-info {
+  flex: 1;
+  text-align: left;
+}
+
+.ts-pn-prize-place {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffd200;
+}
+
+.ts-pn-prize-desc {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+
+/* ----- Panel: Brand ----- */
+
+.ts-pn-brand-name {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.ts-pn-brand-tagline {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.ts-pn-brand-divider {
+  width: 40px;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(135deg, #f7971e 0%, #ffd200 50%, #ffe066 100%);
+  margin-bottom: 16px;
+}
+
+.ts-pn-hours-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.ts-pn-hours-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 12px;
+}
+
+.ts-pn-hours-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ts-pn-hours-value {
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffd200;
+}
+
+
+/* ----- Panel: Announcement ----- */
+
+.ts-pn-announce-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.ts-pn-announce-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: 10px;
+}
+
+.ts-pn-announce-body {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+}
+
+.ts-pn-announce-sub {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 12px;
+}
+
+
+/* ----- Panel: Sports ----- */
+
+.ts-pn-sports-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.ts-pn-sports-emoji {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.ts-pn-sports-matchup {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.ts-pn-sports-when {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 14px;
+}
+
+.ts-pn-promo-card {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 12px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ts-pn-promo-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffd200;
+}
+
+.ts-pn-sports-tagline {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 10px;
+  font-style: italic;
+}
+
+
+/* ----- Panel: Custom ----- */
+
+.ts-pn-custom-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.ts-pn-custom-headline {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+
+.ts-pn-custom-body {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.ts-pn-custom-items {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  padding: 0 4px;
+}
+
+.ts-pn-custom-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.ts-pn-custom-item-emoji {
+  font-size: 16px;
+}
+
+.ts-pn-custom-item-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: left;
+}

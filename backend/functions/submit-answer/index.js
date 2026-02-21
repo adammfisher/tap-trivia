@@ -16,7 +16,7 @@ exports.handler = async (event) => {
   try {
     const gameId = event.pathParameters?.gameId;
     const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
-    const { questionNumber, selectedAnswer, playerName, clientElapsedMs } = body;
+    const { questionNumber, selectedAnswer, playerName, clientElapsedMs, barCode: requestBarCode } = body;
     const playerId = event.headers?.['x-player-id'] || event.headers?.['X-Player-ID'];
 
     // --- Validation ---
@@ -87,7 +87,7 @@ exports.handler = async (event) => {
     const serverTimestamp = Date.now();
     const elapsedMs = serverTimestamp - questionStartEpoch;
 
-    if (elapsedMs < 5000) {
+    if (elapsedMs < 4000) {
       return response(403, {
         error: 'QUESTION_NOT_AVAILABLE',
         message: 'Answers are not being accepted yet for this question',
@@ -95,7 +95,7 @@ exports.handler = async (event) => {
       });
     }
 
-    if (elapsedMs > 49000) {
+    if (elapsedMs > 45000) {
       return response(403, {
         error: 'ANSWER_WINDOW_CLOSED',
         message: 'The answer window for this question has closed',
@@ -108,7 +108,7 @@ exports.handler = async (event) => {
     // so the points the player sees at tap time match what they receive.
     let scoringElapsedMs = elapsedMs;
     if (typeof clientElapsedMs === 'number' &&
-        clientElapsedMs >= 5000 && clientElapsedMs <= 49000 &&
+        clientElapsedMs >= 4000 && clientElapsedMs <= 45000 &&
         Math.abs(clientElapsedMs - elapsedMs) <= 2000) {
       scoringElapsedMs = clientElapsedMs;
     }
@@ -117,9 +117,11 @@ exports.handler = async (event) => {
     const points = correct ? calculatePoints(scoringElapsedMs) : 0;
 
     // --- Get player's bar assignment ---
+    // Use barCode from request body (client knows if they're at a bar this session).
+    // Fall back to stored currentBarCode for older clients that don't send it.
 
     const player = await get(TABLE.PLAYERS, { PK: `PLAYER#${playerId}` });
-    const barCode = player?.currentBarCode || '';
+    const barCode = typeof requestBarCode === 'string' ? requestBarCode : (player?.currentBarCode || '');
 
     // --- Write the answer (conditional to prevent duplicates) ---
 

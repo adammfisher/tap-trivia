@@ -42,10 +42,10 @@ const Player = {
     return localStorage.getItem(STORAGE_KEYS.BAR_NAME) || '';
   },
 
-  setBar(code, name) {
+  setBar(code, name, type) {
     localStorage.setItem(STORAGE_KEYS.BAR_CODE, code);
     localStorage.setItem(STORAGE_KEYS.BAR_NAME, name);
-    this.addBarToHistory(code, name);
+    this.addBarToHistory(code, name, type);
   },
 
   clearBar() {
@@ -100,11 +100,11 @@ const Player = {
     return null;
   },
 
-  addBarToHistory(code, name) {
+  addBarToHistory(code, name, type) {
     let history = this.getBarHistory();
     // Remove existing entry for this code (will re-add at front)
     history = history.filter(b => b.code !== code);
-    history.unshift({ code, name, joinedAt: Date.now() });
+    history.unshift({ code, name, type: type || 'bar', joinedAt: Date.now() });
     // Cap at 20 bars
     if (history.length > 20) history = history.slice(0, 20);
     localStorage.setItem(STORAGE_KEYS.BAR_HISTORY, JSON.stringify(history));

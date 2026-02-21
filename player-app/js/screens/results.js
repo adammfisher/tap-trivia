@@ -7,9 +7,11 @@ const ResultsScreen = {
   gameId: null,
   finalScore: 0,
   _autoNavTimer: null,
+  _countdownInterval: null,
 
   async show(gameId, totalScore) {
     this.clearAutoNav();
+    this._clearCountdown();
 
     // If called with a gameId (from game flow), save it as last game
     if (gameId) {
@@ -75,6 +77,38 @@ const ResultsScreen = {
       clearTimeout(this._autoNavTimer);
       this._autoNavTimer = null;
     }
+  },
+
+  _clearCountdown() {
+    if (this._countdownInterval) {
+      clearInterval(this._countdownInterval);
+      this._countdownInterval = null;
+    }
+  },
+
+  _startNextGameCountdown() {
+    this._clearCountdown();
+    const SLOT_MS = 15 * 60 * 1000;
+    const render = () => {
+      const el = document.getElementById('results-next-game-timer');
+      if (!el) return;
+      const now = Date.now();
+      let nextEpoch = getNextGameTime(now);
+      // getNextGameTime returns current slot start if game is active/results —
+      // advance to next slot if it's in the past
+      while (nextEpoch <= now) nextEpoch += SLOT_MS;
+      const secs = Math.max(0, Math.ceil((nextEpoch - now) / 1000));
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      el.textContent = `${m}:${String(s).padStart(2, '0')}`;
+
+      if (secs <= 60) {
+        this._clearCountdown();
+        App.showScreen(Player.hasBar() ? 'lobby' : 'home');
+      }
+    };
+    render();
+    this._countdownInterval = setInterval(render, 1000);
   },
 
   async loadLeaderboards() {
@@ -151,14 +185,18 @@ const ResultsScreen = {
       <div id="tab-global" class="tab-content">
         ${globalLeaderHtml}
       </div>
-      <button class="btn-next-game" onclick="App.showScreen(Player.hasBar() ? 'lobby' : 'home')">
-        Next Game →
-      </button>
+      <div class="results-next-game">
+        <div class="results-next-label">NEXT GAME IN</div>
+        <div class="results-next-timer" id="results-next-game-timer">--:--</div>
+        <div class="results-next-hint">Auto-joining next game</div>
+      </div>
     `;
+    this._startNextGameCountdown();
   },
 
   hide() {
     this.clearAutoNav();
+    this._clearCountdown();
   },
 
   showTab(tab) {

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, memo } from 'react';
 import { Pressable, Text, View, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FadeInView } from '../utils/animations';
@@ -19,7 +19,9 @@ interface AnswerCardProps {
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 
-export function AnswerCard({
+// Memoize to avoid re-renders from GameContext's 250ms tick.
+// Custom comparison ignores onPress (closure changes every render but behavior is stable).
+export const AnswerCard = memo(function AnswerCard({
   label,
   letter,
   state = 'default',
@@ -157,7 +159,13 @@ export function AnswerCard({
       </Animated.View>
     </FadeInView>
   );
-}
+}, (prev, next) =>
+  prev.label === next.label &&
+  prev.letter === next.letter &&
+  prev.state === next.state &&
+  prev.disabled === next.disabled &&
+  prev.dimmed === next.dimmed
+);
 
 const styles = StyleSheet.create({
   cardBase: {

@@ -963,7 +963,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 20px; /* 10×2 */
+  gap: 32px; /* 16×2 */
 }
 /* Bottom leaderboard strip */
 .tt-play__footer {
@@ -1348,17 +1348,23 @@ body {
 }
 
 /* ─── Results next game text ────────────────────────────────── */
-.tt-results__next-text {
-  font-family: 'Outfit', sans-serif;
-  font-size: 24px;
-  font-weight: 400;
-  color: rgba(255,255,255,0.35);
+.tt-results__countdown {
   text-align: center;
-  margin-top: 8px;
+  margin-bottom: 16px;
+}
+.tt-results__countdown-label {
+  display: block;
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
 }
 .tt-results__countdown-num {
   font-family: 'Fredoka', sans-serif;
-  font-size: 30px;
+  font-size: 56px;
   font-weight: 700;
   color: #ffd200;
 }
@@ -1715,6 +1721,39 @@ body {
   font-size: 20px;
   color: rgba(255,255,255,.35);
   font-weight: 500;
+}
+.tt-signage-header__right {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.tt-signage-header__countdown {
+  text-align: right;
+}
+.tt-signage-header__countdown-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,.35);
+}
+.tt-signage-header__countdown-value {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: #ffd200;
+  letter-spacing: 1px;
+}
+.tt-signage-header__countdown-unit {
+  font-size: 22px;
+  color: rgba(255,255,255,.35);
+  margin-left: 2px;
+}
+.tt-signage-header__divider {
+  width: 2px;
+  height: 56px;
+  background: rgba(255,255,255,.08);
 }
 
 /* --- Full-Screen Signage Slide Types --- */

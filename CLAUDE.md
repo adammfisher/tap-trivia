@@ -104,10 +104,10 @@ tap-trivia/
 
 ## Game Logic
 
-- **15 questions per game**, 60 seconds each (15 min total)
+- **15 questions per game**, 44 seconds each (11 min gameplay + 2 min results + 2 min break = 15 min cycle)
 - **Game window:** 5:00 PM – 2:00 AM ET (36 games/night, crosses midnight)
-- **Question phases:** category_splash (0–5s) → read_time (5–14s, 1000pts) → all_answers (14–18s) → hint_1 (18–33s) → hint_2 (33–45s) → reveal (45–50s) → scores (50–60s)
-- **Points:** Speed bump 1000→800 (14–17s) then linear 800→0 (17–45s)
+- **Question phases:** category_splash (0–3s) → read_time (3–11s, 1000pts) → all_answers (11–14s) → hint_1 (14–24s) → hint_2 (24–32s) → reveal (32–37s) → scores (37–44s)
+- **Points:** Speed bump 1000→800 (11–14s) then linear 800→0 (14–32s)
 - **Difficulty ramp:** Q1-4=L1, Q5-9=L2, Q10-15=L3 (3 levels only)
 - **Question rotation:** LRU-based — always prefer least-recently-used questions. 110K questions = ~6.8 months before any repeat
 

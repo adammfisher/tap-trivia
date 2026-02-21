@@ -29,6 +29,7 @@ export function BetweenScreen({ navigation, route }: Props) {
   }, [gameState.gamePhase, navigation, barCode, playerId, barName]);
 
   const stats = gameState.playerStats;
+  const isSolo = barCode === 'SOLO';
   const rankDirection = gameState.rankChange > 0 ? '\u25B2' : gameState.rankChange < 0 ? '\u25BC' : '';
   const rankChangeText =
     gameState.rankChange !== 0
@@ -58,41 +59,52 @@ export function BetweenScreen({ navigation, route }: Props) {
           {/* Score + Rank */}
           <View style={styles.scoreCard}>
             <Text style={styles.afterLabel}>After Question {gameState.questionNumber}</Text>
-            <View style={styles.scoreRankRow}>
+            {isSolo ? (
               <View style={styles.scoreSection}>
                 <Text style={styles.scoreValue}>{gameState.totalScore.toLocaleString()}</Text>
                 <Text style={styles.scoreSubLabel}>Your Score</Text>
               </View>
-              <View style={styles.divider} />
-              <View style={styles.rankSection}>
-                <Text style={styles.rankValue}>{gameState.rank}{getOrdinal(gameState.rank)}</Text>
-                {rankChangeText ? (
-                  <Text style={[styles.rankChange, { color: gameState.rankChange > 0 ? colors.green : colors.red }]}>
-                    {rankChangeText}
-                  </Text>
-                ) : (
-                  <Text style={styles.scoreSubLabel}>Your Rank</Text>
-                )}
+            ) : (
+              <View style={styles.scoreRankRow}>
+                <View style={styles.scoreSection}>
+                  <Text style={styles.scoreValue}>{gameState.totalScore.toLocaleString()}</Text>
+                  <Text style={styles.scoreSubLabel}>Your Score</Text>
+                </View>
+                <View style={styles.divider} />
+                <View style={styles.rankSection}>
+                  <Text style={styles.rankValue}>{gameState.rank > 0 ? `${gameState.rank}${getOrdinal(gameState.rank)}` : '--'}</Text>
+                  {rankChangeText ? (
+                    <Text style={[styles.rankChange, { color: gameState.rankChange > 0 ? colors.green : colors.red }]}>
+                      {rankChangeText}
+                    </Text>
+                  ) : (
+                    <Text style={styles.scoreSubLabel}>Your Rank</Text>
+                  )}
+                </View>
               </View>
-            </View>
+            )}
           </View>
 
           {/* Stats */}
           <View style={styles.statsRow}>
             <StatBox value={stats.correct} label="Correct" color={colors.green} />
             <StatBox value={stats.wrong} label="Wrong" color={colors.red} />
-            <StatBox value={`\u{1F525} ${stats.streak}`} label="Streak" color={colors.gold} />
+            <StatBox value={stats.timeout} label="Unanswered" color={w(0.4)} />
           </View>
 
-          {/* Leaderboard */}
-          <Text style={styles.sectionLabel}>Leaderboard</Text>
-          <View style={styles.leaderboardContainer}>
-            {gameState.leaderboard.slice(0, 8).map((entry, i) => (
-              <FadeInView key={entry.name} delay={i * 40} duration={300} direction="left">
-                <LeaderboardRow entry={entry} />
-              </FadeInView>
-            ))}
-          </View>
+          {/* Leaderboard (bar play only) */}
+          {!isSolo && gameState.leaderboard.length > 0 && (
+            <>
+              <Text style={styles.sectionLabel}>Leaderboard</Text>
+              <View style={styles.leaderboardContainer}>
+                {gameState.leaderboard.slice(0, 8).map((entry, i) => (
+                  <FadeInView key={entry.name} delay={i * 40} duration={300} direction="left">
+                    <LeaderboardRow entry={entry} />
+                  </FadeInView>
+                ))}
+              </View>
+            </>
+          )}
 
           <View style={styles.footer}>
             <Text style={styles.nextText}>Next question in 5s...</Text>

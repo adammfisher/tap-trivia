@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { FadeInView, FadeInText, ZoomInText } from '../utils/animations';
 import { GradientBackground } from '../components/GradientBackground';
 import { DifficultyDots } from '../components/DifficultyDots';
+import { TimerRing } from '../components/TimerRing';
 import { useGameState } from '../hooks/useGameState';
 import { w } from '../theme/colors';
 import { fonts } from '../theme/typography';
@@ -18,8 +19,11 @@ export function CategoryScreen({ navigation, route }: Props) {
   const { gameState } = useGameState({ barCode, playerId, barName });
 
   useEffect(() => {
+    const params = { barCode, playerId, barName };
     if (gameState.gamePhase === 'question') {
-      navigation.navigate('Playing', { barCode, playerId, barName });
+      navigation.navigate('Playing', params);
+    } else if (gameState.gamePhase === 'finished') {
+      navigation.navigate('Results', params);
     }
   }, [gameState.gamePhase, navigation, barCode, playerId, barName]);
 
@@ -57,7 +61,13 @@ export function CategoryScreen({ navigation, route }: Props) {
 
         {countdown > 0 && (
           <View style={styles.countdownContainer}>
-            <Text style={styles.countdownNumber}>{countdown}</Text>
+            <TimerRing
+              seconds={countdown}
+              totalSeconds={3}
+              size={80}
+              strokeWidth={4}
+              pulse
+            />
             <Text style={styles.readyText}>Get ready!</Text>
           </View>
         )}
@@ -102,11 +112,6 @@ const styles = StyleSheet.create({
   countdownContainer: {
     marginTop: 30,
     alignItems: 'center',
-  },
-  countdownNumber: {
-    fontFamily: fonts.fredoka.bold,
-    fontSize: 48,
-    color: '#fff',
   },
   readyText: {
     fontFamily: fonts.outfit.semiBold,

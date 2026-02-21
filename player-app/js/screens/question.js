@@ -110,7 +110,7 @@ const QuestionScreen = {
     if (state.questionPhase === 'category_splash') {
       this.renderCategorySplash(state);
     } else {
-      // During reveal (44-49s) and scores (49-59s) phases, keep showing
+      // During reveal (32-37s) and scores (37-44s) phases, keep showing
       // the question screen so the correct answer highlight is visible
       this.renderQuestion(state);
     }
@@ -123,7 +123,7 @@ const QuestionScreen = {
     const subcategory = q ? (q.subcategory || '') : '';
 
     // Countdown: 5 seconds total, show 5→1 then GO!
-    const secondsLeft = Math.ceil((5000 - state.elapsedInQuestion) / 1000);
+    const secondsLeft = Math.ceil((4000 - state.elapsedInQuestion) / 1000);
     const countDisplay = secondsLeft > 0 ? secondsLeft : 'GO!';
 
     // Only rebuild DOM when the countdown number changes
@@ -159,9 +159,9 @@ const QuestionScreen = {
     const eliminatedIndices = (hintsVisible || []).map(h => q.eliminateOrder[h]);
     const points = canAnswer ? calculatePoints(elapsedInQuestion) : 0;
 
-    // Timer: 44-second countdown (5s–49s), synced with TV app
+    // Timer: 35-second countdown (4s–39s), synced with TV app
     const remainingSec = state.questionSecondsRemaining;
-    const timerPct = remainingSec / 44;
+    const timerPct = remainingSec / 35;
     const timerR = 30;
     const timerC = 2 * Math.PI * timerR;
     const timerOffset = timerC * (1 - timerPct);
@@ -445,7 +445,8 @@ const QuestionScreen = {
       questionNumber: this.currentQuestionNumber,
       selectedAnswer,
       playerName: Player.getName(),
-      clientElapsedMs: state.elapsedInQuestion
+      clientElapsedMs: state.elapsedInQuestion,
+      barCode: Player.getBarCode()
     });
 
     this.submitting = false;

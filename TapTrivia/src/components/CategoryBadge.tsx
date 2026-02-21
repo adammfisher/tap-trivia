@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { w } from '../theme/colors';
 import { fonts } from '../theme/typography';
@@ -7,14 +8,14 @@ interface CategoryBadgeProps {
   category: string;
 }
 
-export function CategoryBadge({ emoji, category }: CategoryBadgeProps) {
+export const CategoryBadge = memo(function CategoryBadge({ emoji, category }: CategoryBadgeProps) {
   return (
     <View style={styles.badge}>
       <Text style={styles.emoji}>{emoji}</Text>
       <Text style={styles.label}>{category.toUpperCase()}</Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   badge: {

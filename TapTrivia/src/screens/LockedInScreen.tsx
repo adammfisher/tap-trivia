@@ -40,6 +40,8 @@ export function LockedInScreen({ navigation, route }: Props) {
       }
     } else if (gameState.gamePhase === 'leaderboard') {
       navigation.navigate('Between', params);
+    } else if (gameState.gamePhase === 'finished') {
+      navigation.navigate('Results', params);
     }
   }, [gameState.gamePhase, gameState.answerResult, navigation, barCode, playerId, barName]);
 
@@ -90,7 +92,7 @@ export function LockedInScreen({ navigation, route }: Props) {
           </View>
 
           <View style={styles.timerRow}>
-            <TimerRing seconds={gameState.timeRemaining} totalSeconds={39} />
+            <TimerRing seconds={gameState.timeRemaining} totalSeconds={35} />
           </View>
 
           <View style={styles.categoryRow}>
@@ -122,7 +124,7 @@ export function LockedInScreen({ navigation, route }: Props) {
                         ? 'eliminated'
                         : 'default'
                   }
-                  dimmed={!isSelected && !isEliminated}
+                  dimmed={false}
                   onPress={() => handleChangeAnswer(i)}
                   disabled={isEliminated}
                 />

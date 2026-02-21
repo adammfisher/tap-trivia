@@ -1,13 +1,13 @@
+import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { gradients } from '../theme/colors';
 
 interface GradientBackgroundProps {
   children: React.ReactNode;
 }
 
-export function GradientBackground({ children }: GradientBackgroundProps) {
+export const GradientBackground = memo(function GradientBackground({ children }: GradientBackgroundProps) {
   return (
     <LinearGradient
       colors={[...gradients.main]}
@@ -20,16 +20,16 @@ export function GradientBackground({ children }: GradientBackgroundProps) {
       {children}
     </LinearGradient>
   );
-}
+});
 
-function Orbs() {
+const Orbs = memo(function Orbs() {
   return (
     <View style={styles.orbContainer} pointerEvents="none">
       <View style={[styles.orb, styles.orb1]} />
       <View style={[styles.orb, styles.orb2]} />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   gradient: {

@@ -9,6 +9,7 @@ const App = {
   init() {
     // Initialize screen modules
     WelcomeScreen.init();
+    CreateGroupScreen.init();
     JoinBarScreen.init();
 
     // Bottom nav
@@ -65,7 +66,7 @@ const App = {
 
     // Show bottom nav on all screens except onboarding flows
     const nav = document.getElementById('bottom-nav');
-    const hideNavScreens = ['welcome', 'join-bar'];
+    const hideNavScreens = ['welcome', 'join-bar', 'create-group'];
     nav.classList.toggle('hidden', hideNavScreens.includes(screenId));
 
     this.currentScreen = screenId;
@@ -79,6 +80,7 @@ const App = {
     const map = {
       'welcome': WelcomeScreen,
       'home': HomeScreen,
+      'create-group': CreateGroupScreen,
       'join-bar': JoinBarScreen,
       'lobby': LobbyScreen,
       'game': QuestionScreen,

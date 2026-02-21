@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, w } from '../theme/colors';
@@ -7,7 +8,7 @@ interface ProgressBarProps {
   total: number;
 }
 
-export function ProgressBar({ current, total }: ProgressBarProps) {
+export const ProgressBar = memo(function ProgressBar({ current, total }: ProgressBarProps) {
   const pct = (current / total) * 100;
 
   return (
@@ -20,7 +21,7 @@ export function ProgressBar({ current, total }: ProgressBarProps) {
       />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   track: {

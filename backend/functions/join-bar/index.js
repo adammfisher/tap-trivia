@@ -38,7 +38,7 @@ exports.handler = async (event) => {
         headers,
         body: JSON.stringify({
           error: 'INVALID_BAR_CODE',
-          message: "That code doesn't match any active bar. Check the TV and try again.",
+          message: "That code doesn't match any active location or group. Double-check and try again.",
           statusCode: 404
         })
       };
@@ -99,7 +99,8 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         barCode: bar.barCode,
         barName: bar.barName,
-        activePlayers: updatedBar.activePlayers
+        activePlayers: updatedBar.activePlayers,
+        type: bar.type || 'bar'
       })
     };
   } catch (err) {

@@ -1,7 +1,7 @@
 'use strict';
 
 const { TABLE, get, query } = require('./shared/dynamo');
-const { getGameState, getNextGameTime, gameTimeslotPK, GAME_DURATION_MS } = require('./shared/game-clock');
+const { getGameState, getNextGameTime, gameTimeslotPK, GAME_DURATION_MS, RESULTS_DURATION_MS } = require('./shared/game-clock');
 
 function response(statusCode, body) {
   return {
@@ -28,6 +28,20 @@ exports.handler = async (event) => {
           totalQuestions: 15,
           secondsUntilStart: adhocState.secondsUntilStart || null
         });
+      }
+      // Still within results window — report as completed but still current
+      if (adhocState.gamePhase === 'post_game') {
+        const gameEndEpoch = adhocGame.startTimeEpoch + GAME_DURATION_MS;
+        if (now - gameEndEpoch < RESULTS_DURATION_MS) {
+          return response(200, {
+            gameId: adhocGame.gameId,
+            status: 'completed',
+            startTimeEpoch: adhocGame.startTimeEpoch,
+            currentQuestionNumber: null,
+            totalQuestions: 15,
+            secondsUntilStart: null
+          });
+        }
       }
     }
 

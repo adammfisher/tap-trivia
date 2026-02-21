@@ -706,6 +706,50 @@ resource "aws_lambda_permission" "upload_logo_apigw" {
 }
 
 # =============================================================================
+# Group Lambda
+# =============================================================================
+
+data "archive_file" "create_group" {
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/functions/create-group"
+  output_path = "${path.module}/zip/create-group.zip"
+}
+
+# -----------------------------------------------------------------------------
+# 18. create-group
+#     Creates a persistent friend group (virtual bar).
+#     DynamoDB: Read/Write Bars
+# -----------------------------------------------------------------------------
+resource "aws_lambda_function" "create_group" {
+  function_name    = "TapTrivia-create-group"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  memory_size      = 128
+  timeout          = 10
+  filename         = data.archive_file.create_group.output_path
+  source_code_hash = data.archive_file.create_group.output_base64sha256
+
+  environment {
+    variables = local.common_environment_variables
+  }
+
+  tags = {
+    Environment = var.stage
+    Project     = "TapTrivia"
+    Function    = "create-group"
+  }
+}
+
+resource "aws_lambda_permission" "create_group_apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.create_group.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}
+
+# =============================================================================
 # Player Feedback Lambda
 # =============================================================================
 

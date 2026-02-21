@@ -1,5 +1,6 @@
 import type {
   BarJoinResponse,
+  CreateGroupResponse,
   CurrentGameResponse,
   QuestionResponse,
   SubmitAnswerResponse,
@@ -93,11 +94,12 @@ export async function submitAnswer(
   playerName: string,
   clientElapsedMs: number,
   deviceId: string,
+  barCode?: string,
 ): Promise<ApiResult<SubmitAnswerResponse>> {
   return apiCall<SubmitAnswerResponse>(
     'POST',
     `/game/${encodeURIComponent(gameId)}/answer`,
-    { questionNumber, selectedAnswer, playerName, clientElapsedMs },
+    { questionNumber, selectedAnswer, playerName, clientElapsedMs, barCode: barCode || '' },
     { 'X-Player-ID': deviceId },
   );
 }
@@ -147,6 +149,18 @@ export async function submitFeedback(params: {
     platform: params.platform,
     appVersion: params.appVersion,
   }, hdrs);
+}
+
+/**
+ * POST /group/create — create a persistent friend group.
+ */
+export async function createGroup(
+  groupName: string,
+  deviceId: string,
+): Promise<ApiResult<CreateGroupResponse>> {
+  return apiCall<CreateGroupResponse>('POST', '/group/create', { groupName }, {
+    'X-Player-ID': deviceId,
+  });
 }
 
 export { isApiError };

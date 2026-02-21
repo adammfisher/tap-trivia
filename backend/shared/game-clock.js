@@ -6,19 +6,20 @@
  * from a game's start epoch and the current time.
  */
 
-const QUESTION_DURATION_MS = 54000;
+const QUESTION_DURATION_MS = 52000;
 const TOTAL_QUESTIONS = 15;
 const GAME_DURATION_MS = TOTAL_QUESTIONS * QUESTION_DURATION_MS;
-const RESULTS_DURATION_MS = 30000;
+const RESULTS_DURATION_MS = 120000;
+const BREAK_DURATION_MS = 120000;
 
 const PHASES = {
-  CATEGORY_SPLASH: { start: 0,     end: 5000  },
-  READ_TIME:       { start: 5000,  end: 13000 },
+  CATEGORY_SPLASH: { start: 0,     end: 4000  },
+  READ_TIME:       { start: 4000,  end: 13000 },
   ALL_ANSWERS:     { start: 13000, end: 17000 },
-  HINT_1:          { start: 17000, end: 32000 },
-  HINT_2:          { start: 32000, end: 44000 },
-  REVEAL:          { start: 44000, end: 49000 },
-  SCORES:          { start: 49000, end: 54000 }
+  HINT_1:          { start: 17000, end: 29000 },
+  HINT_2:          { start: 29000, end: 39000 },
+  REVEAL:          { start: 39000, end: 45000 },
+  SCORES:          { start: 45000, end: 52000 }
 };
 
 /**
@@ -59,8 +60,8 @@ function getNextGameTime(nowEpoch) {
 
   const slotEpoch = windowStartET.getTime() + etOffset + (slotMinsIntoWindow * 60 * 1000);
 
-  // If past this slot's game end, move to next slot
-  if (nowEpoch >= slotEpoch + GAME_DURATION_MS) {
+  // If past this slot's game + results window, move to next slot
+  if (nowEpoch >= slotEpoch + GAME_DURATION_MS + RESULTS_DURATION_MS) {
     const nextSlotMins = slotMinsIntoWindow + 15;
     if (nextSlotMins >= WINDOW_DURATION_MIN) {
       // Past last slot — next window is tomorrow at 10 AM
@@ -119,13 +120,13 @@ function getGameState(gameStartEpoch, nowEpoch) {
     }
   }
 
-  const canAnswer = elapsedInQuestion >= 5000 && elapsedInQuestion < 49000;
+  const canAnswer = elapsedInQuestion >= 4000 && elapsedInQuestion < 45000;
 
   const hintsVisible = [];
   if (elapsedInQuestion >= 17000) hintsVisible.push(0);
-  if (elapsedInQuestion >= 32000) hintsVisible.push(1);
+  if (elapsedInQuestion >= 29000) hintsVisible.push(1);
 
-  const correctRevealed = elapsedInQuestion >= 44000;
+  const correctRevealed = elapsedInQuestion >= 39000;
 
   // calculatePoints is from scoring.js — available globally in browser,
   // or must be required separately in Node.js
@@ -145,7 +146,7 @@ function getGameState(gameStartEpoch, nowEpoch) {
     pointsAvailable,
     hintsVisible,
     correctRevealed,
-    questionSecondsRemaining: Math.max(0, Math.ceil((49000 - elapsedInQuestion) / 1000))
+    questionSecondsRemaining: Math.max(0, Math.ceil((39000 - elapsedInQuestion) / 1000))
   };
 }
 
@@ -172,6 +173,7 @@ if (typeof module !== 'undefined' && module.exports) {
     TOTAL_QUESTIONS,
     GAME_DURATION_MS,
     RESULTS_DURATION_MS,
+    BREAK_DURATION_MS,
     PHASES,
     DIFFICULTY_RAMP,
     getGameState,

@@ -38,6 +38,9 @@
   }
 
   .frame-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 1.5px;
@@ -45,6 +48,47 @@
     color: rgba(255,255,255,0.25);
     padding-left: 4px;
   }
+
+  /* ─── TV Toggle ──────────────────────────────────── */
+  .tv-toggle {
+    display: flex;
+    gap: 1px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 2px;
+    margin-left: 6px;
+  }
+  .tv-toggle button {
+    padding: 3px 10px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.3);
+    font-family: 'Outfit', sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .tv-toggle button:hover {
+    color: rgba(255,255,255,0.5);
+  }
+  .tv-toggle button.active {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* ─── Status dot ─────────────────────────────────── */
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #f59e0b;
+    margin-left: 4px;
+  }
+  .status-dot.live { background: #00d4aa; }
 
   /* ─── TV Frame ────────────────────────────────────── */
   .tv-frame {
@@ -106,9 +150,16 @@
   <div class="demo-layout">
     <!-- TV App -->
     <div class="frame-wrap" id="tv-wrap">
-      <div class="frame-label">Bar TV</div>
+      <div class="frame-label">
+        <span class="status-dot live" id="tv-status-dot"></span>
+        <span id="tv-status-text">Live — real game data</span>
+        <div class="tv-toggle" id="tv-toggle">
+          <button data-screen="idle" onclick="switchTV('idle')">Off Hours</button>
+          <button class="active" data-screen="live" onclick="switchTV('live')">Live</button>
+        </div>
+      </div>
       <div class="tv-frame" id="tv-frame">
-        <iframe id="tv-iframe" src="https://tv.taptrivia.tv" allow="autoplay"></iframe>
+        <iframe id="tv-iframe" src="tv-app/index.html?bar=9CK6T" allow="autoplay"></iframe>
       </div>
     </div>
 
@@ -126,6 +177,30 @@
   </div>
 
 <script>
+  // ─── TV Toggle ──────────────────────────────────────
+  const TV_URLS = {
+    idle: 'tv-app/index.html?demo&screen=idle&bar=9CK6T',
+    live: 'tv-app/index.html?bar=9CK6T',
+  };
+  const STATUS_TEXT = {
+    idle: 'Full-screen signage — off hours',
+    live: 'Live — real game data',
+  };
+
+  function switchTV(screen) {
+    document.querySelectorAll('.tv-toggle button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.screen === screen);
+    });
+    const dot = document.getElementById('tv-status-dot');
+    const text = document.getElementById('tv-status-text');
+    dot.className = screen === 'live' ? 'status-dot live' : 'status-dot';
+    text.textContent = STATUS_TEXT[screen] || '';
+
+    const tvIframe = document.getElementById('tv-iframe');
+    tvIframe.src = TV_URLS[screen];
+  }
+
+  // ─── Responsive Sizing ──────────────────────────────
   function fitToScreen() {
     const vw = window.innerWidth;
     const vh = window.innerHeight;

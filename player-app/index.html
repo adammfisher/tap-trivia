@@ -40,6 +40,7 @@
       </div>
       <div class="home-actions">
         <button id="btn-join-game" class="btn-primary btn-primary--lg">Join a Game</button>
+        <button id="btn-create-group" class="btn-primary btn-primary--lg">Create a Group</button>
         <button id="btn-how-it-works" class="btn-glass">How It Works</button>
       </div>
       <div class="home-divider">
@@ -50,6 +51,35 @@
       <p class="home-qr-hint">Scan a QR code at any participating bar</p>
       <div class="home-footer">
         <button id="btn-find-bars" class="btn-link home-find-bars">Find bars near you</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- P2b: Create Group -->
+  <section id="screen-create-group" class="screen">
+    <div class="join-header">
+      <div class="logo-small"><span class="logo__tap">Tap</span><span class="logo__trivia">Trivia</span></div>
+    </div>
+    <div class="join-container">
+      <div id="create-group-form">
+        <div class="create-group-emoji">👥</div>
+        <h2 class="create-group-title">Create a Group</h2>
+        <p class="create-group-subtitle">Give your group a name. Share the code with friends to play together!</p>
+        <input type="text" id="create-group-name" class="name-input"
+          placeholder="Group name" maxlength="30" autocomplete="off" autocapitalize="words">
+        <div id="create-group-error" class="join-error"></div>
+        <button id="btn-create-group-submit" class="btn-primary btn-primary--lg">Create Group</button>
+      </div>
+      <div id="create-group-success" class="hidden">
+        <div class="create-group-emoji">✅</div>
+        <h2 class="create-group-title">Group Created!</h2>
+        <p class="create-group-subtitle">Share this code with friends</p>
+        <div class="create-group-code-box">
+          <span id="create-group-code-display" class="create-group-code"></span>
+        </div>
+        <p id="create-group-name-display" class="create-group-name-label"></p>
+        <button id="btn-create-group-share" class="btn-primary btn-primary--lg">Share Code</button>
+        <button id="btn-create-group-continue" class="btn-glass" style="margin-top:12px">Continue →</button>
       </div>
     </div>
   </section>
@@ -68,7 +98,7 @@
         <input type="text" class="code-char" maxlength="1" autocomplete="off" autocapitalize="characters" inputmode="text">
         <input type="text" class="code-char" maxlength="1" autocomplete="off" autocapitalize="characters" inputmode="text">
       </div>
-      <p class="join-hint">Code shown on the bar TV</p>
+      <p class="join-hint">Enter a location or group code</p>
       <div id="join-bar-error" class="join-error"></div>
       <button id="btn-join-submit" class="btn-primary btn-primary--lg">Join Game →</button>
     </div>
@@ -132,8 +162,9 @@
   <script src="js/api.js?v=20260216a"></script>
   <script src="js/player.js?v=20260216a"></script>
   <script src="js/screens/welcome.js?v=20260216a"></script>
-  <script src="js/screens/home.js?v=20260216a"></script>
-  <script src="js/screens/join-bar.js?v=20260216a"></script>
+  <script src="js/screens/home.js?v=20260221a"></script>
+  <script src="js/screens/create-group.js?v=20260221a"></script>
+  <script src="js/screens/join-bar.js?v=20260221a"></script>
   <script src="js/screens/lobby.js?v=20260216a"></script>
   <script src="js/screens/question.js?v=20260216a"></script>
   <script src="js/screens/results.js?v=20260216a"></script>

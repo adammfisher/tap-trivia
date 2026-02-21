@@ -101,7 +101,7 @@ export function NicknameScreen({ navigation, route }: Props) {
               style={[styles.submitButton, (!isValid || loading) && styles.submitDisabled]}
             >
               <Text style={styles.submitText}>
-                {loading ? 'Joining...' : "Let's Go! \u{1F3AE}"}
+                {loading ? 'Joining...' : "Let's Go!"}
               </Text>
             </LinearGradient>
           </Pressable>

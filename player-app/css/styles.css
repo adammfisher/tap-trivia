@@ -427,6 +427,51 @@ body::-webkit-scrollbar { display: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   P2b: CREATE GROUP
+   ═══════════════════════════════════════════════════════════════ */
+.create-group-emoji {
+  font-size: 2.5rem;
+  text-align: center;
+}
+
+.create-group-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.create-group-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.create-group-code-box {
+  background: var(--surface-glass);
+  border: 2px solid var(--blue);
+  border-radius: var(--radius-lg);
+  padding: 16px 32px;
+  text-align: center;
+}
+
+.create-group-code {
+  font-family: var(--font-mono);
+  font-size: 2.2rem;
+  font-weight: 500;
+  color: var(--gold);
+  letter-spacing: 0.3em;
+}
+
+.create-group-name-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    P3b: LOBBY
    ═══════════════════════════════════════════════════════════════ */
 .lobby-header {
@@ -1506,6 +1551,31 @@ body::-webkit-scrollbar { display: none; }
 }
 
 .btn-next-game:active { transform: scale(0.97); }
+
+.results-next-game {
+  text-align: center;
+  padding: var(--sp-lg) 0;
+}
+.results-next-label {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 4px;
+}
+.results-next-timer {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.results-next-hint {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.25);
+}
 
 /* ═══════════════════════════════════════════════════════════════
    P9: PROFILE

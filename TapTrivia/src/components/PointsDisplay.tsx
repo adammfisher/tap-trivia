@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { getPointsColor, w } from '../theme/colors';
 import { fonts } from '../theme/typography';
@@ -8,7 +9,7 @@ interface PointsDisplayProps {
   sublabel?: string;
 }
 
-export function PointsDisplay({ points, maxPoints = 1000, sublabel = 'Points Available' }: PointsDisplayProps) {
+export const PointsDisplay = memo(function PointsDisplay({ points, maxPoints = 1000, sublabel = 'Points Available' }: PointsDisplayProps) {
   const color = getPointsColor(points, maxPoints);
   const pct = points / maxPoints;
 
@@ -21,7 +22,7 @@ export function PointsDisplay({ points, maxPoints = 1000, sublabel = 'Points Ava
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

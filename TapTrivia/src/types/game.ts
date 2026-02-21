@@ -68,6 +68,7 @@ export interface SavedBar {
   code: string;
   name: string;
   lastPlayed: string;
+  type?: 'bar' | 'group';
 }
 
 /** POST /bar/join response */
@@ -75,6 +76,14 @@ export interface BarJoinResponse {
   barCode: string;
   barName: string;
   activePlayers: number;
+  type?: 'bar' | 'group';
+}
+
+/** POST /group/create response */
+export interface CreateGroupResponse {
+  barCode: string;
+  barName: string;
+  type: 'group';
 }
 
 /** GET /game/current response */

@@ -18,7 +18,7 @@ export function SavedBarCard({ bar, onPress }: SavedBarCardProps) {
       ]}
     >
       <View style={styles.icon}>
-        <Text style={styles.iconText}>{'\u{1F37A}'}</Text>
+        <Text style={styles.iconText}>{bar.type === 'group' ? '\u{1F465}' : '\u{1F37A}'}</Text>
       </View>
       <View style={styles.info}>
         <Text style={styles.name}>{bar.name}</Text>
