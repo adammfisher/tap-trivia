@@ -521,11 +521,13 @@
   /** Enter or continue screen rotation mode */
   function handleScreenRotation(currentGameState) {
     const newList = buildRotationList();
+    console.log('[Rotation] handleScreenRotation active=' + rotationActive, 'list=' + JSON.stringify(newList), 'cached=' + Object.keys(cachedScreenData));
 
     if (!rotationActive) {
       rotationActive = true;
       rotationScreens = newList;
       rotationIdx = Math.max(0, newList.indexOf(currentGameState.screen));
+      console.log('[Rotation] Starting rotation, idx=' + rotationIdx, 'screens=' + JSON.stringify(rotationScreens));
       renderRotationScreen();
       startRotationTimer();
       startCountdownTick();
@@ -563,11 +565,16 @@
   /** Start the screen rotation timer (per-screen durations) */
   function startRotationTimer() {
     stopRotationTimer();
-    if (rotationScreens.length <= 1) return;
+    if (rotationScreens.length <= 1) {
+      console.log('[Rotation] Only ' + rotationScreens.length + ' screen(s), skipping timer');
+      return;
+    }
     const currentScreenName = rotationScreens[rotationIdx % rotationScreens.length];
     const duration = ROTATION_DURATIONS[currentScreenName] || 30000;
+    console.log('[Rotation] Timer set: ' + currentScreenName + ' for ' + (duration / 1000) + 's, will switch to idx ' + ((rotationIdx + 1) % rotationScreens.length));
     rotationTimer = setTimeout(() => {
       rotationIdx = (rotationIdx + 1) % rotationScreens.length;
+      console.log('[Rotation] Timer fired! Switching to: ' + rotationScreens[rotationIdx]);
       renderRotationScreen();
       startRotationTimer();
     }, duration);

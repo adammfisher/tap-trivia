@@ -77,6 +77,7 @@ export interface BarJoinResponse {
   barName: string;
   activePlayers: number;
   type?: 'bar' | 'group';
+  displayName?: string;
 }
 
 /** POST /group/create response */

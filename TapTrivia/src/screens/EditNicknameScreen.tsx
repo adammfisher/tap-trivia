@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { GradientBackground } from '../components/GradientBackground';
 import { usePlayerIdentity } from '../hooks/usePlayerIdentity';
+import { updatePlayer, isApiError } from '../services/api';
 import { gradients, w, colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -13,7 +14,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'EditNickname'>;
 
 export function EditNicknameScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { nickname: savedNickname, setNickname } = usePlayerIdentity();
+  const { nickname: savedNickname, deviceId, barCode, setNickname } = usePlayerIdentity();
   const [name, setName] = useState(savedNickname || '');
   const [loading, setLoading] = useState(false);
 
@@ -21,11 +22,17 @@ export function EditNicknameScreen({ navigation }: Props) {
   const hasChanged = name.trim() !== (savedNickname || '');
 
   const handleSave = async () => {
-    if (!isValid || !hasChanged) return;
+    if (!isValid || !hasChanged || !deviceId) return;
     setLoading(true);
     Keyboard.dismiss();
     try {
-      await setNickname(name.trim());
+      // Call backend to set name with dedup at current bar
+      const result = await updatePlayer(deviceId, name.trim(), barCode || undefined);
+      if (isApiError(result)) {
+        setLoading(false);
+        return;
+      }
+      await setNickname(result.displayName || name.trim());
     } catch {
       setLoading(false);
       return;

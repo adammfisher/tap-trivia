@@ -78,8 +78,14 @@ const ProfileScreen = {
       return;
     }
 
-    Player.setName(name);
-    await apiCall('PUT', `/player/${Player.getId()}`, { displayName: name });
+    const result = await apiCall('PUT', `/player/${Player.getId()}`, { displayName: name });
+    // Use the server-returned displayName (may be deduped)
+    const effectiveName = (result && !result.error && result.displayName) ? result.displayName : name;
+    Player.setName(effectiveName);
+    // Update the input to show effective name if it was deduped
+    if (effectiveName !== name) {
+      input.value = effectiveName;
+    }
 
     const btn = document.getElementById('btn-save-name');
     btn.textContent = 'Saved!';
@@ -124,8 +130,16 @@ const ProfileScreen = {
   },
 
   async joinBar(code) {
-    const result = await apiCall('POST', '/bar/join', { barCode: code });
+    const payload = { barCode: code };
+    const playerName = Player.getName();
+    if (playerName) payload.playerName = playerName;
+
+    const result = await apiCall('POST', '/bar/join', payload);
     if (result && !result.error) {
+      // Update local name if server deduped it
+      if (result.displayName && result.displayName !== playerName) {
+        Player.setName(result.displayName);
+      }
       Player.setBar(result.barCode, result.barName);
       App.showScreen('lobby');
     }

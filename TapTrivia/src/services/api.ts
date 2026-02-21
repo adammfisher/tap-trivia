@@ -50,14 +50,41 @@ async function apiCall<T>(
 
 /**
  * POST /bar/join — validates bar code AND joins the player.
- * Requires X-Player-ID header.
+ * Requires X-Player-ID header. Optional playerName for name dedup.
  */
 export async function joinBar(
   barCode: string,
   deviceId: string,
+  playerName?: string,
 ): Promise<ApiResult<BarJoinResponse>> {
-  return apiCall<BarJoinResponse>('POST', '/bar/join', { barCode }, {
+  const body: Record<string, unknown> = { barCode };
+  if (playerName) body.playerName = playerName;
+  return apiCall<BarJoinResponse>('POST', '/bar/join', body, {
     'X-Player-ID': deviceId,
+  });
+}
+
+/**
+ * PUT /player/{playerId} — create or update player profile.
+ * Used for setting displayName with server-side dedup.
+ */
+export interface UpdatePlayerResponse {
+  playerId: string;
+  displayName: string;
+  currentBarCode: string | null;
+  gamesPlayed: number;
+  totalPoints: number;
+}
+
+export async function updatePlayer(
+  playerId: string,
+  displayName: string,
+  currentBarCode?: string,
+): Promise<ApiResult<UpdatePlayerResponse>> {
+  const body: Record<string, unknown> = { displayName };
+  if (currentBarCode) body.currentBarCode = currentBarCode;
+  return apiCall<UpdatePlayerResponse>('PUT', `/player/${encodeURIComponent(playerId)}`, body, {
+    'X-Player-ID': playerId,
   });
 }
 

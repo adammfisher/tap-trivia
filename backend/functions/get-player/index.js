@@ -1,6 +1,7 @@
 'use strict';
 
 const { TABLE, get, put, update } = require('./shared/dynamo');
+const { deduplicateDisplayName, getPlayersAtBar } = require('./shared/name-suffixes');
 
 function response(statusCode, body) {
   return {
@@ -88,12 +89,20 @@ exports.handler = async (event) => {
           });
         }
 
+        // Dedup display name if player is at a bar
+        let effectiveName = displayName;
+        const barForDedup = currentBarCode || null;
+        if (barForDedup) {
+          const playersAtBar = await getPlayersAtBar(barForDedup, playerId);
+          effectiveName = deduplicateDisplayName(displayName, playersAtBar);
+        }
+
         const now = new Date().toISOString();
         const newPlayer = {
           PK: `PLAYER#${playerId}`,
           playerId,
-          displayName,
-          currentBarCode: currentBarCode || null,
+          displayName: effectiveName,
+          currentBarCode: barForDedup,
           gamesPlayed: 0,
           totalPoints: 0,
           createdAt: now,
@@ -119,8 +128,15 @@ exports.handler = async (event) => {
       const expressionNames = {};
 
       if (displayName !== undefined) {
+        // Dedup the name if player is at a bar
+        let effectiveName = displayName;
+        const barForDedup = currentBarCode || existing.currentBarCode;
+        if (barForDedup) {
+          const playersAtBar = await getPlayersAtBar(barForDedup, playerId);
+          effectiveName = deduplicateDisplayName(displayName, playersAtBar);
+        }
         expressionParts.push('#displayName = :displayName');
-        expressionValues[':displayName'] = displayName;
+        expressionValues[':displayName'] = effectiveName;
         expressionNames['#displayName'] = 'displayName';
       }
 

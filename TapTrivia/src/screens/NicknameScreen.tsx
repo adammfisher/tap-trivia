@@ -6,6 +6,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { GradientBackground } from '../components/GradientBackground';
 import { Logo } from '../components/Logo';
 import { usePlayerIdentity } from '../hooks/usePlayerIdentity';
+import { updatePlayer, isApiError } from '../services/api';
 import { gradients, w, colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -31,7 +32,15 @@ export function NicknameScreen({ navigation, route }: Props) {
     Keyboard.dismiss();
 
     try {
-      await setNickname(trimmed);
+      // Call backend to set name with dedup at current bar
+      const result = await updatePlayer(deviceId, trimmed, barCode);
+      if (isApiError(result)) {
+        setError(result.message || 'Failed to save nickname.');
+        setLoading(false);
+        return;
+      }
+      // Use the server-returned displayName (may be suffixed if collision)
+      await setNickname(result.displayName || trimmed);
     } catch {
       setError('Failed to save nickname.');
       setLoading(false);
