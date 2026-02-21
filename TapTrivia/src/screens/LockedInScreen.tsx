@@ -118,10 +118,10 @@ export function LockedInScreen({ navigation, route }: Props) {
                   label={answer}
                   letter={i + 1}
                   state={
-                    isSelected
-                      ? 'selected'
-                      : isEliminated
-                        ? 'eliminated'
+                    isEliminated
+                      ? 'eliminated'
+                      : isSelected
+                        ? 'selected'
                         : 'default'
                   }
                   dimmed={false}

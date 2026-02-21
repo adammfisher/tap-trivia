@@ -20,7 +20,7 @@ function ConfettiPiece({ color, leftPercent, delay, size }: ConfettiPieceProps) 
     const duration = 1500 + Math.random() * 1000;
     const delayMs = delay * 1000;
 
-    Animated.parallel([
+    const anim = Animated.parallel([
       Animated.sequence([
         Animated.delay(delayMs),
         Animated.sequence([
@@ -55,7 +55,9 @@ function ConfettiPiece({ color, leftPercent, delay, size }: ConfettiPieceProps) 
           useNativeDriver: true,
         }),
       ]),
-    ]).start();
+    ]);
+    anim.start();
+    return () => anim.stop();
   }, [delay, opacity, translateY, rotate]);
 
   const rotateInterpolation = rotate.interpolate({

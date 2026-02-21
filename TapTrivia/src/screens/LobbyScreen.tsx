@@ -48,7 +48,9 @@ export function LobbyScreen({ navigation, route }: Props) {
     if (barCode !== 'SOLO') saveBar(barCode, barName);
   }, [barCode, barName, saveBar]);
 
-  const checkGameStatus = useCallback(async () => {
+  // Stable ref for the poll callback — avoids recreating intervals when deps change
+  const checkGameStatusRef = useRef<(() => void) | null>(null);
+  checkGameStatusRef.current = async () => {
     const result = await getCurrentGame();
     if (isApiError(result)) {
       setStatusText('Waiting for next game...');
@@ -57,7 +59,6 @@ export function LobbyScreen({ navigation, route }: Props) {
 
     if (result.activePlayers) setPlayerCount(result.activePlayers);
 
-    // Try to find the next game epoch from any available field
     const findNextEpoch = (): number | null => {
       if (result.nextGameStartEpoch) return result.nextGameStartEpoch;
       if (result.startTimeEpoch && result.secondsUntilStart && result.secondsUntilStart > 0) {
@@ -92,7 +93,6 @@ export function LobbyScreen({ navigation, route }: Props) {
         setStatusText('Game starting soon...');
         return;
       }
-      // Game already ended from client perspective — keep polling
       setStatusText('Checking for games...');
     } else if (result.status === 'scheduled' && result.startTimeEpoch) {
       nextGameEpochRef.current = result.startTimeEpoch;
@@ -106,7 +106,6 @@ export function LobbyScreen({ navigation, route }: Props) {
         setStatusText('No games scheduled right now');
       }
     } else if (result.status === 'completed') {
-      // Game just ended — check for nextGameStartEpoch or keep polling
       const epoch = findNextEpoch();
       if (epoch) {
         nextGameEpochRef.current = epoch;
@@ -117,26 +116,31 @@ export function LobbyScreen({ navigation, route }: Props) {
     } else {
       setStatusText('Waiting for next game...');
     }
-  }, [barCode, barName, deviceId, playerId, playerName, navigation, startGame]);
+  };
 
-  // Poll every 5 seconds — wait for identity to load so nickname isn't "Player"
+  // Stable wrapper that always calls latest ref
+  const checkGameStatus = useCallback(() => {
+    checkGameStatusRef.current?.();
+    return undefined;
+  }, []);
+
+  // Poll every 10 seconds — interval is created once, never recreated
   useEffect(() => {
     if (!identityLoaded) return;
     checkGameStatus();
-    pollRef.current = setInterval(checkGameStatus, 5000);
+    pollRef.current = setInterval(checkGameStatus, 10000);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, [checkGameStatus, identityLoaded]);
 
-  // 1-second countdown tick
+  // 1-second countdown tick — also stable, never recreated
   useEffect(() => {
     const update = () => {
       if (nextGameEpochRef.current) {
         const secs = Math.max(0, Math.ceil((nextGameEpochRef.current - Date.now()) / 1000));
         setCountdownSecs(secs);
 
-        // Auto-check when countdown hits 0
         if (secs === 0 && !startedRef.current) {
           checkGameStatus();
         }

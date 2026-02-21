@@ -50,7 +50,7 @@ const LobbyScreen = {
 
   startPolling() {
     this.stopPolling();
-    this.pollInterval = setInterval(() => this.checkGameStatus(), 5000);
+    this.pollInterval = setInterval(() => this.checkGameStatus(), 10000);
     this.checkGameStatus();
   },
 

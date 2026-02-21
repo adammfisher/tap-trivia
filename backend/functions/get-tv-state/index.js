@@ -181,24 +181,24 @@ exports.handler = async (event) => {
       });
     }
 
-    // --- Update bar heartbeat and fetch bar info ---
+    // --- Fetch bar info + throttled heartbeat (every 30s max) ---
 
-    let bar;
-    try {
-      bar = await update(
-        TABLE.BARS,
-        { PK: `BAR#${barCode}` },
-        'SET lastPollAt = :now',
-        { ':now': new Date().toISOString() }
-      );
-    } catch (err) {
-      // update returns null/error if item doesn't exist
-      console.warn('Bar heartbeat update failed:', err.message);
-    }
+    let bar = await get(TABLE.BARS, { PK: `BAR#${barCode}` });
 
-    if (!bar) {
-      // Try a plain get in case the update didn't work on a non-existent item
-      bar = await get(TABLE.BARS, { PK: `BAR#${barCode}` });
+    // Only write heartbeat if 30+ seconds since last poll (saves DynamoDB writes)
+    const HEARTBEAT_INTERVAL_MS = 30000;
+    const lastPoll = bar && bar.lastPollAt ? new Date(bar.lastPollAt).getTime() : 0;
+    if (bar && (Date.now() - lastPoll >= HEARTBEAT_INTERVAL_MS)) {
+      try {
+        bar = await update(
+          TABLE.BARS,
+          { PK: `BAR#${barCode}` },
+          'SET lastPollAt = :now',
+          { ':now': new Date().toISOString() }
+        );
+      } catch (err) {
+        console.warn('Bar heartbeat update failed:', err.message);
+      }
     }
 
     if (!bar || bar.status !== 'active') {

@@ -25,6 +25,7 @@ async function apiCall<T>(
   path: string,
   body?: Record<string, unknown>,
   headers?: Record<string, string>,
+  signal?: AbortSignal,
 ): Promise<ApiResult<T>> {
   const opts: RequestInit = {
     method,
@@ -36,6 +37,9 @@ async function apiCall<T>(
   if (body) {
     opts.body = JSON.stringify(body);
   }
+  if (signal) {
+    opts.signal = signal;
+  }
   try {
     const res = await fetch(`${API_BASE}${path}`, opts);
     const data = await res.json();
@@ -43,7 +47,10 @@ async function apiCall<T>(
       return { error: data.error || 'API_ERROR', message: data.message || `HTTP ${res.status}` };
     }
     return data as T;
-  } catch {
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      return { error: 'ABORTED', message: 'Request was cancelled.' };
+    }
     return { error: 'NETWORK_ERROR', message: 'Network error — check your connection.' };
   }
 }
@@ -100,12 +107,14 @@ export async function getQuestion(
   gameId: string,
   questionNumber: number,
   deviceId: string,
+  signal?: AbortSignal,
 ): Promise<ApiResult<QuestionResponse>> {
   return apiCall<QuestionResponse>(
     'GET',
     `/game/${encodeURIComponent(gameId)}/question/${questionNumber}`,
     undefined,
     { 'X-Player-ID': deviceId },
+    signal,
   );
 }
 
@@ -120,12 +129,14 @@ export async function submitAnswer(
   clientElapsedMs: number,
   deviceId: string,
   barCode?: string,
+  signal?: AbortSignal,
 ): Promise<ApiResult<SubmitAnswerResponse>> {
   return apiCall<SubmitAnswerResponse>(
     'POST',
     `/game/${encodeURIComponent(gameId)}/answer`,
     { questionNumber, selectedAnswer, playerName, clientElapsedMs, barCode: barCode || '' },
     { 'X-Player-ID': deviceId },
+    signal,
   );
 }
 
@@ -137,12 +148,13 @@ export async function getLeaderboard(
   type: 'bar' | 'global',
   barCode?: string,
   deviceId?: string,
+  signal?: AbortSignal,
 ): Promise<ApiResult<LeaderboardResponse>> {
   let path = `/game/${encodeURIComponent(gameId)}/leaderboard?type=${type}`;
   if (barCode) path += `&barCode=${encodeURIComponent(barCode)}`;
   const headers: Record<string, string> = {};
   if (deviceId) headers['X-Player-ID'] = deviceId;
-  return apiCall<LeaderboardResponse>('GET', path, undefined, headers);
+  return apiCall<LeaderboardResponse>('GET', path, undefined, headers, signal);
 }
 
 /**

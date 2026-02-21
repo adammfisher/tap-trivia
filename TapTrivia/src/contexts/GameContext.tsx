@@ -118,6 +118,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   });
 
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const tick = useCallback(() => {
     const g = gameRef.current;
@@ -151,7 +152,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       !g.fetchingQuestion
     ) {
       g.fetchingQuestion = true;
-      getQuestion(g.gameId!, clockState.questionNumber, g.deviceId).then((result) => {
+      getQuestion(g.gameId!, clockState.questionNumber, g.deviceId, abortRef.current?.signal).then((result) => {
         g.fetchingQuestion = false;
         if (!isApiError(result)) {
           const qd: QuestionData = {
@@ -181,7 +182,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     ) {
       g.leaderboardFetched = true;
       const isSolo = g.barCode === 'SOLO';
-      getLeaderboard(g.gameId, isSolo ? 'global' : 'bar', isSolo ? undefined : g.barCode, g.deviceId).then((result) => {
+      getLeaderboard(g.gameId, isSolo ? 'global' : 'bar', isSolo ? undefined : g.barCode, g.deviceId, abortRef.current?.signal).then((result) => {
         if (!isApiError(result)) {
           const prevRank = g.rank;
           g.leaderboard = (result.leaders || []).map((l) => ({
@@ -311,6 +312,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     g.playerCount = 0;
     g.lastPhase = '';
 
+    // Cancel any pending requests from previous game
+    if (abortRef.current) abortRef.current.abort();
+    abortRef.current = new AbortController();
+
     // Start the tick loop
     if (tickRef.current) clearInterval(tickRef.current);
     tickRef.current = setInterval(tick, 250);
@@ -355,6 +360,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       clockState.elapsedInQuestion || 0,
       g.deviceId,
       effectiveBarCode,
+      abortRef.current?.signal,
     ).then((result) => {
       g.submitting = false;
       if (!isApiError(result)) {
@@ -393,6 +399,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       clearInterval(tickRef.current);
       tickRef.current = null;
     }
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
     const g = gameRef.current;
     g.gameId = null;
     g.startTimeEpoch = 0;
@@ -410,6 +420,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     return () => {
       if (tickRef.current) clearInterval(tickRef.current);
+      if (abortRef.current) abortRef.current.abort();
     };
   }, []);
 

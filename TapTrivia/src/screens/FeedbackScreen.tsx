@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -39,6 +39,14 @@ export function FeedbackScreen({ navigation }: Props) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const goBackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (goBackTimer.current) clearTimeout(goBackTimer.current);
+    };
+  }, []);
 
   const isValid = message.trim().length >= 10;
 
@@ -67,7 +75,7 @@ export function FeedbackScreen({ navigation }: Props) {
     }
 
     setSuccess(true);
-    setTimeout(() => navigation.goBack(), 2500);
+    goBackTimer.current = setTimeout(() => navigation.goBack(), 2500);
   };
 
   if (success) {

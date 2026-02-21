@@ -1710,10 +1710,18 @@
   // POLLING — translates API response → gameState for renderScreen
   // ═══════════════════════════════════════════════════════════════
 
+  let currentPollRate = 0;
+
   function startPolling() {
-    if (pollInterval) clearInterval(pollInterval);
+    setPollRate(CONFIG.POLL_INTERVAL_IDLE || 5000);
     pollTvState();
-    pollInterval = setInterval(pollTvState, CONFIG.POLL_INTERVAL || 5000);
+  }
+
+  function setPollRate(ms) {
+    if (ms === currentPollRate) return;
+    currentPollRate = ms;
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(pollTvState, ms);
   }
 
   async function pollTvState() {
@@ -1756,8 +1764,9 @@
     // Cache for screen rotation
     cacheForRotation(gameState, state);
 
-    // During break: full-screen signage if available, otherwise lobby rotation
+    // During break: slow polling, full-screen signage if available, otherwise lobby rotation
     if (state.state === 'break') {
+      setPollRate(CONFIG.POLL_INTERVAL_IDLE || 5000);
       const activeSlides = getActiveSlides();
       if (activeSlides.length > 0) {
         // Full-screen signage takes over during off-hours
@@ -1769,13 +1778,15 @@
       return;
     }
 
-    // Game over — rotate between results and lobby (countdown to next game)
+    // Game over — slow polling, rotate between results and lobby (countdown to next game)
     if (state.state === 'game_over') {
+      setPollRate(CONFIG.POLL_INTERVAL_IDLE || 5000);
       handleScreenRotation(gameState);
       return;
     }
 
-    // Active game — exit rotation, render normally
+    // Active game — fast polling, exit rotation, render normally
+    setPollRate(CONFIG.POLL_INTERVAL_ACTIVE || 2000);
     exitRotationMode();
     renderScreen(gameState);
   }
