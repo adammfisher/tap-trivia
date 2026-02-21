@@ -65,13 +65,12 @@ body {
   font-family: var(--font-body);
   background: #0a0218;
   color: var(--text-primary);
-  min-height: 100dvh;
+  height: 100dvh;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
-  overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -116,9 +115,10 @@ body::-webkit-scrollbar { display: none; }
 .screen {
   display: none;
   flex-direction: column;
-  min-height: 100dvh;
+  height: 100dvh;
   overflow-y: auto;
-  padding-bottom: 70px;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 16px));
   position: relative;
   z-index: 1;
 }
@@ -1017,7 +1017,7 @@ body::-webkit-scrollbar { display: none; }
 }
 
 /* ─── Redesigned Question Layout (v4 match) ────────────────── */
-#screen-game { padding-bottom: env(safe-area-inset-bottom, 0px); }
+#screen-game { padding-bottom: calc(80px + env(safe-area-inset-bottom, 16px)); }
 
 .p-game-top {
   display: flex;

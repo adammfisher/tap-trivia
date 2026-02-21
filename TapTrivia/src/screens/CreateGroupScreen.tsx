@@ -5,6 +5,7 @@ import {
   TextInput,
   Pressable,
   StyleSheet,
+  ScrollView,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -95,7 +96,7 @@ export function CreateGroupScreen({ navigation }: Props) {
             <Logo size="sm" />
           </View>
 
-          <View style={styles.center}>
+          <ScrollView contentContainerStyle={styles.center} bounces={false}>
             <Text style={styles.emoji}>{'\u2705'}</Text>
             <Text style={styles.title}>Group Created!</Text>
             <Text style={styles.subtitle}>Share this code with friends</Text>
@@ -125,7 +126,7 @@ export function CreateGroupScreen({ navigation }: Props) {
             >
               <Text style={styles.continueText}>Continue</Text>
             </Pressable>
-          </View>
+          </ScrollView>
         </View>
       </GradientBackground>
     );
@@ -145,7 +146,7 @@ export function CreateGroupScreen({ navigation }: Props) {
           <Logo size="sm" />
         </View>
 
-        <View style={styles.center}>
+        <ScrollView contentContainerStyle={styles.center} keyboardShouldPersistTaps="handled" bounces={false}>
           <Text style={styles.emoji}>{'\u{1F465}'}</Text>
           <Text style={styles.title}>Create a Group</Text>
           <Text style={styles.subtitle}>
@@ -190,7 +191,7 @@ export function CreateGroupScreen({ navigation }: Props) {
               </Text>
             </LinearGradient>
           </Pressable>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </GradientBackground>
   );
@@ -215,7 +216,7 @@ const styles = StyleSheet.create({
     color: w(0.5),
   },
   center: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,

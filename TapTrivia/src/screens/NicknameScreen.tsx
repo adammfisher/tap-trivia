@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -81,7 +81,7 @@ export function NicknameScreen({ navigation, route }: Props) {
         </View>
 
         {/* Center */}
-        <View style={styles.center}>
+        <ScrollView contentContainerStyle={styles.center} keyboardShouldPersistTaps="handled" bounces={false}>
           <Text style={styles.emoji}>{'\u{1F44B}'}</Text>
           <Text style={styles.title}>What should we call you?</Text>
           <Text style={styles.subtitle}>This is shown on the leaderboard</Text>
@@ -135,7 +135,7 @@ export function NicknameScreen({ navigation, route }: Props) {
               </Text>
             </LinearGradient>
           </Pressable>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </GradientBackground>
   );
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     color: w(0.5),
   },
   center: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,

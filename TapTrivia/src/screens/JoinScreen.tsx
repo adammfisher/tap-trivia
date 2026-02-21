@@ -5,6 +5,7 @@ import {
   TextInput,
   Pressable,
   StyleSheet,
+  ScrollView,
   Keyboard,
   Animated,
 } from 'react-native';
@@ -89,7 +90,7 @@ export function JoinScreen({ navigation }: Props) {
         </View>
 
         {/* Center content */}
-        <View style={styles.center}>
+        <ScrollView contentContainerStyle={styles.center} keyboardShouldPersistTaps="handled" bounces={false}>
           <Text style={styles.title}>Enter Game Code</Text>
 
           {/* Code display boxes */}
@@ -151,7 +152,7 @@ export function JoinScreen({ navigation }: Props) {
               </Text>
             </LinearGradient>
           </Pressable>
-        </View>
+        </ScrollView>
       </View>
     </GradientBackground>
   );
@@ -180,7 +181,7 @@ const styles = StyleSheet.create({
     color: w(0.5),
   },
   center: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
