@@ -1,16 +1,15 @@
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { FadeInView } from '../utils/animations';
-import { GradientBackground } from '../components/GradientBackground';
-import { Logo } from '../components/Logo';
 import { useSubscription } from '../hooks/useSubscription';
-import { gradients, w } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Subscription'>;
+
+const ACCENT = '#00E5FF';
+const BG = '#0D0D0F';
 
 const FEATURES = [
   { icon: '\u{1F3AE}', text: 'Unlimited games at every bar' },
@@ -22,77 +21,106 @@ const FEATURES = [
 
 export function SubscriptionScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { purchase, restore } = useSubscription();
+  const { isPro, isLoading, offering, purchase, restore } = useSubscription();
+
+  // Derive price string from offering (never hardcoded)
+  const pkg = offering?.availablePackages[0] ?? null;
+  const priceString = pkg?.product.priceString ?? '...';
+  const periodLabel = 'per month';
+
+  // If already subscribed, auto-dismiss
+  if (isPro && !isLoading) {
+    navigation.goBack();
+    return null;
+  }
+
+  const handlePurchase = async () => {
+    const ok = await purchase();
+    if (ok) navigation.goBack();
+  };
+
+  const handleRestore = async () => {
+    const ok = await restore();
+    if (ok) navigation.goBack();
+  };
 
   return (
-    <GradientBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        {/* Close button */}
-        <View style={styles.topBar}>
-          <View style={{ flex: 1 }} />
-          <Pressable onPress={() => navigation.goBack()} style={styles.closeButton}>
-            <Text style={styles.closeText}>{'\u2715'}</Text>
-          </Pressable>
-        </View>
-
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Logo size="lg" />
-          <Text style={styles.title}>Unlimited Trivia</Text>
-          <Text style={styles.subtitle}>
-            Play at any bar, anytime. Support your favorite spots.
-          </Text>
-
-          {/* Features */}
-          <View style={styles.features}>
-            {FEATURES.map((f, i) => (
-              <FadeInView
-                key={i}
-                delay={i * 50}
-                duration={300}
-                style={styles.featureRow}
-              >
-                <Text style={styles.featureIcon}>{f.icon}</Text>
-                <Text style={styles.featureText}>{f.text}</Text>
-              </FadeInView>
-            ))}
-          </View>
-
-          {/* Price */}
-          <View style={styles.priceCard}>
-            <Text style={styles.price}>$2.99</Text>
-            <Text style={styles.priceLabel}>per month</Text>
-          </View>
-
-          {/* Subscribe button */}
-          <Pressable
-            onPress={purchase}
-            style={({ pressed }) => [pressed && { opacity: 0.9 }]}
-          >
-            <LinearGradient
-              colors={[...gradients.gold]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.subscribeButton}
-            >
-              <Text style={styles.subscribeText}>Subscribe Now</Text>
-            </LinearGradient>
-          </Pressable>
-
-          <Pressable onPress={restore}>
-            <Text style={styles.restoreText}>Restore Purchases</Text>
-          </Pressable>
-        </ScrollView>
-
-        {/* Footer */}
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-          <Text style={styles.footerText}>
-            Auto-renews monthly. Cancel anytime.{'\n'}
-            <Text style={styles.footerLink}>Terms</Text> {'\u00B7'}{' '}
-            <Text style={styles.footerLink}>Privacy</Text>
-          </Text>
-        </View>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: BG }]}>
+      {/* Close button */}
+      <View style={styles.topBar}>
+        <View style={{ flex: 1 }} />
+        <Pressable onPress={() => navigation.goBack()} style={styles.closeButton}>
+          <Text style={styles.closeText}>{'\u2715'}</Text>
+        </Pressable>
       </View>
-    </GradientBackground>
+
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Hero */}
+        <Text style={styles.heroEmoji}>{'\u{1F451}'}</Text>
+        <Text style={styles.title}>TapTrivia Pro</Text>
+        <Text style={styles.subtitle}>
+          Unlock the full experience. Play unlimited games at any bar.
+        </Text>
+
+        {/* Features */}
+        <View style={styles.features}>
+          {FEATURES.map((f, i) => (
+            <FadeInView key={i} delay={i * 60} duration={300} style={styles.featureRow}>
+              <Text style={styles.featureIcon}>{f.icon}</Text>
+              <Text style={styles.featureText}>{f.text}</Text>
+            </FadeInView>
+          ))}
+        </View>
+
+        {/* Price card */}
+        <View style={styles.priceCard}>
+          <Text style={styles.price}>{priceString}</Text>
+          <Text style={styles.priceLabel}>{periodLabel}</Text>
+        </View>
+
+        {/* Subscribe button */}
+        <Pressable
+          onPress={handlePurchase}
+          disabled={isLoading || !pkg}
+          style={({ pressed }) => [
+            styles.subscribeButton,
+            (isLoading || !pkg) && styles.buttonDisabled,
+            pressed && !isLoading && { opacity: 0.85 },
+          ]}
+        >
+          {isLoading ? (
+            <ActivityIndicator color={BG} size="small" />
+          ) : (
+            <Text style={styles.subscribeText}>Subscribe Now</Text>
+          )}
+        </Pressable>
+
+        {/* Restore */}
+        <Pressable onPress={handleRestore} disabled={isLoading}>
+          <Text style={styles.restoreText}>Restore Purchases</Text>
+        </Pressable>
+      </ScrollView>
+
+      {/* Footer */}
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+        <Text style={styles.footerText}>
+          Auto-renews monthly. Cancel anytime.{'\n'}
+          <Text
+            style={styles.footerLink}
+            onPress={() => navigation.navigate('TermsOfService')}
+          >
+            Terms
+          </Text>
+          {' \u00B7 '}
+          <Text
+            style={styles.footerLink}
+            onPress={() => navigation.navigate('PrivacyPolicy')}
+          >
+            Privacy
+          </Text>
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -104,35 +132,36 @@ const styles = StyleSheet.create({
     paddingTop: 2,
   },
   closeButton: {
-    backgroundColor: w(0.08),
+    backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 10,
     paddingVertical: 6,
     paddingHorizontal: 10,
   },
-  closeText: { fontSize: 14, color: w(0.5) },
+  closeText: { fontSize: 14, color: 'rgba(255,255,255,0.5)' },
   content: {
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
   },
+  heroEmoji: { fontSize: 56, marginBottom: 8 },
   title: {
     fontFamily: fonts.fredoka.bold,
-    fontSize: 22,
-    color: '#fff',
-    marginTop: 20,
+    fontSize: 26,
+    color: ACCENT,
     marginBottom: 6,
   },
   subtitle: {
     fontFamily: fonts.outfit.regular,
     fontSize: 14,
-    color: w(0.4),
+    color: 'rgba(255,255,255,0.45)',
     textAlign: 'center',
     marginBottom: 28,
+    lineHeight: 20,
   },
   features: {
     width: '100%',
-    gap: 12,
+    gap: 14,
     marginBottom: 28,
   },
   featureRow: {
@@ -144,15 +173,15 @@ const styles = StyleSheet.create({
   featureText: {
     fontFamily: fonts.outfit.medium,
     fontSize: 14,
-    color: w(0.7),
+    color: 'rgba(255,255,255,0.7)',
   },
   priceCard: {
-    backgroundColor: w(0.06),
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 20,
     paddingVertical: 20,
     paddingHorizontal: 28,
     borderWidth: 1,
-    borderColor: w(0.08),
+    borderColor: ACCENT + '30', // 30 = ~19% opacity
     alignItems: 'center',
     width: '100%',
     marginBottom: 16,
@@ -165,7 +194,7 @@ const styles = StyleSheet.create({
   priceLabel: {
     fontFamily: fonts.outfit.regular,
     fontSize: 13,
-    color: w(0.4),
+    color: 'rgba(255,255,255,0.4)',
     marginTop: 2,
   },
   subscribeButton: {
@@ -174,21 +203,18 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: 'center',
-    shadowColor: 'rgba(247,151,30,0.35)',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 1,
-    shadowRadius: 32,
-    elevation: 8,
+    backgroundColor: ACCENT,
   },
+  buttonDisabled: { opacity: 0.5 },
   subscribeText: {
     fontFamily: fonts.outfit.bold,
     fontSize: 17,
-    color: '#1e0f4a',
+    color: BG,
   },
   restoreText: {
     fontFamily: fonts.outfit.medium,
     fontSize: 13,
-    color: w(0.3),
+    color: 'rgba(255,255,255,0.3)',
     marginTop: 14,
   },
   footer: {
@@ -198,7 +224,7 @@ const styles = StyleSheet.create({
   footerText: {
     fontFamily: fonts.outfit.regular,
     fontSize: 10,
-    color: w(0.15),
+    color: 'rgba(255,255,255,0.15)',
     textAlign: 'center',
     lineHeight: 16,
   },

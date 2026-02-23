@@ -16,7 +16,7 @@ import type {
 import { getGameState as clockGetGameState, TOTAL_QUESTIONS } from '../utils/game-clock';
 import type { QuestionPhase } from '../utils/game-clock';
 import { calculatePoints } from '../utils/scoring';
-import { getQuestion, submitAnswer, getLeaderboard, isApiError } from '../services/api';
+import { getQuestion, submitAnswer, getLeaderboard, isApiError, getServerNow } from '../services/api';
 
 const CATEGORY_EMOJI_MAP: Record<string, string> = {
   entertainment: '\u{1F3AC}', science: '\u{1F52C}', history: '\u{1F4DC}',
@@ -115,6 +115,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     rankChange: 0,
     playerCount: 0,
     lastPhase: '' as string,
+    statsSnapshot: { ...INITIAL_STATS } as PlayerStats, // cached immutable copy for React state
   });
 
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -124,7 +125,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const g = gameRef.current;
     if (!g.gameId || !g.startTimeEpoch) return;
 
-    const clockState = clockGetGameState(g.startTimeEpoch, Date.now());
+    const clockState = clockGetGameState(g.startTimeEpoch, getServerNow());
     const mobilePhase = mapPhase(clockState.gamePhase, clockState.questionPhase);
 
     // New question detected
@@ -190,7 +191,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
             name: l.playerName,
             score: l.score,
             movement: 0,
-            isYou: l.playerName === g.nickname,
+            isYou: l.playerId === g.deviceId,
           }));
           g.playerCount = result.totalPlayers;
           if (result.you) {
@@ -201,14 +202,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
       });
     }
 
-    // Calculate eliminated indices from hints
-    let eliminatedIndices: number[] = [];
+    // Calculate eliminated indices from hints — only create new object when list changes
     if (g.questionData && g.rawQuestionData && clockState.hintsVisible) {
-      eliminatedIndices = clockState.hintsVisible.map(
+      const newEliminated = clockState.hintsVisible.map(
         (h) => g.rawQuestionData!.eliminateOrder[h]
       ).filter((idx) => idx !== undefined);
-      // Update the questionData's eliminatedIndices
-      g.questionData = { ...g.questionData, eliminatedIndices };
+      if (newEliminated.length !== g.questionData.eliminatedIndices.length) {
+        g.questionData = { ...g.questionData, eliminatedIndices: newEliminated };
+      }
     }
 
     // Calculate points
@@ -222,14 +223,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
       : 0;
 
     // Build the answer result with correctIndex from raw data during reveal
+    // Only create new object once when correctRevealed first becomes true
     let answerResult = g.answerResult;
     if (clockState.correctRevealed && g.rawQuestionData?.correctIndex !== undefined) {
-      if (answerResult) {
-        // Player answered — attach correctIndex so correct card highlights green
+      if (answerResult && answerResult.correctIndex === undefined) {
         answerResult = { ...answerResult, correctIndex: g.rawQuestionData.correctIndex };
-      } else {
-        // Player timed out (no answer) — synthesize a timeout result with correctIndex
-        // so WrongScreen can still highlight the correct answer green
+        g.answerResult = answerResult; // Cache so next tick reuses same reference
+      } else if (!answerResult) {
         answerResult = {
           selectedIndex: -1,
           correct: false,
@@ -238,6 +238,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           correctAnswer: g.questionData?.answers[g.rawQuestionData.correctIndex] || '',
           correctIndex: g.rawQuestionData.correctIndex,
         };
+        g.answerResult = answerResult; // Cache so next tick reuses same reference
       }
     }
 
@@ -260,6 +261,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
       ) {
         return prev; // Same reference → no re-render
       }
+      // Only create new stats snapshot when stats actually changed
+      const ps = g.playerStats;
+      const ss = g.statsSnapshot;
+      if (ps.correct !== ss.correct || ps.wrong !== ss.wrong ||
+          ps.timeout !== ss.timeout || ps.streak !== ss.streak ||
+          ps.bestStreak !== ss.bestStreak) {
+        g.statsSnapshot = { ...ps };
+      }
       return {
         gamePhase: mobilePhase,
         gameId: g.gameId,
@@ -273,7 +282,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         question: g.questionData,
         answerResult,
         leaderboard: g.leaderboard,
-        playerStats: { ...g.playerStats },
+        playerStats: g.statsSnapshot,
         barName: g.barName,
         barCode: g.barCode,
         countdownValue,
@@ -316,9 +325,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (abortRef.current) abortRef.current.abort();
     abortRef.current = new AbortController();
 
-    // Start the tick loop
+    // Start the tick loop (500ms is responsive enough for second-level game timing)
     if (tickRef.current) clearInterval(tickRef.current);
-    tickRef.current = setInterval(tick, 250);
+    tickRef.current = setInterval(tick, 500);
     tick(); // immediate first tick
   }, [tick]);
 
@@ -329,7 +338,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (g.answerResult && g.answerResult.selectedIndex === answerIndex) return;
     g.submitting = true;
 
-    const clockState = clockGetGameState(g.startTimeEpoch, Date.now());
+    const clockState = clockGetGameState(g.startTimeEpoch, getServerNow());
     const clientPoints = calculatePoints(clockState.elapsedInQuestion || 0);
 
     // Revert stats from previous answer if changing

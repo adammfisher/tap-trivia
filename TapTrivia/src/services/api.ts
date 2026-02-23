@@ -9,6 +9,14 @@ import type {
 
 const API_BASE = 'https://api.taptrivia.tv';
 
+// Server time offset: serverTime - clientTime (positive = client behind server)
+let _serverTimeOffset = 0;
+
+/** Returns server-adjusted current time (ms epoch). Corrects device clock drift. */
+export function getServerNow(): number {
+  return Date.now() + _serverTimeOffset;
+}
+
 interface ApiError {
   error: string;
   message: string;
@@ -41,8 +49,20 @@ async function apiCall<T>(
     opts.signal = signal;
   }
   try {
+    const requestStart = Date.now();
     const res = await fetch(`${API_BASE}${path}`, opts);
     const data = await res.json();
+
+    // Sync clock from server Date header
+    const dateHeader = res.headers.get('Date');
+    if (dateHeader && res.ok) {
+      const serverTime = Date.parse(dateHeader);
+      if (!isNaN(serverTime)) {
+        const clientMidpoint = (requestStart + Date.now()) / 2;
+        _serverTimeOffset = serverTime - clientMidpoint;
+      }
+    }
+
     if (!res.ok) {
       return { error: data.error || 'API_ERROR', message: data.message || `HTTP ${res.status}` };
     }

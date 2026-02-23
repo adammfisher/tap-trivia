@@ -17,7 +17,7 @@
 - [x] **Step 11: Real API** — GameContext with 250ms tick loop, real API polling, all 11 screens wired to backend
 
 ### Phase 2 — Dev Build (Steps 12-13)
-- [ ] **Step 12: RevenueCat** — Real subscription integration
+- [x] **Step 12: RevenueCat** — Real subscription integration (react-native-purchases, service/hook/paywall, soft paywall after game ends)
 - [ ] **Step 13: Polish** — Haptics refinement, animation polish, edge cases
 
 ### Phase 3 — Ship (Steps 14-15)

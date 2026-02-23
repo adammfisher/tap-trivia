@@ -1,8 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { configureRevenueCat } from './src/services/revenuecat';
 import {
   Fredoka_400Regular,
   Fredoka_500Medium,
@@ -44,6 +45,10 @@ export default function App() {
     DMMono_400Regular,
     DMMono_500Medium,
   });
+
+  useEffect(() => {
+    configureRevenueCat();
+  }, []);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {

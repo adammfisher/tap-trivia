@@ -11,6 +11,7 @@ import { colors, w } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import { useEffect } from 'react';
+import { useIsFocused } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Between'>;
 
@@ -18,15 +19,17 @@ export function BetweenScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { barCode, playerId, barName } = route.params;
   const { gameState } = useGameState({ barCode, playerId, barName });
+  const isFocused = useIsFocused();
 
   useEffect(() => {
+    if (!isFocused) return;
     const params = { barCode, playerId, barName };
     if (gameState.gamePhase === 'category') {
       navigation.navigate('Category', params);
     } else if (gameState.gamePhase === 'finished') {
       navigation.navigate('Results', params);
     }
-  }, [gameState.gamePhase, navigation, barCode, playerId, barName]);
+  }, [gameState.gamePhase, isFocused, navigation, barCode, playerId, barName]);
 
   const stats = gameState.playerStats;
   const isSolo = barCode === 'SOLO';

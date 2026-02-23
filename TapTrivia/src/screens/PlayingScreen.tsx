@@ -15,6 +15,7 @@ import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import type { QuestionData } from '../types/game';
 import { useEffect, useCallback, useRef } from 'react';
+import { useIsFocused } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Playing'>;
 
@@ -22,13 +23,15 @@ export function PlayingScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { barCode, playerId, barName } = route.params;
   const { gameState, submitAnswer } = useGameState({ barCode, playerId, barName });
+  const isFocused = useIsFocused();
 
   // Cache last known question to prevent white flash during transitions
   const lastQuestionRef = useRef<QuestionData | null>(null);
   if (gameState.question) lastQuestionRef.current = gameState.question;
 
-  // Phase-driven navigation
+  // Phase-driven navigation (skip while a modal is on top)
   useEffect(() => {
+    if (!isFocused) return;
     const params = { barCode, playerId, barName };
     const { answerResult, gamePhase } = gameState;
     if (gamePhase === 'question' && answerResult) {
@@ -47,7 +50,7 @@ export function PlayingScreen({ navigation, route }: Props) {
     } else if (gamePhase === 'finished') {
       navigation.navigate('Results', params);
     }
-  }, [gameState.gamePhase, gameState.answerResult, gameState.questionNumber, navigation, barCode, playerId, barName]);
+  }, [gameState.gamePhase, gameState.answerResult, gameState.questionNumber, isFocused, navigation, barCode, playerId, barName]);
 
   const handleAnswer = useCallback((index: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

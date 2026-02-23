@@ -7,18 +7,21 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0f0326"
+      "backgroundColor": "#0D0D0F"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "tv.taptrivia.mobile"
+      "bundleIdentifier": "tv.taptrivia.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0f0326"
+        "backgroundColor": "#0D0D0F"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -29,6 +32,12 @@
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6050c54c-dfc9-4de4-a74f-1c6649fd80e2"
+      }
+    },
+    "owner": "adamm733"
   }
 }

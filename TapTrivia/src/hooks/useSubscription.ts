@@ -1,25 +1,60 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native';
+import type { PurchasesOffering } from 'react-native-purchases';
+import {
+  checkSubscription,
+  purchaseMonthly,
+  restorePurchases as rcRestore,
+  getOffering,
+} from '../services/revenuecat';
+
+interface UseSubscription {
+  isPro: boolean;
+  isLoading: boolean;
+  offering: PurchasesOffering | null;
+  purchase: () => Promise<boolean>;
+  restore: () => Promise<boolean>;
+}
 
 /**
- * Subscription hook — mock implementation for Phase 1.
- * Always grants access. Will be replaced with RevenueCat in Phase 2.
+ * RevenueCat subscription hook.
+ * On non-iOS platforms, always returns isPro=true (no paywall).
  */
-export function useSubscription() {
-  const [isSubscribed] = useState(true); // Always grant access for now
-  const [isLoading] = useState(false);
+export function useSubscription(): UseSubscription {
+  const [isPro, setIsPro] = useState(Platform.OS !== 'ios');
+  const [isLoading, setIsLoading] = useState(Platform.OS === 'ios');
+  const [offering, setOffering] = useState<PurchasesOffering | null>(null);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    let cancelled = false;
+    (async () => {
+      const [entitled, off] = await Promise.all([checkSubscription(), getOffering()]);
+      if (cancelled) return;
+      setIsPro(entitled);
+      setOffering(off);
+      setIsLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const purchase = useCallback(async () => {
-    // Will call RevenueCat in Phase 2
+    if (Platform.OS !== 'ios') return true;
+    setIsLoading(true);
+    const ok = await purchaseMonthly();
+    setIsPro(ok);
+    setIsLoading(false);
+    return ok;
   }, []);
 
   const restore = useCallback(async () => {
-    // Will call RevenueCat in Phase 2
+    if (Platform.OS !== 'ios') return true;
+    setIsLoading(true);
+    const ok = await rcRestore();
+    setIsPro(ok);
+    setIsLoading(false);
+    return ok;
   }, []);
 
-  return {
-    isSubscribed,
-    isLoading,
-    purchase,
-    restore,
-  };
+  return { isPro, isLoading, offering, purchase, restore };
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo, memo } from 'react';
 import { View, Animated, StyleSheet, Easing } from 'react-native';
 import { colors } from '../theme/colors';
 
@@ -85,13 +85,15 @@ function ConfettiPiece({ color, leftPercent, delay, size }: ConfettiPieceProps) 
   );
 }
 
-export function Confetti() {
-  const pieces = Array.from({ length: 12 }).map((_, i) => ({
-    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-    leftPercent: 5 + i * 8,
-    delay: i * 0.12,
-    size: 4 + Math.random() * 5,
-  }));
+export const Confetti = memo(function Confetti() {
+  const pieces = useMemo(() =>
+    Array.from({ length: 12 }).map((_, i) => ({
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      leftPercent: 5 + i * 8,
+      delay: i * 0.12,
+      size: 4 + Math.random() * 5,
+    })),
+  []);
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -100,4 +102,4 @@ export function Confetti() {
       ))}
     </View>
   );
-}
+});

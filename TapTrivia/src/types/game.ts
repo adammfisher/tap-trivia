@@ -124,6 +124,7 @@ export interface SubmitAnswerResponse {
 export interface LeaderboardResponse {
   leaders: Array<{
     rank: number;
+    playerId: string;
     playerName: string;
     score: number;
     barName?: string;
@@ -131,6 +132,7 @@ export interface LeaderboardResponse {
   totalPlayers: number;
   you?: {
     rank: number;
+    playerId: string;
     score: number;
   };
 }

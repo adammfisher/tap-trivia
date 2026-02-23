@@ -1,5 +1,5 @@
 import { useRef, useEffect, memo } from 'react';
-import { Pressable, Text, View, StyleSheet, Animated } from 'react-native';
+import { Pressable, Text, View, StyleSheet, Animated, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FadeInView } from '../utils/animations';
 import { colors, gradients, w } from '../theme/colors';
@@ -38,23 +38,27 @@ export const AnswerCard = memo(function AnswerCard({
 
   useEffect(() => {
     const targetOpacity = dimmed ? 0.45 : state === 'eliminated' ? 0.45 : 1;
-    Animated.timing(opacityAnim, {
+    const anim = Animated.timing(opacityAnim, {
       toValue: targetOpacity,
       duration: 80,
       useNativeDriver: true,
-    }).start();
+    });
+    anim.start();
+    return () => anim.stop();
   }, [dimmed, state, opacityAnim]);
 
   // Quick scale pop on selection
   useEffect(() => {
     if (state === 'selected') {
       scaleAnim.setValue(0.96);
-      Animated.spring(scaleAnim, {
+      const anim = Animated.spring(scaleAnim, {
         toValue: 1,
         friction: 8,
         tension: 200,
         useNativeDriver: true,
-      }).start();
+      });
+      anim.start();
+      return () => anim.stop();
     }
   }, [state, scaleAnim]);
 
@@ -164,7 +168,8 @@ export const AnswerCard = memo(function AnswerCard({
   prev.letter === next.letter &&
   prev.state === next.state &&
   prev.disabled === next.disabled &&
-  prev.dimmed === next.dimmed
+  prev.dimmed === next.dimmed &&
+  prev.delay === next.delay
 );
 
 const styles = StyleSheet.create({
@@ -179,18 +184,14 @@ const styles = StyleSheet.create({
   },
   defaultCard: {
     backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 4,
+    ...(Platform.OS === 'ios'
+      ? { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 16 }
+      : { elevation: 2 }),
   },
   gradientCard: {
-    shadowColor: 'rgba(102,126,234,0.35)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 24,
-    elevation: 6,
+    ...(Platform.OS === 'ios'
+      ? { shadowColor: 'rgba(102,126,234,0.35)', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 1, shadowRadius: 24 }
+      : { elevation: 3 }),
   },
   eliminatedCard: {
     backgroundColor: w(0.06),

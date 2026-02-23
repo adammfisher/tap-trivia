@@ -11,7 +11,7 @@ import { TimerRing } from '../components/TimerRing';
 import { useGame } from '../contexts/GameContext';
 import { usePlayerIdentity } from '../hooks/usePlayerIdentity';
 import { useSavedBars } from '../hooks/useSavedBars';
-import { getCurrentGame, isApiError } from '../services/api';
+import { getCurrentGame, isApiError, getServerNow } from '../services/api';
 import { getGameState as clockGetGameState } from '../utils/game-clock';
 import { colors, w } from '../theme/colors';
 import { fonts } from '../theme/typography';
@@ -65,14 +65,14 @@ export function LobbyScreen({ navigation, route }: Props) {
         return result.startTimeEpoch;
       }
       if (result.startTimeEpoch) {
-        const clock = clockGetGameState(result.startTimeEpoch, Date.now());
+        const clock = clockGetGameState(result.startTimeEpoch, getServerNow());
         if (clock.gamePhase === 'pre_game') return result.startTimeEpoch;
       }
       return null;
     };
 
     if (result.status === 'active' && result.startTimeEpoch) {
-      const clock = clockGetGameState(result.startTimeEpoch, Date.now());
+      const clock = clockGetGameState(result.startTimeEpoch, getServerNow());
       if (clock.gamePhase === 'active' && !startedRef.current) {
         startedRef.current = true;
         if (pollRef.current) clearInterval(pollRef.current);
@@ -85,7 +85,10 @@ export function LobbyScreen({ navigation, route }: Props) {
           deviceId || playerId,
           playerName,
         );
-        navigation.navigate('Category', { barCode, playerId: deviceId || playerId, barName });
+        // Only navigate if we're currently focused (no modal on top)
+        if (navigation.isFocused()) {
+          navigation.navigate('Category', { barCode, playerId: deviceId || playerId, barName });
+        }
         return;
       }
       if (clock.gamePhase === 'pre_game') {
@@ -138,7 +141,7 @@ export function LobbyScreen({ navigation, route }: Props) {
   useEffect(() => {
     const update = () => {
       if (nextGameEpochRef.current) {
-        const secs = Math.max(0, Math.ceil((nextGameEpochRef.current - Date.now()) / 1000));
+        const secs = Math.max(0, Math.ceil((nextGameEpochRef.current - getServerNow()) / 1000));
         setCountdownSecs(secs);
 
         if (secs === 0 && !startedRef.current) {
@@ -153,8 +156,9 @@ export function LobbyScreen({ navigation, route }: Props) {
     };
   }, [checkGameStatus]);
 
-  // If game context phase changes, navigate
+  // If game context phase changes, navigate (skip while a modal is on top)
   useEffect(() => {
+    if (!navigation.isFocused()) return;
     if (gameState.gamePhase === 'category' && !startedRef.current) {
       startedRef.current = true;
       navigation.navigate('Category', { barCode, playerId: deviceId || playerId, barName });

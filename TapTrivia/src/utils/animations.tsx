@@ -68,7 +68,9 @@ export function FadeInView({
         }),
       );
     }
-    Animated.parallel(animations).start();
+    const anim = Animated.parallel(animations);
+    anim.start();
+    return () => anim.stop();
   }, []);
 
   const transform: Animated.WithAnimatedObject<ViewStyle>['transform'] =
@@ -116,7 +118,9 @@ export function FadeInText({
         }),
       );
     }
-    Animated.parallel(animations).start();
+    const anim = Animated.parallel(animations);
+    anim.start();
+    return () => anim.stop();
   }, []);
 
   const transform: Animated.WithAnimatedObject<TextStyle>['transform'] =
@@ -168,7 +172,9 @@ export function ZoomInView({
           useNativeDriver: true,
         });
 
-    Animated.parallel([opacityAnim, scaleAnim]).start();
+    const anim = Animated.parallel([opacityAnim, scaleAnim]);
+    anim.start();
+    return () => anim.stop();
   }, []);
 
   return (
@@ -213,7 +219,9 @@ export function ZoomInText({
           useNativeDriver: true,
         });
 
-    Animated.parallel([opacityAnim, scaleAnim]).start();
+    const anim = Animated.parallel([opacityAnim, scaleAnim]);
+    anim.start();
+    return () => anim.stop();
   }, []);
 
   return (

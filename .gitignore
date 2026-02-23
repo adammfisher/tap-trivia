@@ -23,6 +23,8 @@ backend/functions/*/shared/
 
 # Screenshots (dev artifacts)
 *.png
+# But keep mobile app assets
+!TapTrivia/assets/*.png
 
 # Terraform
 *.tfstate

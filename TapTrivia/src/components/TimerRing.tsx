@@ -42,11 +42,13 @@ export const TimerRing = memo(function TimerRing({
   // Smooth ring offset animation (SVG mode only)
   useEffect(() => {
     if (pulse) return;
-    RNAnimated.timing(animatedOffset, {
+    const anim = RNAnimated.timing(animatedOffset, {
       toValue: targetOffset,
       duration: 300,
       useNativeDriver: false,
-    }).start();
+    });
+    anim.start();
+    return () => anim.stop();
   }, [pulse, targetOffset, animatedOffset]);
 
   // Pulsing glow loop (pulse mode — matches web's ringPulse 1.5s ease-in-out infinite)
@@ -72,17 +74,22 @@ export const TimerRing = memo(function TimerRing({
   }, [pulse, pulseAnim]);
 
   // Scale bounce on number change (matches web's countdownNum: scale(2) → scale(1))
+  const scaleAnimRef = useRef<RNAnimated.CompositeAnimation | null>(null);
   useEffect(() => {
     if (seconds !== prevSeconds.current) {
       prevSeconds.current = seconds;
+      if (scaleAnimRef.current) scaleAnimRef.current.stop();
       scaleAnim.setValue(2);
-      RNAnimated.spring(scaleAnim, {
+      const anim = RNAnimated.spring(scaleAnim, {
         toValue: 1,
         friction: 7,
         tension: 100,
         useNativeDriver: true,
-      }).start();
+      });
+      scaleAnimRef.current = anim;
+      anim.start(() => { scaleAnimRef.current = null; });
     }
+    return () => { if (scaleAnimRef.current) scaleAnimRef.current.stop(); };
   }, [seconds, scaleAnim]);
 
   // ── Pulse mode: web-style solid ring with outward-expanding glow ──
