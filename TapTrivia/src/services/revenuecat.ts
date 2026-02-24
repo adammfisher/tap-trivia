@@ -16,12 +16,14 @@ export function isConfigured(): boolean {
 /** Call once at app startup (App.tsx). iOS only — no-ops on Android/web. */
 export function configureRevenueCat(appUserID?: string): void {
   if (_configured || Platform.OS !== 'ios') return;
+  // RevenueCat's native SDK force-kills the app if it detects a test_ key
+  // in a non-development build. Skip configuration until a production key is set.
+  if (RC_API_KEY.startsWith('test_')) return;
   try {
     Purchases.setLogLevel(LOG_LEVEL.DEBUG);
     Purchases.configure({ apiKey: RC_API_KEY, appUserID: appUserID ?? undefined });
     _configured = true;
   } catch {
-    // Test API key or missing entitlements — degrade gracefully
     _configured = false;
   }
 }
