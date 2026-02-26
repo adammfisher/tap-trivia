@@ -1,7 +1,7 @@
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, AppState } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { FadeInView, ZoomInText } from '../utils/animations';
 import { GradientBackground } from '../components/GradientBackground';
 import { Logo } from '../components/Logo';
@@ -13,7 +13,7 @@ import { usePlayerIdentity } from '../hooks/usePlayerIdentity';
 import { useSubscription } from '../hooks/useSubscription';
 import { useGame } from '../contexts/GameContext';
 import { getNextGameTime } from '../utils/game-clock';
-import { getServerNow } from '../services/api';
+import { getServerNow, getCurrentGame, isApiError } from '../services/api';
 import { colors, w } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -46,6 +46,15 @@ export function ResultsScreen({ navigation, route }: Props) {
     return () => clearTimeout(timer);
   }, [isPro, navigation]);
 
+  // Navigate to lobby (reused by countdown tick and foreground handler)
+  const goToLobby = useCallback(() => {
+    if (navigatedRef.current) return;
+    navigatedRef.current = true;
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    resetGame();
+    navigation.navigate('Lobby', { barCode, barName, playerId });
+  }, [resetGame, navigation, barCode, barName, playerId]);
+
   // Countdown to next game + auto-navigate to lobby
   useEffect(() => {
     const SLOT_MS = 15 * 60 * 1000;
@@ -58,19 +67,27 @@ export function ResultsScreen({ navigation, route }: Props) {
       const secs = Math.max(0, Math.ceil((nextEpoch - now) / 1000));
       setNextGameSecs(secs);
 
-      if (secs <= 60 && !navigatedRef.current) {
-        navigatedRef.current = true;
-        if (countdownRef.current) clearInterval(countdownRef.current);
-        resetGame();
-        navigation.navigate('Lobby', { barCode, barName, playerId });
-      }
+      if (secs <= 60) goToLobby();
     };
     tick();
     countdownRef.current = setInterval(tick, 1000);
     return () => {
       if (countdownRef.current) clearInterval(countdownRef.current);
     };
-  }, [resetGame, navigation, barCode, barName, playerId]);
+  }, [goToLobby]);
+
+  // Refresh on foreground — re-syncs server clock and checks if we should be in lobby
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', async (state) => {
+      if (state !== 'active' || navigatedRef.current) return;
+      // API call re-syncs the server time offset
+      const result = await getCurrentGame();
+      if (!isApiError(result) && (result.status === 'active' || result.status === 'scheduled')) {
+        goToLobby();
+      }
+    });
+    return () => sub.remove();
+  }, [goToLobby]);
 
   return (
     <GradientBackground>

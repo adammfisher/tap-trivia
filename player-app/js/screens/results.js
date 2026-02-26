@@ -92,7 +92,7 @@ const ResultsScreen = {
     const render = () => {
       const el = document.getElementById('results-next-game-timer');
       if (!el) return;
-      const now = Date.now();
+      const now = getServerNow();
       let nextEpoch = getNextGameTime(now);
       // getNextGameTime returns current slot start if game is active/results —
       // advance to next slot if it's in the past

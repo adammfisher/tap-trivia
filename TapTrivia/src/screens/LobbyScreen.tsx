@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StyleSheet, ScrollView, Share } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, Share, AppState } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -136,6 +136,14 @@ export function LobbyScreen({ navigation, route }: Props) {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, [checkGameStatus, identityLoaded]);
+
+  // Refresh immediately when app returns to foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') checkGameStatus();
+    });
+    return () => sub.remove();
+  }, [checkGameStatus]);
 
   // 1-second countdown tick — also stable, never recreated
   useEffect(() => {

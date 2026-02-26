@@ -17,6 +17,9 @@ import { getGameState as clockGetGameState, TOTAL_QUESTIONS } from '../utils/gam
 import type { QuestionPhase } from '../utils/game-clock';
 import { calculatePoints } from '../utils/scoring';
 import { getQuestion, submitAnswer, getLeaderboard, isApiError, getServerNow } from '../services/api';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+
+const KEEP_AWAKE_TAG = 'GAME_ACTIVE';
 
 const CATEGORY_EMOJI_MAP: Record<string, string> = {
   entertainment: '\u{1F3AC}', science: '\u{1F52C}', history: '\u{1F4DC}',
@@ -325,6 +328,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (abortRef.current) abortRef.current.abort();
     abortRef.current = new AbortController();
 
+    // Keep screen on during gameplay
+    activateKeepAwakeAsync(KEEP_AWAKE_TAG).catch(() => {});
+
     // Start the tick loop (500ms is responsive enough for second-level game timing)
     if (tickRef.current) clearInterval(tickRef.current);
     tickRef.current = setInterval(tick, 500);
@@ -404,6 +410,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetGame = useCallback(() => {
+    deactivateKeepAwake(KEEP_AWAKE_TAG);
     if (tickRef.current) {
       clearInterval(tickRef.current);
       tickRef.current = null;
@@ -428,6 +435,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      deactivateKeepAwake(KEEP_AWAKE_TAG);
       if (tickRef.current) clearInterval(tickRef.current);
       if (abortRef.current) abortRef.current.abort();
     };

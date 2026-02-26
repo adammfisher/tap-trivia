@@ -57,7 +57,7 @@
   /** Get next game start time that's always in the future (client-side, like player-app) */
   function getNextFutureGameTime(stateEpoch) {
     const SLOT_MS = 15 * 60 * 1000;
-    const now = Date.now();
+    const now = getServerNow();
     let nextEpoch = stateEpoch && stateEpoch > now ? stateEpoch : getNextGameTime(now);
     while (nextEpoch <= now) nextEpoch += SLOT_MS;
     return nextEpoch;
@@ -1044,7 +1044,7 @@
 
     // Countdown to next game (always compute client-side like player-app)
     const nextEpoch = getNextFutureGameTime(state.nextGameStartEpoch);
-    const secsLeft = Math.max(0, Math.ceil((nextEpoch - Date.now()) / 1000));
+    const secsLeft = Math.max(0, Math.ceil((nextEpoch - getServerNow()) / 1000));
     const countdownHTML = `
       <div class="tt-lobby__countdown">
         <span class="tt-lobby__countdown-label">Next game in</span>
@@ -1269,7 +1269,7 @@
     if (rotationActive) {
       // During screen rotation, no game-clock countdown — show next game countdown if available
       if (state.nextGameStartEpoch) {
-        const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - Date.now()) / 1000));
+        const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - getServerNow()) / 1000));
         if (secsLeft > 0) {
           const mins = Math.floor(secsLeft / 60);
           const secs = secsLeft % 60;
@@ -1435,7 +1435,7 @@
 
     // Next game countdown (always compute client-side like player-app)
     const nextEpoch = getNextFutureGameTime(state.nextGameStartEpoch);
-    const secsLeft = Math.max(0, Math.ceil((nextEpoch - Date.now()) / 1000));
+    const secsLeft = Math.max(0, Math.ceil((nextEpoch - getServerNow()) / 1000));
     const countdownHTML = `
       <div class="tt-results__countdown">
         <span class="tt-results__countdown-label">Next game in</span>
@@ -1541,7 +1541,7 @@
       return;
     }
     const nextEpoch = getNextFutureGameTime(state.nextGameStartEpoch);
-    const secsLeft = Math.max(0, Math.ceil((nextEpoch - Date.now()) / 1000));
+    const secsLeft = Math.max(0, Math.ceil((nextEpoch - getServerNow()) / 1000));
     el.textContent = formatCountdown(secsLeft);
   }
 
@@ -1554,7 +1554,7 @@
       return;
     }
     const nextEpoch = getNextFutureGameTime(state.nextGameStartEpoch);
-    const secsLeft = Math.max(0, Math.ceil((nextEpoch - Date.now()) / 1000));
+    const secsLeft = Math.max(0, Math.ceil((nextEpoch - getServerNow()) / 1000));
     el.textContent = formatCountdown(secsLeft);
   }
 
@@ -1605,7 +1605,7 @@
     const TIMER_TOTAL = 34;
 
     function tick() {
-      const cs = getGameState(localGameStartEpoch, Date.now());
+      const cs = getGameState(localGameStartEpoch, getServerNow());
 
       if (cs.gamePhase !== 'active') { stopLocalClock(); return; }
       if (cs.questionPhase === 'scores') { rafId = requestAnimationFrame(tick); return; }

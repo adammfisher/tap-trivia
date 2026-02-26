@@ -62,14 +62,14 @@ const QuestionScreen = {
   },
 
   async update() {
-    const state = getGameState(this.gameStartEpoch, Date.now());
+    const state = getGameState(this.gameStartEpoch, getServerNow());
 
     if (state.gamePhase === 'post_game') {
       Player.clearActiveGame();
 
       // Check if another game is coming soon — stay in-game if so
-      const nextGameStart = getNextGameTime(Date.now());
-      const secsUntilNext = Math.ceil((nextGameStart - Date.now()) / 1000);
+      const nextGameStart = getNextGameTime(getServerNow());
+      const secsUntilNext = Math.ceil((nextGameStart - getServerNow()) / 1000);
 
       if (secsUntilNext > 0 && secsUntilNext <= 120) {
         // Next game is imminent — show break countdown and auto-transition
@@ -431,7 +431,7 @@ const QuestionScreen = {
     const selectedAnswer = q.answers[index];
 
     // Immediate visual feedback — calculate points client-side right now
-    const state = getGameState(this.gameStartEpoch, Date.now());
+    const state = getGameState(this.gameStartEpoch, getServerNow());
     const clientPoints = calculatePoints(state.elapsedInQuestion);
     this.answerResult = {
       selectedIndex: index,
@@ -502,7 +502,7 @@ const QuestionScreen = {
     const barName = Player.getBarName();
 
     const renderCountdown = () => {
-      const secsLeft = Math.max(0, Math.ceil((nextGameStartEpoch - Date.now()) / 1000));
+      const secsLeft = Math.max(0, Math.ceil((nextGameStartEpoch - getServerNow()) / 1000));
 
       container.innerHTML = `
         <div class="p-break-countdown">

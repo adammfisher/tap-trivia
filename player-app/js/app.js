@@ -31,7 +31,7 @@ const App = {
     // Check for active game in localStorage (instant rejoin on refresh)
     const activeGame = Player.getActiveGame();
     if (activeGame) {
-      const state = getGameState(activeGame.startTimeEpoch, Date.now());
+      const state = getGameState(activeGame.startTimeEpoch, getServerNow());
       if (state.gamePhase === 'active') {
         this.startGame(activeGame.gameId, activeGame.startTimeEpoch);
         return;

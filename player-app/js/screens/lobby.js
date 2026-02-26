@@ -65,7 +65,7 @@ const LobbyScreen = {
     const game = await apiCall('GET', '/game/current');
 
     if (game && !game.error && game.status === 'active' && game.startTimeEpoch) {
-      const now = Date.now();
+      const now = getServerNow();
       const state = getGameState(game.startTimeEpoch, now);
       if (state.gamePhase === 'active') {
         this.stopPolling();
@@ -111,7 +111,7 @@ const LobbyScreen = {
     const el = document.getElementById('lobby-countdown');
     if (!el || !this._nextGameEpoch) return;
 
-    const secsLeft = Math.max(0, Math.ceil((this._nextGameEpoch - Date.now()) / 1000));
+    const secsLeft = Math.max(0, Math.ceil((this._nextGameEpoch - getServerNow()) / 1000));
     if (secsLeft > 0) {
       el.textContent = `Next game in ${secsLeft}s`;
     } else {

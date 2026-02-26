@@ -10,5 +10,8 @@
     "player": "cd player-app && python3 -m http.server 8091",
     "tv": "cd tv-app && python3 -m http.server 8090",
     "dashboard": "cd dashboard-app && python3 -m http.server 8092"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
   }
 }
