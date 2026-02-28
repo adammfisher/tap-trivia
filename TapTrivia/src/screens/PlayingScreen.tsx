@@ -15,7 +15,7 @@ import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import type { QuestionData } from '../types/game';
 import { useEffect, useCallback, useRef } from 'react';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsOnTop } from '../hooks/useIsOnTop';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Playing'>;
 
@@ -23,34 +23,33 @@ export function PlayingScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { barCode, playerId, barName } = route.params;
   const { gameState, submitAnswer } = useGameState({ barCode, playerId, barName });
-  const isFocused = useIsFocused();
+  const isOnTop = useIsOnTop(route.key);
 
   // Cache last known question to prevent white flash during transitions
   const lastQuestionRef = useRef<QuestionData | null>(null);
   if (gameState.question) lastQuestionRef.current = gameState.question;
 
-  // Phase-driven navigation (skip while a modal is on top)
+  // Phase-driven navigation — replace keeps the stack flat (no screen pile-up on Android)
   useEffect(() => {
-    if (!isFocused) return;
+    if (!isOnTop) return;
     const params = { barCode, playerId, barName };
     const { answerResult, gamePhase } = gameState;
     if (gamePhase === 'question' && answerResult) {
-      navigation.navigate('LockedIn', params);
+      navigation.replace('LockedIn', params);
     } else if (gamePhase === 'reveal') {
       if (answerResult?.correct) {
-        navigation.navigate('Correct', params);
+        navigation.replace('Correct', params);
       } else {
-        navigation.navigate('Wrong', params);
+        navigation.replace('Wrong', params);
       }
     } else if (gamePhase === 'leaderboard') {
-      navigation.navigate('Between', params);
+      navigation.replace('Between', params);
     } else if (gamePhase === 'category' && gameState.questionNumber > 1) {
-      // Next question category splash
-      navigation.navigate('Category', params);
+      navigation.replace('Category', params);
     } else if (gamePhase === 'finished') {
-      navigation.navigate('Results', params);
+      navigation.replace('Results', params);
     }
-  }, [gameState.gamePhase, gameState.answerResult, gameState.questionNumber, isFocused, navigation, barCode, playerId, barName]);
+  }, [gameState.gamePhase, gameState.answerResult, gameState.questionNumber, isOnTop, navigation, barCode, playerId, barName]);
 
   const handleAnswer = useCallback((index: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

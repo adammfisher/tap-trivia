@@ -2,6 +2,7 @@ import { View, Text, Pressable, StyleSheet, ScrollView, Share, AppState } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useIsOnTop } from '../hooks/useIsOnTop';
 import { FadeInView } from '../utils/animations';
 import { GradientBackground } from '../components/GradientBackground';
 import { Logo } from '../components/Logo';
@@ -32,6 +33,7 @@ export function LobbyScreen({ navigation, route }: Props) {
   const { nickname, deviceId, loaded: identityLoaded } = usePlayerIdentity();
   const { saveBar } = useSavedBars();
   const { startGame, gameState } = useGame();
+  const isOnTop = useIsOnTop(route.key);
 
   const [statusText, setStatusText] = useState('Checking for games...');
   const [playerCount, setPlayerCount] = useState(0);
@@ -40,6 +42,8 @@ export function LobbyScreen({ navigation, route }: Props) {
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const nextGameEpochRef = useRef<number | null>(null);
   const startedRef = useRef(false);
+  const isOnTopRef = useRef(isOnTop);
+  isOnTopRef.current = isOnTop;
 
   const playerName = nickname || 'Player';
 
@@ -85,9 +89,9 @@ export function LobbyScreen({ navigation, route }: Props) {
           deviceId || playerId,
           playerName,
         );
-        // Only navigate if we're currently focused (no modal on top)
-        if (navigation.isFocused()) {
-          navigation.navigate('Category', { barCode, playerId: deviceId || playerId, barName });
+        // Only navigate if we're the top screen (no modal on top)
+        if (isOnTopRef.current) {
+          navigation.replace('Category', { barCode, playerId: deviceId || playerId, barName });
         }
         return;
       }
@@ -166,12 +170,12 @@ export function LobbyScreen({ navigation, route }: Props) {
 
   // If game context phase changes, navigate (skip while a modal is on top)
   useEffect(() => {
-    if (!navigation.isFocused()) return;
+    if (!isOnTop) return;
     if (gameState.gamePhase === 'category' && !startedRef.current) {
       startedRef.current = true;
-      navigation.navigate('Category', { barCode, playerId: deviceId || playerId, barName });
+      navigation.replace('Category', { barCode, playerId: deviceId || playerId, barName });
     }
-  }, [gameState.gamePhase, navigation, barCode, playerId, deviceId, barName]);
+  }, [gameState.gamePhase, isOnTop, navigation, barCode, playerId, deviceId, barName]);
 
   const showCountdown = countdownSecs !== null && countdownSecs > 0;
 

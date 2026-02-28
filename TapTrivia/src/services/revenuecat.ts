@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import Purchases, {
   LOG_LEVEL,
   type CustomerInfo,
@@ -8,16 +9,17 @@ import { RC_API_KEY, RC_ENTITLEMENT_ID, RC_OFFERING_ID } from '../constants/reve
 
 let _configured = false;
 
+const isExpoGo = Constants.appOwnership === 'expo';
+
 /** Whether RevenueCat initialized successfully. If false, all RC calls degrade gracefully. */
 export function isConfigured(): boolean {
   return _configured;
 }
 
-/** Call once at app startup (App.tsx). iOS only — no-ops on Android/web. */
+/** Call once at app startup (App.tsx). iOS only — no-ops on Android/web/Expo Go. */
 export function configureRevenueCat(appUserID?: string): void {
   if (_configured || Platform.OS !== 'ios') return;
-  // RevenueCat's native SDK force-kills the app if it detects a test_ key
-  // in a non-development build. Skip configuration until a production key is set.
+  if (isExpoGo) return;
   if (RC_API_KEY.startsWith('test_')) return;
   try {
     Purchases.setLogLevel(LOG_LEVEL.DEBUG);

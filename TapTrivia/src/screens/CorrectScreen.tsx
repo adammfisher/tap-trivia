@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 import { useRef } from 'react';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsOnTop } from '../hooks/useIsOnTop';
 import { ZoomInView } from '../utils/animations';
 import { GradientBackground } from '../components/GradientBackground';
 import { Logo } from '../components/Logo';
@@ -23,7 +23,7 @@ export function CorrectScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { barCode, playerId, barName } = route.params;
   const { gameState } = useGameState({ barCode, playerId, barName });
-  const isFocused = useIsFocused();
+  const isOnTop = useIsOnTop(route.key);
 
   // Cache last known data to prevent white flash during transitions
   const lastQuestionRef = useRef<QuestionData | null>(null);
@@ -38,16 +38,16 @@ export function CorrectScreen({ navigation, route }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!isFocused) return;
+    if (!isOnTop) return;
     const params = { barCode, playerId, barName };
     if (gameState.gamePhase === 'leaderboard') {
-      navigation.navigate('Between', params);
+      navigation.replace('Between', params);
     } else if (gameState.gamePhase === 'finished') {
-      navigation.navigate('Results', params);
+      navigation.replace('Results', params);
     } else if (gameState.gamePhase === 'category' && gameState.questionNumber > 1) {
-      navigation.navigate('Category', params);
+      navigation.replace('Category', params);
     }
-  }, [gameState.gamePhase, gameState.questionNumber, isFocused, navigation, barCode, playerId, barName]);
+  }, [gameState.gamePhase, gameState.questionNumber, isOnTop, navigation, barCode, playerId, barName]);
 
   const question = gameState.question || lastQuestionRef.current;
   const result = gameState.answerResult || lastResultRef.current;

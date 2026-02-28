@@ -4,9 +4,11 @@
   "description": "TapTrivia monorepo — live bar trivia platform",
   "private": true,
   "scripts": {
-    "mobile": "cd TapTrivia && npx expo start --clear",
-    "mobile:ios": "cd TapTrivia && npx expo start --clear --ios",
-    "mobile:android": "cd TapTrivia && npx expo start --clear --android",
+    "mobile": "cd TapTrivia && npx expo start --clear --go",
+    "mobile:ios": "cd TapTrivia && npx expo start --clear --go --ios",
+    "mobile:android": "cd TapTrivia && npx expo start --clear --go --android",
+    "mobile:dev": "cd TapTrivia && npx expo start --clear",
+    "mobile:dev-build": "cd TapTrivia && eas build --profile development --platform all",
     "player": "cd player-app && python3 -m http.server 8091",
     "tv": "cd tv-app && python3 -m http.server 8090",
     "dashboard": "cd dashboard-app && python3 -m http.server 8092"

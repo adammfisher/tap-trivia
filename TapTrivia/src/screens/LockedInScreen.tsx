@@ -2,7 +2,7 @@ import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useRef, useEffect, useCallback } from 'react';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsOnTop } from '../hooks/useIsOnTop';
 import * as Haptics from 'expo-haptics';
 import { FadeInView } from '../utils/animations';
 import { GradientBackground } from '../components/GradientBackground';
@@ -24,7 +24,7 @@ export function LockedInScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { barCode, playerId, barName } = route.params;
   const { gameState, submitAnswer } = useGameState({ barCode, playerId, barName });
-  const isFocused = useIsFocused();
+  const isOnTop = useIsOnTop(route.key);
 
   // Cache last known data to prevent white flash during transitions
   const lastQuestionRef = useRef<QuestionData | null>(null);
@@ -33,20 +33,20 @@ export function LockedInScreen({ navigation, route }: Props) {
   if (gameState.answerResult) lastResultRef.current = gameState.answerResult;
 
   useEffect(() => {
-    if (!isFocused) return;
+    if (!isOnTop) return;
     const params = { barCode, playerId, barName };
     if (gameState.gamePhase === 'reveal') {
       if (gameState.answerResult?.correct) {
-        navigation.navigate('Correct', params);
+        navigation.replace('Correct', params);
       } else {
-        navigation.navigate('Wrong', params);
+        navigation.replace('Wrong', params);
       }
     } else if (gameState.gamePhase === 'leaderboard') {
-      navigation.navigate('Between', params);
+      navigation.replace('Between', params);
     } else if (gameState.gamePhase === 'finished') {
-      navigation.navigate('Results', params);
+      navigation.replace('Results', params);
     }
-  }, [gameState.gamePhase, gameState.answerResult, isFocused, navigation, barCode, playerId, barName]);
+  }, [gameState.gamePhase, gameState.answerResult, isOnTop, navigation, barCode, playerId, barName]);
 
   const question = gameState.question || lastQuestionRef.current;
   const answerResult = gameState.answerResult || lastResultRef.current;

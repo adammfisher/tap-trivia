@@ -10,7 +10,7 @@ import { w } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import { useEffect } from 'react';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsOnTop } from '../hooks/useIsOnTop';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Category'>;
 
@@ -18,17 +18,17 @@ export function CategoryScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { barCode, playerId, barName } = route.params;
   const { gameState } = useGameState({ barCode, playerId, barName });
-  const isFocused = useIsFocused();
+  const isOnTop = useIsOnTop(route.key);
 
   useEffect(() => {
-    if (!isFocused) return;
+    if (!isOnTop) return;
     const params = { barCode, playerId, barName };
     if (gameState.gamePhase === 'question') {
-      navigation.navigate('Playing', params);
+      navigation.replace('Playing', params);
     } else if (gameState.gamePhase === 'finished') {
-      navigation.navigate('Results', params);
+      navigation.replace('Results', params);
     }
-  }, [gameState.gamePhase, isFocused, navigation, barCode, playerId, barName]);
+  }, [gameState.gamePhase, isOnTop, navigation, barCode, playerId, barName]);
 
   const question = gameState.question;
   const countdown = gameState.countdownValue;

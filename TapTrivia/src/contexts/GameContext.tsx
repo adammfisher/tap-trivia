@@ -118,6 +118,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     rankChange: 0,
     playerCount: 0,
     lastPhase: '' as string,
+    pendingResult: null as { correct: boolean; pointsAwarded: number; correctAnswer: string; totalGameScore: number } | null,
     statsSnapshot: { ...INITIAL_STATS } as PlayerStats, // cached immutable copy for React state
   });
 
@@ -143,6 +144,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       g.questionData = null;
       g.rawQuestionData = null;
       g.answerResult = null;
+      g.pendingResult = null;
       g.fetchingQuestion = false;
       g.submitting = false;
       g.leaderboardFetched = false;
@@ -225,14 +227,41 @@ export function GameProvider({ children }: { children: ReactNode }) {
       ? Math.max(1, Math.ceil((4000 - (clockState.elapsedInQuestion || 0)) / 1000))
       : 0;
 
-    // Build the answer result with correctIndex from raw data during reveal
-    // Only create new object once when correctRevealed first becomes true
+    // Reveal phase: apply pending server result (correctness, score, stats)
+    // This is when the player first learns if they got it right.
     let answerResult = g.answerResult;
-    if (clockState.correctRevealed && g.rawQuestionData?.correctIndex !== undefined) {
-      if (answerResult && answerResult.correctIndex === undefined) {
-        answerResult = { ...answerResult, correctIndex: g.rawQuestionData.correctIndex };
-        g.answerResult = answerResult; // Cache so next tick reuses same reference
-      } else if (!answerResult) {
+    if (clockState.correctRevealed) {
+      // Apply pending API result once at reveal time
+      if (g.pendingResult && answerResult) {
+        const pr = g.pendingResult;
+        let correctIdx = g.rawQuestionData?.correctIndex ?? -1;
+        if (correctIdx === -1 && pr.correctAnswer && g.questionData) {
+          correctIdx = g.questionData.answers.indexOf(pr.correctAnswer);
+        }
+        answerResult = {
+          selectedIndex: answerResult.selectedIndex,
+          correct: pr.correct,
+          pointsAwarded: pr.pointsAwarded,
+          lockedInPoints: answerResult.lockedInPoints,
+          correctAnswer: pr.correctAnswer,
+          correctIndex: correctIdx,
+        };
+        g.answerResult = answerResult;
+        g.totalScore = pr.totalGameScore;
+        // Update stats now that we're revealing
+        if (pr.correct) {
+          g.playerStats.correct += 1;
+          g.playerStats.streak += 1;
+          if (g.playerStats.streak > g.playerStats.bestStreak) {
+            g.playerStats.bestStreak = g.playerStats.streak;
+          }
+        } else {
+          g.playerStats.wrong += 1;
+          g.playerStats.streak = 0;
+        }
+        g.pendingResult = null; // Applied — don't repeat
+      } else if (!answerResult && g.rawQuestionData?.correctIndex !== undefined) {
+        // Player didn't answer — still show the correct answer at reveal
         answerResult = {
           selectedIndex: -1,
           correct: false,
@@ -241,7 +270,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
           correctAnswer: g.questionData?.answers[g.rawQuestionData.correctIndex] || '',
           correctIndex: g.rawQuestionData.correctIndex,
         };
-        g.answerResult = answerResult; // Cache so next tick reuses same reference
+        g.answerResult = answerResult;
+      } else if (answerResult && answerResult.correctIndex === undefined && g.rawQuestionData?.correctIndex !== undefined) {
+        // Edge case: reveal phase but correctIndex not yet set (from get-question data)
+        answerResult = { ...answerResult, correctIndex: g.rawQuestionData.correctIndex };
+        g.answerResult = answerResult;
       }
     }
 
@@ -331,9 +364,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
     // Keep screen on during gameplay
     activateKeepAwakeAsync(KEEP_AWAKE_TAG).catch(() => {});
 
-    // Start the tick loop (500ms is responsive enough for second-level game timing)
+    // Start the tick loop (250ms for responsive phase detection, especially on Android)
     if (tickRef.current) clearInterval(tickRef.current);
-    tickRef.current = setInterval(tick, 500);
+    tickRef.current = setInterval(tick, 250);
     tick(); // immediate first tick
   }, [tick]);
 
@@ -347,14 +380,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const clockState = clockGetGameState(g.startTimeEpoch, getServerNow());
     const clientPoints = calculatePoints(clockState.elapsedInQuestion || 0);
 
-    // Revert stats from previous answer if changing
-    if (g.answerResult && g.answerResult.correct !== undefined) {
-      if (g.answerResult.pointsAwarded > 0) {
-        g.playerStats.correct = Math.max(0, g.playerStats.correct - 1);
-      } else if (g.answerResult.selectedIndex >= 0) {
-        g.playerStats.wrong = Math.max(0, g.playerStats.wrong - 1);
-      }
-    }
+    // Clear any previous pending result when changing answer
+    g.pendingResult = null;
 
     // Immediate local feedback
     g.answerResult = {
@@ -379,32 +406,23 @@ export function GameProvider({ children }: { children: ReactNode }) {
     ).then((result) => {
       g.submitting = false;
       if (!isApiError(result)) {
-        // Compute correctIndex from correctAnswer text (backend doesn't send index to prevent cheating)
-        let correctIdx = g.rawQuestionData?.correctIndex ?? -1;
-        if (correctIdx === -1 && result.correctAnswer && g.questionData) {
-          correctIdx = g.questionData.answers.indexOf(result.correctAnswer);
-        }
+        // Store the server result but DON'T reveal correctness or update score yet.
+        // These are deferred until the reveal phase (see tick() where correctRevealed is checked).
         g.answerResult = {
           selectedIndex: answerIndex,
+          correct: false,        // Hidden until reveal
+          pointsAwarded: 0,      // Hidden until reveal
+          lockedInPoints: clientPoints,
+          correctAnswer: '',     // Hidden until reveal
+          correctIndex: undefined as unknown as number, // Hidden until reveal
+        };
+        // Stash server result for reveal phase
+        g.pendingResult = {
           correct: result.correct,
           pointsAwarded: result.pointsAwarded,
-          lockedInPoints: clientPoints,
           correctAnswer: result.correctAnswer,
-          correctIndex: correctIdx,
+          totalGameScore: result.totalGameScore,
         };
-        g.totalScore = result.totalGameScore;
-
-        // Update stats
-        if (result.correct) {
-          g.playerStats.correct += 1;
-          g.playerStats.streak += 1;
-          if (g.playerStats.streak > g.playerStats.bestStreak) {
-            g.playerStats.bestStreak = g.playerStats.streak;
-          }
-        } else {
-          g.playerStats.wrong += 1;
-          g.playerStats.streak = 0;
-        }
       }
     });
   }, []);
@@ -426,6 +444,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     g.questionData = null;
     g.rawQuestionData = null;
     g.answerResult = null;
+    g.pendingResult = null;
     g.totalScore = 0;
     g.leaderboard = [];
     g.playerStats = { ...INITIAL_STATS };

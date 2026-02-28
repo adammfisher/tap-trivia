@@ -10,6 +10,7 @@ const QuestionScreen = {
   currentQuestionNumber: null,
   questionData: null,
   answerResult: null,
+  pendingResult: null,
   totalGameScore: 0,
   animFrame: null,
   fetchingQuestion: false,
@@ -23,6 +24,7 @@ const QuestionScreen = {
     this.gameId = gameId;
     this.gameStartEpoch = gameStartEpoch;
     this.answerResult = null;
+    this.pendingResult = null;
     this.questionData = null;
     this.currentQuestionNumber = null;
     this.totalGameScore = 0;
@@ -89,6 +91,7 @@ const QuestionScreen = {
     if (state.questionNumber !== this.currentQuestionNumber) {
       this.currentQuestionNumber = state.questionNumber;
       this.answerResult = null;
+      this.pendingResult = null;
       this.questionData = null;
       this.fetchingQuestion = false;
       this.submitting = false;
@@ -156,6 +159,19 @@ const QuestionScreen = {
     if (!q) return;
 
     const { hintsVisible, correctRevealed, canAnswer, elapsedInQuestion } = state;
+
+    // Apply pending server result at reveal time (score + correctness hidden until now)
+    if (correctRevealed && this.pendingResult) {
+      const pr = this.pendingResult;
+      if (this.answerResult) {
+        this.answerResult.correct = pr.correct;
+        this.answerResult.pointsAwarded = pr.pointsAwarded;
+        this.answerResult.correctAnswer = pr.correctAnswer;
+      }
+      this.totalGameScore = pr.totalGameScore;
+      this.pendingResult = null;
+    }
+
     const eliminatedIndices = (hintsVisible || []).map(h => q.eliminateOrder[h]);
     const points = canAnswer ? calculatePoints(elapsedInQuestion) : 0;
 
@@ -452,14 +468,21 @@ const QuestionScreen = {
     this.submitting = false;
 
     if (!result.error) {
+      // Don't reveal correctness or update score yet — stash for reveal phase.
+      // The locked-in UI shows displayPoints (client-calculated), not the server result.
       this.answerResult = {
         selectedIndex: index,
+        correct: false,
+        pointsAwarded: 0,
+        displayPoints: clientPoints,
+        correctAnswer: ''
+      };
+      this.pendingResult = {
         correct: result.correct,
         pointsAwarded: result.pointsAwarded,
-        displayPoints: clientPoints,
-        correctAnswer: result.correctAnswer
+        correctAnswer: result.correctAnswer,
+        totalGameScore: result.totalGameScore
       };
-      this.totalGameScore = result.totalGameScore || this.totalGameScore + result.pointsAwarded;
     }
   },
 

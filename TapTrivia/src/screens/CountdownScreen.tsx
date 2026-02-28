@@ -9,7 +9,7 @@ import { colors, w } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import { useEffect } from 'react';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsOnTop } from '../hooks/useIsOnTop';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Countdown'>;
 
@@ -17,14 +17,14 @@ export function CountdownScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { barCode, playerId, barName } = route.params;
   const { gameState } = useGameState({ barCode, playerId, barName });
-  const isFocused = useIsFocused();
+  const isOnTop = useIsOnTop(route.key);
 
   useEffect(() => {
-    if (!isFocused) return;
+    if (!isOnTop) return;
     if (gameState.gamePhase === 'category') {
-      navigation.navigate('Category', { barCode, playerId, barName });
+      navigation.replace('Category', { barCode, playerId, barName });
     }
-  }, [gameState.gamePhase, isFocused, navigation, barCode, playerId, barName]);
+  }, [gameState.gamePhase, isOnTop, navigation, barCode, playerId, barName]);
 
   const question = gameState.question;
 
