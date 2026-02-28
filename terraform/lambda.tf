@@ -792,3 +792,47 @@ resource "aws_lambda_permission" "submit_feedback_apigw" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }
+
+# =============================================================================
+# TV Activate Lambda
+# =============================================================================
+
+data "archive_file" "tv_activate" {
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/functions/tv-activate"
+  output_path = "${path.module}/zip/tv-activate.zip"
+}
+
+# -----------------------------------------------------------------------------
+# 19. tv-activate
+#     Validates a bar code and returns bar info for TV activation.
+#     DynamoDB: Read Bars
+# -----------------------------------------------------------------------------
+resource "aws_lambda_function" "tv_activate" {
+  function_name    = "TapTrivia-tv-activate"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  memory_size      = 128
+  timeout          = 10
+  filename         = data.archive_file.tv_activate.output_path
+  source_code_hash = data.archive_file.tv_activate.output_base64sha256
+
+  environment {
+    variables = local.common_environment_variables
+  }
+
+  tags = {
+    Environment = var.stage
+    Project     = "TapTrivia"
+    Function    = "tv-activate"
+  }
+}
+
+resource "aws_lambda_permission" "tv_activate_apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.tv_activate.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}

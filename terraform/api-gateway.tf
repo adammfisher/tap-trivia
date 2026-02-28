@@ -325,6 +325,26 @@ resource "aws_apigatewayv2_route" "create_group" {
 }
 
 # =============================================================================
+# TV Routes
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# POST /tv/activate → tv-activate
+# -----------------------------------------------------------------------------
+resource "aws_apigatewayv2_integration" "tv_activate" {
+  api_id                 = aws_apigatewayv2_api.main.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.tv_activate.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "tv_activate" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "POST /tv/activate"
+  target    = "integrations/${aws_apigatewayv2_integration.tv_activate.id}"
+}
+
+# =============================================================================
 # Feedback Route
 # =============================================================================
 

@@ -190,3 +190,11 @@ resource "aws_route53_record" "ses_mail_from_spf" {
   ttl     = 600
   records = ["v=spf1 include:amazonses.com ~all"]
 }
+
+resource "aws_route53_record" "dmarc" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = "_dmarc.taptrivia.tv"
+  type    = "TXT"
+  ttl     = 600
+  records = ["v=DMARC1; p=none; rua=mailto:dmarc@taptrivia.tv"]
+}

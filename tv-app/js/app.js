@@ -16,9 +16,44 @@
   // ═══════════════════════════════════════════════════════════════
   // STATE
   // ═══════════════════════════════════════════════════════════════
-  let barCode = localStorage.getItem('tt_bar_code') || '';
-  let barName = localStorage.getItem('tt_bar_name') || '';
-  let tvDeviceId = localStorage.getItem('tt_tv_device_id') || '';
+
+  // localStorage migration: read new key first, fall back to legacy keys
+  function loadTvConfig() {
+    const stored = localStorage.getItem('taptrivia_tv_config');
+    if (stored) {
+      try {
+        const cfg = JSON.parse(stored);
+        return { barCode: cfg.barCode || '', barName: cfg.barName || '', tvDeviceId: cfg.tvDeviceId || '' };
+      } catch { /* fall through */ }
+    }
+    // Fall back to legacy keys
+    return {
+      barCode: localStorage.getItem('tt_bar_code') || '',
+      barName: localStorage.getItem('tt_bar_name') || '',
+      tvDeviceId: localStorage.getItem('tt_tv_device_id') || ''
+    };
+  }
+
+  function saveTvConfig() {
+    // Write both formats for backward compat
+    localStorage.setItem('taptrivia_tv_config', JSON.stringify({ barCode, barName, tvDeviceId }));
+    localStorage.setItem('tt_bar_code', barCode);
+    localStorage.setItem('tt_bar_name', barName);
+    localStorage.setItem('tt_tv_device_id', tvDeviceId);
+  }
+
+  const initialConfig = loadTvConfig();
+  let barCode = initialConfig.barCode;
+  let barName = initialConfig.barName;
+  let tvDeviceId = initialConfig.tvDeviceId;
+
+  // Setup screen state
+  let setupRegState = 'form';    // form | sending | sent
+  let setupCodeState = 'input';  // input | verifying | activated | error
+  let setupCode = ['', '', '', '', ''];
+  let setupCodeAutoFilled = false;
+  let setupLocName = '';
+  let setupEmail = '';
   let currentScreen = '';
   let pollInterval = null;
   let consecutiveErrors = 0;
@@ -995,35 +1030,271 @@
       </div>`;
   }
 
-  /** SETUP SCREEN — bar registration or join with existing code */
+  /** SETUP SCREEN — split-panel: Register (left) | Activate (right) */
   function renderSetup() {
+
+    // ── Left panel content based on regState ──
+    let leftHTML = '';
+    if (setupRegState === 'form') {
+      const emailVal = setupEmail || '';
+      const showSignageCallout = !emailVal.trim();
+      leftHTML = `
+        <div style="margin-bottom:36px">
+          <div class="tt-setup__badge tt-setup__badge--new">
+            <span style="font-size:15px">🆕</span>
+            <span>New Location</span>
+          </div>
+          <h2 class="tt-setup__title">Register Your Location</h2>
+          <p class="tt-setup__desc">Everything is free — live trivia, signage, analytics. Just enter your location name to get started.</p>
+        </div>
+        <div class="tt-setup__form">
+          <div class="tt-setup__field">
+            <span class="tt-setup__field-icon">📍</span>
+            <input type="text" id="tt-setup-loc" class="tt-setup__input" placeholder="Your location's name" maxlength="50" autocomplete="off" value="${setupLocName}">
+          </div>
+          <div>
+            <div class="tt-setup__field">
+              <span class="tt-setup__field-icon">✉️</span>
+              <input type="email" id="tt-setup-email" class="tt-setup__input" placeholder="Owner email (optional)" maxlength="100" autocomplete="off" value="${emailVal}">
+            </div>
+            ${showSignageCallout ? `
+              <div class="tt-setup__signage-callout">
+                <span style="font-size:26px">📺</span>
+                <div>
+                  <span class="tt-setup__signage-callout-title">Free Digital Signage</span>
+                  <span class="tt-setup__signage-callout-desc">Add your email to get free signage, a dashboard &amp; analytics — all completely free</span>
+                </div>
+              </div>` : `
+              <div class="tt-setup__signage-unlocked">
+                <span style="font-size:16px">✅</span>
+                <span>Signage, dashboard &amp; analytics unlocked — all free</span>
+              </div>`}
+          </div>
+        </div>
+        <div class="tt-setup__features">
+          <div class="tt-setup__feature" style="animation:slideUp .5s ease-out .1s both">
+            <span class="tt-setup__feature-icon">🎯</span>
+            <span class="tt-setup__feature-text">Free live trivia that drives traffic and keeps guests longer</span>
+          </div>
+          <div class="tt-setup__feature" style="animation:slideUp .5s ease-out .15s both">
+            <span class="tt-setup__feature-icon">📺</span>
+            <span class="tt-setup__feature-text">Free digital signage to promote your specials &amp; events</span>
+          </div>
+          <div class="tt-setup__feature" style="animation:slideUp .5s ease-out .2s both">
+            <span class="tt-setup__feature-icon">📊</span>
+            <span class="tt-setup__feature-text">Free dashboard with player metrics and engagement analytics</span>
+          </div>
+        </div>
+        <button id="tt-setup-reg-btn" class="tt-setup__btn tt-setup__btn--gold">
+          <span class="tt-setup__btn-icon">📧</span>
+          <span class="tt-setup__btn-label">Register &amp; Get Code</span>
+        </button>
+        <p class="tt-setup__hint">Use your TV remote or USB keyboard to type</p>`;
+    } else if (setupRegState === 'sending') {
+      leftHTML = `
+        <div class="tt-setup__spinner">
+          <div class="tt-setup__spinner-ring"></div>
+          <div class="tt-setup__spinner-text">Setting up your location...</div>
+        </div>`;
+    } else if (setupRegState === 'sent') {
+      const hasEmail = setupEmail && setupEmail.trim().length > 0;
+      leftHTML = `
+        <div class="tt-setup__success">
+          <div class="tt-setup__check-circle">✅</div>
+          <h2 class="tt-setup__success-title">You're Registered!</h2>
+          <p class="tt-setup__success-desc">Your code is ready — <strong>hit Activate on the right</strong> to get this TV running.</p>
+          ${hasEmail ? `
+            <div class="tt-setup__email-box">
+              <div class="tt-setup__email-box-label">📧 We also emailed you at:</div>
+              <div class="tt-setup__email-box-value">${setupEmail}</div>
+              <span class="tt-setup__email-box-hint">Check your email for instructions to set up your dashboard and digital signage.</span>
+            </div>` : `
+            <div class="tt-setup__upsell-box">
+              <span class="tt-setup__upsell-title">📺 Don't miss your free signage!</span>
+              <span class="tt-setup__upsell-desc">Re-register with your email to get free digital signage, your management dashboard, and player analytics. Everything is free — no catch.</span>
+            </div>`}
+          <button id="tt-setup-startover" class="tt-setup__start-over">← Start over</button>
+        </div>`;
+    }
+
+    // ── Right panel content based on codeState ──
+    let rightHTML = '';
+    if (setupCodeState !== 'activated') {
+      const badgeClass = setupCodeAutoFilled ? 'tt-setup__badge--ready' : 'tt-setup__badge--code';
+      const badgeIcon = setupCodeAutoFilled ? '✓' : '🔑';
+      const badgeText = setupCodeAutoFilled ? 'Code Ready' : 'Have a Code';
+      const descText = setupCodeAutoFilled
+        ? 'Your code is loaded and ready. Hit activate to start!'
+        : 'Enter the 5-character code from your registration email to pair this TV to your location.';
+      const descAnim = setupCodeAutoFilled ? ' style="animation:slideInRight .5s ease-out"' : '';
+      const codeComplete = setupCode.every(c => c !== '');
+      const isVerifying = setupCodeState === 'verifying';
+
+      let codeBoxesHTML = '';
+      for (let i = 0; i < 5; i++) {
+        const val = setupCode[i] || '';
+        const filledClass = val ? ' tt-setup__code-box--filled' : '';
+        const roClass = setupCodeAutoFilled ? ' tt-setup__code-box--readonly' : '';
+        codeBoxesHTML += `<input type="text" class="tt-setup__code-box${filledClass}${roClass}" data-code-idx="${i}" value="${val}" maxlength="2" ${setupCodeAutoFilled ? 'readonly' : ''} autocomplete="off">`;
+      }
+
+      let errorHTML = '';
+      if (setupCodeState === 'error') {
+        errorHTML = `
+          <div class="tt-setup__error">
+            <span style="font-size:18px">⚠️</span>
+            <span class="tt-setup__error-text">Code not found. Check your email and try again.</span>
+          </div>`;
+      }
+
+      const btnLabel = isVerifying ? 'Activating...' : 'Activate This TV';
+      const btnIcon = isVerifying ? '⏳' : '📺';
+      const btnDisabled = !codeComplete || isVerifying ? ' disabled' : '';
+      const btnPulse = setupCodeAutoFilled && setupCodeState === 'input' ? ' tt-setup__btn--pulse' : '';
+
+      rightHTML = `
+        <div class="${badgeClass} tt-setup__badge">
+          <span style="font-size:15px">${badgeIcon}</span>
+          <span>${badgeText}</span>
+        </div>
+        <h2 class="tt-setup__title" style="text-align:center">Activate This TV</h2>
+        <p class="tt-setup__desc tt-setup__desc--center"${descAnim}>${descText}</p>
+        <div class="tt-setup__code-wrap${setupCodeAutoFilled ? ' tt-setup__code-wrap--pop' : ''}">
+          <div class="tt-setup__code-boxes">${codeBoxesHTML}</div>
+        </div>
+        <div class="tt-setup__multi-tv${setupCodeAutoFilled ? ' tt-setup__multi-tv--glow' : ''}">
+          <span class="tt-setup__multi-tv-title">Use this code on all your TVs</span>
+          <span class="tt-setup__multi-tv-desc">One code activates every screen at your location</span>
+        </div>
+        ${errorHTML}
+        <div class="tt-setup__activate-wrap">
+          <button id="tt-setup-activate-btn" class="tt-setup__btn tt-setup__btn--green${btnPulse}"${btnDisabled}>
+            <span class="tt-setup__btn-icon">${btnIcon}</span>
+            <span class="tt-setup__btn-label">${btnLabel}</span>
+          </button>
+        </div>
+        ${!setupCodeAutoFilled ? '<p class="tt-setup__lost-code">Lost your code? Check your email or register on the left.</p>' : ''}`;
+    } else {
+      const displayName = setupLocName || barName || 'Your location';
+      rightHTML = `
+        <div class="tt-setup__activated">
+          <div class="tt-setup__activated-circle">🎉</div>
+          <h2 class="tt-setup__activated-title">You're Live!</h2>
+          <p class="tt-setup__activated-desc"><strong>${displayName}</strong> is now connected. Trivia starts here.</p>
+          <div class="tt-setup__activated-loading">Loading trivia experience...</div>
+        </div>`;
+    }
+
     screenEl.innerHTML = `
-      <div class="tt-setup">
-        ${logoHTML('xl')}
-        <div class="tt-setup__subtitle">Register Your Bar</div>
-        <input type="text" id="tt-setup-input" class="tt-setup__input" placeholder="Murphy's Pub" maxlength="50" autocomplete="off" aria-label="Bar name">
-        <input type="email" id="tt-setup-email" class="tt-setup__input tt-setup__input--email" placeholder="owner@email.com (optional)" maxlength="100" autocomplete="off" aria-label="Owner email">
-        <button id="tt-setup-btn" class="tt-setup__btn">GET YOUR BAR CODE</button>
-        <div class="tt-setup__divider"><span>or</span></div>
-        <div class="tt-setup__subtitle">Already have a bar code?</div>
-        <input type="text" id="tt-setup-code" class="tt-setup__input tt-setup__input--code" placeholder="ABC12" maxlength="5" autocomplete="off" aria-label="Bar code" style="text-transform:uppercase;letter-spacing:8px">
-        <button id="tt-setup-join-btn" class="tt-setup__btn tt-setup__btn--join">JOIN WITH CODE</button>
-        <div class="tt-setup__hint">Use your TV remote or USB keyboard to type.</div>
+      <div class="tt-setup__header">${logoHTML('lg')}</div>
+      <div class="tt-setup__panels">
+        <div class="tt-setup__panel tt-setup__panel--left">${leftHTML}</div>
+        <div class="tt-setup__divider"><div class="tt-setup__divider-or">OR</div></div>
+        <div class="tt-setup__panel tt-setup__panel--right">${rightHTML}</div>
+      </div>
+      <div class="tt-setup__footer">
+        <span class="tt-setup__footer-text">taptrivia.tv · Free for venues · Powered by Visudo Labs</span>
       </div>`;
-    // Bind events — register flow
-    const input = document.getElementById('tt-setup-input');
+
+    // ── Bind events ──
+    bindSetupEvents();
+  }
+
+  function bindSetupEvents() {
+    // Registration form
+    const locInput = document.getElementById('tt-setup-loc');
     const emailInput = document.getElementById('tt-setup-email');
-    const btn = document.getElementById('tt-setup-btn');
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') emailInput.focus(); });
-    emailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') registerBar(); });
-    btn.addEventListener('click', registerBar);
-    // Bind events — join with code flow
-    const codeInput = document.getElementById('tt-setup-code');
-    const joinBtn = document.getElementById('tt-setup-join-btn');
-    codeInput.addEventListener('input', () => { codeInput.value = codeInput.value.toUpperCase(); });
-    codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinWithCode(); });
-    joinBtn.addEventListener('click', joinWithCode);
-    input.focus();
+    const regBtn = document.getElementById('tt-setup-reg-btn');
+
+    if (locInput) {
+      locInput.addEventListener('input', () => { setupLocName = locInput.value; });
+      locInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && emailInput) emailInput.focus();
+      });
+      locInput.focus();
+    }
+    if (emailInput) {
+      emailInput.addEventListener('input', () => {
+        setupEmail = emailInput.value;
+        // Live-update signage callout
+        const callout = emailInput.closest('div').querySelector('.tt-setup__signage-callout');
+        const unlocked = emailInput.closest('div').querySelector('.tt-setup__signage-unlocked');
+        if (emailInput.value.trim()) {
+          if (callout) callout.style.display = 'none';
+          if (unlocked) unlocked.style.display = 'flex';
+        } else {
+          if (callout) callout.style.display = 'flex';
+          if (unlocked) unlocked.style.display = 'none';
+        }
+      });
+      emailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') registerBar(); });
+    }
+    if (regBtn) {
+      regBtn.addEventListener('click', registerBar);
+    }
+
+    // Start over
+    const startOverBtn = document.getElementById('tt-setup-startover');
+    if (startOverBtn) {
+      startOverBtn.addEventListener('click', () => {
+        setupRegState = 'form';
+        setupLocName = '';
+        setupEmail = '';
+        setupCode = ['', '', '', '', ''];
+        setupCodeAutoFilled = false;
+        setupCodeState = 'input';
+        renderSetup();
+      });
+    }
+
+    // Code box inputs
+    const codeBoxes = document.querySelectorAll('.tt-setup__code-box');
+    codeBoxes.forEach((box, i) => {
+      if (box.hasAttribute('readonly')) return;
+      box.addEventListener('input', (e) => {
+        const char = e.target.value.slice(-1).toUpperCase();
+        if (char && !/^[A-Z0-9]$/.test(char)) {
+          e.target.value = setupCode[i] || '';
+          return;
+        }
+        setupCode[i] = char;
+        e.target.value = char;
+        // Update styling
+        if (char) {
+          box.classList.add('tt-setup__code-box--filled');
+          if (i < 4) codeBoxes[i + 1].focus();
+        } else {
+          box.classList.remove('tt-setup__code-box--filled');
+        }
+        updateActivateButton();
+      });
+      box.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !setupCode[i] && i > 0) {
+          codeBoxes[i - 1].focus();
+        }
+        if (e.key === 'Enter') activateTV();
+      });
+    });
+    // Auto-focus first empty code box if not auto-filled
+    if (!setupCodeAutoFilled && codeBoxes.length > 0) {
+      const firstEmpty = setupCode.findIndex(c => !c);
+      if (firstEmpty >= 0 && !document.getElementById('tt-setup-loc')) {
+        codeBoxes[firstEmpty].focus();
+      }
+    }
+
+    // Activate button
+    const activateBtn = document.getElementById('tt-setup-activate-btn');
+    if (activateBtn) {
+      activateBtn.addEventListener('click', activateTV);
+    }
+  }
+
+  function updateActivateButton() {
+    const btn = document.getElementById('tt-setup-activate-btn');
+    if (!btn) return;
+    const codeComplete = setupCode.every(c => c !== '');
+    btn.disabled = !codeComplete || setupCodeState === 'verifying';
   }
 
   /** LOBBY SCREEN — v4 lines 492-521 */
@@ -1653,57 +1924,66 @@
   // ═══════════════════════════════════════════════════════════════
 
   async function registerBar() {
-    const input = document.getElementById('tt-setup-input');
-    const emailInput = document.getElementById('tt-setup-email');
-    const btn = document.getElementById('tt-setup-btn');
-    const name = input ? input.value.trim() : '';
-    if (!name) { if (input) input.focus(); return; }
+    const name = setupLocName.trim();
+    if (!name) {
+      const locInput = document.getElementById('tt-setup-loc');
+      if (locInput) locInput.focus();
+      return;
+    }
 
-    const ownerEmail = emailInput ? emailInput.value.trim() : '';
+    // Show sending spinner
+    setupRegState = 'sending';
+    renderSetup();
 
-    if (btn) { btn.textContent = 'REGISTERING...'; btn.disabled = true; }
-
-    const payload = { barName: name, tvDeviceId };
-    if (ownerEmail) payload.ownerEmail = ownerEmail;
+    const payload = { barName: name };
+    if (setupEmail && setupEmail.trim()) payload.ownerEmail = setupEmail.trim();
     const result = await apiCall('POST', '/bar/register', payload);
+
     if (result.error) {
-      if (btn) { btn.textContent = 'GET YOUR BAR CODE'; btn.disabled = false; }
+      setupRegState = 'form';
+      renderSetup();
+      return;
+    }
+
+    // Auto-fill the code boxes on the right side
+    barCode = result.barCode;
+    barName = result.barName;
+    setupCode = barCode.split('');
+    setupCodeAutoFilled = true;
+    setupRegState = 'sent';
+    saveTvConfig();
+    renderSetup();
+  }
+
+  async function activateTV() {
+    const codeStr = setupCode.join('').toUpperCase();
+    if (codeStr.length < 5) return;
+
+    setupCodeState = 'verifying';
+    renderSetup();
+
+    const result = await apiCall('POST', '/tv/activate', { barCode: codeStr });
+    if (result.error) {
+      setupCodeState = 'error';
+      if (!setupCodeAutoFilled) {
+        setupCode = ['', '', '', '', ''];
+      }
+      renderSetup();
       return;
     }
 
     barCode = result.barCode;
     barName = result.barName;
-    localStorage.setItem('tt_bar_code', barCode);
-    localStorage.setItem('tt_bar_name', barName);
-    startPolling();
-    renderScreen({ screen: 'lobby', playerCount: 0, players: [] });
-  }
+    saveTvConfig();
 
-  async function joinWithCode() {
-    const codeInput = document.getElementById('tt-setup-code');
-    const joinBtn = document.getElementById('tt-setup-join-btn');
-    const code = codeInput ? codeInput.value.trim().toUpperCase() : '';
-    if (!code) { if (codeInput) codeInput.focus(); return; }
+    // Show "You're Live!" for 3 seconds
+    setupCodeState = 'activated';
+    renderSetup();
 
-    if (joinBtn) { joinBtn.textContent = 'JOINING...'; joinBtn.disabled = true; }
-
-    const bar = await apiCall('GET', `/bar/${code}`);
-    if (bar.error || bar.status !== 'active') {
-      if (joinBtn) { joinBtn.textContent = 'JOIN WITH CODE'; joinBtn.disabled = false; }
-      if (codeInput) {
-        codeInput.value = '';
-        codeInput.placeholder = 'Not found — try again';
-        codeInput.focus();
-      }
-      return;
-    }
-
-    barCode = bar.barCode;
-    barName = bar.barName;
-    localStorage.setItem('tt_bar_code', barCode);
-    localStorage.setItem('tt_bar_name', barName);
-    startPolling();
-    renderScreen({ screen: 'lobby', playerCount: 0, players: [] });
+    setTimeout(() => {
+      startPolling();
+      renderScreen({ screen: 'lobby', playerCount: 0, players: [] });
+    }, 3000);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -2195,7 +2475,7 @@
   async function init() {
     if (!tvDeviceId) {
       tvDeviceId = crypto.randomUUID();
-      localStorage.setItem('tt_tv_device_id', tvDeviceId);
+      saveTvConfig();
     }
 
     // Demo mode — cycle through screens with mock data
@@ -2209,7 +2489,7 @@
     const barParam = urlParams.get('bar');
     if (barParam && barParam !== barCode) {
       barCode = barParam.toUpperCase();
-      localStorage.setItem('tt_bar_code', barCode);
+      saveTvConfig();
     }
 
     // If we have a stored bar code, verify and enter lobby
@@ -2217,15 +2497,14 @@
       const bar = await apiCall('GET', `/bar/${barCode}`);
       if (bar && !bar.error && bar.status === 'active') {
         barName = bar.barName;
-        localStorage.setItem('tt_bar_name', barName);
+        saveTvConfig();
         startPolling();
         return;
       }
       // Invalid code — clear and show setup
-      localStorage.removeItem('tt_bar_code');
-      localStorage.removeItem('tt_bar_name');
       barCode = '';
       barName = '';
+      saveTvConfig();
     }
 
     renderScreen({ screen: 'setup' });

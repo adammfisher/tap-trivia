@@ -76,27 +76,43 @@ async function sendWelcomeEmail(email, barName, barCode) {
     Source: 'TapTrivia <noreply@taptrivia.tv>',
     Destination: { ToAddresses: [email] },
     Message: {
-      Subject: { Data: `Welcome to TapTrivia — Your bar code is ${barCode}` },
+      Subject: { Data: `Welcome to TapTrivia — Your code is ${barCode}` },
       Body: {
         Html: {
           Data: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h1 style="color: #764ba2;">Welcome to TapTrivia!</h1>
-              <p>Hi there! <strong>${barName}</strong> is now registered on TapTrivia.</p>
-              <div style="background: #f5f0ff; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
-                <p style="margin: 0 0 8px; color: #666;">Your permanent bar code:</p>
-                <h2 style="font-size: 48px; letter-spacing: 12px; color: #764ba2; margin: 0;">${barCode}</h2>
+            <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+              <div style="text-align: center; margin-bottom: 32px;">
+                <span style="font-size: 32px; font-weight: 700; color: #764ba2;">TapTrivia</span>
               </div>
-              <p>Enter this code in the TV app to activate your display.</p>
-              <h3>Set Up Your Dashboard</h3>
-              <p>Manage your digital signage, upload your logo, and view analytics:</p>
-              <p><a href="https://admin.taptrivia.tv" style="display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">Open Dashboard</a></p>
-              <p style="color: #999; font-size: 12px; margin-top: 32px;">You'll use this email and bar code to log in. No password needed — we'll send you a one-time code each time.</p>
+              <p style="font-size: 18px; color: #333; margin: 0 0 4px; text-align: center;">
+                <strong>${barName}</strong> is now registered!
+              </p>
+              <p style="font-size: 15px; color: #666; margin: 0 0 32px; text-align: center;">
+                Use this code on your TV to activate your display.
+              </p>
+              <div style="background-color: #f5f0ff; border: 2px solid #e0d4f5; border-radius: 12px; padding: 28px; margin: 0 0 28px; text-align: center;">
+                <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 3px; color: #999; margin-bottom: 12px;">Your Location Code</div>
+                <div style="font-size: 48px; font-weight: 800; letter-spacing: 12px; color: #764ba2;">${barCode}</div>
+              </div>
+              <p style="font-size: 14px; color: #888; margin: 0 0 28px; text-align: center;">
+                Use this same code on all your TVs &mdash; one code activates every screen.
+              </p>
+              <div style="text-align: center; margin-bottom: 28px;">
+                <a href="https://admin.taptrivia.tv" style="display: inline-block; background-color: #764ba2; color: #ffffff; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 16px;">
+                  Open Your Dashboard
+                </a>
+              </div>
+              <p style="font-size: 13px; color: #999; text-align: center; margin: 0 0 32px;">
+                Log in with this email + your bar code. No password needed.
+              </p>
+              <p style="font-size: 12px; color: #bbb; text-align: center; margin: 0; border-top: 1px solid #eee; padding-top: 20px;">
+                taptrivia.tv &middot; Free for venues &middot; Powered by Visudo Labs
+              </p>
             </div>
           `
         },
         Text: {
-          Data: `Welcome to TapTrivia!\n\n${barName} is registered. Your bar code: ${barCode}\n\nEnter this code in the TV app to activate.\n\nDashboard: https://admin.taptrivia.tv\nLog in with this email + your bar code.\n`
+          Data: `Welcome to TapTrivia!\n\n${barName} is registered. Your location code: ${barCode}\n\nEnter this code on your TV to activate.\nUse the same code on all your TVs.\n\nDashboard: https://admin.taptrivia.tv\nLog in with this email + your bar code.\n`
         }
       }
     }
@@ -110,34 +126,36 @@ exports.handler = async (event) => {
     const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
     const { barName, tvDeviceId, ownerEmail } = body;
 
-    if (!barName || !tvDeviceId) {
+    if (!barName) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'MISSING_FIELDS', message: 'barName and tvDeviceId are required', statusCode: 400 })
+        body: JSON.stringify({ error: 'MISSING_FIELDS', message: 'barName is required', statusCode: 400 })
       };
     }
 
-    // Check if this TV device already has an active bar
-    const existingBars = await query(TABLE.BARS, {
-      IndexName: 'tvDeviceId-index',
-      KeyConditionExpression: 'tvDeviceId = :tvId',
-      ExpressionAttributeValues: { ':tvId': tvDeviceId }
-    });
+    // Only check existing device when tvDeviceId is provided
+    if (tvDeviceId) {
+      const existingBars = await query(TABLE.BARS, {
+        IndexName: 'tvDeviceId-index',
+        KeyConditionExpression: 'tvDeviceId = :tvId',
+        ExpressionAttributeValues: { ':tvId': tvDeviceId }
+      });
 
-    const activeBar = existingBars.find(b => b.status === 'active');
-    if (activeBar) {
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          barCode: activeBar.barCode,
-          barName: activeBar.barName,
-          city: activeBar.city,
-          state: activeBar.state,
-          isNew: false
-        })
-      };
+      const activeBar = existingBars.find(b => b.status === 'active');
+      if (activeBar) {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            barCode: activeBar.barCode,
+            barName: activeBar.barName,
+            city: activeBar.city,
+            state: activeBar.state,
+            isNew: false
+          })
+        };
+      }
     }
 
     // Geo-locate the caller IP
@@ -162,7 +180,6 @@ exports.handler = async (event) => {
         PK: `BAR#${barCode}`,
         barCode,
         barName,
-        tvDeviceId,
         activePlayers: 0,
         city: geo.city,
         state: geo.state,
@@ -173,6 +190,11 @@ exports.handler = async (event) => {
         lastPollAt: now,
         status: 'active'
       };
+
+      // Only include tvDeviceId if provided
+      if (tvDeviceId) {
+        barItem.tvDeviceId = tvDeviceId;
+      }
 
       if (cleanEmail) {
         barItem.ownerEmail = cleanEmail;
