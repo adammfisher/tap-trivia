@@ -100,9 +100,12 @@
 
   /** Format seconds into countdown display string */
   function formatCountdown(secsLeft) {
-    const mins = Math.floor(secsLeft / 60);
+    const hours = Math.floor(secsLeft / 3600);
+    const mins = Math.floor((secsLeft % 3600) / 60);
     const secs = secsLeft % 60;
-    return mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${secs}s`;
+    if (hours > 0) return `${hours}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    if (mins > 0) return `${mins}:${String(secs).padStart(2, '0')}`;
+    return `${secs}s`;
   }
 
   /** Generate a deterministic hue from a name string (v4 line 130) */

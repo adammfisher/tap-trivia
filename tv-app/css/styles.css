@@ -1981,6 +1981,33 @@ body {
   animation: popIn .5s ease-out;
 }
 
+/* ─── Reset Arrow (subtle back-to-setup button) ──────────────── */
+.tt-reset-arrow {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 100;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.08);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s, color 0.3s;
+}
+.tt-reset-arrow:hover,
+.tt-reset-arrow:focus {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.3);
+  outline: none;
+}
+
 /* ═══════════════════════════════════════════════════════════════
    KEYFRAME ANIMATIONS
    From v4.jsx lines 27-52, pixel values 2× for 1920×1080
