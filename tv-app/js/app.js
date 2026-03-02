@@ -79,7 +79,7 @@
   let rotationIdx = 0;
   let rotationTimer = null;
   let countdownTickTimer = null;
-  const ROTATION_DURATIONS = { results: 60000, lobby: 60000 };
+  const ROTATION_DURATIONS = { results: 60000, idle: 30000, lobby: 60000 };
 
   // DOM refs
   const screenEl = document.getElementById('tt-screen');
@@ -121,6 +121,37 @@
   function barNameHTML(size) {
     if (!barName) return '';
     return `<div class="tt-bar-name tt-bar-name--${size}">${barName}</div>`;
+  }
+
+  /** Reset arrow — subtle top-right button to return to setup */
+  function resetArrowHTML() {
+    return `<button class="tt-reset-arrow" id="tt-reset-arrow" title="Change location" aria-label="Back to setup">←</button>`;
+  }
+
+  function bindResetArrow() {
+    const btn = document.getElementById('tt-reset-arrow');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+        exitRotationMode();
+        stopSignageRotation();
+        // Pre-fill code boxes with current bar code so user can re-activate quickly
+        const prevCode = barCode || '';
+        setupRegState = 'form';
+        setupCodeState = 'input';
+        setupCode = prevCode.length === 5
+          ? prevCode.split('')
+          : ['', '', '', '', ''];
+        setupCodeAutoFilled = prevCode.length === 5;
+        setupLocName = '';
+        setupEmail = '';
+        barCode = '';
+        barName = '';
+        saveTvConfig();
+        currentScreen = '';
+        renderScreen({ screen: 'setup' });
+      });
+    }
   }
 
   /** Build avatar HTML — v4 lines 129-145 */
@@ -472,20 +503,23 @@
   }
 
   /** Start signage rotation timer */
-  function startSignageRotation() {
+  function startSignageRotation(speedOverride) {
     stopSignageRotation();
-    const active = getActiveSlides();
+    let active = getActiveSlides();
+    const usingDefaults = active.length === 0;
+    if (usingDefaults) active = getDefaultSignageSlides();
     if (active.length <= 1) return;
+    const speed = speedOverride || (usingDefaults ? 30 : signageRotationSpeed);
     signageRotationTimer = setInterval(() => {
-      signageCurrentIndex = (signageCurrentIndex + 1) % getActiveSlides().length;
-      // Re-render screens that display signage
+      let slides = getActiveSlides();
+      if (slides.length === 0) slides = getDefaultSignageSlides();
+      signageCurrentIndex = (signageCurrentIndex + 1) % slides.length;
       if (currentScreen === 'idle') {
         renderIdle();
       } else {
-        // Update in-game signage panel in place
         updateSignagePanel();
       }
-    }, signageRotationSpeed * 1000);
+    }, speed * 1000);
   }
 
   /** Stop signage rotation */
@@ -496,9 +530,10 @@
     }
   }
 
-  /** Ensure signage rotation is running when slides exist */
+  /** Ensure signage rotation is running when slides exist (custom or defaults) */
   function ensureSignageRotation() {
-    const active = getActiveSlides();
+    let active = getActiveSlides();
+    if (active.length === 0) active = getDefaultSignageSlides();
     if (active.length > 1 && !signageRotationTimer) {
       startSignageRotation();
     }
@@ -508,7 +543,8 @@
   function updateSignagePanel() {
     const panelEl = document.querySelector('.tt-signage-panel');
     if (!panelEl) return;
-    const active = getActiveSlides();
+    let active = getActiveSlides();
+    if (active.length === 0) active = getDefaultSignageSlides();
     if (active.length === 0) return;
     const idx = signageCurrentIndex % active.length;
     const slide = active[idx];
@@ -549,6 +585,8 @@
   function buildRotationList() {
     const screens = [];
     if (cachedScreenData.results) screens.push('results');
+    // Include idle (default signage) in rotation when no custom signage
+    screens.push('idle');
     if (cachedScreenData.lobby) screens.push('lobby');
     return screens;
   }
@@ -578,6 +616,13 @@
   function renderRotationScreen() {
     if (rotationScreens.length === 0) return;
     const screenName = rotationScreens[rotationIdx % rotationScreens.length];
+    // idle is always available (uses default signage), doesn't need cached data
+    if (screenName === 'idle') {
+      currentScreen = '';
+      localQuestionNumber = null;
+      renderScreen({ screen: 'idle' });
+      return;
+    }
     const state = cachedScreenData[screenName];
     if (!state) return;
     currentScreen = '';
@@ -784,6 +829,30 @@
           </div>
         </div>`;
     },
+
+    /** Default "Scan to Join" slide — large centered QR code */
+    _defaultQr(d) {
+      return `
+        <div class="tt-signage-fs tt-signage-fade-in" style="background:linear-gradient(150deg,#0a0218,#1a0c3a 30%,#2e1458 50%,#1a0c3a)">
+          ${signageHeaderHTML()}
+          <div class="tt-signage-center">
+            <div class="tt-signage-headline" style="font-size:64px;margin-bottom:40px">Scan to Join</div>
+            ${qrCodeHTML(200)}
+            <div style="margin-top:36px;display:flex;align-items:center;gap:16px;justify-content:center">
+              <span style="font-size:28px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:3px">BAR CODE</span>
+              <span style="font-family:'Fredoka',sans-serif;font-size:48px;font-weight:700;color:#ffd200;letter-spacing:6px">${barCode}</span>
+            </div>
+            <div style="font-size:30px;color:#ffd200;margin-top:16px;font-weight:600">play.taptrivia.tv</div>
+          </div>
+          <div class="tt-signage-powered">
+            <div class="tt-signage-powered__inner">
+              ${logoHTML('sm')}
+              <div class="tt-signage-powered__sep"></div>
+              <span class="tt-signage-powered__text">Powered by TapTrivia</span>
+            </div>
+          </div>
+        </div>`;
+    },
   };
 
   // --- In-Game Panel Renderers (7 templates, 680px at 2×) ---
@@ -933,18 +1002,50 @@
     return renderer(slide.data || {});
   }
 
+  /** Built-in default signage slides shown when bar has no custom signage */
+  function getDefaultSignageSlides() {
+    return [
+      {
+        template: 'announcement',
+        enabled: true,
+        data: {
+          emoji: '🧠',
+          headline: 'Play TapTrivia!',
+          message: 'Live trivia every 15 minutes — compete with the whole bar!',
+          subtext: 'Scan the QR code or visit play.taptrivia.tv',
+        },
+      },
+      {
+        template: 'custom',
+        enabled: true,
+        data: {
+          emoji: '📱',
+          headline: 'How to Play',
+          items: [
+            { emoji: '📱', text: 'Scan the QR code or visit play.taptrivia.tv' },
+            { emoji: '🔤', text: 'Enter your bar code: ' + barCode },
+            { emoji: '🏆', text: 'Answer fast for more points!' },
+            { emoji: '🍻', text: 'Top the leaderboard, win bragging rights' },
+          ],
+        },
+      },
+      {
+        template: '_defaultQr',
+        enabled: true,
+        data: {},
+      },
+    ];
+  }
+
   /** Get signage panel HTML with divider for in-game screens */
   function signagePanelWrapHTML() {
-    const active = getActiveSlides();
-    console.log('[Signage panel] active:', active.length, 'total:', signageSlides.length, 'screen:', currentScreen);
+    let active = getActiveSlides();
+    if (active.length === 0) active = getDefaultSignageSlides();
     if (active.length === 0) return '';
     const idx = signageCurrentIndex % active.length;
     const slide = active[idx];
     const renderer = SIGNAGE_PANEL[slide.template];
-    if (!renderer) {
-      console.warn('[Signage panel] No renderer for template:', slide.template);
-      return '';
-    }
+    if (!renderer) return '';
     return `
       <div class="tt-signage-panel-divider"></div>
       <div class="tt-signage-panel">
@@ -1008,9 +1109,10 @@
     }
   }
 
-  /** IDLE / ATTRACT SCREEN — shows signage slides when available */
+  /** IDLE / ATTRACT SCREEN — shows signage slides, falls back to built-in defaults */
   function renderIdle() {
-    const active = getActiveSlides();
+    let active = getActiveSlides();
+    if (active.length === 0) active = getDefaultSignageSlides();
     if (active.length > 0) {
       const idx = signageCurrentIndex % active.length;
       const html = renderSignageFullScreen(active[idx]);
@@ -1020,14 +1122,17 @@
         return;
       }
     }
+    // Ultimate fallback (shouldn't reach here with defaults)
     stopSignageRotation();
     screenEl.innerHTML = `
       <div class="tt-idle">
+        ${resetArrowHTML()}
         <div class="tt-idle__logo">${logoHTML('xl')}</div>
         ${barNameHTML('xl')}
         <div class="tt-idle__cta">Live trivia every 15 minutes!</div>
         <div class="tt-idle__sub">Scan the QR code to play on your phone</div>
       </div>`;
+    bindResetArrow();
   }
 
   /** SETUP SCREEN — split-panel: Register (left) | Activate (right) */
@@ -1324,6 +1429,7 @@
 
     screenEl.innerHTML = `
       <div class="tt-lobby${panel ? ' tt-lobby--with-panel' : ''}">
+        ${resetArrowHTML()}
         ${countdownHTML}
         <div class="tt-lobby__left">
           <div class="tt-lobby__logo">${logoHTML('xl')}</div>
@@ -1342,6 +1448,7 @@
         </div>
         ${panel}
       </div>`;
+    bindResetArrow();
     if (panel) ensureSignageRotation();
   }
 
@@ -1375,6 +1482,7 @@
 
     screenEl.innerHTML = `
       <div class="tt-category">
+        ${resetArrowHTML()}
         ${barNameHTML('md')}
         <div class="tt-category__counter">QUESTION ${num} OF ${total}</div>
         <div class="tt-category__icon">${icon}</div>
@@ -1383,6 +1491,7 @@
         <div class="tt-category__difficulty">${difficultyHTML(diff)}</div>
       </div>
       ${qrBadgeHTML('bl')}`;
+    bindResetArrow();
   }
 
   /** PLAYING SCREEN — v4 lines 557-595 */
@@ -1426,6 +1535,7 @@
 
     screenEl.innerHTML = `
       <div class="tt-play">
+        ${resetArrowHTML()}
         <!-- Header -->
         <div class="tt-play__header">
           <div style="display:flex;flex-direction:column;gap:4px">${logoHTML('sm')}${barNameHTML('header')}</div>
@@ -1456,6 +1566,7 @@
         </div>
         ${qrBadgeHTML('bl')}
       </div>`;
+    bindResetArrow();
   }
 
   /** ANSWER REVEAL SCREEN — new screen, not in v4 prototype */
@@ -1499,6 +1610,7 @@
 
     screenEl.innerHTML = `
       <div class="tt-play">
+        ${resetArrowHTML()}
         <div class="tt-play__header">
           <div style="display:flex;flex-direction:column;gap:4px">${logoHTML('sm')}${barNameHTML('header')}</div>
           <div class="tt-play__pts-area">
@@ -1525,6 +1637,7 @@
         </div>
         ${qrBadgeHTML('bl')}
       </div>`;
+    bindResetArrow();
   }
 
   /** BETWEEN QUESTIONS / SCOREBOARD FLASH — left-half + optional signage panel */
@@ -1582,6 +1695,7 @@
 
     screenEl.innerHTML = `
       <div class="tt-between tt-between--half${panelFinal ? ' tt-between--with-panel' : ''}">
+        ${resetArrowHTML()}
         <div class="tt-between__panel">
           ${logoHTML('sm')}
           ${barNameHTML('md')}
@@ -1591,6 +1705,7 @@
         </div>
         ${panelFinal}
       </div>`;
+    bindResetArrow();
   }
 
   /** LEADERBOARD SCREEN — v4 lines 598-637 + signage panel */
@@ -1619,6 +1734,7 @@
       }
       screenEl.innerHTML = `
         <div class="tt-leaderboard tt-leaderboard--with-panel">
+          ${resetArrowHTML()}
           <div class="tt-leaderboard__left">
             ${logoHTML('md')}
             ${barNameHTML('lg')}
@@ -1635,6 +1751,7 @@
       const listStartRank = scores.length < 4 ? 1 : 4;
       screenEl.innerHTML = `
         <div class="tt-leaderboard">
+          ${resetArrowHTML()}
           <div class="tt-leaderboard__left">
             ${logoHTML('md')}
             ${barNameHTML('lg')}
@@ -1654,6 +1771,7 @@
     if (getActiveSlides().length > 1) {
       signageCurrentIndex = (signageCurrentIndex + 1) % getActiveSlides().length;
     }
+    bindResetArrow();
   }
 
   /** RESULTS / GAME OVER SCREEN — podium top 3 + 4th/5th runners + signage panel */
@@ -1715,6 +1833,7 @@
 
     screenEl.innerHTML = `
       <div class="tt-results tt-results--half${panel ? ' tt-results--with-panel' : ''}">
+        ${resetArrowHTML()}
         <div class="tt-results__panel">
           ${countdownHTML}
           <div class="tt-results__trophy">🏆</div>
@@ -1730,6 +1849,7 @@
     if (getActiveSlides().length > 1) {
       signageCurrentIndex = (signageCurrentIndex + 1) % getActiveSlides().length;
     }
+    bindResetArrow();
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -2044,17 +2164,12 @@
     // Cache for screen rotation
     cacheForRotation(gameState, state);
 
-    // During break: slow polling, full-screen signage if available, otherwise lobby rotation
+    // During break: slow polling, full-screen signage (custom or defaults), otherwise lobby rotation
     if (state.state === 'break') {
       setPollRate(CONFIG.POLL_INTERVAL_IDLE || 5000);
-      const activeSlides = getActiveSlides();
-      if (activeSlides.length > 0) {
-        // Full-screen signage takes over during off-hours
-        exitRotationMode();
-        renderScreen({ ...gameState, screen: 'idle' });
-        return;
-      }
-      handleScreenRotation(gameState);
+      // Show idle screen with signage — renderIdle() handles default fallback
+      exitRotationMode();
+      renderScreen({ ...gameState, screen: 'idle' });
       return;
     }
 
