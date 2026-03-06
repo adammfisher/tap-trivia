@@ -56,6 +56,8 @@
   let setupEmail = '';
   let currentScreen = '';
   let pollInterval = null;
+  const tvPlatform = new URLSearchParams(window.location.search).get('platform') || '';
+  let platformModalDismissed = false;
   let consecutiveErrors = 0;
   const MAX_ERRORS_BEFORE_OVERLAY = 3;
 
@@ -66,7 +68,7 @@
 
   // Signage state
   let signageSlides = [];
-  let signageRotationSpeed = 15;
+  let signageRotationSpeed = 60;
   let signageCurrentIndex = 0;
   let signageRotationTimer = null;
   let barLogoUrl = null;
@@ -79,7 +81,7 @@
   let rotationIdx = 0;
   let rotationTimer = null;
   let countdownTickTimer = null;
-  const ROTATION_DURATIONS = { results: 60000, idle: 30000, lobby: 60000 };
+  const ROTATION_DURATIONS = { results: 60000, idle: 60000, lobby: 60000 };
 
   // DOM refs
   const screenEl = document.getElementById('tt-screen');
@@ -98,13 +100,13 @@
     return nextEpoch;
   }
 
-  /** Format seconds into countdown display string */
+  /** Format seconds into human-readable countdown (e.g., "10h 5m", "3m 22s", "15s") */
   function formatCountdown(secsLeft) {
     const hours = Math.floor(secsLeft / 3600);
     const mins = Math.floor((secsLeft % 3600) / 60);
     const secs = secsLeft % 60;
-    if (hours > 0) return `${hours}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    if (mins > 0) return `${mins}:${String(secs).padStart(2, '0')}`;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    if (mins > 0) return `${mins}m ${secs}s`;
     return `${secs}s`;
   }
 
@@ -505,6 +507,25 @@
     });
   }
 
+  /** Crossfade via overlay: fade cover in → swap content → fade cover out */
+  let fadeTimeout = null;
+  function fadeScreenTransition(renderFn) {
+    if (fadeTimeout) { clearTimeout(fadeTimeout); fadeTimeout = null; }
+    let cover = document.getElementById('tt-fade-cover');
+    if (!cover) {
+      cover = document.createElement('div');
+      cover.id = 'tt-fade-cover';
+      cover.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#0f0326;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.5s ease';
+      document.body.appendChild(cover);
+    }
+    cover.style.opacity = '1';
+    fadeTimeout = setTimeout(() => {
+      fadeTimeout = null;
+      renderFn();
+      cover.style.opacity = '0';
+    }, 550);
+  }
+
   /** Start signage rotation timer */
   function startSignageRotation(speedOverride) {
     stopSignageRotation();
@@ -512,13 +533,13 @@
     const usingDefaults = active.length === 0;
     if (usingDefaults) active = getDefaultSignageSlides();
     if (active.length <= 1) return;
-    const speed = speedOverride || (usingDefaults ? 30 : signageRotationSpeed);
+    const speed = speedOverride || (usingDefaults ? 60 : signageRotationSpeed);
     signageRotationTimer = setInterval(() => {
       let slides = getActiveSlides();
       if (slides.length === 0) slides = getDefaultSignageSlides();
       signageCurrentIndex = (signageCurrentIndex + 1) % slides.length;
       if (currentScreen === 'idle') {
-        renderIdle();
+        fadeScreenTransition(() => renderIdle());
       } else {
         updateSignagePanel();
       }
@@ -588,9 +609,11 @@
   function buildRotationList() {
     const screens = [];
     if (cachedScreenData.results) screens.push('results');
-    // Include idle (default signage) in rotation when no custom signage
     screens.push('idle');
-    if (cachedScreenData.lobby) screens.push('lobby');
+    // Only include lobby near game time (not during off-hours)
+    if (cachedScreenData.lobby && minutesUntilNextGame() <= 15) {
+      screens.push('lobby');
+    }
     return screens;
   }
 
@@ -651,7 +674,7 @@
     const duration = ROTATION_DURATIONS[currentScreenName] || 30000;
     rotationTimer = setTimeout(() => {
       rotationIdx = (rotationIdx + 1) % rotationScreens.length;
-      renderRotationScreen();
+      fadeScreenTransition(() => renderRotationScreen());
       startRotationTimer();
     }, duration);
   }
@@ -684,6 +707,10 @@
     stopCountdownTick();
     rotationScreens = [];
     rotationIdx = 0;
+    // Cancel any in-progress fade transition to prevent visual pop
+    if (fadeTimeout) { clearTimeout(fadeTimeout); fadeTimeout = null; }
+    const cover = document.getElementById('tt-fade-cover');
+    if (cover) cover.style.opacity = '0';
   }
 
   // --- Full-Screen Signage Renderers (7 templates, all at 2×) ---
@@ -1032,11 +1059,6 @@
           ],
         },
       },
-      {
-        template: '_defaultQr',
-        enabled: true,
-        data: {},
-      },
     ];
   }
 
@@ -1136,6 +1158,59 @@
         <div class="tt-idle__sub">Scan the QR code to play on your phone</div>
       </div>`;
     bindResetArrow();
+  }
+
+  /** Platform-specific device settings instructions (shown as modal on setup screen) */
+  function platformInstructionsHTML() {
+    const INSTRUCTIONS = {
+      firestickvega: {
+        device: 'Fire TV Stick',
+        steps: [
+          'Settings → Preferences → Data Usage Monitoring → Still Watching → <strong>Off</strong>',
+          'Settings → Display & Sounds → Ambient Experience → <strong>Off</strong>'
+        ]
+      },
+      firestickclassic: {
+        device: 'Fire TV Stick',
+        steps: [
+          'Settings → Preferences → Data Usage Monitoring → Still Watching → <strong>Off</strong>',
+          'Settings → Display & Sounds → Screensaver → Start Time → <strong>Never</strong>'
+        ]
+      },
+      roku: {
+        device: 'Roku',
+        steps: [
+          'Settings → Network → Bandwidth Saver → <strong>Off</strong>',
+          'Settings → Theme → Screensaver → <strong>Disabled</strong>',
+          'Settings → System → Power → Auto Power Savings → <strong>Off</strong>'
+        ]
+      }
+    };
+    const info = INSTRUCTIONS[tvPlatform];
+    if (!info || platformModalDismissed) return '';
+    const stepsHTML = info.steps.map((s, i) =>
+      `<div class="tt-setup__pi-step"><span class="tt-setup__pi-num">${i + 1}</span><span>${s}</span></div>`
+    ).join('');
+    return `
+      <div class="tt-pi-overlay" id="tt-pi-overlay">
+        <div class="tt-pi-modal">
+          <button class="tt-pi-close" id="tt-pi-close" title="Close">✕</button>
+          <div class="tt-pi-modal-icon">⚙️</div>
+          <div class="tt-pi-modal-title">Recommended ${info.device} Settings</div>
+          <div class="tt-pi-modal-desc">For uninterrupted 24/7 display, adjust these settings on your device:</div>
+          <div class="tt-setup__pi-steps">${stepsHTML}</div>
+          <button class="tt-pi-got-it" id="tt-pi-got-it">Got It</button>
+        </div>
+      </div>`;
+  }
+
+  function bindPlatformInstructionsEvents() {
+    const overlay = document.getElementById('tt-pi-overlay');
+    if (!overlay) return;
+    const close = () => { platformModalDismissed = true; overlay.remove(); };
+    document.getElementById('tt-pi-close')?.addEventListener('click', close);
+    document.getElementById('tt-pi-got-it')?.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
   }
 
   /** SETUP SCREEN — split-panel: Register (left) | Activate (right) */
@@ -1269,6 +1344,7 @@
         <p class="tt-setup__desc tt-setup__desc--center"${descAnim}>${descText}</p>
         <div class="tt-setup__code-wrap${setupCodeAutoFilled ? ' tt-setup__code-wrap--pop' : ''}">
           <div class="tt-setup__code-boxes">${codeBoxesHTML}</div>
+          ${codeComplete ? '<button id="tt-setup-clear-btn" class="tt-setup__clear-btn" title="Clear code">✕</button>' : ''}
         </div>
         <div class="tt-setup__multi-tv${setupCodeAutoFilled ? ' tt-setup__multi-tv--glow' : ''}">
           <span class="tt-setup__multi-tv-title">Use this code on all your TVs</span>
@@ -1300,12 +1376,14 @@
         <div class="tt-setup__divider"><div class="tt-setup__divider-or">OR</div></div>
         <div class="tt-setup__panel tt-setup__panel--right">${rightHTML}</div>
       </div>
+      ${platformInstructionsHTML()}
       <div class="tt-setup__footer">
         <span class="tt-setup__footer-text">taptrivia.tv · Free for venues · Powered by Visudo Labs</span>
       </div>`;
 
     // ── Bind events ──
     bindSetupEvents();
+    bindPlatformInstructionsEvents();
   }
 
   function bindSetupEvents() {
@@ -1389,6 +1467,17 @@
       if (firstEmpty >= 0 && !document.getElementById('tt-setup-loc')) {
         codeBoxes[firstEmpty].focus();
       }
+    }
+
+    // Clear code button
+    const clearBtn = document.getElementById('tt-setup-clear-btn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        setupCode = ['', '', '', '', ''];
+        setupCodeAutoFilled = false;
+        setupCodeState = 'input';
+        renderSetup();
+      });
     }
 
     // Activate button
@@ -2144,7 +2233,7 @@
     // Capture signage configuration
     if (state.signage) {
       signageSlides = state.signage.slides || [];
-      signageRotationSpeed = state.signage.rotationSpeed || 15;
+      signageRotationSpeed = state.signage.rotationSpeed || 60;
       console.log('[Signage] Loaded', signageSlides.length, 'slides from API, speed:', signageRotationSpeed);
     } else {
       console.log('[Signage] No signage in response, state:', state.state, 'keeping', signageSlides.length, 'cached slides');
@@ -2167,11 +2256,12 @@
     // Cache for screen rotation
     cacheForRotation(gameState, state);
 
-    // During break: slow polling, full-screen signage (custom or defaults), otherwise lobby rotation
+    // During break: slow polling, full-screen signage (custom or defaults)
     if (state.state === 'break') {
       setPollRate(CONFIG.POLL_INTERVAL_IDLE || 5000);
-      // Show idle screen with signage — renderIdle() handles default fallback
       exitRotationMode();
+      // Don't re-render if already on idle — avoids flashing on every poll tick
+      if (currentScreen === 'idle') return;
       renderScreen({ ...gameState, screen: 'idle' });
       return;
     }
@@ -2197,7 +2287,7 @@
     const gs = {
       screen: 'lobby',
       gameCode: barCode,
-      playerCount: (apiState.barLeaderboard || []).length || apiState.activePlayers || 0,
+      playerCount: apiState.state === 'active_game' ? (apiState.barLeaderboard || []).length : 0,
       players: [],
       scores: [],
       question: {},
@@ -2539,7 +2629,7 @@
     const tvState = await apiCall('GET', `/game/tv-state?barCode=${barCode}`);
     if (tvState && !tvState.error && tvState.signage) {
       signageSlides = tvState.signage.slides || [];
-      signageRotationSpeed = tvState.signage.rotationSpeed || 15;
+      signageRotationSpeed = tvState.signage.rotationSpeed || 60;
       if (tvState.logoHash) {
         barLogoHash = tvState.logoHash;
         barLogoUrl = tvState.logoUrl || null;
@@ -2548,7 +2638,7 @@
     } else {
       // Fallback to mock data if API fails
       signageSlides = DEMO_SIGNAGE_SLIDES;
-      signageRotationSpeed = 15;
+      signageRotationSpeed = 60;
       console.log('[Demo] API unavailable, using mock signage');
     }
     signageCurrentIndex = 0;

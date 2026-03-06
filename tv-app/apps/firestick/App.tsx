@@ -2,7 +2,7 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { View, StyleSheet, Text, BackHandler } from 'react-native';
 import { WebView } from 'react-native-webview';
 
-const TV_APP_URL = 'https://tv.taptrivia.tv';
+const TV_APP_URL = 'https://tv.taptrivia.tv?platform=firestickclassic';
 const RETRY_INTERVAL_MS = 10000;
 
 // Force the WebView viewport to 1920x1080 so the TV app renders at full HD

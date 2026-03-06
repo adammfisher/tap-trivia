@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="ResultsScreen" extends="Group">
+  <interface>
+    <field id="barCode" type="string" />
+    <field id="barName" type="string" />
+    <field id="signageSlides" type="array" value="[]" />
+    <field id="signageIndex" type="integer" value="0" onChange="onSignageIndexChanged" />
+    <field id="barLogoUrl" type="string" value="" />
+    <field id="gameState" type="assocarray" onChange="onGameStateChanged" />
+  </interface>
+
+  <children>
+    <!-- Background gradient -->
+    <Poster id="bgGradient" width="1920" height="1080"
+            uri="pkg:/images/bg-gradient.png" />
+
+    <!-- Dark panel behind right/signage half -->
+    <Rectangle id="rightPanelBg" translation="[960, 0]" width="960" height="1080" color="#000000" opacity="0.2" />
+
+    <!-- ═══ LEFT COLUMN — SIGNAGE MODE: centered Game Over + winner ═══ -->
+    <Group id="gameOverCenter" translation="[0, 0]" visible="false">
+      <!-- "NEXT GAME IN" -->
+      <Label id="countdownPreCenter" text="NEXT GAME IN" color="#ffffff60"
+             translation="[0, 170]" width="960" horizAlign="center">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
+      </Label>
+      <!-- Countdown value -->
+      <Label id="countdownValueCenter" text=""
+             translation="[0, 200]" width="960" horizAlign="center" color="#ffd200">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="64" />
+      </Label>
+      <!-- Trophy emoji -->
+      <Poster id="trophyEmoji" uri="pkg:/images/emoji-lg-1f3c6.png"
+              width="100" height="100" translation="[430, 290]" />
+      <!-- "Game Over!" -->
+      <Label id="gameOverTitleCenter" text="Game Over!"
+             translation="[0, 400]" width="960" horizAlign="center" color="#f0f0f0">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="72" />
+      </Label>
+      <!-- Stats line -->
+      <Label id="statsLineCenter" text="15 questions · 0 players"
+             translation="[0, 485]" width="960" horizAlign="center" color="#ffffff80">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="28" />
+      </Label>
+      <!-- Winner avatar (centered) -->
+      <Avatar id="winnerAvatar" translation="[416, 550]" />
+      <!-- Winner name -->
+      <Label id="winnerName" text=""
+             translation="[0, 700]" width="960" horizAlign="center" color="#ffffffB0">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="26" />
+      </Label>
+      <!-- Winner score -->
+      <Label id="winnerScore" text=""
+             translation="[0, 735]" width="960" horizAlign="center" color="#ffd200">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
+      </Label>
+    </Group>
+
+    <!-- ═══ LEFT COLUMN — NO-SIGNAGE MODE: Podium + standings ═══ -->
+    <Group id="leftCol" translation="[0, 0]">
+
+      <!-- Countdown to next game (top) -->
+      <Group id="countdownArea" translation="[120, 30]">
+        <Label id="countdownPre" text="Next game in" color="#ffffff60">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="20" />
+        </Label>
+        <Label id="countdownValue" text=""
+               translation="[140, -4]" color="#ffd200">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
+        </Label>
+      </Group>
+
+      <!-- "Game Over!" title -->
+      <Label id="gameOverTitle" text="Game Over!"
+             translation="[120, 80]" width="780" horizAlign="center" color="#f0f0f0">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="64" />
+      </Label>
+
+      <!-- Stats line: "15 questions · 12 players" -->
+      <Label id="statsLine" text="15 questions · 0 players"
+             translation="[120, 160]" width="780" horizAlign="center" color="#ffffff99">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="24" />
+      </Label>
+
+      <!-- ═══ PODIUM: 2nd | 1st | 3rd ═══ -->
+      <Podium id="podium" translation="[80, 220]" />
+
+      <!-- 4th/5th runner rows -->
+      <Group id="runnerRows" translation="[100, 660]" visible="false">
+        <LeaderRow id="runner4" translation="[0, 0]" />
+        <LeaderRow id="runner5" translation="[0, 76]" />
+      </Group>
+    </Group>
+
+    <!-- ═══ RIGHT COLUMN: FINAL STANDINGS (no-signage mode) ═══ -->
+    <Group id="rightCol" translation="[960, 40]">
+      <Label id="standingsLabel" text="FINAL STANDINGS"
+             translation="[0, 0]" width="880" horizAlign="center" color="#ffffffCC">
+        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="32" />
+      </Label>
+
+      <!-- Ranks 1-10 list -->
+      <Group id="rankList" translation="[40, 60]">
+        <LeaderRow id="rank1" translation="[0, 0]" />
+        <LeaderRow id="rank2" translation="[0, 76]" />
+        <LeaderRow id="rank3" translation="[0, 152]" />
+        <LeaderRow id="rank4" translation="[0, 228]" />
+        <LeaderRow id="rank5" translation="[0, 304]" />
+        <LeaderRow id="rank6" translation="[0, 380]" />
+        <LeaderRow id="rank7" translation="[0, 456]" />
+        <LeaderRow id="rank8" translation="[0, 532]" />
+        <LeaderRow id="rank9" translation="[0, 608]" />
+        <LeaderRow id="rank10" translation="[0, 684]" />
+      </Group>
+    </Group>
+
+    <!-- QR Badge — bottom-right (no-signage mode) -->
+    <QRBadge id="qrBadge" translation="[1520, 920]" />
+
+    <!-- ═══ RIGHT HALF: Signage panel (signage mode) ═══ -->
+    <SignagePanel id="signagePanel" translation="[960, 0]" visible="false" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Utils.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Colors.brs" />
+  <script type="text/brightscript" uri="ResultsScreen.brs" />
+</component>

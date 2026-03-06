@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="ProgressBar" extends="Group">
+  <interface>
+    <field id="currentValue" type="integer" value="0" onChange="onValueChanged" />
+    <field id="totalValue" type="integer" value="15" onChange="onValueChanged" />
+    <field id="barWidth" type="integer" value="520" onChange="onSizeChanged" />
+  </interface>
+
+  <children>
+    <!-- Track -->
+    <Rectangle id="track" color="#ffffff10" width="520" height="6" />
+    <!-- Fill -->
+    <Rectangle id="fill" color="#00d4aa" width="0" height="6" />
+  </children>
+
+  <script type="text/brightscript" uri="ProgressBar.brs" />
+</component>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="Logo" extends="Group">
+  <interface>
+    <field id="logoSize" type="string" value="md" onChange="onSizeChanged" />
+  </interface>
+
+  <children>
+    <Label id="tapLabel" text="Tap" color="#f0f0f0">
+      <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="48" />
+    </Label>
+    <Label id="triviaLabel" text="Trivia" color="#ffd200">
+      <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="48" />
+    </Label>
+  </children>
+
+  <script type="text/brightscript" uri="Logo.brs" />
+</component>

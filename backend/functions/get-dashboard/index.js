@@ -187,7 +187,7 @@ exports.handler = async (event) => {
           emailVerified: bar.emailVerified || false,
           logoUrl: bar.logoUrl || null,
           logoHash: bar.logoHash || null,
-          signage: bar.signage || { slides: [], rotationSpeed: 15, enabled: true }
+          signage: bar.signage || { slides: [], rotationSpeed: 60, enabled: true }
         },
         analytics: {
           playersThisWeek: weekPlayerIds.size,

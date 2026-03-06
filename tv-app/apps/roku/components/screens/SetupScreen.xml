@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="SetupScreen" extends="Group">
+  <interface>
+    <field id="gameState" type="assocarray" onChange="onGameStateChanged" />
+    <field id="registerResult" type="assocarray" onChange="onRegisterResult" />
+    <field id="activateResult" type="assocarray" onChange="onActivateResult" />
+    <field id="resetToInput" type="boolean" onChange="onResetToInput" alwaysNotify="true" />
+  </interface>
+
+  <children>
+    <!-- Background gradient -->
+    <Poster id="bgGradient" width="1920" height="1080"
+            uri="pkg:/images/bg-gradient.png" />
+
+    <!-- Header: TapTrivia logo -->
+    <Group id="header" translation="[860, 40]">
+      <Label id="logoTap" text="Tap" color="#ffffff">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="48" />
+      </Label>
+      <Label id="logoTrivia" text="Trivia" color="#ffd200"
+             translation="[72, 0]">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="48" />
+      </Label>
+    </Group>
+
+    <!-- Left Panel: Register New Location -->
+    <Group id="leftPanel" translation="[60, 120]">
+      <Poster id="leftBg" uri="pkg:/images/setup-panel-bg.png" width="860" height="840" />
+
+      <!-- New Location badge -->
+      <Group translation="[40, 30]">
+        <Poster uri="pkg:/images/pill-badge-blue.png" width="180" height="36" />
+        <Label text="New Location" color="#667eea"
+               translation="[12, 6]">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="18" />
+        </Label>
+      </Group>
+
+      <Label id="regTitle" text="Register Your Location"
+             translation="[40, 80]" color="#f0f0f0">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
+      </Label>
+
+      <Label id="regDesc" text="Everything is free — live trivia, signage, analytics."
+             translation="[40, 130]" width="780" color="#ffffff80">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+      </Label>
+
+      <!-- Location name input -->
+      <Group id="locFieldGroup" translation="[40, 180]">
+        <Poster uri="pkg:/images/input-field-bg.png" width="780" height="56" />
+        <Label id="locLabel" text="Your location's name"
+               translation="[20, 14]" color="#ffffff40">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+        </Label>
+        <Label id="locValue" text=""
+               translation="[20, 14]" color="#f0f0f0">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+        </Label>
+      </Group>
+
+      <!-- Email input -->
+      <Group id="emailFieldGroup" translation="[40, 248]">
+        <Poster uri="pkg:/images/input-field-bg.png" width="780" height="56" />
+        <Label id="emailLabel" text="Owner email (optional)"
+               translation="[20, 14]" color="#ffffff40">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+        </Label>
+        <Label id="emailValue" text=""
+               translation="[20, 14]" color="#f0f0f0">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+        </Label>
+      </Group>
+
+      <!-- Signage callout -->
+      <Group id="signageCallout" translation="[40, 316]">
+        <Poster uri="pkg:/images/signage-callout-bg.png" width="780" height="60" />
+        <Group translation="[20, 8]">
+          <Label text="Free Digital Signage" color="#ffd200">
+            <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="18" />
+          </Label>
+          <Label text="Add email to get free signage, dashboard & analytics"
+                 translation="[0, 22]" width="700" color="#ffffff60">
+            <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="16" />
+          </Label>
+        </Group>
+      </Group>
+
+      <!-- Feature bullets -->
+      <Group id="features" translation="[40, 396]">
+        <Group translation="[0, 0]">
+          <Label text=">" color="#00d4aa">
+            <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="20" />
+          </Label>
+          <Label text="Free live trivia that drives traffic and keeps guests engaged"
+                 translation="[24, 0]" width="730" color="#ffffffB0">
+            <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="20" />
+          </Label>
+        </Group>
+        <Group translation="[0, 36]">
+          <Label text=">" color="#ffd200">
+            <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="20" />
+          </Label>
+          <Label text="Free digital signage to promote your specials & events"
+                 translation="[24, 0]" width="730" color="#ffffffB0">
+            <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="20" />
+          </Label>
+        </Group>
+        <Group translation="[0, 72]">
+          <Label text=">" color="#667eea">
+            <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="20" />
+          </Label>
+          <Label text="Free dashboard with player metrics and engagement analytics"
+                 translation="[24, 0]" width="730" color="#ffffffB0">
+            <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="20" />
+          </Label>
+        </Group>
+      </Group>
+
+      <!-- Register button -->
+      <Group id="regBtnGroup" translation="[40, 530]">
+        <Poster id="regBtn" uri="pkg:/images/btn-gold.png" width="780" height="56" />
+        <Label text="Register & Get Code"
+               translation="[0, 14]" horizAlign="center" width="780" color="#08080c">
+          <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="22" />
+        </Label>
+      </Group>
+
+      <Label text="Use your TV remote or USB keyboard to type"
+             translation="[40, 600]" width="780" horizAlign="center" color="#ffffff40">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="18" />
+      </Label>
+
+      <!-- Sending state -->
+      <Group id="sendingState" visible="false" translation="[340, 350]">
+        <Label text="Setting up your location..." color="#f0f0f0">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="26" />
+        </Label>
+      </Group>
+
+      <!-- Sent state -->
+      <Group id="sentState" visible="false" translation="[40, 180]">
+        <Label text="You're Registered!"
+               translation="[0, 20]" width="780" horizAlign="center" color="#00d4aa">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
+        </Label>
+        <Label id="sentDesc" text="Your code is ready — hit Activate on the right to get this TV running."
+               translation="[40, 80]" width="700" horizAlign="center" color="#ffffff80">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+        </Label>
+      </Group>
+    </Group>
+
+    <!-- Divider -->
+    <Group id="divider" translation="[940, 120]">
+      <Rectangle color="#ffffff15" width="2" height="840" />
+      <Group translation="[-28, 400]">
+        <Rectangle color="#1e0f4a" width="58" height="36" />
+        <Label text="OR" translation="[8, 6]" color="#ffffff40">
+          <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="18" />
+        </Label>
+      </Group>
+    </Group>
+
+    <!-- Right Panel: Activate This TV -->
+    <Group id="rightPanel" translation="[1000, 120]">
+      <Poster id="rightBg" uri="pkg:/images/setup-panel-bg.png" width="860" height="840" />
+
+      <!-- Have a Code badge -->
+      <Group id="codeBadge" translation="[40, 30]">
+        <Poster id="codeBadgeBg" uri="pkg:/images/pill-badge-green.png" width="160" height="36" />
+        <Label id="codeBadgeText" text="Have a Code" color="#00d4aa"
+               translation="[12, 6]">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="18" />
+        </Label>
+      </Group>
+
+      <Label text="Activate This TV"
+             translation="[40, 80]" width="780" horizAlign="center" color="#f0f0f0">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
+      </Label>
+
+      <Label id="activateDesc" text="Enter the 5-character code from your registration email to pair this TV."
+             translation="[40, 130]" width="780" horizAlign="center" color="#ffffff80">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+      </Label>
+
+      <!-- Code input field (single field, opens keyboard on OK) -->
+      <Group id="codeFieldGroup" translation="[40, 200]">
+        <Poster id="codeFieldBg" uri="pkg:/images/input-field-bg.png" width="780" height="56" />
+        <Label id="codeLabel" text="Type your 5-letter code with remote"
+               translation="[20, 14]" color="#ffffff40">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+        </Label>
+        <Label id="codeValue" text=""
+               translation="[20, 14]" color="#ffd200">
+          <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="22" />
+        </Label>
+      </Group>
+
+      <!-- Use this code on all your TVs -->
+      <Group id="codeHintGroup" translation="[40, 280]">
+        <Label text="Use this code on all your TVs"
+               width="780" horizAlign="center" color="#ffffffB0">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="20" />
+        </Label>
+        <Label text="One code activates every screen at your location"
+               translation="[0, 28]" width="780" horizAlign="center" color="#ffffff60">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="18" />
+        </Label>
+      </Group>
+
+      <!-- Error message -->
+      <Group id="errorMsg" visible="false" translation="[40, 340]">
+        <Poster uri="pkg:/images/error-msg-bg.png" width="780" height="44" />
+        <Label text="Code not found. Check your email and try again."
+               translation="[16, 10]" width="748" color="#ff4757">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="20" />
+        </Label>
+      </Group>
+
+      <!-- Activate button -->
+      <Group id="activateBtnGroup" translation="[40, 400]">
+        <Poster id="activateBtn" uri="pkg:/images/btn-green.png" width="780" height="56" />
+        <Label id="activateBtnLabel" text="Activate This TV"
+               translation="[0, 14]" horizAlign="center" width="780" color="#08080c">
+          <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="22" />
+        </Label>
+      </Group>
+
+      <Label id="lostCodeHint" text="Replay clears code · Lost your code? Register on the left."
+             translation="[40, 470]" width="780" horizAlign="center" color="#ffffff40">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="18" />
+      </Label>
+
+      <!-- Activated state -->
+      <Group id="activatedState" visible="false" translation="[40, 200]">
+        <Label text="You're Live!"
+               translation="[0, 40]" width="780" horizAlign="center" color="#00d4aa">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="48" />
+        </Label>
+        <Label id="activatedDesc" text="Your location is now connected."
+               translation="[0, 100]" width="780" horizAlign="center" color="#ffffff80">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="24" />
+        </Label>
+        <Label text="Loading trivia experience..."
+               translation="[0, 150]" width="780" horizAlign="center" color="#ffffff40">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="20" />
+        </Label>
+      </Group>
+    </Group>
+
+    <!-- Recommended Roku Settings -->
+    <Group id="rokuSettings" translation="[420, 976]">
+      <Label text="⚙" translation="[0, 0]" color="#ffd200">
+        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="22" />
+      </Label>
+      <Label text="Recommended Roku Settings for 24/7 display:"
+             translation="[30, 2]" color="#ffd200">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="16" />
+      </Label>
+      <Label text="Network › Bandwidth Saver › Off   ·   Theme › Screensaver › Disabled   ·   System › Power › Auto Power Savings › Off"
+             translation="[30, 24]" width="1100" color="#ffffff60">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="15" />
+      </Label>
+    </Group>
+
+    <!-- Footer -->
+    <Label text="taptrivia.tv · Free for venues · Powered by Visudo Labs"
+           translation="[0, 1040]" horizAlign="center" width="1920" color="#ffffff20">
+      <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="14" />
+           </Label>
+
+    <!-- Settings Modal Overlay (shown on first load, dismissed with OK) -->
+    <Group id="settingsModal" visible="false">
+      <Rectangle color="#08080cDD" width="1920" height="1080" />
+      <Group translation="[460, 210]">
+        <!-- Modal background -->
+        <Rectangle color="#1e0f4aF5" width="1000" height="660" />
+        <!-- Top accent line -->
+        <Rectangle color="#667eea" width="1000" height="3" />
+
+        <!-- Title -->
+        <Label text="Recommended Roku Settings"
+               translation="[0, 40]" horizAlign="center" width="1000" color="#ffd200">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
+        </Label>
+
+        <!-- Description -->
+        <Label text="For uninterrupted 24/7 display, adjust these settings on your Roku:"
+               translation="[60, 95]" width="880" color="#ffffff80">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+        </Label>
+
+        <!-- Step 1: Bandwidth Saver -->
+        <Group translation="[60, 155]">
+          <Rectangle color="#ffffff0D" width="880" height="90" />
+          <Group translation="[20, 22]">
+            <Rectangle color="#667eea" width="44" height="44" />
+            <Label text="1" translation="[15, 8]" color="#ffffff">
+              <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="22" />
+            </Label>
+          </Group>
+          <Group translation="[82, 16]">
+            <Label text="Settings > Network > Bandwidth Saver" color="#ffffffCC">
+              <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+            </Label>
+            <Label text="Off" translation="[0, 32]" color="#00d4aa">
+              <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
+            </Label>
+          </Group>
+        </Group>
+
+        <!-- Step 2: Screensaver -->
+        <Group translation="[60, 260]">
+          <Rectangle color="#ffffff0D" width="880" height="90" />
+          <Group translation="[20, 22]">
+            <Rectangle color="#667eea" width="44" height="44" />
+            <Label text="2" translation="[15, 8]" color="#ffffff">
+              <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="22" />
+            </Label>
+          </Group>
+          <Group translation="[82, 16]">
+            <Label text="Settings > Theme > Screensaver" color="#ffffffCC">
+              <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+            </Label>
+            <Label text="Disabled" translation="[0, 32]" color="#00d4aa">
+              <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
+            </Label>
+          </Group>
+        </Group>
+
+        <!-- Step 3: Auto Power Savings -->
+        <Group translation="[60, 365]">
+          <Rectangle color="#ffffff0D" width="880" height="90" />
+          <Group translation="[20, 22]">
+            <Rectangle color="#667eea" width="44" height="44" />
+            <Label text="3" translation="[15, 8]" color="#ffffff">
+              <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="22" />
+            </Label>
+          </Group>
+          <Group translation="[82, 16]">
+            <Label text="Settings > System > Power > Auto Power Savings" color="#ffffffCC">
+              <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+            </Label>
+            <Label text="Off" translation="[0, 32]" color="#00d4aa">
+              <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
+            </Label>
+          </Group>
+        </Group>
+
+        <!-- Got It button -->
+        <Group id="modalBtnGroup" translation="[300, 490]">
+          <Rectangle color="#667eea" width="400" height="56" />
+          <Label text="Got It" translation="[0, 14]" horizAlign="center" width="400" color="#ffffff">
+            <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
+          </Label>
+        </Group>
+
+        <!-- Dismiss hint -->
+        <Label text="Press OK to continue"
+               translation="[0, 565]" horizAlign="center" width="1000" color="#ffffff40">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="18" />
+        </Label>
+      </Group>
+    </Group>
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Utils.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Colors.brs" />
+  <script type="text/brightscript" uri="SetupScreen.brs" />
+</component>

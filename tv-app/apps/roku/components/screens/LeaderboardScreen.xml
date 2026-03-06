@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="LeaderboardScreen" extends="Group">
+  <interface>
+    <field id="barCode" type="string" />
+    <field id="barName" type="string" />
+    <field id="signageSlides" type="array" value="[]" />
+    <field id="signageIndex" type="integer" value="0" onChange="onSignageIndexChanged" />
+    <field id="barLogoUrl" type="string" value="" />
+    <field id="gameState" type="assocarray" onChange="onGameStateChanged" />
+  </interface>
+
+  <children>
+    <!-- Background gradient -->
+    <Poster id="bgGradient" width="1920" height="1080"
+            uri="pkg:/images/bg-gradient.png" />
+
+    <!-- Dark panel behind right/signage half -->
+    <Rectangle id="rightPanelBg" translation="[960, 0]" width="960" height="1080" color="#000000" opacity="0.2" />
+
+    <Group id="leftCol" translation="[0, 0]">
+
+      <!-- Logo (md) -->
+      <Logo id="logo" translation="[100, 40]" />
+
+      <!-- Bar name -->
+      <Label id="barNameLabel" text="" translation="[100, 92]" color="#ffffff60">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+      </Label>
+
+      <!-- "AFTER QUESTION N" label -->
+      <Label id="afterLabel" text="AFTER QUESTION 1"
+             translation="[100, 130]" color="#ffffffB0">
+        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="28" />
+      </Label>
+
+      <!-- ═══ PODIUM: 2nd | 1st | 3rd ═══ -->
+      <Podium id="podium" translation="[80, 200]" />
+
+      <!-- 4th/5th runner rows (shown in signage mode) -->
+      <Group id="runnerRows" translation="[100, 620]" visible="false">
+        <LeaderRow id="runner4" translation="[0, 0]" />
+        <LeaderRow id="runner5" translation="[0, 76]" />
+      </Group>
+
+      <!-- "Next question in 5s..." label -->
+      <Label id="nextLabel" text="Next question in 5s..."
+             translation="[100, 680]" color="#ffffff60">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+      </Label>
+    </Group>
+
+    <!-- ═══ RIGHT COLUMN: TOP 10 list (no-signage mode) ═══ -->
+    <Group id="rightCol" translation="[960, 40]">
+      <Label id="topLabel" text="TOP 10"
+             translation="[0, 0]" width="880" horizAlign="center" color="#ffffffCC">
+        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="32" />
+      </Label>
+
+      <!-- Ranks 4-10 list -->
+      <Group id="rankList" translation="[40, 60]">
+        <LeaderRow id="rank4" translation="[0, 0]" />
+        <LeaderRow id="rank5" translation="[0, 76]" />
+        <LeaderRow id="rank6" translation="[0, 152]" />
+        <LeaderRow id="rank7" translation="[0, 228]" />
+        <LeaderRow id="rank8" translation="[0, 304]" />
+        <LeaderRow id="rank9" translation="[0, 380]" />
+        <LeaderRow id="rank10" translation="[0, 456]" />
+      </Group>
+    </Group>
+
+    <!-- QR Badge — bottom-right (no-signage mode) -->
+    <QRBadge id="qrBadge" translation="[1520, 920]" />
+
+    <!-- ═══ RIGHT HALF: Signage panel (signage mode) ═══ -->
+    <SignagePanel id="signagePanel" translation="[960, 0]" visible="false" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Utils.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Colors.brs" />
+  <script type="text/brightscript" uri="LeaderboardScreen.brs" />
+</component>

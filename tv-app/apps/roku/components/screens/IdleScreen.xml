@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="IdleScreen" extends="Group">
+  <interface>
+    <field id="barCode" type="string" value="" />
+    <field id="barName" type="string" value="" />
+    <field id="barLogoUrl" type="string" value="" />
+    <field id="signageSlides" type="array" onChange="onSignageSlidesChanged" />
+    <field id="signageRotationSpeed" type="integer" value="15" />
+    <field id="signageIndex" type="integer" value="0" onChange="onSignageIndexChanged" />
+    <field id="gameState" type="assocarray" onChange="onGameStateChanged" />
+  </interface>
+
+  <children>
+    <!-- Background gradient (fallback) -->
+    <Poster id="bgGradient" width="1920" height="1080"
+            uri="pkg:/images/bg-gradient.png" />
+
+    <!-- ══════════════════════════════════════════════════════
+         SIGNAGE CONTAINER — full-screen signage slide area
+         ══════════════════════════════════════════════════════ -->
+    <Group id="signageContainer" visible="false">
+
+      <!-- Signage background (per-template gradient PNG) -->
+      <Poster id="signageBg" width="1920" height="1080"
+              uri="pkg:/images/signage-announcement.png" />
+
+      <!-- ── Signage header: bar logo/name (left) | countdown + TapTrivia (right) ── -->
+      <Group id="signageHeader" translation="[0, 0]">
+
+        <!-- Left: bar logo + bar name -->
+        <Group id="headerLeft" translation="[64, 28]">
+          <!-- Logo background (rounded rect PNG) -->
+          <Poster id="headerLogoBg" uri="pkg:/images/signage-header-logo-bg.png"
+                  width="88" height="88" />
+          <Label id="headerLogoInitial" text="" color="#ffd200"
+                 horizAlign="center" width="88" translation="[0, 18]">
+            <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
+          </Label>
+          <Poster id="headerLogoPoster" translation="[4, 4]" width="80" height="80"
+                  visible="false" />
+          <Label id="headerBarName" text="" translation="[116, 24]" color="#f0f0f0">
+            <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
+          </Label>
+        </Group>
+
+        <!-- Right: countdown + divider + TapTrivia logo (28px gaps, 64px right padding) -->
+        <Group id="headerRight" translation="[1920, 28]">
+          <!-- TapTrivia Logo widget (playing=32px, closest to web sm=34px) -->
+          <Logo id="headerLogo" translation="[-220, 24]" />
+
+          <!-- Divider (28px gap from logo start) -->
+          <Rectangle id="headerDividerRect" translation="[-248, 10]"
+                     color="#ffffff14" width="2" height="56" />
+
+          <!-- Countdown (28px gap from divider, right-aligned) -->
+          <Group id="headerCountdownGroup" translation="[-500, 0]">
+            <Label id="headerCountdownLabel" text="TRIVIA STARTS IN" color="#ffffff59"
+                   translation="[0, 4]" horizAlign="right" width="222">
+              <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="18" />
+            </Label>
+            <Label id="headerCountdownValue" text="" color="#ffd200"
+                   translation="[0, 28]" horizAlign="right" width="222">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
+            </Label>
+          </Group>
+        </Group>
+      </Group>
+
+      <!-- ══════════════════════════════════════════
+           SIGNAGE CONTENT — template-specific areas
+           ══════════════════════════════════════════ -->
+      <Group id="signageContent" translation="[0, 0]">
+
+        <!-- ── Specials template ── -->
+        <!-- Two-column: left column with label/headline/featured, right column with menu items -->
+        <Group id="tplSpecials" visible="false">
+          <!-- Left column (vertically centered in content area) -->
+          <Group id="specialsLeft" translation="[80, 370]">
+            <!-- Label emoji + text -->
+            <Poster id="specialsLabelEmoji" width="32" height="32"
+                    translation="[0, -4]" visible="false" />
+            <Label id="specialsLabel" text="" color="#f59e0b"
+                   translation="[0, 0]">
+              <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
+            </Label>
+            <!-- Headline -->
+            <Label id="specialsHeadline" text="" color="#f0f0f0"
+                   translation="[0, 50]" width="900" wrap="true" maxLines="2">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="88" />
+            </Label>
+            <!-- Subheadline (gold, consecutive line after headline) -->
+            <Label id="specialsSubheadline" text="" color="#ffd200"
+                   translation="[0, 148]" width="900">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="88" />
+            </Label>
+            <!-- Featured item box -->
+            <Group id="specialsFeatured" translation="[0, 258]">
+              <Poster uri="pkg:/images/signage-featured-box.png" width="760" height="120" />
+              <Label id="specialsFeaturedName" text="" translation="[48, 20]" color="#f0f0f0"
+                     width="450">
+                <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="44" />
+              </Label>
+              <Label id="specialsFeaturedDesc" text="" translation="[48, 68]" color="#ffffff66"
+                     width="450">
+                <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="26" />
+              </Label>
+              <Label id="specialsFeaturedPrice" text="" translation="[560, 24]" color="#00d4aa"
+                     horizAlign="right" width="170">
+                <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="72" />
+              </Label>
+            </Group>
+          </Group>
+          <!-- Right column: menu items (vertically centered) -->
+          <Group id="specialsMenuItems" translation="[1056, 310]" />
+        </Group>
+
+        <!-- ── Happy Hour template ── -->
+        <!-- Centered: label + time + frequency + deal cards row -->
+        <Group id="tplHappyhour" visible="false">
+          <Group id="happyhourCenter" translation="[960, 540]">
+            <!-- Emoji before label (positioned dynamically) -->
+            <Poster id="happyhourEmoji" width="32" height="32"
+                    translation="[-140, -231]" visible="false" />
+            <Label id="happyhourLabel" text="" color="#f59e0b"
+                   horizAlign="center" width="1200" translation="[-600, -227]">
+              <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
+            </Label>
+            <Label id="happyhourTime" text="" color="#f0f0f0"
+                   horizAlign="center" width="1200" translation="[-600, -174]">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="88" />
+            </Label>
+            <Label id="happyhourFreq" text="" color="#ffffff80"
+                   horizAlign="center" width="1200" translation="[-600, -57]">
+              <Font role="font" uri="pkg:/fonts/Outfit-Medium.ttf" size="36" />
+            </Label>
+            <!-- Deal cards (dynamically built as horizontal row) -->
+            <Group id="happyhourDeals" translation="[-600, 34]" />
+          </Group>
+        </Group>
+
+        <!-- ── Event template ── -->
+        <!-- Centered: emoji + when label + event name + details + prizes row -->
+        <Group id="tplEvent" visible="false">
+          <Group id="eventCenter" translation="[960, 540]">
+            <Poster id="eventEmoji" width="128" height="128"
+                    translation="[-64, -295]" />
+            <Label id="eventWhen" text="" color="#667eea"
+                   horizAlign="center" width="1200" translation="[-600, -127]">
+              <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
+            </Label>
+            <Label id="eventName" text="" color="#f0f0f0"
+                   horizAlign="center" width="1200" translation="[-600, -74]"
+                   wrap="true" maxLines="2">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="88" />
+            </Label>
+            <Label id="eventDetails" text="" color="#ffffff80"
+                   horizAlign="center" width="1200" translation="[-600, 43]">
+              <Font role="font" uri="pkg:/fonts/Outfit-Medium.ttf" size="36" />
+            </Label>
+            <!-- Prize cards (dynamically built as horizontal row) -->
+            <Group id="eventPrizes" translation="[-400, 134]" />
+          </Group>
+        </Group>
+
+        <!-- ── Brand template (NO header — full centered) ── -->
+        <Group id="tplBrand" visible="false">
+          <Group id="brandCenter" translation="[960, 540]">
+            <!-- Large brand logo -->
+            <Poster id="brandLogoBg" uri="pkg:/images/signage-brand-logo-bg.png"
+                    width="280" height="280" translation="[-140, -324]" />
+            <Label id="brandLogoInitial" text="" color="#ffd200"
+                   horizAlign="center" width="280" translation="[-140, -234]">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="100" />
+            </Label>
+            <Poster id="brandLogoPoster" translation="[-130, -314]" width="260" height="260"
+                    visible="false" />
+            <!-- Bar name -->
+            <Label id="brandBarName" text="" color="#f0f0f0"
+                   horizAlign="center" width="1200" translation="[-600, -4]"
+                   wrap="true" maxLines="2">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="88" />
+            </Label>
+            <!-- Tagline -->
+            <Label id="brandTagline" text="" color="#ffffff80"
+                   horizAlign="center" width="1200" translation="[-600, 113]">
+              <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="32" />
+            </Label>
+            <!-- Gold divider -->
+            <Poster id="brandDivider" uri="pkg:/images/signage-gold-divider.png"
+                    width="120" height="6" translation="[-60, 199]" />
+            <!-- Hours row (dynamically built, wider for full text) -->
+            <Group id="brandHours" translation="[-500, 253]" />
+          </Group>
+          <!-- Powered by TapTrivia footer (web: TapTrivia | Powered by TapTrivia) -->
+          <Group id="brandPowered" translation="[960, 1008]">
+            <Poster uri="pkg:/images/signage-powered-bg.png" width="560" height="80"
+                    translation="[-280, -40]" />
+            <!-- TapTrivia Logo widget (playing=32px, matches web sm=34px) -->
+            <Logo id="brandPoweredLogo" translation="[-232, -17]" />
+            <!-- Separator -->
+            <Rectangle color="#ffffff1A" width="2" height="40" translation="[-68, -20]" />
+            <!-- "Powered by TapTrivia" text (right side) -->
+            <Label text="Powered by TapTrivia" color="#ffffff66" translation="[-34, -12]">
+              <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="24" />
+            </Label>
+          </Group>
+        </Group>
+
+        <!-- ── Announcement template ── -->
+        <!-- Centered: big emoji + headline + message body + subtext -->
+        <Group id="tplAnnouncement" visible="false">
+          <Group id="announcementCenter" translation="[960, 540]">
+            <Poster id="announcementEmoji" width="128" height="128"
+                    translation="[-64, -236]" />
+            <Label id="announcementHeadline" text="" color="#f0f0f0"
+                   horizAlign="center" width="1400" translation="[-700, -68]"
+                   wrap="true" maxLines="2">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="88" />
+            </Label>
+            <Label id="announcementMessage" text="" color="#ffffff8C"
+                   horizAlign="center" width="1200" translation="[-600, 49]"
+                   wrap="true" maxLines="4">
+              <Font role="font" uri="pkg:/fonts/Outfit-Medium.ttf" size="40" />
+            </Label>
+            <Label id="announcementSubtext" text="" color="#ffffff4D"
+                   horizAlign="center" width="1000" translation="[-500, 209]">
+              <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="28" />
+            </Label>
+          </Group>
+        </Group>
+
+        <!-- ── Sports template ── -->
+        <!-- Centered: emoji + label + matchup + when + promo box + tagline -->
+        <Group id="tplSports" visible="false">
+          <Group id="sportsCenter" translation="[960, 540]">
+            <Poster id="sportsEmoji" width="128" height="128"
+                    translation="[-64, -289]" />
+            <Label id="sportsHeadline" text="" color="#ff4757"
+                   horizAlign="center" width="1200" translation="[-600, -121]">
+              <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
+            </Label>
+            <Label id="sportsMatchup" text="" color="#f0f0f0"
+                   horizAlign="center" width="1400" translation="[-700, -68]"
+                   wrap="true" maxLines="2">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="88" />
+            </Label>
+            <Label id="sportsWhen" text="" color="#ffffff80"
+                   horizAlign="center" width="1200" translation="[-600, 49]">
+              <Font role="font" uri="pkg:/fonts/Outfit-Medium.ttf" size="36" />
+            </Label>
+            <!-- Promo box -->
+            <Group id="sportsPromoGroup" translation="[-350, 188]">
+              <Poster uri="pkg:/images/signage-promo-box.png" width="700" height="100" />
+              <Label id="sportsPromo" text="" color="#ffd200"
+                     horizAlign="center" width="700" translation="[0, 28]">
+                <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="36" />
+              </Label>
+            </Group>
+            <Label id="sportsTagline" text="" color="#ffffff4D"
+                   horizAlign="center" width="1200" translation="[-600, 320]">
+              <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="28" />
+            </Label>
+          </Group>
+        </Group>
+
+        <!-- ── Custom template ── -->
+        <!-- Centered: emoji + headline + body + items row -->
+        <Group id="tplCustom" visible="false">
+          <Group id="customCenter" translation="[960, 540]">
+            <Poster id="customEmoji" width="128" height="128"
+                    translation="[-64, -241]" />
+            <Label id="customHeadline" text="" color="#f0f0f0"
+                   horizAlign="center" width="1400" translation="[-700, -73]"
+                   wrap="true" maxLines="2">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="88" />
+            </Label>
+            <Label id="customBody" text="" color="#ffffff8C"
+                   horizAlign="center" width="1200" translation="[-600, 44]"
+                   wrap="true" maxLines="3">
+              <Font role="font" uri="pkg:/fonts/Outfit-Medium.ttf" size="40" />
+            </Label>
+            <!-- Custom items (dynamically built as horizontal row) -->
+            <Group id="customItems" translation="[-600, 160]" />
+          </Group>
+        </Group>
+
+        <!-- ── Default QR template (_defaultQr) ── -->
+        <Group id="tplDefaultQr" visible="false">
+          <Group id="defaultQrCenter" translation="[960, 490]">
+            <Label text="Scan to Join" color="#f0f0f0"
+                   horizAlign="center" width="1200" translation="[-600, -340]">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="64" />
+            </Label>
+            <!-- QR code with white background -->
+            <Rectangle translation="[-124, -240]" color="#ffffff" width="248" height="248" />
+            <Poster id="defaultQrPoster" translation="[-100, -216]" width="200" height="200"
+                    uri="pkg:/images/qr-play-200.png" />
+            <!-- Code display row -->
+            <Group translation="[-200, 40]">
+              <Label text="YOUR CODE" color="#ffffff66" translation="[0, 10]">
+                <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
+              </Label>
+              <Label id="defaultQrBarCode" text="" color="#ffd200"
+                     translation="[200, 0]">
+                <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="48" />
+              </Label>
+            </Group>
+            <Label text="play.taptrivia.tv" color="#ffd200"
+                   horizAlign="center" width="600" translation="[-300, 110]">
+              <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="30" />
+            </Label>
+          </Group>
+          <!-- Powered by TapTrivia footer (web: TapTrivia | Powered by TapTrivia) -->
+          <Group id="qrPowered" translation="[960, 1008]">
+            <Poster uri="pkg:/images/signage-powered-bg.png" width="560" height="80"
+                    translation="[-280, -40]" />
+            <!-- TapTrivia Logo widget (playing=32px, matches web sm=34px) -->
+            <Logo id="qrPoweredLogo" translation="[-232, -17]" />
+            <Rectangle color="#ffffff1A" width="2" height="40" translation="[-68, -20]" />
+            <Label text="Powered by TapTrivia" color="#ffffff66" translation="[-34, -12]">
+              <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="24" />
+            </Label>
+          </Group>
+        </Group>
+
+      </Group>
+    </Group>
+
+    <!-- ══════════════════════════════════════════════════════
+         DEFAULT FALLBACK — when no signage slides available
+         ══════════════════════════════════════════════════════ -->
+    <Group id="defaultContainer" visible="false">
+      <Group translation="[960, 0]">
+        <!-- TapTrivia Logo widget (xl = 80px, matches web xl 88px and lobby screen) -->
+        <Logo id="defaultLogo" translation="[-160, 60]" />
+
+        <Label id="defaultBarName" text="" color="#f0f0f0"
+               horizAlign="center" width="1200" translation="[-600, 170]">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="56" />
+        </Label>
+
+        <Label id="defaultSubtitle" text="Trivia starts soon - scan the QR code to join"
+               color="#ffffff60" horizAlign="center" width="1000" translation="[-500, 240]">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="28" />
+        </Label>
+
+        <Group id="defaultQrGroup" translation="[-160, 300]">
+          <Rectangle color="#ffffff" width="320" height="320" />
+          <Poster id="defaultQrGroupPoster" translation="[20, 20]" width="280" height="280"
+                  uri="pkg:/images/qr-play-360.png" />
+        </Group>
+
+        <Label text="play.taptrivia.tv" color="#ffd200"
+               horizAlign="center" width="500" translation="[-250, 640]">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="30" />
+        </Label>
+      </Group>
+    </Group>
+
+    <!-- Footer hint — always visible on idle screen -->
+    <Label id="changeLocationHint"
+           text="Press ◀ Back to change location"
+           color="#ffffff40"
+           horizAlign="center" width="1920"
+           translation="[0, 1040]">
+      <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+    </Label>
+
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Utils.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Colors.brs" />
+  <script type="text/brightscript" uri="IdleScreen.brs" />
+</component>

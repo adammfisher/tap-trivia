@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="TimerRing" extends="Group">
+  <interface>
+    <field id="seconds" type="integer" value="0" onChange="onSecondsChanged" />
+    <field id="totalSeconds" type="integer" value="35" onChange="onTotalChanged" />
+    <field id="ringSize" type="integer" value="96" onChange="onSizeChanged" />
+  </interface>
+
+  <children>
+    <!-- Pre-rendered ring image (replaces rectangle approximation) -->
+    <Poster id="ringPoster" width="96" height="96"
+            uri="pkg:/images/timer-ring-safe-35.png" />
+
+    <!-- Countdown number (centered in ring) -->
+    <Label id="numLabel" text="0"
+           translation="[0, 30]" horizAlign="center" width="96" color="#ffffff">
+      <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="32" />
+    </Label>
+  </children>
+
+  <script type="text/brightscript" uri="TimerRing.brs" />
+</component>

@@ -23,6 +23,7 @@ cp tv-signage-module/css/tv-signage.css tv-app/css/tv-signage.css
 In the `<head>`, add after the existing stylesheet:
 
 ```html
+
 <link rel="stylesheet" href="css/tv-signage.css">
 ```
 

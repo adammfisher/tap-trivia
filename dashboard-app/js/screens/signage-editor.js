@@ -38,7 +38,7 @@ const ALL_DAYS = ['All Days', ...WEEKDAYS];
 
 let signageState = {
   slides: [],
-  rotationSpeed: 15,
+  rotationSpeed: 60,
   enabled: true,
   editing: null,       // { templateId, data, editIdx } or null
   selectedDay: 'All Days',
@@ -409,7 +409,7 @@ function renderSignageEditor() {
   const { bar } = getAuthState();
   if (bar && bar.signage && !signageState.dirty) {
     signageState.slides = bar.signage.slides ? JSON.parse(JSON.stringify(bar.signage.slides)) : [];
-    signageState.rotationSpeed = bar.signage.rotationSpeed || 15;
+    signageState.rotationSpeed = bar.signage.rotationSpeed || 60;
     signageState.enabled = bar.signage.enabled !== false;
   }
 

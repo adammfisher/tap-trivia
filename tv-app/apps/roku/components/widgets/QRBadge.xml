@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="QRBadge" extends="Group">
+  <interface>
+    <field id="barCode" type="string" value="" onChange="onBarCodeChanged" />
+  </interface>
+
+  <children>
+    <!-- Dark semi-transparent background (pre-rendered rounded PNG) -->
+    <Poster id="badgeBg" uri="pkg:/images/qr-badge-bg.png" width="360" height="140" />
+
+    <!-- QR code image (pre-generated PNG) -->
+    <Poster id="qrImage" translation="[16, 10]" width="120" height="120"
+            uri="pkg:/images/qr-play-120.png" />
+
+    <!-- Info text -->
+    <Group id="infoGroup" translation="[148, 16]">
+      <Label id="titleLabel" text="Join Trivia!" color="#f0f0f0">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
+      </Label>
+      <Label id="urlLabel" text="play.taptrivia.tv"
+             translation="[0, 34]" color="#ffd200">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
+      </Label>
+      <Group translation="[0, 62]">
+        <Label text="CODE" color="#ffffff4D"
+               translation="[0, 4]">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="18" />
+        </Label>
+        <Label id="codeLabel" text=""
+               translation="[54, 0]" color="#ffd200">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="24" />
+        </Label>
+      </Group>
+    </Group>
+  </children>
+
+  <script type="text/brightscript" uri="QRBadge.brs" />
+</component>

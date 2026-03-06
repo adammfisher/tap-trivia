@@ -1,0 +1,14 @@
+{
+    "id": "tv.taptrivia.lg",
+    "version": "1.0.0",
+    "vendor": "TapTrivia",
+    "type": "web",
+    "main": "index.html",
+    "title": "TapTrivia TV",
+    "icon": "icon.png",
+    "largeIcon": "largeIcon.png",
+    "resolution": "1920x1080",
+    "transparent": false,
+    "disableBackHistoryAPI": true,
+    "keepAlive": true
+}

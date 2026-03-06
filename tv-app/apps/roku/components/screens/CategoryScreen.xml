@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="CategoryScreen" extends="Group">
+  <interface>
+    <field id="barName" type="string" />
+    <field id="barCode" type="string" />
+    <field id="gameState" type="assocarray" onChange="onGameStateChanged" />
+  </interface>
+
+  <children>
+    <!-- Background gradient -->
+    <Poster id="bgGradient" width="1920" height="1080"
+            uri="pkg:/images/bg-gradient.png" />
+
+    <!-- Centered content block (vertically centered on 1080p) -->
+    <Group id="content" translation="[260, 265]">
+
+      <!-- Bar name -->
+      <Label id="barNameLabel" text=""
+             translation="[0, 0]" width="1400" horizAlign="center" color="#f0f0f0">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="40" />
+      </Label>
+
+      <!-- "QUESTION X OF Y" counter -->
+      <Label id="questionCounter" text="QUESTION 1 OF 15"
+             translation="[0, 58]" width="1400" horizAlign="center" color="#ffffff58">
+        <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="28" />
+      </Label>
+
+      <!-- Category icon (pre-rendered emoji PNG) -->
+      <Poster id="categoryIcon" uri="pkg:/images/cat-default.png"
+              translation="[612, 104]" width="176" height="176" />
+
+      <!-- Category name -->
+      <Label id="categoryName" text=""
+             translation="[0, 312]" width="1400" horizAlign="center" color="#f0f0f0"
+             wrap="true" maxLines="2">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="80" />
+      </Label>
+
+      <!-- Subcategory -->
+      <Label id="subcategoryName" text=""
+             translation="[0, 410]" width="1400" horizAlign="center" color="#ffffff66">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="32" />
+      </Label>
+
+      <!-- Difficulty row -->
+      <Group id="difficultyRow" translation="[0, 470]">
+        <!-- Difficulty dots (up to 3, always green) -->
+        <Group id="diffDots" translation="[630, 0]">
+          <Poster id="dot1" uri="pkg:/images/difficulty-dot-filled.png" width="16" height="16" visible="false" blendColor="#00d4aa" />
+          <Poster id="dot2" uri="pkg:/images/difficulty-dot-filled.png" width="16" height="16" translation="[24, 0]" visible="false" blendColor="#00d4aa" />
+          <Poster id="dot3" uri="pkg:/images/difficulty-dot-filled.png" width="16" height="16" translation="[48, 0]" visible="false" blendColor="#00d4aa" />
+        </Group>
+        <!-- Difficulty label -->
+        <Label id="diffLabel" text=""
+               translation="[700, -3]" color="#ffffff66">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="24" />
+        </Label>
+      </Group>
+    </Group>
+
+    <!-- QR Badge — bottom-left -->
+    <QRBadge id="qrBadge" translation="[40, 920]" />
+
+    <!-- Category icon zoom animation -->
+    <Animation id="categoryZoomAnim" duration="0.6" easeFunction="outBack" repeat="false">
+      <FloatFieldInterpolator id="iconOpacity"
+        key="[0.0, 1.0]"
+        keyValue="[0.0, 1.0]"
+        fieldToInterp="categoryIcon.opacity" />
+      <Vector2DFieldInterpolator id="iconScale"
+        key="[0.0, 1.0]"
+        keyValue="[[0.5, 0.5], [1.0, 1.0]]"
+        fieldToInterp="categoryIcon.scale" />
+    </Animation>
+
+    <!-- Name fade-down animation -->
+    <Animation id="nameFadeAnim" duration="0.5" delay="0.2" easeFunction="outCubic" repeat="false">
+      <FloatFieldInterpolator id="nameOpacity"
+        key="[0.0, 1.0]"
+        keyValue="[0.0, 1.0]"
+        fieldToInterp="categoryName.opacity" />
+    </Animation>
+
+    <!-- Difficulty fade-down animation -->
+    <Animation id="diffFadeAnim" duration="0.5" delay="0.4" easeFunction="outCubic" repeat="false">
+      <FloatFieldInterpolator id="diffOpacity"
+        key="[0.0, 1.0]"
+        keyValue="[0.0, 1.0]"
+        fieldToInterp="difficultyRow.opacity" />
+    </Animation>
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Utils.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Colors.brs" />
+  <script type="text/brightscript" uri="CategoryScreen.brs" />
+</component>

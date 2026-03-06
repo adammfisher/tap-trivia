@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="AnswerCard" extends="Group">
+  <interface>
+    <field id="answerText" type="string" value="" onChange="onDataChanged" />
+    <field id="letterIndex" type="integer" value="0" onChange="onDataChanged" />
+    <field id="cardState" type="string" value="default" onChange="onStateChanged" />
+    <field id="pctPicked" type="integer" value="-1" onChange="onPctChanged" />
+  </interface>
+
+  <children>
+    <!-- Clip all children to card bounds -->
+    <Group id="cardClip" clippingRect="[0, 0, 780, 136]">
+      <!-- Card background (pre-rendered rounded PNG) -->
+      <Poster id="cardBg" uri="pkg:/images/answer-card-default.png" width="780" height="136" />
+
+      <!-- Percentage fill bar (solid Rectangle, clipped by parent) -->
+      <Rectangle id="pctBar" width="0" height="136" color="#ffffff18" visible="false" />
+
+      <!-- Letter badge (pre-rendered rounded-rect PNG) -->
+      <Poster id="letterBadge" uri="pkg:/images/badge-a.png" width="80" height="80"
+              translation="[8, 28]" />
+
+      <!-- Answer text -->
+      <Label id="answerLabel" text=""
+             translation="[100, 0]" width="560" height="136" color="#1e0f4a"
+             vertAlign="center" wrap="true" maxLines="2" lineSpacing="-8">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="34" />
+      </Label>
+
+      <!-- Percentage label (for reveal) -->
+      <Label id="pctLabel" text=""
+             translation="[680, 54]" horizAlign="right" width="80" color="#ffffffB0"
+             visible="false">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
+      </Label>
+
+      <!-- Correct indicator (pre-rendered check icon) -->
+      <Poster id="correctIcon" uri="pkg:/images/badge-check.png" width="40" height="40"
+              translation="[720, 48]" visible="false" />
+    </Group>
+  </children>
+
+  <script type="text/brightscript" uri="AnswerCard.brs" />
+</component>

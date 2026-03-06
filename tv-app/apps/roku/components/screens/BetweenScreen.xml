@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="BetweenScreen" extends="Group">
+  <interface>
+    <field id="barCode" type="string" />
+    <field id="barName" type="string" />
+    <field id="signageSlides" type="array" value="[]" />
+    <field id="signageIndex" type="integer" value="0" onChange="onSignageIndexChanged" />
+    <field id="barLogoUrl" type="string" value="" />
+    <field id="gameState" type="assocarray" onChange="onGameStateChanged" />
+  </interface>
+
+  <children>
+    <!-- Background gradient -->
+    <Poster id="bgGradient" width="1920" height="1080"
+            uri="pkg:/images/bg-gradient.png" />
+
+    <!-- Dark panel behind right/signage half -->
+    <Rectangle id="rightPanelBg" translation="[960, 0]" width="960" height="1080" color="#000000" opacity="0.2" />
+
+    <!-- ═══ LEFT COLUMN (960px): Vertically centered standings ═══ -->
+
+    <Group id="leftCol" translation="[0, 0]">
+
+      <!-- Logo (md, 48px) — centered in 960px (~213px wide → X=374) -->
+      <Logo id="logo" translation="[374, 0]" />
+
+      <!-- Bar name — centered -->
+      <Label id="barNameLabel" text="" translation="[0, 66]" color="#ffffff60"
+             width="960" horizAlign="center">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+      </Label>
+
+      <!-- "Standings" heading — centered -->
+      <Label id="standingsLabel" text="Standings"
+             translation="[0, 110]" color="#ffffffCC" width="960" horizAlign="center">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
+      </Label>
+
+      <!-- 5 standings rows (860px wide, centered in 960px → X=50) -->
+      <Group id="standingsList" translation="[50, 170]">
+        <LeaderRow id="standing1" translation="[0, 0]" />
+        <LeaderRow id="standing2" translation="[0, 80]" />
+        <LeaderRow id="standing3" translation="[0, 160]" />
+        <LeaderRow id="standing4" translation="[0, 240]" />
+        <LeaderRow id="standing5" translation="[0, 320]" />
+      </Group>
+
+      <!-- Countdown label — centered (Y positioned dynamically in BRS) -->
+      <Label id="countdownLabel" text=""
+             translation="[0, 500]" color="#ffffff60" width="960" horizAlign="center">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+      </Label>
+    </Group>
+
+    <!-- QR Badge — bottom-center of left half (shown when no signage) -->
+    <QRBadge id="qrBadge" translation="[300, 940]" visible="false" />
+
+    <!-- ═══ RIGHT HALF: Signage panel ═══ -->
+    <SignagePanel id="signagePanel" translation="[960, 0]" visible="false" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Utils.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Colors.brs" />
+  <script type="text/brightscript" uri="BetweenScreen.brs" />
+</component>

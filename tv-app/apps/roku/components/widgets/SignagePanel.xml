@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="SignagePanel" extends="Group">
+  <interface>
+    <field id="barCode" type="string" value="" onChange="onBarCodeChanged" />
+    <field id="barName" type="string" value="" onChange="onBarNameChanged" />
+    <field id="barLogoUrl" type="string" value="" onChange="onBarLogoUrlChanged" />
+    <field id="signageSlides" type="array" value="[]" onChange="onSlidesChanged" />
+    <field id="signageIndex" type="integer" value="0" onChange="onIndexChanged" />
+  </interface>
+
+  <children>
+    <!-- Panel container (880px content within 960px right half) -->
+    <Group id="panelContent" translation="[40, 0]">
+
+      <!-- Panel header: bar logo + name -->
+      <Group id="panelHeader" translation="[0, 32]">
+        <Poster id="barLogoBg" uri="pkg:/images/signage-panel-logo-bg.png"
+                width="60" height="60" />
+        <Label id="barInitial" text="" color="#ffd200"
+               horizAlign="center" width="60" translation="[0, 12]">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="24" />
+        </Label>
+        <Poster id="barLogoPoster" translation="[4, 4]" width="52" height="52"
+                visible="false" />
+        <Label id="barNameLabel" text="" translation="[78, 14]" width="780" color="#f0f0f0">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="24" />
+        </Label>
+      </Group>
+
+      <!-- ── Template label (small uppercase category) ── -->
+      <Label id="templateLabel" text="" translation="[0, 116]" color="#f59e0b" visible="false"
+             width="880" horizAlign="center">
+        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="22" />
+      </Label>
+
+      <!-- ── Dynamic signage content (populated per template) ── -->
+      <Group id="signageContent" translation="[0, 150]" />
+
+      <!-- ── QR badge at bottom ── -->
+      <Group id="panelQR" translation="[0, 880]">
+        <Poster uri="pkg:/images/signage-panel-qr-bg.png" width="880" height="120" />
+        <Poster id="panelQRImg" translation="[18, 16]" width="88" height="88"
+                uri="pkg:/images/qr-play-120.png" />
+        <Group translation="[124, 16]">
+          <Label text="Join Trivia!" color="#f0f0f0">
+            <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="24" />
+          </Label>
+          <Label text="play.taptrivia.tv" translation="[0, 30]" color="#ffd200">
+            <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="18" />
+          </Label>
+          <Group translation="[0, 56]">
+            <Label text="CODE" color="#ffffff4D">
+              <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="14" />
+            </Label>
+            <Label id="panelBarCode" text="" translation="[50, -2]" color="#ffd200">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="22" />
+            </Label>
+          </Group>
+        </Group>
+      </Group>
+    </Group>
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Utils.brs" />
+  <script type="text/brightscript" uri="SignagePanel.brs" />
+</component>

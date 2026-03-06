@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="TapTriviaScene" extends="Scene">
+  <interface>
+    <field id="currentScreen" type="string" value="" />
+    <function name="makeApiCall" />
+  </interface>
+
+  <children>
+    <!-- Full-screen background gradient -->
+    <Poster id="sceneBg" width="1920" height="1080"
+            uri="pkg:/images/bg-gradient.png" />
+
+    <!-- Screen container — all screens layered here, toggle visibility -->
+    <Group id="screenContainer">
+      <SetupScreen id="setupScreen" visible="false" />
+      <IdleScreen id="idleScreen" visible="false" />
+      <LobbyScreen id="lobbyScreen" visible="false" />
+      <GetReadyScreen id="getReadyScreen" visible="false" />
+      <CategoryScreen id="categoryScreen" visible="false" />
+      <PlayingScreen id="playingScreen" visible="false" />
+      <RevealScreen id="revealScreen" visible="false" />
+      <LeaderboardScreen id="leaderboardScreen" visible="false" />
+      <BetweenScreen id="betweenScreen" visible="false" />
+      <ResultsScreen id="resultsScreen" visible="false" />
+    </Group>
+
+    <!-- Error overlay (hidden by default) -->
+    <Group id="errorOverlay" visible="false">
+      <Rectangle color="#08080cCC" width="1920" height="1080" />
+      <Group translation="[760, 440]">
+        <Rectangle color="#1a1a2eEE" width="400" height="200" />
+        <Label text="Reconnecting..."
+               translation="[200, 60]"
+               horizAlign="center" vertAlign="center"
+               width="400"
+               color="#ffd200">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="32" />
+        </Label>
+        <Label text="Check your internet connection"
+               translation="[200, 110]"
+               horizAlign="center" vertAlign="center"
+               width="400"
+               color="#ffffff80">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+        </Label>
+      </Group>
+    </Group>
+
+    <!-- API polling task -->
+    <ApiTask id="apiTask" />
+
+    <!-- Screensaver prevention: ECP self-ping task -->
+    <KeepAwakeTask id="keepAwakeTask" />
+  </children>
+
+  <script type="text/brightscript" uri="TapTriviaScene.brs" />
+</component>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets"
+        id="http://taptrivia.tv" version="1.0.0" viewmodes="maximized">
+    <name>TapTrivia TV</name>
+    <content src="index.html"/>
+    <icon src="icon.png"/>
+    <tizen:application id="TpTrviaTv0.TapTriviaTV" package="TpTrviaTv0" required_version="6.0"/>
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:privilege name="http://tizen.org/privilege/power"/>
+    <tizen:privilege name="http://developer.samsung.com/privilege/productinfo"/>
+    <access origin="*" subdomains="true"/>
+    <tizen:setting screen-orientation="landscape" context-menu="enable"
+                   background-support="enable" encryption="disable" install-location="auto"/>
+    <tizen:metadata key="http://samsung.com/tv/metadata/prelaunch" value="true"/>
+</widget>

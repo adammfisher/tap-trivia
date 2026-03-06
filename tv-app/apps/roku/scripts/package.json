@@ -1,0 +1,12 @@
+{
+  "name": "taptrivia-roku-assets",
+  "private": true,
+  "description": "Asset generation for TapTrivia Roku app",
+  "scripts": {
+    "generate": "node generate-assets.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.65",
+    "qrcode": "^1.5.3"
+  }
+}

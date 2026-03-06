@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="GetReadyScreen" extends="Group">
+  <interface>
+    <field id="barName" type="string" />
+    <field id="barCode" type="string" />
+    <field id="gameState" type="assocarray" onChange="onGameStateChanged" />
+  </interface>
+
+  <children>
+    <!-- Background gradient -->
+    <Poster id="bgGradient" width="1920" height="1080"
+            uri="pkg:/images/bg-gradient.png" />
+
+    <!-- Centered content container -->
+    <Group id="content" translation="[960, 180]">
+
+      <!-- TapTrivia logo -->
+      <Logo id="logo" translation="[-100, 0]" />
+
+      <!-- Bar name -->
+      <Label id="barNameLabel" text=""
+             translation="[-200, 72]" width="400" horizAlign="center" color="#ffffffB0">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
+      </Label>
+
+      <!-- "GAME STARTING" label -->
+      <Label id="gameStartingLabel" text="GAME STARTING"
+             translation="[-200, 140]" width="400" horizAlign="center" color="#ffffff60">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
+      </Label>
+
+      <!-- Countdown ring -->
+      <Group id="countdownRing" translation="[-120, 200]">
+        <!-- Outer ring (pre-rendered circle outline) -->
+        <Poster id="ringBg" uri="pkg:/images/countdown-ring-bg.png" width="240" height="240" />
+        <!-- Inner fill (pre-rendered glass circle) -->
+        <Poster id="ringInner" uri="pkg:/images/countdown-ring-inner.png" width="228" height="228"
+                translation="[6, 6]" />
+        <!-- Countdown number -->
+        <Label id="countdownNum" text="3"
+               translation="[0, 40]" width="240" horizAlign="center" color="#f0f0f0">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="128" />
+        </Label>
+      </Group>
+
+      <!-- "Get ready!" text -->
+      <Label id="getReadyText" text="Get ready!"
+             translation="[-200, 480]" width="400" horizAlign="center" color="#ffd200">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="32" />
+      </Label>
+
+      <!-- Info line -->
+      <Label id="infoLine" text="15 questions . Answer fast for more points"
+             translation="[-300, 530]" width="600" horizAlign="center" color="#ffffff50">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+      </Label>
+    </Group>
+
+    <!-- QR Badge — bottom-left -->
+    <QRBadge id="qrBadge" translation="[40, 920]" />
+
+    <!-- Countdown pulse animation (flash bright then settle) -->
+    <Animation id="pulseAnim" duration="0.6" easeFunction="outCubic" repeat="false">
+      <FloatFieldInterpolator id="pulseOpacity"
+        key="[0.0, 0.15, 1.0]"
+        keyValue="[0.6, 1.0, 1.0]"
+        fieldToInterp="countdownRing.opacity" />
+      <Vector2DFieldInterpolator id="pulseScale"
+        key="[0.0, 0.15, 1.0]"
+        keyValue="[[1.1, 1.1], [0.97, 0.97], [1.0, 1.0]]"
+        fieldToInterp="countdownRing.scale" />
+    </Animation>
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Utils.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Colors.brs" />
+  <script type="text/brightscript" uri="GetReadyScreen.brs" />
+</component>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="KeepAwakeTask" extends="Task">
+  <interface>
+    <field id="ping" type="boolean" value="false" onChange="onPing" />
+  </interface>
+  <script type="text/brightscript" uri="KeepAwakeTask.brs" />
+</component>

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="PlayingScreen" extends="Group">
+  <interface>
+    <field id="barCode" type="string" />
+    <field id="barName" type="string" />
+    <field id="gameState" type="assocarray" onChange="onGameStateChanged" />
+  </interface>
+
+  <children>
+    <!-- Background gradient -->
+    <Poster id="bgGradient" width="1920" height="1080"
+            uri="pkg:/images/bg-gradient.png" />
+
+    <!-- ═══════════════════════════════════════════════════
+         HEADER — full width, ~100px
+         Left: logo + bar name | Center: points | Right: players + timer
+         ═══════════════════════════════════════════════════ -->
+    <Group id="header" translation="[0, 0]">
+      <!-- Header gradient overlay (pre-rendered fade PNG) -->
+      <Poster id="headerFade" uri="pkg:/images/header-fade.png" width="1920" height="120" />
+
+      <!-- Left: TapTrivia logo + bar name -->
+      <Group id="headerLeft" translation="[56, 20]">
+        <Logo id="logo" />
+        <Label id="headerBarName" text=""
+               translation="[0, 38]" color="#f0f0f0">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
+        </Label>
+      </Group>
+
+      <!-- Center: Points display -->
+      <Group id="headerCenter" translation="[960, 10]">
+        <Label id="pointsValue" text="1000"
+               width="300" horizAlign="center"
+               translation="[-150, 0]" color="#00d4aa">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="64" />
+        </Label>
+        <Label id="pointsLabel" text="POINTS AVAILABLE"
+               width="300" horizAlign="center"
+               translation="[-150, 64]" color="#ffffff40">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="18" />
+        </Label>
+      </Group>
+
+      <!-- Right: Players badge + Timer ring -->
+      <Group id="headerRight" translation="[1660, 12]">
+        <!-- Players badge -->
+        <Group id="playersBadge" translation="[0, 16]">
+          <Label id="playersIcon" text="" >
+            <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="24" />
+          </Label>
+          <Label id="playersCount" text="0"
+                 translation="[32, 2]" color="#f0f0f0">
+            <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="22" />
+          </Label>
+        </Group>
+
+        <!-- Timer ring (96px) -->
+        <TimerRing id="timerRing" translation="[100, 0]" />
+      </Group>
+    </Group>
+
+    <!-- ═══════════════════════════════════════════════════
+         BODY — below header
+         Left column (~55%): category pill + question + progress
+         Right column (~45%): 4 answer cards
+         ═══════════════════════════════════════════════════ -->
+    <Group id="body" translation="[72, 152]">
+
+      <!-- Left column: question area -->
+      <Group id="questionCol" translation="[0, 35]">
+
+        <!-- Category pill + question counter row -->
+        <Group id="catRow" translation="[0, 0]">
+          <!-- Category pill (pre-rendered rounded PNG) -->
+          <Group id="categoryPill" translation="[0, 0]">
+            <Poster id="pillBg" uri="pkg:/images/category-pill.png" width="240" height="40" />
+            <Poster id="pillIcon" uri="pkg:/images/cat-sm-default.png"
+                    translation="[6, 2]" width="36" height="36" />
+            <Label id="pillText" text="Trivia"
+                   translation="[46, 4]" width="450" color="#ffffffB0">
+              <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
+            </Label>
+          </Group>
+          <!-- Question counter -->
+          <Label id="qCounter" text="Q1"
+                 translation="[260, 8]" color="#ffffff58">
+            <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
+          </Label>
+          <Label id="qCounterSep" text="/15"
+                 translation="[310, 8]" color="#ffffff30">
+            <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
+          </Label>
+        </Group>
+
+        <!-- Question text -->
+        <Label id="questionText" text=""
+               translation="[0, 60]" width="960" color="#f0f0f0"
+               wrap="true" maxLines="5" lineSpacing="-12">
+          <Font role="font" uri="pkg:/fonts/Outfit-Black.ttf" size="64" />
+        </Label>
+
+        <!-- Progress bar -->
+        <ProgressBar id="progressBar" translation="[0, 500]" />
+      </Group>
+
+      <!-- Right column: 4 answer cards (vertical stack, fill available space) -->
+      <Group id="answersCol" translation="[988, 40]">
+        <AnswerCard id="card0" translation="[0, 0]" />
+        <AnswerCard id="card1" translation="[0, 160]" />
+        <AnswerCard id="card2" translation="[0, 320]" />
+        <AnswerCard id="card3" translation="[0, 480]" />
+      </Group>
+    </Group>
+
+    <!-- ═══════════════════════════════════════════════════
+         FOOTER — bottom bar with top 5 player strip
+         ═══════════════════════════════════════════════════ -->
+    <Group id="footer" translation="[0, 960]">
+      <!-- Footer gradient (pre-rendered fade PNG) -->
+      <Poster id="footerFade" uri="pkg:/images/footer-fade.png" width="1920" height="120" />
+
+      <!-- Top 5 player strip (right-aligned, avatar + name side by side) -->
+      <Group id="footerScores" translation="[0, 24]">
+        <Group id="footerPlayer0" visible="false">
+          <Avatar id="fpAvatar0" translation="[0, 0]" />
+          <Label id="fpName0" text="" translation="[60, 12]" maxLines="1"
+                 color="#ffffffB0">
+            <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
+          </Label>
+        </Group>
+        <Group id="footerPlayer1" visible="false">
+          <Avatar id="fpAvatar1" translation="[0, 0]" />
+          <Label id="fpName1" text="" translation="[60, 12]" maxLines="1"
+                 color="#ffffffB0">
+            <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
+          </Label>
+        </Group>
+        <Group id="footerPlayer2" visible="false">
+          <Avatar id="fpAvatar2" translation="[0, 0]" />
+          <Label id="fpName2" text="" translation="[60, 12]" maxLines="1"
+                 color="#ffffffB0">
+            <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
+          </Label>
+        </Group>
+        <Group id="footerPlayer3" visible="false">
+          <Avatar id="fpAvatar3" translation="[0, 0]" />
+          <Label id="fpName3" text="" translation="[60, 12]" maxLines="1"
+                 color="#ffffffB0">
+            <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
+          </Label>
+        </Group>
+        <Group id="footerPlayer4" visible="false">
+          <Avatar id="fpAvatar4" translation="[0, 0]" />
+          <Label id="fpName4" text="" translation="[60, 12]" maxLines="1"
+                 color="#ffffffB0">
+            <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
+          </Label>
+        </Group>
+      </Group>
+    </Group>
+
+    <!-- QR Badge — bottom-left -->
+    <QRBadge id="qrBadge" translation="[40, 920]" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Utils.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Colors.brs" />
+  <script type="text/brightscript" uri="PlayingScreen.brs" />
+</component>

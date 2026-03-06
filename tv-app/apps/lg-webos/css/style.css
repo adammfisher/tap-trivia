@@ -1,0 +1,21 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: #08080c; }
+
+#tvApp {
+    position: fixed; top: 0; left: 0;
+    width: 1920px; height: 1080px;
+    border: none; background: #08080c;
+}
+
+#errorOverlay {
+    position: fixed; top: 0; left: 0;
+    width: 1920px; height: 1080px;
+    background: rgba(8, 8, 12, 0.9);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 10;
+}
+#errorOverlay.hidden { display: none; }
+
+.error-box { text-align: center; }
+.error-text { color: #ffd200; font-size: 32px; font-family: sans-serif; margin-bottom: 12px; }
+.error-sub { color: rgba(255,255,255,0.4); font-size: 18px; font-family: sans-serif; }

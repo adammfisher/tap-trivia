@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="ApiTask" extends="Task">
+  <interface>
+    <field id="callId" type="string" value="" />
+    <field id="requestMethod" type="string" value="GET" />
+    <field id="requestUrl" type="string" value="" />
+    <field id="requestBody" type="string" value="" />
+    <field id="response" type="assocarray" />
+  </interface>
+  <script type="text/brightscript" uri="ApiTask.brs" />
+</component>

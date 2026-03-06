@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="OrbBackground" extends="Group">
+  <interface>
+    <field id="active" type="boolean" value="true" onChange="onActiveChanged" />
+  </interface>
+
+  <children>
+    <!-- Floating gradient orbs (decorative, animated slowly) -->
+    <!-- Orb 1: Blue, top-left -->
+    <Poster id="orb1" translation="[-200, -100]" width="600" height="600"
+            uri="pkg:/images/orb-blue.png" opacity="0.15" />
+
+    <!-- Orb 2: Red/Purple, bottom-right -->
+    <Poster id="orb2" translation="[1400, 600]" width="500" height="500"
+            uri="pkg:/images/orb-red.png" opacity="0.12" />
+
+    <!-- Orb 3: Green, center -->
+    <Poster id="orb3" translation="[700, 200]" width="400" height="400"
+            uri="pkg:/images/orb-green.png" opacity="0.08" />
+
+    <!-- Orb 1 float animation (18s loop) -->
+    <Animation id="orb1Anim" duration="18" repeat="true" easeFunction="linear">
+      <Vector2DFieldInterpolator id="orb1Move"
+        key="[0.0, 0.25, 0.5, 0.75, 1.0]"
+        keyValue="[[-200, -100], [-150, -50], [-100, -100], [-150, -150], [-200, -100]]"
+        fieldToInterp="orb1.translation" />
+      <FloatFieldInterpolator
+        key="[0.0, 0.5, 1.0]"
+        keyValue="[0.15, 0.2, 0.15]"
+        fieldToInterp="orb1.opacity" />
+    </Animation>
+
+    <!-- Orb 2 float animation (24s loop) -->
+    <Animation id="orb2Anim" duration="24" repeat="true" easeFunction="linear">
+      <Vector2DFieldInterpolator id="orb2Move"
+        key="[0.0, 0.25, 0.5, 0.75, 1.0]"
+        keyValue="[[1400, 600], [1350, 550], [1300, 600], [1350, 650], [1400, 600]]"
+        fieldToInterp="orb2.translation" />
+    </Animation>
+
+    <!-- Orb 3 float animation (28s loop) -->
+    <Animation id="orb3Anim" duration="28" repeat="true" easeFunction="linear">
+      <Vector2DFieldInterpolator id="orb3Move"
+        key="[0.0, 0.25, 0.5, 0.75, 1.0]"
+        keyValue="[[700, 200], [750, 250], [700, 300], [650, 250], [700, 200]]"
+        fieldToInterp="orb3.translation" />
+    </Animation>
+  </children>
+
+  <script type="text/brightscript" uri="OrbBackground.brs" />
+</component>

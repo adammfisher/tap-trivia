@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="Avatar" extends="Group">
+  <interface>
+    <field id="playerName" type="string" value="" onChange="onNameChanged" />
+    <field id="rank" type="integer" value="0" onChange="onRankChanged" />
+    <field id="avatarSize" type="string" value="md" onChange="onSizeChanged" />
+    <field id="showRing" type="boolean" value="false" onChange="onRingChanged" />
+    <field id="isYou" type="boolean" value="false" />
+  </interface>
+
+  <children>
+    <!-- Circle background (white PNG tinted via blendColor) -->
+    <Poster id="circleBg" uri="pkg:/images/avatar-circle.png"
+            width="56" height="56" blendColor="#667eea" />
+
+    <!-- Gold ring overlay -->
+    <Poster id="ringOverlay" uri="pkg:/images/avatar-ring-gold.png"
+            width="56" height="56" visible="false" />
+
+    <!-- Initial letter -->
+    <Label id="initialLabel" text=""
+           translation="[0, 10]" horizAlign="center" width="56" color="#ffffff">
+      <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
+    </Label>
+
+    <!-- Medal overlay (pre-rendered PNG) -->
+    <Poster id="medalPoster" width="28" height="28"
+            translation="[36, -8]" visible="false" />
+  </children>
+
+  <script type="text/brightscript" uri="Avatar.brs" />
+</component>
