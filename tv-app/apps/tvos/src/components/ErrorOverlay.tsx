@@ -11,7 +11,7 @@ export function ErrorOverlay({ visible }: Props) {
   if (!visible) return null;
 
   return (
-    <View style={styles.overlay}>
+    <View style={styles.overlay} pointerEvents="none">
       <Text style={styles.icon}>{'\u{1F4E1}'}</Text>
       <Text style={styles.title}>Connection Lost</Text>
       <Text style={styles.subtitle}>Reconnecting automatically...</Text>
@@ -22,7 +22,7 @@ export function ErrorOverlay({ visible }: Props) {
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 3, 38, 0.92)',
+    backgroundColor: 'rgba(15, 3, 38, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 999,

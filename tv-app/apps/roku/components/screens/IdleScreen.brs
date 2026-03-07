@@ -274,6 +274,11 @@ function getDefaultSignageSlides() as Object
   barCode = m.top.getField("barCode")
   return [
     {
+      template: "_defaultQr",
+      enabled: true,
+      data: {}
+    },
+    {
       template: "announcement",
       enabled: true,
       data: {

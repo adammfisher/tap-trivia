@@ -81,6 +81,17 @@ sub init()
   ' ── Start screensaver prevention ──
   startKeepAwake()
 
+  ' ── Animated gradient background (also prevents screensaver) ──
+  m.bgVideo = m.top.findNode("bgVideo")
+  if m.bgVideo <> invalid
+    m.bgVideo.content = CreateObject("roSGNode", "ContentNode")
+    m.bgVideo.content.url = "pkg:/images/bg-gradient.mp4"
+    m.bgVideo.content.streamFormat = "mp4"
+    m.bgVideo.loop = true
+    m.bgVideo.control = "play"
+    m.bgVideo.enableUI = false
+  end if
+
   ' ── Load config and initialize ──
   loadConfig()
   doInit()
@@ -178,6 +189,9 @@ sub processGameState(apiState as Object)
     exitRotationMode()
     if m.currentScreen <> "idleScreen"
       showIdleScreen(gameState)
+    else
+      ' Update idle screen gameState for countdown refresh
+      m.screens.idleScreen.setField("gameState", gameState)
     end if
     ensureSignageRotation()
     return
@@ -550,8 +564,20 @@ sub renderRotationScreen()
   screenName = m.rotationScreens[idx]
 
   if screenName = "idle"
-    ' Push current signage index so idle shows next slide each time it appears
+    ' Push all data to idle screen (barCode, barName, etc.) so header renders
+    m.screens.idleScreen.setField("barCode", m.barCode)
+    m.screens.idleScreen.setField("barName", m.barName)
+    m.screens.idleScreen.setField("barLogoUrl", m.barLogoUrl)
+    m.screens.idleScreen.setField("signageSlides", m.signageSlides)
+    m.screens.idleScreen.setField("signageRotationSpeed", m.signageRotationSpeed)
     m.screens.idleScreen.setField("signageIndex", m.signageCurrentIndex)
+    ' Pass cached gameState for countdown
+    idleCached = m.cachedScreenData["idle"]
+    if idleCached <> invalid
+      m.screens.idleScreen.setField("gameState", idleCached)
+    else if m.cachedScreenData.results <> invalid
+      m.screens.idleScreen.setField("gameState", m.cachedScreenData.results)
+    end if
     switchScreen("idleScreen")
     return
   end if

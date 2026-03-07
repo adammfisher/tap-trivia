@@ -6,9 +6,9 @@
   </interface>
 
   <children>
-    <!-- Full-screen background gradient -->
-    <Poster id="sceneBg" width="1920" height="1080"
-            uri="pkg:/images/bg-gradient.png" />
+    <!-- Animated background gradient (video plane renders behind graphics) -->
+    <Video id="bgVideo" width="1920" height="1080"
+           visible="true" enableUI="false" />
 
     <!-- Screen container — all screens layered here, toggle visibility -->
     <Group id="screenContainer">
