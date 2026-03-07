@@ -13,7 +13,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-VPKG_PATH="$PROJECT_DIR/build/private/kepler/@amazon-devices/taptriviatv/undefined/vega/armv7/Release/@amazon-devices/taptriviatv_armv7.vpkg"
+VPKG_PATH="$PROJECT_DIR/build/armv7-release/taptriviatv_armv7.vpkg"
 VEGA="$HOME/vega/bin/vega"
 ADB="$(which adb 2>/dev/null || echo "$HOME/Library/Android/sdk/platform-tools/adb")"
 

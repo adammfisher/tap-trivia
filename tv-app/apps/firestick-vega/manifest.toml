@@ -30,7 +30,19 @@ id = "com.amazon.media.server"
 id = "com.amazon.audio.control"
 
 [[wants.service]]
+id = "com.amazon.audio.stream"
+
+[[wants.service]]
+id = "com.amazon.audio.system"
+
+[[wants.service]]
 id = "com.amazon.mediametrics.service"
+
+[[wants.service]]
+id = "com.amazon.mediabuffer.service"
+
+[[wants.service]]
+id = "com.amazon.mediatransform.service"
 
 # Player session (required for PlayerSession API to inhibit screensaver)
 [[wants.service]]
@@ -39,6 +51,14 @@ id = "com.amazon.media.playersession.service"
 # Group-IPC for service access
 [[wants.service]]
 id = "com.amazon.gipc.uuid.*"
+
+[[extras]]
+key = "interface.provider"
+component-id = "tv.taptrivia.firestick.main"
+
+[[extras.value.application.interface]]
+interface_name = "com.amazon.kepler.media.IMediaPlaybackServer"
+command_options = ["Play", "Pause"]
 
 [offers]
 [[offers.service]]
