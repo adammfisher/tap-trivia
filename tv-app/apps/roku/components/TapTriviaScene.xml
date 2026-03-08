@@ -22,6 +22,10 @@
       <LeaderboardScreen id="leaderboardScreen" visible="false" />
       <BetweenScreen id="betweenScreen" visible="false" />
       <ResultsScreen id="resultsScreen" visible="false" />
+      <BetweenPodiumScreen id="betweenPodiumScreen" visible="false" />
+      <BetweenStandingsScreen id="betweenStandingsScreen" visible="false" />
+      <BetweenNationalScreen id="betweenNationalScreen" visible="false" />
+      <BetweenHypeScreen id="betweenHypeScreen" visible="false" />
     </Group>
 
     <!-- Error overlay (hidden by default) -->

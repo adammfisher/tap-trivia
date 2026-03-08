@@ -140,12 +140,16 @@ exports.handler = async (event) => {
       const gameId = crypto.randomUUID();
       const pk = gameTimeslotPK(slotEpoch);
 
+      // Extract unique category names for between-game hype screen
+      const categories = [...new Set(questions.map(q => q.category))];
+
       const gameItem = {
         PK: pk,
         gameId,
         startTime: new Date(slotEpoch).toISOString(),
         startTimeEpoch: slotEpoch,
         questions,
+        categories,
         status: 'scheduled',
         createdAt: new Date().toISOString(),
         ttl: Math.floor(slotEpoch / 1000) + 7 * 24 * 3600

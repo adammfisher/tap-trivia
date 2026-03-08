@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="BetweenStandingsScreen" extends="Group">
+  <interface>
+    <field id="barCode" type="string" />
+    <field id="barName" type="string" />
+    <field id="betweenData" type="assocarray" onChange="onDataChanged" />
+    <field id="nextGameEpoch" type="longinteger" value="0" onChange="onEpochChanged" />
+  </interface>
+
+  <children>
+    <!-- Background gradient -->
+    <Poster id="bgGradient" width="1920" height="1080"
+            uri="pkg:/images/bg-gradient.png" />
+
+    <!-- Countdown bar overlay -->
+    <CountdownBar id="countdownBar" />
+
+    <!-- ═══ LEFT COLUMN: Bar score callout + state rankings ═══ -->
+    <Group id="leftCol" translation="[0, 80]">
+
+      <!-- "TAP STANDINGS" heading -->
+      <Label id="headingLabel" text="TAP STANDINGS"
+             translation="[0, 10]" width="960" horizAlign="center" color="#ffd200">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="40" />
+      </Label>
+
+      <!-- Your bar callout card -->
+      <Group id="barCallout" translation="[60, 70]">
+        <!-- Glass background -->
+        <Rectangle id="barCalloutBg" width="840" height="120"
+                   color="#ffffff" opacity="0.08" />
+        <Label id="barNameCallout" text=""
+               translation="[24, 12]" width="792" color="#f0f0f0">
+          <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="26" />
+        </Label>
+        <Label id="barCityState" text=""
+               translation="[24, 44]" width="400" color="#ffffff80">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="20" />
+        </Label>
+        <!-- Score Index value -->
+        <Label id="scoreIndexLabel" text="Score Index"
+               translation="[540, 12]" width="280" horizAlign="right" color="#ffffff60">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="18" />
+        </Label>
+        <Label id="scoreIndexValue" text=""
+               translation="[540, 34]" width="280" horizAlign="right" color="#00d4aa">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="40" />
+        </Label>
+      </Group>
+
+      <!-- State ranking label -->
+      <Label id="stateLabel" text=""
+             translation="[60, 210]" width="840" color="#ffffffCC">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="24" />
+      </Label>
+
+      <!-- 5 state ranking rows -->
+      <Group id="stateRankList" translation="[60, 250]">
+        <LeaderRow id="stateRow1" translation="[0, 0]" />
+        <LeaderRow id="stateRow2" translation="[0, 76]" />
+        <LeaderRow id="stateRow3" translation="[0, 152]" />
+        <LeaderRow id="stateRow4" translation="[0, 228]" />
+        <LeaderRow id="stateRow5" translation="[0, 304]" />
+      </Group>
+    </Group>
+
+    <!-- ═══ RIGHT COLUMN: Explainer + national rank + QR ═══ -->
+    <Group id="rightCol" translation="[960, 100]">
+
+      <!-- Score Index explainer card -->
+      <Group id="explainerCard" translation="[40, 10]">
+        <Rectangle width="860" height="100" color="#ffffff" opacity="0.06" />
+        <Poster id="chartIcon" uri="pkg:/images/emoji-lg-1f4ca.png"
+                width="56" height="56" translation="[20, 22]" />
+        <Label id="explainerTitle" text="What is Score Index?"
+               translation="[88, 12]" width="740" color="#f0f0f0">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
+        </Label>
+        <Label id="explainerText" text="Average points per question across all players at your bar this week."
+               translation="[88, 40]" width="740" color="#ffffff80" maxLines="2">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="18" />
+        </Label>
+      </Group>
+
+      <!-- National rank card -->
+      <Group id="nationalCard" translation="[40, 140]">
+        <Rectangle width="860" height="100" color="#ffffff" opacity="0.06" />
+        <Poster id="flagIcon" uri="pkg:/images/emoji-lg-1f1fa-1f1f8.png"
+                width="56" height="56" translation="[20, 22]" />
+        <Label id="nationalLabel" text="National Rank"
+               translation="[88, 12]" width="740" color="#ffffff80">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="20" />
+        </Label>
+        <Label id="nationalRankValue" text=""
+               translation="[88, 38]" width="740" color="#f0f0f0">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
+        </Label>
+      </Group>
+    </Group>
+
+    <!-- QR Badge — bottom-right -->
+    <QRBadge id="qrBadge" translation="[1520, 920]" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Utils.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Colors.brs" />
+  <script type="text/brightscript" uri="BetweenStandingsScreen.brs" />
+</component>

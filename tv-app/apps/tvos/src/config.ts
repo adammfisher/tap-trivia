@@ -11,3 +11,6 @@ export const ROTATION_DURATIONS: Record<string, number> = {
   idle: 60000,
   lobby: 60000,
 };
+
+export const BETWEEN_PHASE_DURATION = 30000;  // 30s per phase
+export const BETWEEN_TOTAL_DURATION = 120000; // 120s total

@@ -1,8 +1,20 @@
 'use strict';
 
-const { TABLE, get, put, query, docClient, PutCommand, QueryCommand } = require('./shared/dynamo');
+const { TABLE, get, put, query, update, docClient, PutCommand, QueryCommand } = require('./shared/dynamo');
 const { calculatePoints } = require('./shared/scoring');
 const { QUESTION_DURATION_MS } = require('./shared/game-clock');
+
+/**
+ * Get the ISO date string for the Monday of the current week (ET timezone).
+ */
+function getMonday() {
+  const now = new Date();
+  const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const day = et.getDay();
+  const diff = day === 0 ? 6 : day - 1; // Monday = 0 offset
+  et.setDate(et.getDate() - diff);
+  return `${et.getFullYear()}-${String(et.getMonth() + 1).padStart(2, '0')}-${String(et.getDate()).padStart(2, '0')}`;
+}
 
 function response(statusCode, body) {
   return {
@@ -157,6 +169,49 @@ exports.handler = async (event) => {
     });
 
     const totalGameScore = playerAnswers.reduce((sum, a) => sum + (a.pointsAwarded || 0), 0);
+
+    // --- Update weekly stats (fire-and-forget, don't block response) ---
+    if (points > 0) {
+      const monday = getMonday();
+      // Update player weekly stats (lazy reset if new week)
+      const playerWeekly = update(TABLE.PLAYERS, { PK: `PLAYER#${playerId}` },
+        'SET weekStart = :ws, weeklyPoints = if_not_exists(weeklyPoints, :zero) + :pts, weeklyGames = if_not_exists(weeklyGames, :zero)',
+        { ':ws': monday, ':pts': points, ':zero': 0 }
+      ).then(async (playerResult) => {
+        // If weekStart changed, reset first then add
+        if (playerResult && playerResult.weekStart !== monday) {
+          await update(TABLE.PLAYERS, { PK: `PLAYER#${playerId}` },
+            'SET weekStart = :ws, weeklyPoints = :pts, weeklyGames = :one',
+            { ':ws': monday, ':pts': points, ':one': 1 }
+          );
+        }
+      }).catch(err => console.error('Weekly player update error:', err.message));
+
+      // Update bar weekly aggregate
+      const barWeekly = (async () => {
+        if (!barCode) return;
+        const bar = await get(TABLE.BARS, { PK: `BAR#${barCode}` });
+        if (!bar) return;
+        if (bar.weekStart !== monday) {
+          // New week — reset bar weekly stats
+          await update(TABLE.BARS, { PK: `BAR#${barCode}` },
+            'SET weekStart = :ws, weeklyTotalPoints = :pts, weeklyTotalQuestions = :one, scoreIndex = :si',
+            { ':ws': monday, ':pts': points, ':one': 1, ':si': points }
+          );
+        } else {
+          const newTotal = (bar.weeklyTotalPoints || 0) + points;
+          const newQuestions = (bar.weeklyTotalQuestions || 0) + 1;
+          const newIndex = Math.round(newTotal / newQuestions);
+          await update(TABLE.BARS, { PK: `BAR#${barCode}` },
+            'SET weeklyTotalPoints = :tp, weeklyTotalQuestions = :tq, scoreIndex = :si',
+            { ':tp': newTotal, ':tq': newQuestions, ':si': newIndex }
+          );
+        }
+      })().catch(err => console.error('Weekly bar update error:', err.message));
+
+      // Don't await — let these run in background
+      Promise.allSettled([playerWeekly, barWeekly]).catch(() => {});
+    }
 
     return response(200, {
       correct,

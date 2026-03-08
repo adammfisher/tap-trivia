@@ -191,6 +191,22 @@ resource "aws_apigatewayv2_route" "get_tv_state" {
   target    = "integrations/${aws_apigatewayv2_integration.get_tv_state.id}"
 }
 
+# -----------------------------------------------------------------------------
+# GET /game/between → get-between-game-data
+# -----------------------------------------------------------------------------
+resource "aws_apigatewayv2_integration" "get_between_game_data" {
+  api_id                 = aws_apigatewayv2_api.main.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.get_between_game_data.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "get_between_game_data" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "GET /game/between"
+  target    = "integrations/${aws_apigatewayv2_integration.get_between_game_data.id}"
+}
+
 # =============================================================================
 # Player Routes
 # =============================================================================

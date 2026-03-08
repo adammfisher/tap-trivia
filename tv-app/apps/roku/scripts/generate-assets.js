@@ -971,6 +971,8 @@ function generateSignageEmojis() {
     '🎖️', '🌈', '☀️', '🌙', '⛅', '🍝', '🍲', '🥁', '🎼',
     '💃', '🕺', '🤑', '🗓️', '⏰', '🕐', '📍', '🏠', '❤️',
     '🌈', '🎈', '🪩',
+    // Between-game experience
+    '👥', '📊', '🌎', '🇺🇸',
   ];
 
   // Big size (128px for FS, used for big emoji display)

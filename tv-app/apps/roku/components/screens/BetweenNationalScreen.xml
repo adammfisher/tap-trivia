@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="BetweenNationalScreen" extends="Group">
+  <interface>
+    <field id="barCode" type="string" />
+    <field id="barName" type="string" />
+    <field id="betweenData" type="assocarray" onChange="onDataChanged" />
+    <field id="nextGameEpoch" type="longinteger" value="0" onChange="onEpochChanged" />
+  </interface>
+
+  <children>
+    <!-- Background gradient -->
+    <Poster id="bgGradient" width="1920" height="1080"
+            uri="pkg:/images/bg-gradient.png" />
+
+    <!-- Countdown bar overlay -->
+    <CountdownBar id="countdownBar" />
+
+    <!-- ═══ LEFT SIDE: Two-column top 25 ═══ -->
+    <Group id="leftArea" translation="[0, 80]">
+
+      <!-- Globe + heading -->
+      <Poster id="globeIcon" uri="pkg:/images/emoji-lg-1f30e.png"
+              width="56" height="56" translation="[420, 0]" />
+      <Label id="headingLabel" text="NATIONAL TOP 25"
+             translation="[0, 60]" width="960" horizAlign="center" color="#ffd200">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
+      </Label>
+
+      <!-- Column 1: Ranks 1-13 -->
+      <Group id="col1" translation="[30, 110]">
+        <Group id="col1Rows" />
+      </Group>
+
+      <!-- Column 2: Ranks 14-25 -->
+      <Group id="col2" translation="[490, 110]">
+        <Group id="col2Rows" />
+      </Group>
+    </Group>
+
+    <!-- ═══ RIGHT SIDE: Platform stats + cutoff ═══ -->
+    <Group id="rightCol" translation="[960, 100]">
+
+      <!-- Platform stats -->
+      <Label id="statsHeading" text="THIS WEEK"
+             translation="[0, 0]" width="880" horizAlign="center" color="#ffffffCC">
+        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
+      </Label>
+
+      <!-- Stats grid (2x2) -->
+      <Group id="statsGrid" translation="[40, 50]">
+        <!-- Row 1 -->
+        <Group id="stat1" translation="[0, 0]">
+          <Rectangle width="400" height="80" color="#ffffff" opacity="0.06" />
+          <Poster uri="pkg:/images/emoji-sm-1f465.png" width="36" height="36" translation="[16, 22]" />
+          <Label id="stat1Value" text="0" translation="[60, 8]" width="320" color="#f0f0f0">
+            <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
+          </Label>
+          <Label text="Players" translation="[60, 42]" width="320" color="#ffffff60">
+            <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="18" />
+          </Label>
+        </Group>
+        <Group id="stat2" translation="[420, 0]">
+          <Rectangle width="400" height="80" color="#ffffff" opacity="0.06" />
+          <Poster uri="pkg:/images/emoji-sm-1f37a.png" width="36" height="36" translation="[16, 22]" />
+          <Label id="stat2Value" text="0" translation="[60, 8]" width="320" color="#f0f0f0">
+            <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
+          </Label>
+          <Label text="Bars" translation="[60, 42]" width="320" color="#ffffff60">
+            <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="18" />
+          </Label>
+        </Group>
+      </Group>
+
+      <!-- Cutoff card -->
+      <Group id="cutoffCard" translation="[40, 170]">
+        <Rectangle width="860" height="90" color="#ffffff" opacity="0.06" />
+        <Poster uri="pkg:/images/emoji-sm-1f3af.png" width="36" height="36" translation="[16, 27]" />
+        <Label id="cutoffLabel" text="Top 25 Cutoff"
+               translation="[64, 10]" width="760" color="#ffffff80">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="20" />
+        </Label>
+        <Label id="cutoffValue" text=""
+               translation="[64, 38]" width="760" color="#ffd200">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="32" />
+        </Label>
+      </Group>
+
+      <!-- Your bar's best player -->
+      <Group id="yourBarCard" translation="[40, 290]" visible="false">
+        <Rectangle width="860" height="90" color="#ffffff" opacity="0.06" />
+        <Label id="yourBarLabel" text="Your Bar's Best"
+               translation="[20, 10]" width="820" color="#ffffff80">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="20" />
+        </Label>
+        <Label id="yourBarName" text=""
+               translation="[20, 38]" width="540" color="#f0f0f0">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="24" />
+        </Label>
+        <Label id="yourBarScore" text=""
+               translation="[560, 38]" width="280" horizAlign="right" color="#00d4aa">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
+        </Label>
+      </Group>
+    </Group>
+
+    <!-- QR Badge — bottom-right -->
+    <QRBadge id="qrBadge" translation="[1520, 920]" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Utils.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Colors.brs" />
+  <script type="text/brightscript" uri="BetweenNationalScreen.brs" />
+</component>

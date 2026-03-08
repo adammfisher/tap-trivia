@@ -129,6 +129,17 @@
   let countdownTickTimer = null;
   const ROTATION_DURATIONS = { results: 60000, idle: 60000, lobby: 60000 };
 
+  // Between-game experience state
+  let betweenGameData = null;
+  let betweenGameActive = false;
+  let betweenGamePhases = [];
+  let betweenGamePhaseIdx = 0;
+  let betweenGameTimer = null;
+  let betweenGameCountdownTimer = null;
+  let betweenGameStartEpoch = null;
+  let betweenGameTotalDuration = 120000; // 120s total
+  let betweenGameLastGameId = null;
+
   // DOM refs
   const screenEl = document.getElementById('tt-screen');
   const errorOverlay = document.getElementById('tt-error-overlay');
@@ -1145,6 +1156,7 @@
       if (screen === 'between') { updateBetweenCountdown(gameState); return; }
       if (screen === 'results') { updateResultsCountdown(gameState); return; }
       if (screen === 'lobby') { updateLobbyCountdown(gameState); return; }
+      if (screen.startsWith('between-')) return; // Between-game phases: static
       return; // All other screens: static, no update needed
     }
 
@@ -1990,6 +2002,353 @@
   }
 
   // ═══════════════════════════════════════════════════════════════
+  // BETWEEN-GAME EXPERIENCE — 4-phase post-game sequence
+  // ═══════════════════════════════════════════════════════════════
+
+  /** Countdown bar overlay HTML — persistent across all between-game phases */
+  function betweenCountdownBarHTML() {
+    return '<div class="tt-between-countdown" id="tt-between-countdown"><span class="tt-between-countdown__label">Next Game In</span> <span class="tt-between-countdown__time" id="tt-between-countdown-time">2:00</span></div>';
+  }
+
+  /** Update the between-game countdown bar display */
+  function updateBetweenGameCountdown() {
+    const el = document.getElementById('tt-between-countdown-time');
+    if (!el || !betweenGameData?.hype?.startsAt) return;
+    const secsLeft = Math.max(0, Math.ceil((betweenGameData.hype.startsAt - getServerNow()) / 1000));
+    const mins = Math.floor(secsLeft / 60);
+    const secs = secsLeft % 60;
+    el.textContent = `${mins}:${String(secs).padStart(2, '0')}`;
+    // Gold pulse when ≤15s
+    const bar = document.getElementById('tt-between-countdown');
+    if (bar) {
+      if (secsLeft <= 15) bar.classList.add('tt-between-countdown--urgent');
+      else bar.classList.remove('tt-between-countdown--urgent');
+    }
+  }
+
+  /** BETWEEN-GAME PODIUM — Trophy, top 3, ranks 4-10, confetti, QR */
+  function renderBetweenPodium(data) {
+    const { players = [], questionCount = 15, playerCount = 0 } = data;
+    const top3 = players.slice(0, 3);
+    const rest = players.slice(3, 10);
+
+    let rankRows = '';
+    rest.forEach((p, i) => {
+      rankRows += `
+        <div class="tt-bg-rank-row" style="animation:rankSlide .3s ease-out ${i * 0.06}s both">
+          <span class="tt-bg-rank-row__rank">${p.rank}</span>
+          ${avatarHTML(p.name, { size: 'sm' })}
+          <span class="tt-bg-rank-row__name">${p.name}</span>
+          <span class="tt-bg-rank-row__score">${p.score.toLocaleString()}</span>
+        </div>`;
+    });
+
+    screenEl.innerHTML = `
+      <div class="tt-bg-podium">
+        ${betweenCountdownBarHTML()}
+        ${resetArrowHTML()}
+        <div class="tt-bg-podium__left">
+          <div class="tt-bg-podium__trophy" style="animation:trophy .6s ease-out both">🏆</div>
+          <div class="tt-bg-podium__title" style="animation:fadeDown .5s ease-out .2s both">Game Over!</div>
+          <div class="tt-bg-podium__subtitle" style="animation:fadeDown .5s ease-out .3s both">${questionCount} questions · ${playerCount} players</div>
+          ${podiumHTML(top3, { avatarSizes: ['xl', '2xl', 'xl'] })}
+          ${confettiHTML(20)}
+        </div>
+        <div class="tt-bg-podium__right">
+          <div class="tt-bg-podium__ranks">
+            ${rankRows}
+          </div>
+          ${qrBadgeHTML('br')}
+        </div>
+      </div>`;
+    bindResetArrow();
+  }
+
+  /** BETWEEN-GAME STANDINGS — Bar's weekly Score Index, state rankings */
+  function renderBetweenStandings(data) {
+    const { yourBar = {}, stateRanking = [], stateName = '' } = data;
+
+    let rankingRows = '';
+    stateRanking.forEach((b, i) => {
+      const isYours = b.name === yourBar.name;
+      const delta = b.delta > 0 ? `<span class="tt-bg-delta tt-bg-delta--up">▲${b.delta}</span>`
+        : b.delta < 0 ? `<span class="tt-bg-delta tt-bg-delta--down">▼${Math.abs(b.delta)}</span>` : '';
+      rankingRows += `
+        <div class="tt-bg-bar-row${isYours ? ' tt-bg-bar-row--you' : ''}" style="animation:rankSlide .3s ease-out ${i * 0.08}s both">
+          <span class="tt-bg-bar-row__rank">${b.rank}</span>
+          <div class="tt-bg-bar-row__info">
+            <span class="tt-bg-bar-row__name">${b.name}</span>
+            <span class="tt-bg-bar-row__city">${b.city}</span>
+          </div>
+          <span class="tt-bg-bar-row__index">${(b.index || 0).toLocaleString()}</span>
+          ${delta}
+        </div>`;
+    });
+
+    const yourDelta = yourBar.delta > 0 ? `<span class="tt-bg-delta tt-bg-delta--up">▲${yourBar.delta}</span>`
+      : yourBar.delta < 0 ? `<span class="tt-bg-delta tt-bg-delta--down">▼${Math.abs(yourBar.delta)}</span>` : '';
+
+    screenEl.innerHTML = `
+      <div class="tt-bg-standings">
+        ${betweenCountdownBarHTML()}
+        ${resetArrowHTML()}
+        <div class="tt-bg-standings__left">
+          <div class="tt-bg-standings__header" style="animation:fadeDown .5s ease-out both">🏆 Tap Standings</div>
+          <div class="tt-bg-standings__your-bar tt-glass" style="animation:slideUp .5s ease-out .1s both">
+            <div class="tt-bg-standings__bar-name">${yourBar.name || barName}</div>
+            <div class="tt-bg-standings__bar-city">${yourBar.city || ''}, ${yourBar.state || ''}</div>
+            <div class="tt-bg-standings__bar-index">
+              <span class="tt-bg-standings__index-num">${(yourBar.index || 0).toLocaleString()}</span>
+              <span class="tt-bg-standings__index-label">Score Index</span>
+              ${yourDelta}
+            </div>
+          </div>
+          <div class="tt-bg-standings__state-header">${stateName} Rankings</div>
+          <div class="tt-bg-standings__ranking">${rankingRows}</div>
+        </div>
+        <div class="tt-bg-standings__right">
+          <div class="tt-glass tt-bg-standings__explainer" style="animation:slideUp .5s ease-out .3s both">
+            <div class="tt-bg-standings__explainer-icon">📊</div>
+            <div class="tt-bg-standings__explainer-title">Score Index</div>
+            <div class="tt-bg-standings__explainer-desc">Average points per question across all players at your bar this week.</div>
+          </div>
+          <div class="tt-glass tt-bg-standings__national" style="animation:slideUp .5s ease-out .4s both">
+            <div class="tt-bg-standings__national-flag">🇺🇸</div>
+            <div class="tt-bg-standings__national-label">Nationally</div>
+            <div class="tt-bg-standings__national-rank">#${yourBar.nationalRank || '—'}</div>
+            <div class="tt-bg-standings__national-total">of ${yourBar.totalBars || 0} bars</div>
+          </div>
+          ${qrBadgeHTML('br')}
+        </div>
+      </div>`;
+    bindResetArrow();
+  }
+
+  /** BETWEEN-GAME NATIONAL — Two-column top 25 players, platform stats */
+  function renderBetweenNational(data) {
+    const { top25 = [], stats = {}, cutoffScore = 0, yourBarBest = null } = data;
+
+    // Split into two columns: 1-13 and 14-25
+    const col1 = top25.slice(0, 13);
+    const col2 = top25.slice(13, 25);
+
+    function playerRow(p, rank) {
+      const isTop3 = rank <= 3;
+      const scoreK = p.score >= 1000 ? `${(p.score / 1000).toFixed(1)}K` : p.score;
+      return `
+        <div class="tt-bg-nat-row${isTop3 ? ' tt-bg-nat-row--gold' : ''}" style="animation:rankSlide .3s ease-out ${rank * 0.03}s both">
+          <span class="tt-bg-nat-row__rank">${rank}</span>
+          ${avatarHTML(p.name || 'Anon', { size: 'xs', rank: isTop3 ? rank : 0 })}
+          <span class="tt-bg-nat-row__name">${p.name || 'Anonymous'}</span>
+          <span class="tt-bg-nat-row__score">${scoreK}</span>
+        </div>`;
+    }
+
+    let col1HTML = col1.map((p, i) => playerRow(p, i + 1)).join('');
+    let col2HTML = col2.map((p, i) => playerRow(p, i + 14)).join('');
+
+    const statItems = [
+      { icon: '👥', label: 'Players', value: (stats.players || 0).toLocaleString() },
+      { icon: '🎮', label: 'Games', value: (stats.games || 0).toLocaleString() },
+      { icon: '❓', label: 'Questions', value: stats.questions >= 1000000 ? `${(stats.questions / 1000000).toFixed(1)}M` : (stats.questions || 0).toLocaleString() },
+      { icon: '🍺', label: 'Bars', value: (stats.bars || 0).toLocaleString() },
+    ];
+    const statsHTML = statItems.map(s =>
+      `<div class="tt-bg-stat"><span class="tt-bg-stat__icon">${s.icon}</span><span class="tt-bg-stat__value">${s.value}</span><span class="tt-bg-stat__label">${s.label}</span></div>`
+    ).join('');
+
+    let cutoffHTML = '';
+    if (cutoffScore > 0) {
+      const cutoffK = cutoffScore >= 1000 ? `${(cutoffScore / 1000).toFixed(1)}K` : cutoffScore;
+      cutoffHTML = `
+        <div class="tt-glass tt-bg-cutoff" style="animation:slideUp .5s ease-out .4s both">
+          <div class="tt-bg-cutoff__icon">🎯</div>
+          <div class="tt-bg-cutoff__title">Top 25 Cutoff</div>
+          <div class="tt-bg-cutoff__score">${cutoffK} pts</div>
+          ${yourBarBest ? `<div class="tt-bg-cutoff__closest">Closest from your bar: <strong>${yourBarBest.name}</strong> (${yourBarBest.score >= 1000 ? `${(yourBarBest.score / 1000).toFixed(1)}K` : yourBarBest.score})</div>` : ''}
+        </div>`;
+    }
+
+    screenEl.innerHTML = `
+      <div class="tt-bg-national">
+        ${betweenCountdownBarHTML()}
+        ${resetArrowHTML()}
+        <div class="tt-bg-national__left">
+          <div class="tt-bg-national__header" style="animation:fadeDown .5s ease-out both">🌎 National Top 25</div>
+          <div class="tt-bg-national__columns">
+            <div class="tt-bg-national__col">${col1HTML}</div>
+            <div class="tt-bg-national__col">${col2HTML}</div>
+          </div>
+        </div>
+        <div class="tt-bg-national__right">
+          <div class="tt-bg-national__stats" style="animation:slideUp .5s ease-out .2s both">${statsHTML}</div>
+          ${cutoffHTML}
+          ${qrBadgeHTML('br')}
+        </div>
+      </div>`;
+    bindResetArrow();
+  }
+
+  /** BETWEEN-GAME HYPE — Logo, next game categories, big QR + bar code */
+  function renderBetweenHype(data) {
+    const { categories = [], startsAt } = data;
+
+    const catPills = categories.map(cat =>
+      `<span class="tt-bg-hype__pill" style="animation:popIn .3s ease-out ${categories.indexOf(cat) * 0.08 + 0.3}s both">${getCategoryIcon(cat)} ${cat}</span>`
+    ).join('');
+
+    const secsLeft = startsAt ? Math.max(0, Math.ceil((startsAt - getServerNow()) / 1000)) : 0;
+    const mins = Math.floor(secsLeft / 60);
+    const secs = secsLeft % 60;
+
+    screenEl.innerHTML = `
+      <div class="tt-bg-hype">
+        ${betweenCountdownBarHTML()}
+        ${resetArrowHTML()}
+        <div class="tt-bg-hype__content">
+          <div class="tt-bg-hype__logo" style="animation:breathe 3s ease-in-out infinite">${logoHTML('xl')}</div>
+          <div class="tt-bg-hype__tagline" style="animation:fadeDown .5s ease-out .2s both">Next round starting soon!</div>
+          <div class="tt-bg-hype__categories" style="animation:slideUp .5s ease-out .3s both">${catPills}</div>
+          <div class="tt-bg-hype__qr-section" style="animation:slideUp .5s ease-out .5s both">
+            ${qrCodeHTML(240)}
+            <div class="tt-bg-hype__code-display">
+              <div class="tt-bg-hype__code-label">JOIN CODE</div>
+              <div class="tt-bg-hype__code-value">${barCode}</div>
+            </div>
+            <div class="tt-bg-hype__url">play.taptrivia.tv</div>
+          </div>
+        </div>
+      </div>`;
+    bindResetArrow();
+  }
+
+  /** Confetti HTML generator for between-game podium */
+  function confettiHTML(count) {
+    const colors = ['#ffd200', '#00d4aa', '#667eea', '#ff4757', '#764ba2', '#f59e0b', '#e879f9'];
+    let html = '<div class="tt-confetti">';
+    for (let i = 0; i < count; i++) {
+      const color = colors[i % colors.length];
+      const left = Math.random() * 100;
+      const delay = Math.random() * 2;
+      const duration = 1.5 + Math.random() * 1.5;
+      const size = 6 + Math.random() * 8;
+      html += `<div class="tt-confetti__piece" style="left:${left}%;background:${color};animation-delay:${delay}s;animation-duration:${duration}s;width:${size}px;height:${size * 1.4}px"></div>`;
+    }
+    html += '</div>';
+    return html;
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // BETWEEN-GAME STATE MACHINE
+  // ═══════════════════════════════════════════════════════════════
+
+  /** Fetch between-game data and start the 4-phase experience */
+  async function startBetweenGameExperience(gameId) {
+    if (betweenGameActive) return;
+    if (betweenGameLastGameId === gameId) return; // Already ran for this game
+
+    betweenGameLastGameId = gameId;
+    betweenGameActive = true;
+    betweenGameStartEpoch = Date.now();
+
+    // Fetch data from API
+    try {
+      betweenGameData = await apiCall('GET', `/game/between?barCode=${barCode}&gameId=${gameId}`);
+      if (betweenGameData.error) {
+        console.warn('[Between] API error:', betweenGameData.error);
+        betweenGameData = null;
+      }
+    } catch (err) {
+      console.error('[Between] Fetch error:', err);
+      betweenGameData = null;
+    }
+
+    if (!betweenGameData) {
+      exitBetweenGameMode();
+      return;
+    }
+
+    // Build phase list (skip null phases)
+    const allPhases = [
+      { key: 'podium', data: betweenGameData.podium, render: renderBetweenPodium },
+      { key: 'barStandings', data: betweenGameData.barStandings, render: renderBetweenStandings },
+      { key: 'national', data: betweenGameData.national, render: renderBetweenNational },
+      { key: 'hype', data: betweenGameData.hype, render: renderBetweenHype },
+    ];
+
+    betweenGamePhases = allPhases.filter(p => p.data !== null && p.data !== undefined);
+
+    if (betweenGamePhases.length === 0) {
+      exitBetweenGameMode();
+      return;
+    }
+
+    // Distribute 120s across available phases
+    const perPhaseMs = Math.floor(betweenGameTotalDuration / betweenGamePhases.length);
+    betweenGamePhases.forEach(p => { p.duration = perPhaseMs; });
+
+    betweenGamePhaseIdx = 0;
+    renderBetweenGamePhase();
+    startBetweenGameTimer();
+    startBetweenGameCountdownTick();
+    console.log(`[Between] Started ${betweenGamePhases.length} phases, ${perPhaseMs / 1000}s each`);
+  }
+
+  /** Render the current between-game phase */
+  function renderBetweenGamePhase() {
+    if (betweenGamePhaseIdx >= betweenGamePhases.length) {
+      exitBetweenGameMode();
+      return;
+    }
+    const phase = betweenGamePhases[betweenGamePhaseIdx];
+    currentScreen = `between-${phase.key}`;
+    localQuestionNumber = null;
+    phase.render(phase.data);
+    updateBetweenGameCountdown();
+  }
+
+  /** Start timer for current between-game phase */
+  function startBetweenGameTimer() {
+    stopBetweenGameTimer();
+    if (betweenGamePhaseIdx >= betweenGamePhases.length) return;
+    const phase = betweenGamePhases[betweenGamePhaseIdx];
+    betweenGameTimer = setTimeout(() => {
+      betweenGamePhaseIdx++;
+      if (betweenGamePhaseIdx >= betweenGamePhases.length) {
+        exitBetweenGameMode();
+      } else {
+        fadeScreenTransition(() => renderBetweenGamePhase());
+        startBetweenGameTimer();
+      }
+    }, phase.duration);
+  }
+
+  /** Countdown tick for between-game overlay (1s updates) */
+  function startBetweenGameCountdownTick() {
+    stopBetweenGameCountdownTick();
+    betweenGameCountdownTimer = setInterval(updateBetweenGameCountdown, 1000);
+  }
+
+  function stopBetweenGameTimer() {
+    if (betweenGameTimer) { clearTimeout(betweenGameTimer); betweenGameTimer = null; }
+  }
+
+  function stopBetweenGameCountdownTick() {
+    if (betweenGameCountdownTimer) { clearInterval(betweenGameCountdownTimer); betweenGameCountdownTimer = null; }
+  }
+
+  /** Exit between-game mode and enter normal rotation */
+  function exitBetweenGameMode() {
+    betweenGameActive = false;
+    stopBetweenGameTimer();
+    stopBetweenGameCountdownTick();
+    betweenGamePhases = [];
+    betweenGamePhaseIdx = 0;
+    // Return to normal idle/lobby rotation
+    currentScreen = '';
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   // ERROR OVERLAY
   // ═══════════════════════════════════════════════════════════════
   function showError() { errorOverlay.classList.remove('tt-hidden'); }
@@ -2305,22 +2664,33 @@
     if (state.state === 'break') {
       setPollRate(CONFIG.POLL_INTERVAL_IDLE || 5000);
       exitRotationMode();
+      if (betweenGameActive) exitBetweenGameMode();
       // Don't re-render if already on idle — avoids flashing on every poll tick
       if (currentScreen === 'idle') return;
       renderScreen({ ...gameState, screen: 'idle' });
       return;
     }
 
-    // Game over — slow polling, rotate between results and lobby (countdown to next game)
+    // Game over — slow polling, between-game experience then rotation
     if (state.state === 'game_over') {
       setPollRate(CONFIG.POLL_INTERVAL_IDLE || 5000);
+      const gameId = state.gameId || '';
+      // Start between-game experience if not already running and not yet done for this game
+      if (!betweenGameActive && betweenGameLastGameId !== gameId && gameId) {
+        startBetweenGameExperience(gameId);
+        return;
+      }
+      // If between-game is active, let it continue (don't interfere)
+      if (betweenGameActive) return;
+      // Between-game done — enter normal rotation
       handleScreenRotation(gameState);
       return;
     }
 
-    // Active game — fast polling, exit rotation, render normally
+    // Active game — fast polling, exit rotation + between-game, render normally
     setPollRate(CONFIG.POLL_INTERVAL_ACTIVE || 2000);
     exitRotationMode();
+    if (betweenGameActive) exitBetweenGameMode();
     renderScreen(gameState);
   }
 
@@ -2576,6 +2946,42 @@
     },
   ];
 
+  // Between-game demo data
+  const DEMO_BETWEEN_DATA = {
+    podium: {
+      players: DEMO_PLAYERS.slice(0, 10).map((p, i) => ({ name: p.name, score: p.score, rank: i + 1 })),
+      questionCount: 15,
+      playerCount: 12
+    },
+    barStandings: {
+      yourBar: { name: barName || "Mo's Tavern", city: 'Brevard', state: 'NC', rank: 6, index: 7620, delta: 5, nationalRank: 46, totalBars: 312 },
+      stateRanking: [
+        { name: "The Whiskey Jar", city: 'Asheville', rank: 4, index: 8100, delta: 2 },
+        { name: "Oskar Blues", city: 'Brevard', rank: 5, index: 7850, delta: -1 },
+        { name: barName || "Mo's Tavern", city: 'Brevard', rank: 6, index: 7620, delta: 5 },
+        { name: "Sierra Nevada", city: 'Mills River', rank: 7, index: 7400, delta: 0 },
+        { name: "Wicked Weed", city: 'Asheville', rank: 8, index: 7200, delta: -3 },
+      ],
+      stateName: 'North Carolina'
+    },
+    national: {
+      top25: Array.from({ length: 25 }, (_, i) => ({
+        name: ['Sarah M', 'Chris K', 'Jake', 'Mike D', 'Lisa P', 'Tom W', 'Amy R', 'Dan B', 'Nicole S', 'Ryan T', 'Emma L', 'Josh P', 'Alex G', 'Maria H', 'Kevin W', 'Laura S', 'James T', 'Sofia R', 'David M', 'Olivia K', 'Ethan B', 'Mia C', 'Noah L', 'Ava P', 'Liam J'][i],
+        bar: ['The Pub', 'Sports Bar', 'Brew House'][i % 3],
+        city: ['Austin, TX', 'Denver, CO', 'Nashville, TN', 'Portland, OR'][i % 4],
+        score: Math.round(98420 - i * 1800 + Math.random() * 200)
+      })),
+      stats: { players: 12400, games: 847, questions: 4200000, bars: 312 },
+      cutoffScore: 55500,
+      yourBarBest: { name: 'Sarah M', score: 42100 }
+    },
+    hype: {
+      nextGameId: 'GAME#demo',
+      categories: ['Entertainment', 'Sports', 'Science', 'Geography', 'History'],
+      startsAt: Date.now() + 120000
+    }
+  };
+
   const DEMO_SCREENS = [
     { screen: 'idle' },
     {
@@ -2650,6 +3056,10 @@
       playerCount: 12,
       scores: DEMO_PLAYERS,
     },
+    { screen: 'between-podium', _betweenData: 'podium' },
+    { screen: 'between-barStandings', _betweenData: 'barStandings' },
+    { screen: 'between-national', _betweenData: 'national' },
+    { screen: 'between-hype', _betweenData: 'hype' },
   ];
 
   async function runDemoMode() {
@@ -2697,7 +3107,17 @@
     function showNext() {
       currentScreen = ''; // Force re-render
       localQuestionNumber = null; // Reset question tracking for demo
-      renderScreen(DEMO_SCREENS[idx]);
+      const demoScreen = DEMO_SCREENS[idx];
+      if (demoScreen._betweenData) {
+        // Render between-game screen directly from demo data
+        const renderers = { podium: renderBetweenPodium, barStandings: renderBetweenStandings, national: renderBetweenNational, hype: renderBetweenHype };
+        const key = demoScreen._betweenData;
+        betweenGameData = DEMO_BETWEEN_DATA;
+        renderers[key](DEMO_BETWEEN_DATA[key]);
+        currentScreen = demoScreen.screen;
+      } else {
+        renderScreen(demoScreen);
+      }
       idx = (idx + 1) % DEMO_SCREENS.length;
     }
 

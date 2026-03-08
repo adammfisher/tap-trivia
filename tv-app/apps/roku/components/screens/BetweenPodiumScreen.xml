@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="BetweenPodiumScreen" extends="Group">
+  <interface>
+    <field id="barCode" type="string" />
+    <field id="barName" type="string" />
+    <field id="betweenData" type="assocarray" onChange="onDataChanged" />
+    <field id="nextGameEpoch" type="longinteger" value="0" onChange="onEpochChanged" />
+  </interface>
+
+  <children>
+    <!-- Background gradient -->
+    <Poster id="bgGradient" width="1920" height="1080"
+            uri="pkg:/images/bg-gradient.png" />
+
+    <!-- Countdown bar overlay (top center) -->
+    <CountdownBar id="countdownBar" />
+
+    <!-- ═══ LEFT COLUMN: Trophy + Podium ═══ -->
+    <Group id="leftCol" translation="[0, 80]">
+
+      <!-- Trophy emoji (128px) -->
+      <Poster id="trophyIcon" uri="pkg:/images/emoji-lg-1f3c6.png"
+              width="100" height="100" translation="[430, 10]" />
+
+      <!-- "PODIUM" heading -->
+      <Label id="headingLabel" text="PODIUM"
+             translation="[0, 120]" width="960" horizAlign="center" color="#ffd200">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="44" />
+      </Label>
+
+      <!-- Stats line: "15 questions · 12 players" -->
+      <Label id="statsLabel" text=""
+             translation="[0, 175]" width="960" horizAlign="center" color="#ffffff80">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+      </Label>
+
+      <!-- Podium widget (top 3) -->
+      <Podium id="podium" translation="[80, 220]" />
+    </Group>
+
+    <!-- ═══ RIGHT COLUMN: Ranks 4-10 ═══ -->
+    <Group id="rightCol" translation="[960, 100]">
+      <Label id="runnersLabel" text="RUNNERS UP"
+             translation="[0, 0]" width="880" horizAlign="center" color="#ffffffCC">
+        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="28" />
+      </Label>
+
+      <Group id="rankList" translation="[40, 50]">
+        <LeaderRow id="rank4" translation="[0, 0]" />
+        <LeaderRow id="rank5" translation="[0, 76]" />
+        <LeaderRow id="rank6" translation="[0, 152]" />
+        <LeaderRow id="rank7" translation="[0, 228]" />
+        <LeaderRow id="rank8" translation="[0, 304]" />
+        <LeaderRow id="rank9" translation="[0, 380]" />
+        <LeaderRow id="rank10" translation="[0, 456]" />
+      </Group>
+    </Group>
+
+    <!-- QR Badge — bottom-right -->
+    <QRBadge id="qrBadge" translation="[1520, 920]" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Utils.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Colors.brs" />
+  <script type="text/brightscript" uri="BetweenPodiumScreen.brs" />
+</component>

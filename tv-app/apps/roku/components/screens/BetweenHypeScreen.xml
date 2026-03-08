@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="BetweenHypeScreen" extends="Group">
+  <interface>
+    <field id="barCode" type="string" />
+    <field id="barName" type="string" />
+    <field id="betweenData" type="assocarray" onChange="onDataChanged" />
+    <field id="nextGameEpoch" type="longinteger" value="0" onChange="onEpochChanged" />
+  </interface>
+
+  <children>
+    <!-- Background gradient -->
+    <Poster id="bgGradient" width="1920" height="1080"
+            uri="pkg:/images/bg-gradient.png" />
+
+    <!-- Countdown bar overlay -->
+    <CountdownBar id="countdownBar" />
+
+    <!-- ═══ CENTERED LAYOUT ═══ -->
+    <Group id="centerContent" translation="[0, 100]">
+
+      <!-- Logo (hero size) -->
+      <Logo id="logo" translation="[760, 30]" />
+
+      <!-- "NEXT GAME" heading -->
+      <Label id="headingLabel" text="NEXT GAME"
+             translation="[0, 160]" width="1920" horizAlign="center" color="#ffd200">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="48" />
+      </Label>
+
+      <!-- Categories heading -->
+      <Label id="categoriesLabel" text="Categories"
+             translation="[0, 230]" width="1920" horizAlign="center" color="#ffffff80">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="24" />
+      </Label>
+
+      <!-- Category pills (dynamically created) -->
+      <Group id="pillContainer" translation="[0, 280]" />
+
+      <!-- Big QR code -->
+      <Group id="qrArea" translation="[660, 580]">
+        <Poster id="qrBig" uri="pkg:/images/qr-play-360.png"
+                width="240" height="240" translation="[130, 0]" />
+        <!-- URL below QR -->
+        <Label id="urlLabel" text="play.taptrivia.tv"
+               translation="[0, 255]" width="600" horizAlign="center" color="#ffd200">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
+        </Label>
+        <!-- Bar code -->
+        <Group translation="[0, 295]">
+          <Label text="CODE" translation="[200, 4]" width="80" color="#ffffff4D">
+            <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
+          </Label>
+          <Label id="bigCodeLabel" text="" translation="[285, 0]" color="#ffd200">
+            <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="32" />
+          </Label>
+        </Group>
+      </Group>
+    </Group>
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Utils.brs" />
+  <script type="text/brightscript" uri="pkg:/components/utils/Colors.brs" />
+  <script type="text/brightscript" uri="BetweenHypeScreen.brs" />
+</component>

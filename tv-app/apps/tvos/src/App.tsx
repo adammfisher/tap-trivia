@@ -15,9 +15,16 @@ import { RevealScreen } from './screens/RevealScreen';
 import { BetweenScreen } from './screens/BetweenScreen';
 import { LeaderboardScreen } from './screens/LeaderboardScreen';
 import { ResultsScreen } from './screens/ResultsScreen';
+import { BetweenPodiumScreen } from './screens/BetweenPodiumScreen';
+import { BetweenStandingsScreen } from './screens/BetweenStandingsScreen';
+import { BetweenNationalScreen } from './screens/BetweenNationalScreen';
+import { BetweenHypeScreen } from './screens/BetweenHypeScreen';
 
-// Screens that should fade between each other (idle rotation)
-const FADE_SCREENS = new Set(['idle', 'lobby', 'results']);
+// Screens that should fade between each other (idle rotation + between-game)
+const FADE_SCREENS = new Set([
+  'idle', 'lobby', 'results',
+  'between-podium', 'between-standings', 'between-national', 'between-hype',
+]);
 
 function getScreen(screenName: string): React.ReactNode {
   switch (screenName) {
@@ -31,6 +38,10 @@ function getScreen(screenName: string): React.ReactNode {
     case 'between': return <BetweenScreen />;
     case 'leaderboard': return <LeaderboardScreen />;
     case 'results': return <ResultsScreen />;
+    case 'between-podium': return <BetweenPodiumScreen />;
+    case 'between-standings': return <BetweenStandingsScreen />;
+    case 'between-national': return <BetweenNationalScreen />;
+    case 'between-hype': return <BetweenHypeScreen />;
     default: return <SetupScreen />;
   }
 }

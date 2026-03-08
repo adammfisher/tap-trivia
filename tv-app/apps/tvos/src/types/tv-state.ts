@@ -10,7 +10,50 @@ export type TVScreen =
   | 'reveal'
   | 'between'
   | 'leaderboard'
-  | 'results';
+  | 'results'
+  | 'between-podium'
+  | 'between-standings'
+  | 'between-national'
+  | 'between-hype';
+
+export interface BetweenGameData {
+  podium: {
+    players: Array<{ name: string; score: number; rank: number }>;
+    questionCount: number;
+    playerCount: number;
+  } | null;
+  barStandings: {
+    yourBar: {
+      name: string;
+      city: string;
+      state: string;
+      rank: number;
+      index: number;
+      delta: number;
+      nationalRank: number;
+      totalBars: number;
+    };
+    stateRanking: Array<{
+      name: string;
+      city: string;
+      rank: number;
+      index: number;
+      delta: number;
+    }>;
+    stateName: string;
+  } | null;
+  national: {
+    top25: Array<{ name: string; bar: string; city: string; score: number }>;
+    stats: { players: number; games: number; questions: number; bars: number };
+    cutoffScore: number;
+    yourBarBest: { name: string; score: number } | null;
+  } | null;
+  hype: {
+    nextGameId: string;
+    categories: string[];
+    startsAt: number;
+  } | null;
+}
 
 export interface TVState {
   screen: TVScreen;
@@ -54,6 +97,9 @@ export interface TVState {
   signageCurrentIndex: number;
   logoUrl?: string | null;
   logoHash?: string | null;
+
+  // Between-game experience
+  betweenData?: BetweenGameData | null;
 
   // Connection
   consecutiveErrors: number;

@@ -706,6 +706,52 @@ resource "aws_lambda_permission" "upload_logo_apigw" {
 }
 
 # =============================================================================
+# Between-Game Data Lambda
+# =============================================================================
+
+data "archive_file" "get_between_game_data" {
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/functions/get-between-game-data"
+  output_path = "${path.module}/zip/get-between-game-data.zip"
+}
+
+# -----------------------------------------------------------------------------
+# 20. get-between-game-data
+#     Returns podium, bar standings, national top 25, and hype data
+#     for the between-game TV experience.
+#     DynamoDB: Read Answers (game-bar-index), Read Players (WeeklyLeaderboard GSI),
+#               Read Bars (StateScoreIndex GSI), Read Games
+# -----------------------------------------------------------------------------
+resource "aws_lambda_function" "get_between_game_data" {
+  function_name    = "TapTrivia-get-between-game-data"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  memory_size      = 256
+  timeout          = 15
+  filename         = data.archive_file.get_between_game_data.output_path
+  source_code_hash = data.archive_file.get_between_game_data.output_base64sha256
+
+  environment {
+    variables = local.common_environment_variables
+  }
+
+  tags = {
+    Environment = var.stage
+    Project     = "TapTrivia"
+    Function    = "get-between-game-data"
+  }
+}
+
+resource "aws_lambda_permission" "get_between_game_data_apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_between_game_data.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}
+
+# =============================================================================
 # Group Lambda
 # =============================================================================
 

@@ -3065,3 +3065,552 @@ body {
   background: linear-gradient(180deg, transparent, rgba(255,255,255,.08), rgba(255,255,255,.08), transparent);
   margin: 56px 0;
 }
+
+/* =============================================================================
+   BETWEEN-GAME EXPERIENCE — 4-phase post-game sequence
+   ============================================================================= */
+
+/* Countdown bar overlay — persistent across all between-game phases */
+.tt-between-countdown {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 40px;
+  background: linear-gradient(135deg, rgba(102,126,234,.4), rgba(118,75,162,.4));
+  backdrop-filter: blur(12px);
+  border-radius: 0 0 24px 24px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-top: none;
+  font-family: 'Outfit', sans-serif;
+  animation: fadeDown .5s ease-out both;
+}
+.tt-between-countdown__label {
+  font-size: 24px;
+  font-weight: 500;
+  color: rgba(255,255,255,.6);
+}
+.tt-between-countdown__time {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+.tt-between-countdown--urgent {
+  background: linear-gradient(135deg, rgba(255,210,0,.4), rgba(245,158,11,.4));
+  animation: codeGlow 1.5s ease-in-out infinite;
+}
+.tt-between-countdown--urgent .tt-between-countdown__time {
+  color: #ffd200;
+}
+
+/* Confetti */
+.tt-confetti {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 10;
+}
+.tt-confetti__piece {
+  position: absolute;
+  top: -20px;
+  border-radius: 3px;
+  animation: confettiFall 2s ease-in forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(1100px) rotate(720deg); opacity: 0; }
+}
+
+/* Trophy bounce */
+@keyframes trophy {
+  0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+  60% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Bar grow animation for standings */
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Shimmer for highlights */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Crown bounce for top bar */
+@keyframes crownBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* --- Phase 1: Podium --- */
+.tt-bg-podium {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding: 72px 60px 40px;
+}
+.tt-bg-podium__left {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.tt-bg-podium__right {
+  flex: 0.8;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 40px;
+}
+.tt-bg-podium__trophy {
+  font-size: 80px;
+  text-align: center;
+}
+.tt-bg-podium__title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 56px;
+  font-weight: 700;
+  color: #f0f0f0;
+  text-align: center;
+}
+.tt-bg-podium__subtitle {
+  font-size: 24px;
+  color: rgba(255,255,255,.5);
+  text-align: center;
+  margin-bottom: 12px;
+}
+.tt-bg-podium__ranks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Rank rows for podium 4-10 */
+.tt-bg-rank-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  background: rgba(255,255,255,.04);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.04);
+}
+.tt-bg-rank-row__rank {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: rgba(255,255,255,.25);
+  width: 32px;
+  text-align: center;
+}
+.tt-bg-rank-row__name {
+  flex: 1;
+  font-size: 22px;
+  font-weight: 500;
+  color: rgba(255,255,255,.7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tt-bg-rank-row__score {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffd200;
+}
+
+/* --- Phase 2: Standings --- */
+.tt-bg-standings {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding: 72px 60px 40px;
+}
+.tt-bg-standings__left {
+  flex: 1.1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  padding-right: 40px;
+}
+.tt-bg-standings__right {
+  flex: 0.9;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+  padding: 0 20px;
+}
+.tt-bg-standings__header {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+.tt-bg-standings__your-bar {
+  padding: 24px 28px;
+  border-radius: 20px;
+}
+.tt-bg-standings__bar-name {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+.tt-bg-standings__bar-city {
+  font-size: 20px;
+  color: rgba(255,255,255,.5);
+  margin-bottom: 12px;
+}
+.tt-bg-standings__bar-index {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.tt-bg-standings__index-num {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: #ffd200;
+}
+.tt-bg-standings__index-label {
+  font-size: 20px;
+  color: rgba(255,255,255,.4);
+}
+.tt-bg-standings__state-header {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(255,255,255,.5);
+  margin-top: 8px;
+}
+.tt-bg-standings__ranking {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Bar ranking rows */
+.tt-bg-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background: rgba(255,255,255,.04);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.04);
+}
+.tt-bg-bar-row--you {
+  background: linear-gradient(135deg, rgba(102,126,234,.15), rgba(118,75,162,.15));
+  border-color: rgba(102,126,234,.2);
+}
+.tt-bg-bar-row__rank {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: rgba(255,255,255,.25);
+  width: 32px;
+  text-align: center;
+}
+.tt-bg-bar-row__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.tt-bg-bar-row__name {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(255,255,255,.8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tt-bg-bar-row__city {
+  font-size: 16px;
+  color: rgba(255,255,255,.35);
+}
+.tt-bg-bar-row__index {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffd200;
+}
+
+/* Delta arrows */
+.tt-bg-delta {
+  font-size: 18px;
+  font-weight: 700;
+}
+.tt-bg-delta--up { color: #00d4aa; }
+.tt-bg-delta--down { color: #ff4757; }
+
+/* Explainer + national cards */
+.tt-bg-standings__explainer {
+  padding: 24px;
+  border-radius: 20px;
+  text-align: center;
+}
+.tt-bg-standings__explainer-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+.tt-bg-standings__explainer-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #f0f0f0;
+  margin-bottom: 8px;
+}
+.tt-bg-standings__explainer-desc {
+  font-size: 18px;
+  color: rgba(255,255,255,.5);
+  line-height: 1.5;
+}
+.tt-bg-standings__national {
+  padding: 24px;
+  border-radius: 20px;
+  text-align: center;
+}
+.tt-bg-standings__national-flag {
+  font-size: 36px;
+  margin-bottom: 4px;
+}
+.tt-bg-standings__national-label {
+  font-size: 20px;
+  color: rgba(255,255,255,.5);
+}
+.tt-bg-standings__national-rank {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 52px;
+  font-weight: 700;
+  color: #667eea;
+}
+.tt-bg-standings__national-total {
+  font-size: 18px;
+  color: rgba(255,255,255,.35);
+}
+
+/* --- Phase 3: National Top 25 --- */
+.tt-bg-national {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding: 72px 60px 40px;
+}
+.tt-bg-national__left {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  padding-right: 40px;
+}
+.tt-bg-national__right {
+  flex: 0.8;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+  padding: 0 20px;
+}
+.tt-bg-national__header {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+.tt-bg-national__columns {
+  display: flex;
+  gap: 24px;
+}
+.tt-bg-national__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* National player rows */
+.tt-bg-nat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-radius: 10px;
+}
+.tt-bg-nat-row--gold {
+  background: linear-gradient(135deg, rgba(255,210,0,.1), rgba(245,158,11,.05));
+}
+.tt-bg-nat-row__rank {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(255,255,255,.25);
+  width: 28px;
+  text-align: center;
+}
+.tt-bg-nat-row--gold .tt-bg-nat-row__rank {
+  color: #ffd200;
+}
+.tt-bg-nat-row__name {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(255,255,255,.6);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tt-bg-nat-row__score {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffd200;
+}
+
+/* Platform stats */
+.tt-bg-national__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.tt-bg-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  background: rgba(255,255,255,.04);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.04);
+}
+.tt-bg-stat__icon { font-size: 28px; margin-bottom: 4px; }
+.tt-bg-stat__value {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+.tt-bg-stat__label {
+  font-size: 14px;
+  color: rgba(255,255,255,.35);
+}
+
+/* Cutoff card */
+.tt-bg-cutoff {
+  padding: 20px;
+  border-radius: 20px;
+  text-align: center;
+}
+.tt-bg-cutoff__icon { font-size: 32px; margin-bottom: 4px; }
+.tt-bg-cutoff__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(255,255,255,.6);
+}
+.tt-bg-cutoff__score {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: #667eea;
+}
+.tt-bg-cutoff__closest {
+  font-size: 16px;
+  color: rgba(255,255,255,.45);
+  margin-top: 8px;
+}
+
+/* --- Phase 4: Hype CTA --- */
+.tt-bg-hype {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 72px 60px 40px;
+}
+.tt-bg-hype__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+.tt-bg-hype__logo {
+  margin-bottom: 8px;
+}
+.tt-bg-hype__tagline {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 40px;
+  font-weight: 600;
+  color: rgba(255,255,255,.7);
+  text-align: center;
+}
+.tt-bg-hype__categories {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  max-width: 900px;
+}
+.tt-bg-hype__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: rgba(255,255,255,.06);
+  border-radius: 100px;
+  border: 1px solid rgba(255,255,255,.08);
+  font-size: 22px;
+  font-weight: 500;
+  color: rgba(255,255,255,.7);
+  backdrop-filter: blur(8px);
+}
+.tt-bg-hype__qr-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+.tt-bg-hype__code-display {
+  text-align: center;
+}
+.tt-bg-hype__code-label {
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255,255,255,.4);
+  letter-spacing: 3px;
+}
+.tt-bg-hype__code-value {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 56px;
+  font-weight: 700;
+  color: #ffd200;
+  letter-spacing: 8px;
+  animation: codeGlow 2s ease-in-out infinite;
+}
+.tt-bg-hype__url {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(255,255,255,.5);
+}

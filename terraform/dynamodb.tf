@@ -207,6 +207,23 @@ resource "aws_dynamodb_table" "players" {
     type = "S"
   }
 
+  attribute {
+    name = "weekStart"
+    type = "S"
+  }
+
+  attribute {
+    name = "weeklyPoints"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name            = "WeeklyLeaderboard"
+    hash_key        = "weekStart"
+    range_key       = "weeklyPoints"
+    projection_type = "ALL"
+  }
+
   tags = {
     Environment = var.stage
     Project     = "TapTrivia"
@@ -251,10 +268,22 @@ resource "aws_dynamodb_table" "bars" {
     projection_type = "ALL"
   }
 
+  attribute {
+    name = "scoreIndex"
+    type = "N"
+  }
+
   global_secondary_index {
     name            = "state-index"
     hash_key        = "state"
     range_key       = "barCode"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "StateScoreIndex"
+    hash_key        = "state"
+    range_key       = "scoreIndex"
     projection_type = "ALL"
   }
 

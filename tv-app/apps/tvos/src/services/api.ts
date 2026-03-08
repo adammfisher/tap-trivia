@@ -59,6 +59,41 @@ export async function activateTV(barCode: string) {
   );
 }
 
+export async function getBetweenGameData(barCode: string, gameId: string) {
+  return apiCall<BetweenGameDataResponse>(
+    'GET',
+    `/game/between?barCode=${encodeURIComponent(barCode)}&gameId=${encodeURIComponent(gameId)}`,
+  );
+}
+
+export interface BetweenGameDataResponse {
+  podium: {
+    players: Array<{ name: string; score: number; rank: number }>;
+    questionCount: number;
+    playerCount: number;
+  } | null;
+  barStandings: {
+    yourBar: {
+      name: string; city: string; state: string;
+      rank: number; index: number; delta: number;
+      nationalRank: number; totalBars: number;
+    };
+    stateRanking: Array<{ name: string; city: string; rank: number; index: number; delta: number }>;
+    stateName: string;
+  } | null;
+  national: {
+    top25: Array<{ name: string; bar: string; city: string; score: number }>;
+    stats: { players: number; games: number; questions: number; bars: number };
+    cutoffScore: number;
+    yourBarBest: { name: string; score: number } | null;
+  } | null;
+  hype: {
+    nextGameId: string;
+    categories: string[];
+    startsAt: number;
+  } | null;
+}
+
 // API response types
 
 export interface TvLeaderboardEntry {

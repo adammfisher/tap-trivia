@@ -9,6 +9,7 @@ import React, {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getTvState,
+  getBetweenGameData,
   registerBar,
   activateTV,
   getServerNow,
@@ -20,9 +21,10 @@ import {
   POLL_INTERVAL_IDLE,
   MAX_ERRORS_BEFORE_OVERLAY,
   ROTATION_DURATIONS,
+  BETWEEN_TOTAL_DURATION,
 } from '../config';
 import { getNextGameTime, GAME_DURATION_MS, RESULTS_DURATION_MS } from '../utils/game-clock';
-import type { TVState, TVScreen, INITIAL_TV_STATE } from '../types/tv-state';
+import type { TVState, TVScreen, BetweenGameData, INITIAL_TV_STATE } from '../types/tv-state';
 
 const STORAGE_KEY = '@taptrivia_tv_config';
 
@@ -223,6 +225,14 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
   const signageSlidesRef = useRef<SignageSlide[]>([]);
   const signageIdxRef = useRef(0);
 
+  // Between-game state refs
+  const betweenGameActiveRef = useRef(false);
+  const betweenGameDataRef = useRef<BetweenGameData | null>(null);
+  const betweenGamePhasesRef = useRef<TVScreen[]>([]);
+  const betweenGamePhaseIdxRef = useRef(0);
+  const betweenGameTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const betweenGameLastGameIdRef = useRef('');
+
   // ─── Load saved config ──────────────────────────────────────────────
 
   useEffect(() => {
@@ -262,10 +272,12 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
     if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
     if (signageTimerRef.current) clearInterval(signageTimerRef.current);
     if (rotationTimerRef.current) clearTimeout(rotationTimerRef.current);
+    if (betweenGameTimerRef.current) clearTimeout(betweenGameTimerRef.current);
     pollTimerRef.current = null;
     countdownTimerRef.current = null;
     signageTimerRef.current = null;
     rotationTimerRef.current = null;
+    betweenGameTimerRef.current = null;
   }
 
   function startPolling() {
@@ -359,10 +371,31 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
       };
 
       // Handle rotation for game_over / break
-      if (api.state === 'game_over' || api.state === 'break') {
+      if (api.state === 'game_over') {
+        // Fetch between-game data once per game
+        if (api.gameId && api.gameId !== betweenGameLastGameIdRef.current) {
+          betweenGameLastGameIdRef.current = api.gameId;
+          fetchBetweenGameData(api.gameId, newState);
+        } else if (betweenGameActiveRef.current) {
+          // Already in between-game — update state but keep current between screen
+          setTvState(prev => ({
+            ...newState,
+            screen: prev.screen,
+            betweenData: prev.betweenData,
+          }));
+        } else {
+          handlePostGameRotation(api, newState);
+        }
+      } else if (api.state === 'break') {
+        if (betweenGameActiveRef.current) {
+          exitBetweenGameMode();
+        }
         handlePostGameRotation(api, newState);
       } else {
-        // Active game — stop rotation
+        // Active game — stop rotation and between-game
+        if (betweenGameActiveRef.current) {
+          exitBetweenGameMode();
+        }
         if (rotationActiveRef.current) {
           exitRotation();
         }
@@ -485,6 +518,93 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
     cachedScreenDataRef.current = {};
   }
 
+  // ─── Between-game experience ────────────────────────────────────
+
+  async function fetchBetweenGameData(gameId: string, baseState: TVState) {
+    try {
+      const data = await getBetweenGameData(barCodeRef.current, gameId);
+      betweenGameDataRef.current = data;
+
+      // Build phase list from non-null phases
+      const phases: TVScreen[] = [];
+      if (data.podium) phases.push('between-podium');
+      if (data.barStandings) phases.push('between-standings');
+      if (data.national) phases.push('between-national');
+      if (data.hype) phases.push('between-hype');
+
+      if (phases.length === 0) {
+        // No data — fall back to normal rotation
+        handlePostGameRotation(latestApiRef.current!, baseState);
+        return;
+      }
+
+      // Start between-game sequence
+      betweenGameActiveRef.current = true;
+      betweenGamePhasesRef.current = phases;
+      betweenGamePhaseIdxRef.current = 0;
+
+      const firstScreen = phases[0];
+      setTvState({
+        ...baseState,
+        screen: firstScreen,
+        betweenData: data,
+      });
+
+      // Schedule phase cycling
+      scheduleBetweenGamePhase(phases);
+    } catch {
+      // API error — fall back to normal rotation
+      handlePostGameRotation(latestApiRef.current!, baseState);
+    }
+  }
+
+  function scheduleBetweenGamePhase(phases: TVScreen[]) {
+    if (betweenGameTimerRef.current) clearTimeout(betweenGameTimerRef.current);
+    // Distribute total duration evenly across phases
+    const phaseDuration = Math.floor(BETWEEN_TOTAL_DURATION / phases.length);
+
+    betweenGameTimerRef.current = setTimeout(() => {
+      if (!betweenGameActiveRef.current) return;
+
+      betweenGamePhaseIdxRef.current++;
+
+      if (betweenGamePhaseIdxRef.current >= phases.length) {
+        // All phases done — transition to normal rotation
+        exitBetweenGameMode();
+        if (latestApiRef.current) {
+          const api = latestApiRef.current;
+          // Build base state for rotation, clearing betweenData
+          setTvState(prev => {
+            const baseState: TVState = { ...prev, betweenData: null };
+            // Kick off rotation on next tick to avoid nested setState
+            setTimeout(() => handlePostGameRotation(api, baseState), 0);
+            return baseState;
+          });
+        }
+        return;
+      }
+
+      const nextScreen = phases[betweenGamePhaseIdxRef.current];
+      setTvState(prev => ({
+        ...prev,
+        screen: nextScreen,
+      }));
+
+      scheduleBetweenGamePhase(phases);
+    }, phaseDuration);
+  }
+
+  function exitBetweenGameMode() {
+    betweenGameActiveRef.current = false;
+    betweenGameDataRef.current = null;
+    betweenGamePhasesRef.current = [];
+    betweenGamePhaseIdxRef.current = 0;
+    if (betweenGameTimerRef.current) {
+      clearTimeout(betweenGameTimerRef.current);
+      betweenGameTimerRef.current = null;
+    }
+  }
+
   // ─── Countdown tick (1s) — next-game countdown only ──────────────
   // Game timer + points are now driven by a fast local clock in
   // PlayingScreen (using gameStartEpoch + getGameState at 50ms),
@@ -528,6 +648,8 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
     AsyncStorage.removeItem(STORAGE_KEY);
     rotationActiveRef.current = false;
     cachedScreenDataRef.current = {};
+    exitBetweenGameMode();
+    betweenGameLastGameIdRef.current = '';
     setTvState({
       screen: 'setup',
       barCode: '',
@@ -550,6 +672,8 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
     stopAll();
     rotationActiveRef.current = false;
     cachedScreenDataRef.current = {};
+    exitBetweenGameMode();
+    betweenGameLastGameIdRef.current = '';
     setTvState(prev => ({
       ...prev,
       screen: 'setup',

@@ -37,8 +37,18 @@ sub init()
   m.cachedScreenData = {}
   m.ROTATION_DURATIONS = { results: 60, idle: 60, lobby: 60 }
 
+  ' Between-game experience state
+  m.betweenGameActive = false
+  m.betweenGameData = invalid
+  m.betweenGamePhases = []
+  m.betweenGamePhaseIdx = 0
+  m.betweenGameTotalDuration = 120000  ' 120s total
+  m.betweenGameStartEpoch = 0&
+  m.betweenGameLastGameId = ""
+  m.betweenGameNextGameEpoch = 0&
+
   ' ── Node references ──
-  m.screenNames = ["setupScreen", "idleScreen", "lobbyScreen", "getReadyScreen", "categoryScreen", "playingScreen", "revealScreen", "leaderboardScreen", "betweenScreen", "resultsScreen"]
+  m.screenNames = ["setupScreen", "idleScreen", "lobbyScreen", "getReadyScreen", "categoryScreen", "playingScreen", "revealScreen", "leaderboardScreen", "betweenScreen", "resultsScreen", "betweenPodiumScreen", "betweenStandingsScreen", "betweenNationalScreen", "betweenHypeScreen"]
   m.screens = {}
   for each name in m.screenNames
     m.screens[name] = m.top.findNode(name)
@@ -71,6 +81,10 @@ sub init()
   m.signageTimer = CreateObject("roSGNode", "Timer")
   m.signageTimer.repeat = true
   m.signageTimer.observeField("fire", "onSignageRotation")
+
+  m.betweenGamePhaseTimer = CreateObject("roSGNode", "Timer")
+  m.betweenGamePhaseTimer.repeat = false
+  m.betweenGamePhaseTimer.observeField("fire", "onBetweenGamePhaseTimer")
 
   ' ── Screen container ──
   m.screenContainer = m.top.findNode("screenContainer")
@@ -187,6 +201,7 @@ sub processGameState(apiState as Object)
   if state = "break"
     setPollRate(m.POLL_INTERVAL_IDLE)
     exitRotationMode()
+    exitBetweenGameMode()
     if m.currentScreen <> "idleScreen"
       showIdleScreen(gameState)
     else
@@ -199,6 +214,27 @@ sub processGameState(apiState as Object)
 
   if state = "game_over"
     setPollRate(m.POLL_INTERVAL_IDLE)
+
+    ' Start between-game experience on first game_over for this game
+    gameId = ""
+    if apiState.gameId <> invalid then gameId = apiState.gameId
+    if gameId <> "" and gameId <> m.betweenGameLastGameId and not m.betweenGameActive
+      m.betweenGameLastGameId = gameId
+      ' Capture next game epoch for countdown bar
+      nextEpoch = 0&
+      if gameState.nextGameStartEpoch <> invalid then nextEpoch = gameState.nextGameStartEpoch
+      if nextEpoch <= 0
+        SLOT_MS = 15& * 60 * 1000
+        nowMs = getEpochMs()
+        nextEpoch = nowMs + SLOT_MS - (nowMs mod SLOT_MS)
+      end if
+      m.betweenGameNextGameEpoch = nextEpoch
+      fetchBetweenGameData(gameId)
+    end if
+
+    ' If between-game experience is active, don't start normal rotation
+    if m.betweenGameActive then return
+
     handleScreenRotation(gameState)
     return
   end if
@@ -206,6 +242,7 @@ sub processGameState(apiState as Object)
   ' Active game — fast polling
   setPollRate(m.POLL_INTERVAL_ACTIVE)
   exitRotationMode()
+  exitBetweenGameMode()
   ' NOTE: signage rotation is managed per-screen (start for between/leaderboard, stop for playing/reveal)
   renderGameScreen(gameState)
 end sub
@@ -689,6 +726,8 @@ sub onApiResponse()
 
   if callId = "tvState"
     processGameState(response)
+  else if callId = "betweenGameData"
+    onBetweenGameDataResponse(response)
   else if callId = "verifyBar"
     onVerifyBarResponse(response)
   else if callId = "registerBar"
@@ -747,6 +786,133 @@ end sub
 
 sub onActivateComplete()
   startPolling()
+end sub
+
+' ══════════════════════════════════════════════════════════════
+' BETWEEN-GAME EXPERIENCE (4-phase sequence after game ends)
+' ══════════════════════════════════════════════════════════════
+
+sub fetchBetweenGameData(gameId as String)
+  print ">>> betweenGame: fetching data for gameId=" + gameId
+  makeApiCall("GET", "/game/between?barCode=" + m.barCode + "&gameId=" + gameId, invalid, "betweenGameData")
+end sub
+
+sub onBetweenGameDataResponse(response as Object)
+  if response = invalid then return
+  if response.error <> invalid then return
+
+  m.betweenGameData = response
+
+  ' Build phase list — skip null phases
+  phases = []
+  if response.podium <> invalid then phases.push("podium")
+  if response.barStandings <> invalid then phases.push("standings")
+  if response.national <> invalid then phases.push("national")
+  if response.hype <> invalid then phases.push("hype")
+
+  if phases.count() = 0
+    print ">>> betweenGame: no phases available, skipping"
+    return
+  end if
+
+  print ">>> betweenGame: starting with " + Str(phases.count()).trim() + " phases"
+  m.betweenGamePhases = phases
+  m.betweenGamePhaseIdx = 0
+  m.betweenGameActive = true
+  m.betweenGameStartEpoch = getEpochMs()
+  exitRotationMode()
+  stopSignageRotation()
+
+  renderBetweenGamePhase()
+  startBetweenGamePhaseTimer()
+end sub
+
+sub renderBetweenGamePhase()
+  if m.betweenGamePhases.count() = 0 then return
+  if m.betweenGamePhaseIdx >= m.betweenGamePhases.count() then return
+
+  phase = m.betweenGamePhases[m.betweenGamePhaseIdx]
+  print ">>> betweenGame: rendering phase " + Str(m.betweenGamePhaseIdx + 1).trim() + "/" + Str(m.betweenGamePhases.count()).trim() + " = " + phase
+
+  if phase = "podium"
+    showBetweenPodiumScreen()
+  else if phase = "standings"
+    showBetweenStandingsScreen()
+  else if phase = "national"
+    showBetweenNationalScreen()
+  else if phase = "hype"
+    showBetweenHypeScreen()
+  end if
+end sub
+
+sub showBetweenPodiumScreen()
+  m.screens.betweenPodiumScreen.setField("barCode", m.barCode)
+  m.screens.betweenPodiumScreen.setField("barName", m.barName)
+  m.screens.betweenPodiumScreen.setField("nextGameEpoch", m.betweenGameNextGameEpoch)
+  m.screens.betweenPodiumScreen.setField("betweenData", m.betweenGameData)
+  switchScreen("betweenPodiumScreen")
+end sub
+
+sub showBetweenStandingsScreen()
+  m.screens.betweenStandingsScreen.setField("barCode", m.barCode)
+  m.screens.betweenStandingsScreen.setField("barName", m.barName)
+  m.screens.betweenStandingsScreen.setField("nextGameEpoch", m.betweenGameNextGameEpoch)
+  m.screens.betweenStandingsScreen.setField("betweenData", m.betweenGameData)
+  switchScreen("betweenStandingsScreen")
+end sub
+
+sub showBetweenNationalScreen()
+  m.screens.betweenNationalScreen.setField("barCode", m.barCode)
+  m.screens.betweenNationalScreen.setField("barName", m.barName)
+  m.screens.betweenNationalScreen.setField("nextGameEpoch", m.betweenGameNextGameEpoch)
+  m.screens.betweenNationalScreen.setField("betweenData", m.betweenGameData)
+  switchScreen("betweenNationalScreen")
+end sub
+
+sub showBetweenHypeScreen()
+  m.screens.betweenHypeScreen.setField("barCode", m.barCode)
+  m.screens.betweenHypeScreen.setField("barName", m.barName)
+  m.screens.betweenHypeScreen.setField("nextGameEpoch", m.betweenGameNextGameEpoch)
+  m.screens.betweenHypeScreen.setField("betweenData", m.betweenGameData)
+  switchScreen("betweenHypeScreen")
+end sub
+
+sub startBetweenGamePhaseTimer()
+  m.betweenGamePhaseTimer.control = "stop"
+  phaseCount = m.betweenGamePhases.count()
+  if phaseCount = 0 then return
+  ' Distribute 120s evenly across available phases
+  phaseDuration = Int(m.betweenGameTotalDuration / 1000 / phaseCount)
+  m.betweenGamePhaseTimer.duration = phaseDuration
+  m.betweenGamePhaseTimer.control = "start"
+end sub
+
+sub onBetweenGamePhaseTimer()
+  if not m.betweenGameActive then return
+  m.betweenGamePhaseIdx = m.betweenGamePhaseIdx + 1
+
+  if m.betweenGamePhaseIdx >= m.betweenGamePhases.count()
+    ' All phases complete — exit to normal rotation
+    exitBetweenGameMode()
+    ' Trigger normal game_over rotation with cached data
+    if m.cachedScreenData.results <> invalid
+      handleScreenRotation(m.cachedScreenData.results)
+    end if
+    return
+  end if
+
+  renderBetweenGamePhase()
+  startBetweenGamePhaseTimer()
+end sub
+
+sub exitBetweenGameMode()
+  if not m.betweenGameActive then return
+  print ">>> betweenGame: exiting"
+  m.betweenGameActive = false
+  m.betweenGamePhaseTimer.control = "stop"
+  m.betweenGamePhases = []
+  m.betweenGamePhaseIdx = 0
+  m.betweenGameData = invalid
 end sub
 
 ' ══════════════════════════════════════════════════════════════
