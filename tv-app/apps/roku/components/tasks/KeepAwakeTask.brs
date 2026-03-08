@@ -1,41 +1,29 @@
-' KeepAwakeTask — prevents Roku screensaver via ECP self-ping.
+' KeepAwakeTask — prevents Roku OS inactivity auto-home timer.
 '
-' Two mechanisms:
-' 1. Every 2 minutes: POST to ECP localhost to simulate a keypress,
-'    which resets the Roku OS idle/screensaver timer.
-' 2. Every 30 seconds: log video node state for debugging.
+' Uses roAppManager.UpdateLastKeyPressTime() every 2 minutes to reset
+' the OS inactivity timer that would otherwise exit the app after ~4 hours.
+' This API is deprecated but still works on sideloaded dev channels.
 
 sub init()
   m.top.functionName = "taskLoop"
 end sub
 
 sub taskLoop()
-  ecpInterval = 120  ' ECP ping every 2 minutes (in seconds)
+  interval = 120  ' Every 2 minutes (in seconds)
 
   while true
-    sleep(ecpInterval * 1000)
-    sendEcpKeypress()
+    sleep(interval * 1000)
+    resetIdleTimer()
   end while
 end sub
 
-' Send an ECP keypress to localhost to reset the Roku OS screensaver timer.
-' Uses "Info" key which is explicitly ignored by our onKeyEvent handler.
-sub sendEcpKeypress()
-  request = CreateObject("roUrlTransfer")
-  request.SetCertificatesFile("common:/certs/ca-bundle.crt")
-  port = CreateObject("roMessagePort")
-  request.SetMessagePort(port)
-  request.SetUrl("http://127.0.0.1:8060/keypress/Info")
-
-  if request.AsyncPostFromString("") then
-    msg = wait(5000, port)
-    if msg <> invalid
-      code = msg.GetResponseCode()
-      print ">>> keepAwake ECP ping: response=" + Str(code).trim()
-    else
-      print ">>> keepAwake ECP ping: timeout (no response in 5s)"
-    end if
+sub resetIdleTimer()
+  ' Try UpdateLastKeyPressTime first (resets the OS inactivity timer)
+  appMgr = CreateObject("roAppManager")
+  if appMgr <> invalid
+    appMgr.UpdateLastKeyPressTime()
+    print ">>> keepAwake: UpdateLastKeyPressTime OK"
   else
-    print ">>> keepAwake ECP ping: failed to send"
+    print ">>> keepAwake: roAppManager unavailable"
   end if
 end sub

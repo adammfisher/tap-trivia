@@ -10,10 +10,9 @@ class AppDelegate: RCTAppDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     self.moduleName = "TapTrivia"
-    // Prevent screen dimming / screensaver
-    application.isIdleTimerDisabled = true
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
+
 
   override func sourceURL(for bridge: RCTBridge) -> URL? {
     self.bundleURL()

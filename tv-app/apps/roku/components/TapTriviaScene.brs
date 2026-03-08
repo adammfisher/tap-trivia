@@ -799,9 +799,11 @@ end sub
 ' ══════════════════════════════════════════════════════════════
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
-  ' Ignore stray literal character keypresses and keep-awake pings
+  ' Ignore stray literal character keypresses, keep-awake pings, and
+  ' external ECP keepalive keypresses (Right+Left sent by watchdog)
   if Left(key, 4) = "Lit_" then return true
   if key = "info" then return true
+  if key = "right" or key = "left" or key = "up" or key = "down" then return true
 
   if press
     print ">>> Scene.onKeyEvent: key=" + key + " press=true"

@@ -20,6 +20,7 @@ class SilentAudioPlayerModule: NSObject {
     DispatchQueue.main.async { [weak self] in
       self?.configureAndPlay()
       self?.startIdleReset()
+      self?.observeAppLifecycle()
     }
   }
 
@@ -84,8 +85,7 @@ class SilentAudioPlayerModule: NSObject {
     idleResetTimer?.invalidate()
     UIApplication.shared.isIdleTimerDisabled = true
     idleResetTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
-      // 1. Toggle idle timer to reset system inactivity counter
-      UIApplication.shared.isIdleTimerDisabled = false
+      // 1. Re-assert idle timer disabled (belt-and-suspenders with sceneDidBecomeActive)
       UIApplication.shared.isIdleTimerDisabled = true
 
       // 2. Trigger focus engine update — tvOS counts this as user activity
@@ -108,6 +108,19 @@ class SilentAudioPlayerModule: NSObject {
         self?.player?.play()
         NSLog("[SilentAudioPlayer] Restarted paused AVPlayer")
       }
+    }
+  }
+
+  /// Listen for app becoming active to set isIdleTimerDisabled at the right
+  /// lifecycle moment (after the scene is fully initialized).
+  private func observeAppLifecycle() {
+    NotificationCenter.default.addObserver(
+      forName: UIApplication.didBecomeActiveNotification,
+      object: nil,
+      queue: .main
+    ) { _ in
+      UIApplication.shared.isIdleTimerDisabled = true
+      NSLog("[SilentAudioPlayer] didBecomeActive — isIdleTimerDisabled = true")
     }
   }
 

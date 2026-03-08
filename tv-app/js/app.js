@@ -58,6 +58,52 @@
   let pollInterval = null;
   const tvPlatform = new URLSearchParams(window.location.search).get('platform') || '';
   let platformModalDismissed = false;
+
+  // Keep-alive for Fire TV Vega: play a tiny silent video to prevent screensaver.
+  // The idle manager only inhibits screensaver during active media playback.
+  // silence.mp4 is 16KB, cached for 1 year by CloudFront after first load.
+  if (tvPlatform === 'firestickvega') {
+    (function initKeepAlive() {
+      try {
+        // Wake Lock API (Chromium 84+)
+        if ('wakeLock' in navigator) {
+          navigator.wakeLock.request('screen').then(function(lock) {
+            lock.addEventListener('release', function() { setTimeout(function() { navigator.wakeLock.request('screen').catch(function(){}); }, 1000); });
+          }).catch(function(){});
+          document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') navigator.wakeLock.request('screen').catch(function(){});
+          });
+        }
+      } catch(e) {}
+
+      // Silent looping video — engages Chromium's media pipeline
+      var v = document.createElement('video');
+      v.setAttribute('playsinline', '');
+      v.setAttribute('muted', '');
+      v.muted = true;
+      v.volume = 0;
+      v.loop = true;
+      v.style.cssText = 'position:fixed;bottom:0;right:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;';
+      v.src = 'silence.mp4';
+      document.body.appendChild(v);
+      function tryPlay() { v.play().catch(function(){}); }
+      v.addEventListener('canplay', tryPlay);
+      v.addEventListener('pause', function() { setTimeout(tryPlay, 1000); });
+      v.addEventListener('error', function() { setTimeout(function() { v.load(); tryPlay(); }, 3000); });
+      // Retry play periodically in case autoplay was blocked
+      setInterval(function() { if (v.paused) tryPlay(); }, 10000);
+      tryPlay();
+
+      // Media Session API
+      try {
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.metadata = new MediaMetadata({ title: 'TapTrivia TV', artist: 'TapTrivia' });
+          navigator.mediaSession.playbackState = 'playing';
+          setInterval(function() { try { navigator.mediaSession.playbackState = 'playing'; } catch(e) {} }, 30000);
+        }
+      } catch(e) {}
+    })();
+  }
   let consecutiveErrors = 0;
   const MAX_ERRORS_BEFORE_OVERLAY = 3;
 
@@ -1166,8 +1212,7 @@
       firestickvega: {
         device: 'Fire TV Stick',
         steps: [
-          'Settings → Preferences → Data Usage Monitoring → Still Watching → <strong>Off</strong>',
-          'Settings → Display & Sounds → Ambient Experience → <strong>Off</strong>'
+          'Settings → Preferences → Data Usage Monitoring → Still Watching → <strong>Off</strong>'
         ]
       },
       firestickclassic: {
