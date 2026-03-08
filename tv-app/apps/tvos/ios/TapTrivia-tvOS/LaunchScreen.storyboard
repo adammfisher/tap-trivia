@@ -13,7 +13,20 @@
                     <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
                         <rect key="frame" x="0.0" y="0.0" width="1920" height="1080"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="LaunchLogo" translatesAutoresizingMaskIntoConstraints="NO" id="Lgo-Im-v01">
+                                <rect key="frame" x="860" y="440" width="200" height="200"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="200" id="Lgo-W-001"/>
+                                    <constraint firstAttribute="height" constant="200" id="Lgo-H-001"/>
+                                </constraints>
+                            </imageView>
+                        </subviews>
                         <color key="backgroundColor" red="0.05882352941" green="0.01176470588" blue="0.14901960784" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="Lgo-Im-v01" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="Cnx-X-001"/>
+                            <constraint firstItem="Lgo-Im-v01" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="Cnx-Y-001"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="Bcu-3y-fUS"/>
                     </view>
                 </viewController>
@@ -22,4 +35,7 @@
             <point key="canvasLocation" x="52.173913043478265" y="375"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="LaunchLogo" width="200" height="200"/>
+    </resources>
 </document>

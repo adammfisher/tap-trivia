@@ -2,9 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, AppState, AppStateStatus, StyleSheet, View } from 'react-native';
 import SilentAudioPlayer from './SilentAudioPlayer';
 import { TVStateProvider, useTVState } from './contexts/TVStateContext';
-import { ErrorOverlay } from './components/ErrorOverlay';
 import { SetupButton } from './components/SetupButton';
-import { MAX_ERRORS_BEFORE_OVERLAY } from './config';
 
 // Screens
 import { SetupScreen } from './screens/SetupScreen';
@@ -39,7 +37,6 @@ function getScreen(screenName: string): React.ReactNode {
 
 function ScreenRouter() {
   const { state } = useTVState();
-  const showError = state.consecutiveErrors >= MAX_ERRORS_BEFORE_OVERLAY;
 
   // Cross-dissolve: during transition, old screen stays visible underneath
   // while new screen fades in on top. Only mount the overlay layer during
@@ -105,7 +102,6 @@ function ScreenRouter() {
         {getScreen(currentScreen)}
       </Animated.View>
       {currentScreen !== 'setup' && <SetupButton />}
-      <ErrorOverlay visible={showError} />
     </>
   );
 }
