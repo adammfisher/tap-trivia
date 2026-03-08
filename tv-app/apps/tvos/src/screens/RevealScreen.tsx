@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { GradientBackground } from '../components/GradientBackground';
+
 import { AnswerCard } from '../components/AnswerCard';
 import { CategoryPill } from '../components/CategoryPill';
 import { ProgressBar } from '../components/ProgressBar';
@@ -37,7 +37,7 @@ export function RevealScreen() {
   }
 
   return (
-    <GradientBackground>
+    <>
       <View style={s.root}>
         {/* ── Body (absolute, between header & footer) ── */}
         <View style={s.body}>
@@ -114,7 +114,7 @@ export function RevealScreen() {
           </View>
         )}
       </View>
-    </GradientBackground>
+    </>
   );
 }
 

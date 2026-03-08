@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { GradientBackground } from '../components/GradientBackground';
+
 import { QRBadge } from '../components/QRBadge';
 import { CountdownBar } from '../components/CountdownBar';
 import { FadeInView, FadeInText } from '../utils/animations';
@@ -33,7 +33,7 @@ export function BetweenNationalScreen() {
   const national = state.betweenData?.national;
   const barCode = state.barCode;
 
-  if (!national) return <GradientBackground><View style={s.root} /></GradientBackground>;
+  if (!national) return <View style={s.root} />;
 
   const top25 = national.top25 || [];
   const col1 = top25.slice(0, 13);
@@ -41,7 +41,7 @@ export function BetweenNationalScreen() {
   const stats = national.stats;
 
   return (
-    <GradientBackground>
+    <>
       <CountdownBar />
       <View style={s.root}>
         <View style={s.body}>
@@ -112,7 +112,7 @@ export function BetweenNationalScreen() {
           </View>
         </View>
       </View>
-    </GradientBackground>
+    </>
   );
 }
 

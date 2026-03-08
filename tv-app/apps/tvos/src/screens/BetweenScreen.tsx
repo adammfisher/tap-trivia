@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { GradientBackground } from '../components/GradientBackground';
+
 import { Logo } from '../components/Logo';
 import { StandingRow } from '../components/StandingRow';
 import { SignagePanel } from '../signage/SignagePanel';
@@ -33,7 +33,7 @@ export function BetweenScreen() {
     : 5;
 
   return (
-    <GradientBackground>
+    <>
       <View style={s.root}>
         <View style={s.body}>
           {/* ── Left: Standings ─────────── */}
@@ -83,7 +83,7 @@ export function BetweenScreen() {
           )}
         </View>
       </View>
-    </GradientBackground>
+    </>
   );
 }
 

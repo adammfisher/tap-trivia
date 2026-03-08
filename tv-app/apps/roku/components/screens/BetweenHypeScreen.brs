@@ -28,6 +28,13 @@ sub onDataChanged(event as Object)
   ' Build category pills
   categories = []
   if hype.categories <> invalid then categories = hype.categories
+  if categories.count() > 4 then
+    trimmed = []
+    for ti = 0 to 3
+      trimmed.push(categories[ti])
+    end for
+    categories = trimmed
+  end if
 
   ' Clear existing pills
   m.pillContainer.removeChildrenIndex(m.pillContainer.getChildCount(), 0)
@@ -35,10 +42,10 @@ sub onDataChanged(event as Object)
   if categories.count() = 0 then return
 
   ' Calculate pill layout — centered, wrapping rows
-  pillW = 220
-  pillH = 48
-  pillGap = 12
-  maxPerRow = 6
+  pillW = 360
+  pillH = 72
+  pillGap = 24
+  maxPerRow = 4
   totalW = 1920
 
   ' Split into rows
@@ -78,25 +85,25 @@ sub addCategoryPill(category as String, xPos as Integer, yPos as Integer)
 
   ' Glass background
   bg = CreateObject("roSGNode", "Rectangle")
-  bg.width = 220
-  bg.height = 48
+  bg.width = 360
+  bg.height = 72
   bg.color = "#ffffff"
   bg.opacity = 0.10
   pill.appendChild(bg)
 
   ' Category icon (small, 36px)
   icon = CreateObject("roSGNode", "Poster")
-  icon.translation = [8, 6]
-  icon.width = 36
-  icon.height = 36
+  icon.translation = [14, 10]
+  icon.width = 52
+  icon.height = 52
   icon.uri = getCategoryIconSmall(category)
   pill.appendChild(icon)
 
   ' Category name
   nameLabel = CreateObject("roSGNode", "Label")
-  nameLabel.translation = [48, 12]
-  nameLabel.width = 164
-  nameLabel.font = makeFont("Outfit-SemiBold", 18)
+  nameLabel.translation = [76, 18]
+  nameLabel.width = 268
+  nameLabel.font = makeFont("Outfit-SemiBold", 28)
   nameLabel.color = "#f0f0f0"
   nameLabel.text = category
   pill.appendChild(nameLabel)

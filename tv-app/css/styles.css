@@ -3074,12 +3074,15 @@ body {
 .tt-between-countdown {
   position: absolute;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   z-index: 100;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 16px;
+  width: fit-content;
+  margin: 0 auto;
   padding: 14px 40px;
   background: linear-gradient(135deg, rgba(102,126,234,.4), rgba(118,75,162,.4));
   backdrop-filter: blur(12px);
@@ -3569,20 +3572,20 @@ body {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
-  max-width: 900px;
+  gap: 20px;
+  max-width: 1200px;
 }
 .tt-bg-hype__pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 24px;
-  background: rgba(255,255,255,.06);
+  gap: 14px;
+  padding: 18px 36px;
+  background: rgba(255,255,255,.08);
   border-radius: 100px;
-  border: 1px solid rgba(255,255,255,.08);
-  font-size: 22px;
-  font-weight: 500;
-  color: rgba(255,255,255,.7);
+  border: 1px solid rgba(255,255,255,.10);
+  font-size: 36px;
+  font-weight: 600;
+  color: rgba(255,255,255,.85);
   backdrop-filter: blur(8px);
 }
 .tt-bg-hype__qr-section {

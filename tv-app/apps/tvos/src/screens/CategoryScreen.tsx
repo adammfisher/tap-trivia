@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { GradientBackground } from '../components/GradientBackground';
+
 import { DifficultyDots } from '../components/DifficultyDots';
 import { QRBadge } from '../components/QRBadge';
 import { FadeInView, FadeInText, ZoomInText } from '../utils/animations';
@@ -16,7 +16,7 @@ export function CategoryScreen() {
   const icon = getCategoryIcon(category || '');
 
   return (
-    <GradientBackground>
+    <>
       <View style={s.container}>
         {/* Bar name */}
         {barName ? (
@@ -55,7 +55,7 @@ export function CategoryScreen() {
           <QRBadge barCode={barCode} variant="inline" />
         </View>
       </View>
-    </GradientBackground>
+    </>
   );
 }
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { GradientBackground } from '../components/GradientBackground';
+
 import { TimerRing } from '../components/TimerRing';
 import { AnswerCard } from '../components/AnswerCard';
 import { CategoryPill } from '../components/CategoryPill';
@@ -124,7 +124,7 @@ export function PlayingScreen() {
   const progress = (questionNumber || 1) / totalQuestions;
 
   return (
-    <GradientBackground>
+    <>
       <View style={s.root}>
         {/* ── Body (absolute, between header & footer) ──── */}
         <View style={s.body}>
@@ -198,7 +198,7 @@ export function PlayingScreen() {
           <QRBadge barCode={barCode} variant="inline" />
         </View>
       </View>
-    </GradientBackground>
+    </>
   );
 }
 

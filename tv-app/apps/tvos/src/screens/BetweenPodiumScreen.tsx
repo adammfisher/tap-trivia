@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { GradientBackground } from '../components/GradientBackground';
+
 import { Podium } from '../components/Podium';
 import { Confetti } from '../components/Confetti';
 import { Avatar } from '../components/Avatar';
@@ -17,7 +17,7 @@ export function BetweenPodiumScreen() {
   const podium = state.betweenData?.podium;
   const barCode = state.barCode;
 
-  if (!podium) return <GradientBackground><View style={s.root} /></GradientBackground>;
+  if (!podium) return <View style={s.root} />;
 
   const players = podium.players || [];
   // Build leaderboard entries for Podium component
@@ -30,7 +30,7 @@ export function BetweenPodiumScreen() {
   const runners = players.slice(3, 10);
 
   return (
-    <GradientBackground>
+    <>
       <Confetti />
       <CountdownBar />
       <View style={s.root}>
@@ -68,7 +68,7 @@ export function BetweenPodiumScreen() {
           </View>
         </View>
       </View>
-    </GradientBackground>
+    </>
   );
 }
 

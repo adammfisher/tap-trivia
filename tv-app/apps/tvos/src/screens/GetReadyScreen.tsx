@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
-import { GradientBackground } from '../components/GradientBackground';
+
 import { Logo } from '../components/Logo';
 import { QRBadge } from '../components/QRBadge';
 import { ZoomInText } from '../utils/animations';
@@ -47,7 +47,7 @@ export function GetReadyScreen() {
   }, [pulseAnim]);
 
   return (
-    <GradientBackground>
+    <>
       <View style={s.container}>
         <Logo size="lg" />
 
@@ -74,7 +74,7 @@ export function GetReadyScreen() {
           <QRBadge barCode={state.barCode} variant="inline" />
         </View>
       </View>
-    </GradientBackground>
+    </>
   );
 }
 

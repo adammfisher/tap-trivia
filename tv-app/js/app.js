@@ -2191,10 +2191,11 @@
 
   /** BETWEEN-GAME HYPE — Logo, next game categories, big QR + bar code */
   function renderBetweenHype(data) {
-    const { categories = [], startsAt } = data;
+    const { categories: allCats = [], startsAt } = data;
+    const categories = allCats.slice(0, 4);
 
-    const catPills = categories.map(cat =>
-      `<span class="tt-bg-hype__pill" style="animation:popIn .3s ease-out ${categories.indexOf(cat) * 0.08 + 0.3}s both">${getCategoryIcon(cat)} ${cat}</span>`
+    const catPills = categories.map((cat, i) =>
+      `<span class="tt-bg-hype__pill" style="animation:popIn .3s ease-out ${i * 0.1 + 0.3}s both">${getCategoryIcon(cat)} ${cat}</span>`
     ).join('');
 
     const secsLeft = startsAt ? Math.max(0, Math.ceil((startsAt - getServerNow()) / 1000)) : 0;

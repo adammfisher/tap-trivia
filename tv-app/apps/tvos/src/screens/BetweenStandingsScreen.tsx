@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { GradientBackground } from '../components/GradientBackground';
+
 import { Avatar } from '../components/Avatar';
 import { QRBadge } from '../components/QRBadge';
 import { CountdownBar } from '../components/CountdownBar';
@@ -15,13 +15,13 @@ export function BetweenStandingsScreen() {
   const standings = state.betweenData?.barStandings;
   const barCode = state.barCode;
 
-  if (!standings) return <GradientBackground><View style={s.root} /></GradientBackground>;
+  if (!standings) return <View style={s.root} />;
 
   const yourBar = standings.yourBar;
   const stateRanking = standings.stateRanking || [];
 
   return (
-    <GradientBackground>
+    <>
       <CountdownBar />
       <View style={s.root}>
         <View style={s.body}>
@@ -91,7 +91,7 @@ export function BetweenStandingsScreen() {
           </View>
         </View>
       </View>
-    </GradientBackground>
+    </>
   );
 }
 

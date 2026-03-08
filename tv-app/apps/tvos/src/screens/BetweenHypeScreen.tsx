@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { GradientBackground } from '../components/GradientBackground';
 import { Logo } from '../components/Logo';
 import { CountdownBar } from '../components/CountdownBar';
 import { FadeInView, FadeInText, ZoomInView } from '../utils/animations';
@@ -30,12 +29,12 @@ export function BetweenHypeScreen() {
   const hype = state.betweenData?.hype;
   const barCode = state.barCode;
 
-  if (!hype) return <GradientBackground><View style={s.root} /></GradientBackground>;
+  if (!hype) return <View style={s.root} />;
 
-  const categories = hype.categories || [];
+  const categories = (hype.categories || []).slice(0, 4);
 
   return (
-    <GradientBackground>
+    <>
       <CountdownBar />
       <View style={s.root}>
         <View style={s.center}>
@@ -53,7 +52,7 @@ export function BetweenHypeScreen() {
           {/* Category pills */}
           <View style={s.pillGrid}>
             {categories.map((cat, i) => (
-              <CategoryPill key={cat + i} name={cat} delay={400 + i * 60} />
+              <CategoryPill key={cat + i} name={cat} delay={400 + i * 80} />
             ))}
           </View>
 
@@ -75,7 +74,7 @@ export function BetweenHypeScreen() {
           </FadeInView>
         </View>
       </View>
-    </GradientBackground>
+    </>
   );
 }
 
@@ -104,23 +103,23 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 10,
+    gap: 20,
     marginBottom: 32,
-    maxWidth: 900,
+    maxWidth: 1200,
   },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 20,
+    gap: 14,
+    paddingHorizontal: 28,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    borderRadius: 40,
   },
-  pillIcon: { fontSize: 22 },
+  pillIcon: { fontSize: 36 },
   pillText: {
     fontFamily: fonts.outfit.semiBold,
-    fontSize: 18,
+    fontSize: 32,
     color: '#f0f0f0',
   },
   qrArea: { alignItems: 'center', gap: 8 },

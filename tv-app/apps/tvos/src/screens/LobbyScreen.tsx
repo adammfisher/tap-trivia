@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { GradientBackground } from '../components/GradientBackground';
+
 import { Logo } from '../components/Logo';
 import { QRBadge } from '../components/QRBadge';
 import { Avatar } from '../components/Avatar';
@@ -15,7 +15,7 @@ export function LobbyScreen() {
   const { barCode, barName, activePlayers, secondsUntilNextGame, barLeaderboard } = state;
 
   return (
-    <GradientBackground>
+    <>
       <View style={s.root}>
         {/* ── Countdown (top-left overlay) ─────────── */}
         <View style={s.countdownOverlay}>
@@ -62,7 +62,7 @@ export function LobbyScreen() {
           </View>
         </View>
       </View>
-    </GradientBackground>
+    </>
   );
 }
 

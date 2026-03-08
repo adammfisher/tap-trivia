@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { GradientBackground } from '../components/GradientBackground';
+
 import { Logo } from '../components/Logo';
 import { useTVState } from '../contexts/TVStateContext';
 import { fonts, tvFontSizes } from '../theme/typography';
@@ -77,7 +77,7 @@ export function SetupScreen() {
   const codeReady = code.length === 5;
 
   return (
-    <GradientBackground>
+    <>
       <View style={s.container}>
         {/* Header */}
         <View style={s.header}>
@@ -237,7 +237,7 @@ export function SetupScreen() {
         {/* Footer */}
         <Text style={s.footer}>taptrivia.tv · Free for venues · Powered by Visudo Labs</Text>
       </View>
-    </GradientBackground>
+    </>
   );
 }
 

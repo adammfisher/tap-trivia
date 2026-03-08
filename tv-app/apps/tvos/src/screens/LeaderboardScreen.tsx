@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { GradientBackground } from '../components/GradientBackground';
+
 import { Logo } from '../components/Logo';
 import { Podium } from '../components/Podium';
 import { LeaderboardRow } from '../components/LeaderboardRow';
@@ -29,7 +29,7 @@ export function LeaderboardScreen() {
   const runners = barLeaderboard.slice(3, hasSignage ? 5 : 10);
 
   return (
-    <GradientBackground>
+    <>
       <View style={s.root}>
         <View style={s.body}>
           {/* ── Left: Podium + runners ─────────── */}
@@ -93,7 +93,7 @@ export function LeaderboardScreen() {
           )}
         </View>
       </View>
-    </GradientBackground>
+    </>
   );
 }
 

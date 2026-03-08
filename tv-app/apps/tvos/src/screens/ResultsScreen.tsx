@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { GradientBackground } from '../components/GradientBackground';
+
 import { Podium } from '../components/Podium';
 import { Confetti } from '../components/Confetti';
 import { Avatar } from '../components/Avatar';
@@ -30,7 +30,7 @@ export function ResultsScreen() {
   const hasSignage = signageSlides.length > 0;
 
   return (
-    <GradientBackground>
+    <>
       <Confetti />
       <View style={s.root}>
         <View style={s.body}>
@@ -101,7 +101,7 @@ export function ResultsScreen() {
           )}
         </View>
       </View>
-    </GradientBackground>
+    </>
   );
 }
 

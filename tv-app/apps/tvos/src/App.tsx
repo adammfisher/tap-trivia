@@ -3,6 +3,7 @@ import { Animated, AppState, AppStateStatus, StyleSheet, View } from 'react-nati
 import SilentAudioPlayer from './SilentAudioPlayer';
 import { TVStateProvider, useTVState } from './contexts/TVStateContext';
 import { SetupButton } from './components/SetupButton';
+import { GradientBackground } from './components/GradientBackground';
 
 // Screens
 import { SetupScreen } from './screens/SetupScreen';
@@ -146,11 +147,11 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <View style={styles.root}>
+    <GradientBackground style={styles.root}>
       <TVStateProvider>
         <ScreenRouter />
       </TVStateProvider>
-    </View>
+    </GradientBackground>
   );
 };
 
