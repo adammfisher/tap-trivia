@@ -15,7 +15,7 @@
     <!-- Countdown bar overlay -->
     <CountdownBar id="countdownBar" />
 
-    <!-- ═══ LEFT COLUMN: Bar score callout + state rankings ═══ -->
+    <!-- LEFT COLUMN: Bar score callout + state rankings -->
     <Group id="leftCol" translation="[0, 80]">
 
       <!-- "TAP STANDINGS" heading -->
@@ -64,7 +64,7 @@
       </Group>
     </Group>
 
-    <!-- ═══ RIGHT COLUMN: Explainer + national rank + QR ═══ -->
+    <!-- RIGHT COLUMN: Explainer + national rank + QR -->
     <Group id="rightCol" translation="[960, 100]">
 
       <!-- Score Index explainer card -->
@@ -98,7 +98,7 @@
       </Group>
     </Group>
 
-    <!-- QR Badge — bottom-right -->
+    <!-- QR Badge - bottom-right -->
     <QRBadge id="qrBadge" translation="[1520, 920]" />
   </children>
 

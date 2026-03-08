@@ -65,7 +65,7 @@ sub onDataChanged(event as Object)
     else if natRank > 0
       m.nationalRankValue.text = "#" + Str(natRank).trim()
     else
-      m.nationalRankValue.text = "—"
+      m.nationalRankValue.text = "-"
     end if
   end if
 
@@ -101,11 +101,4 @@ end sub
 function safeStr(val as Dynamic) as String
   if val = invalid then return ""
   return val.toStr()
-end function
-
-function safeInt(val as Dynamic, fallback as Integer) as Integer
-  if val = invalid then return fallback
-  if type(val) = "Integer" or type(val) = "roInteger" or type(val) = "roInt" then return val
-  if type(val) = "Float" or type(val) = "roFloat" or type(val) = "Double" or type(val) = "roDouble" then return Int(val)
-  return fallback
 end function

@@ -23,6 +23,5 @@
   </children>
 
   <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
-  <script type="text/brightscript" uri="pkg:/components/utils/Utils.brs" />
   <script type="text/brightscript" uri="CountdownBar.brs" />
 </component>
