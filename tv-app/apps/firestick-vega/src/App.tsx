@@ -103,7 +103,7 @@ export const App = () => {
         audio.volume = 0.01;
         audio.muted = false;
         // CDN URL with immutable cache headers — fetched once per device, then cached
-        audio.src = "https://tv.taptrivia.tv/silence.m4a";
+        audio.src = "https://tv.taptrivia.tv/silence.m4a?v=2";
         audio.load();
         console.log("[KEEPALIVE] audio.load() called");
 
@@ -120,25 +120,30 @@ export const App = () => {
     // which would tear down the audio stream and lose the AUDIO_PLAYBACK session.
     const seekBack = setInterval(() => {
       try {
-        if (audio && !audio.paused && audio.readyState >= 2) {
+        if (audio && !audio.paused && audio.readyState >= 2 && !isNaN(audio.currentTime)) {
           console.log("[KEEPALIVE] Seeking to 0 (currentTime:", audio.currentTime, ")");
           audio.currentTime = 0;
         }
       } catch (_e) {}
     }, 30000);
 
-    // Recovery: only restart if audio is truly dead (paused AND not just buffering)
+    // Recovery: restart audio if it's dead (error, paused, or NaN currentTime)
     const recovery = setInterval(async () => {
       try {
-        if (audio && audio.paused && audio.readyState >= 1) {
-          console.log("[KEEPALIVE] Audio paused unexpectedly, restarting... readyState:", audio.readyState);
+        if (!audio) return;
+        const dead = audio.error
+          || audio.paused
+          || isNaN(audio.currentTime)
+          || audio.readyState === 0;
+        if (dead) {
+          console.log("[KEEPALIVE] Audio dead, restarting... error:", audio.error, "paused:", audio.paused, "currentTime:", audio.currentTime, "readyState:", audio.readyState);
           try { audio.pause(); audio.deinitialize(); } catch (_e) {}
           audio = null;
           playerRef.current = null;
           await initAudio();
         }
       } catch (_e) {}
-    }, 60000);
+    }, 45000);
 
     return () => {
       clearInterval(seekBack);
