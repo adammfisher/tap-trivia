@@ -237,3 +237,38 @@ node scripts/reset-questions.js --confirm
 - The TV app is **display-only** (no player interaction). The player app is **fully standalone** (works without TV).
 - The dashboard-app uses **Bearer token auth** — session tokens stored in localStorage (trusted) or sessionStorage (untrusted).
 - All DynamoDB tables use **on-demand billing** (PAY_PER_REQUEST) for scale-to-zero cost.
+
+## Next Task: Cross-Platform TV Screen Consistency Audit
+
+### Goal
+Ensure every screen on Roku and tvOS native apps is visually consistent with the web TV app (`tv-app/js/app.js`). The web app is the source of truth.
+
+### Screens to Compare (all platforms must match web)
+- **Setup** — bar code entry, registration
+- **Idle** — signage rotation, QR code, branding
+- **Lobby** — countdown to game, player count, bar name
+- **Category Splash** — category name + icon, question number
+- **Playing** — question text, answer cards (A/B/C/D), timer ring, points available
+- **Reveal** — correct/wrong answer states, point award
+- **Between Questions** — leaderboard mini-view, transition
+- **Leaderboard** — podium (top 3), full rankings, bar vs global scope
+- **Results** — final standings, game summary, next game countdown
+
+### What to Check Per Screen
+- Layout, spacing, element positioning
+- Colors (backgrounds, gradients, text, answer card states)
+- Fonts (Fredoka for display, Outfit for body, DM Mono for monospace)
+- Answer card states: default (white), selected (blue-purple gradient), correct (green gradient), wrong (red gradient), eliminated (faded strikethrough)
+- Timer ring appearance and countdown
+- Signage panel rendering (7 templates) during leaderboard/between/results
+- Full-screen signage rendering during idle
+- QR code and bar branding
+
+### Approach
+1. **Code audit** — compare Roku BrightScript (`tv-app/apps/roku/`) and tvOS React Native (`tv-app/apps/tvos/`) screen rendering against web (`tv-app/js/app.js`)
+2. **Live screenshot monitoring** (requires screen recording permission for terminal):
+   - Roku: ECP screenshot API at `http://<roku-ip>:8060`
+   - Apple TV: QuickTime screen mirror → `screencapture` of QuickTime window
+   - Web: Playwright browser automation
+   - Capture every 30-60s, save timestamped side-by-side comparisons
+3. Grant **Screen Recording** permission to terminal app in System Settings → Privacy & Security before running live monitoring

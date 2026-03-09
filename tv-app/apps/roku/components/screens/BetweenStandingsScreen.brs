@@ -8,6 +8,7 @@ sub init()
   m.barCityState = m.top.findNode("barCityState")
   m.scoreIndexValue = m.top.findNode("scoreIndexValue")
   m.stateLabel = m.top.findNode("stateLabel")
+  m.headingSubLabel = m.top.findNode("headingSubLabel")
   m.nationalRankValue = m.top.findNode("nationalRankValue")
   m.qrBadge = m.top.findNode("qrBadge")
   m.countdownBar = m.top.findNode("countdownBar")
@@ -69,10 +70,11 @@ sub onDataChanged(event as Object)
     end if
   end if
 
-  ' State name heading
+  ' State name heading + subtitle
   stateName = ""
   if standings.stateName <> invalid then stateName = standings.stateName
   m.stateLabel.text = stateName + " Rankings"
+  m.headingSubLabel.text = "Weekly Score Index · " + stateName
 
   ' State ranking rows — use LeaderRow but pass bar data as playerData
   stateRanking = []

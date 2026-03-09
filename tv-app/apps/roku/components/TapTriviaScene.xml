@@ -53,6 +53,9 @@
     <!-- API polling task -->
     <ApiTask id="apiTask" />
 
+    <!-- Separate API task for between-game data (avoids race with poll timer) -->
+    <ApiTask id="betweenApiTask" />
+
     <!-- Screensaver prevention: ECP self-ping task -->
     <KeepAwakeTask id="keepAwakeTask" />
   </children>

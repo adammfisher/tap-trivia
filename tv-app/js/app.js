@@ -269,6 +269,22 @@
       </div>`;
   }
 
+  /** Build QR badge for between-game screens — custom CTA text */
+  function betweenQRBadgeHTML(title = 'Play Next Round!') {
+    return `
+      <div class="tt-qr-badge tt-qr-badge--br">
+        ${qrCodeHTML(120)}
+        <div class="tt-qr-badge__info">
+          <div class="tt-qr-badge__title">${title}</div>
+          <div class="tt-qr-badge__url">play.taptrivia.tv</div>
+          <div class="tt-qr-badge__code-row">
+            <span class="tt-qr-badge__code-label">CODE</span>
+            <span class="tt-qr-badge__code">${barCode}</span>
+          </div>
+        </div>
+      </div>`;
+  }
+
   /** Build QR badge for leaderboard sidebar — v4 lines 626-633 */
   function sidebarQRBadgeHTML() {
     return `
@@ -2007,17 +2023,18 @@
 
   /** Countdown bar overlay HTML — persistent across all between-game phases */
   function betweenCountdownBarHTML() {
-    return '<div class="tt-between-countdown" id="tt-between-countdown"><span class="tt-between-countdown__label">Next Game In</span> <span class="tt-between-countdown__time" id="tt-between-countdown-time">2:00</span></div>';
+    return '<div class="tt-between-countdown" id="tt-between-countdown"><span class="tt-between-countdown__label">NEXT GAME IN</span> <span class="tt-between-countdown__time" id="tt-between-countdown-time"></span></div>';
   }
 
   /** Update the between-game countdown bar display */
   function updateBetweenGameCountdown() {
     const el = document.getElementById('tt-between-countdown-time');
-    if (!el || !betweenGameData?.hype?.startsAt) return;
-    const secsLeft = Math.max(0, Math.ceil((betweenGameData.hype.startsAt - getServerNow()) / 1000));
-    const mins = Math.floor(secsLeft / 60);
-    const secs = secsLeft % 60;
-    el.textContent = `${mins}:${String(secs).padStart(2, '0')}`;
+    if (!el) return;
+    // Use hype.startsAt if available, otherwise compute client-side
+    const startsAt = betweenGameData?.hype?.startsAt;
+    const nextEpoch = getNextFutureGameTime(startsAt);
+    const secsLeft = Math.max(0, Math.ceil((nextEpoch - getServerNow()) / 1000));
+    el.textContent = formatCountdown(secsLeft);
     // Gold pulse when ≤15s
     const bar = document.getElementById('tt-between-countdown');
     if (bar) {
@@ -2055,10 +2072,11 @@
           ${confettiHTML(20)}
         </div>
         <div class="tt-bg-podium__right">
+          <div class="tt-bg-podium__ranks-header" style="animation:fadeDown .3s ease-out both">ALSO IN THE TOP 10</div>
           <div class="tt-bg-podium__ranks">
             ${rankRows}
           </div>
-          ${qrBadgeHTML('br')}
+          ${betweenQRBadgeHTML('Play Next Round!')}
         </div>
       </div>`;
     bindResetArrow();
@@ -2072,53 +2090,68 @@
     stateRanking.forEach((b, i) => {
       const isYours = b.name === yourBar.name;
       const delta = b.delta > 0 ? `<span class="tt-bg-delta tt-bg-delta--up">▲${b.delta}</span>`
-        : b.delta < 0 ? `<span class="tt-bg-delta tt-bg-delta--down">▼${Math.abs(b.delta)}</span>` : '';
+        : b.delta < 0 ? `<span class="tt-bg-delta tt-bg-delta--down">▼${Math.abs(b.delta)}</span>`
+        : `<span class="tt-bg-delta tt-bg-delta--flat">—</span>`;
       rankingRows += `
         <div class="tt-bg-bar-row${isYours ? ' tt-bg-bar-row--you' : ''}" style="animation:rankSlide .3s ease-out ${i * 0.08}s both">
-          <span class="tt-bg-bar-row__rank">${b.rank}</span>
+          <span class="tt-bg-bar-row__rank">#${b.rank}</span>
           <div class="tt-bg-bar-row__info">
-            <span class="tt-bg-bar-row__name">${b.name}</span>
-            <span class="tt-bg-bar-row__city">${b.city}</span>
+            <span class="tt-bg-bar-row__name">${b.name}${isYours ? ' <span class="tt-bg-bar-row__you-tag">YOU</span>' : ''}</span>
+            <span class="tt-bg-bar-row__city">${b.city || ''}</span>
           </div>
           <span class="tt-bg-bar-row__index">${(b.index || 0).toLocaleString()}</span>
           ${delta}
         </div>`;
     });
 
-    const yourDelta = yourBar.delta > 0 ? `<span class="tt-bg-delta tt-bg-delta--up">▲${yourBar.delta}</span>`
-      : yourBar.delta < 0 ? `<span class="tt-bg-delta tt-bg-delta--down">▼${Math.abs(yourBar.delta)}</span>` : '';
+    const yourDeltaNum = yourBar.delta || 0;
+    const yourDeltaHTML = yourDeltaNum > 0
+      ? `<div class="tt-bg-standings__delta-pill tt-bg-standings__delta-pill--up">▲ ${yourDeltaNum} spots this week</div>`
+      : yourDeltaNum < 0
+      ? `<div class="tt-bg-standings__delta-pill tt-bg-standings__delta-pill--down">▼ ${Math.abs(yourDeltaNum)} spots this week</div>`
+      : '';
 
     screenEl.innerHTML = `
       <div class="tt-bg-standings">
         ${betweenCountdownBarHTML()}
         ${resetArrowHTML()}
         <div class="tt-bg-standings__left">
-          <div class="tt-bg-standings__header" style="animation:fadeDown .5s ease-out both">🏆 Tap Standings</div>
-          <div class="tt-bg-standings__your-bar tt-glass" style="animation:slideUp .5s ease-out .1s both">
-            <div class="tt-bg-standings__bar-name">${yourBar.name || barName}</div>
-            <div class="tt-bg-standings__bar-city">${yourBar.city || ''}, ${yourBar.state || ''}</div>
-            <div class="tt-bg-standings__bar-index">
-              <span class="tt-bg-standings__index-num">${(yourBar.index || 0).toLocaleString()}</span>
-              <span class="tt-bg-standings__index-label">Score Index</span>
-              ${yourDelta}
+          <div class="tt-bg-standings__header" style="animation:fadeDown .5s ease-out both">
+            <span class="tt-bg-standings__header-icon">🏆</span>
+            <div>
+              <div class="tt-bg-standings__header-title">Tap Standings</div>
+              <div class="tt-bg-standings__header-sub">Weekly Score Index · ${stateName}</div>
             </div>
           </div>
-          <div class="tt-bg-standings__state-header">${stateName} Rankings</div>
+          <div class="tt-bg-standings__your-bar tt-glass" style="animation:slideUp .5s ease-out .1s both">
+            <div class="tt-bg-standings__your-bar-header">
+              <div>
+                <div class="tt-bg-standings__your-label">YOUR BAR</div>
+                <div class="tt-bg-standings__bar-name">${yourBar.name || barName}</div>
+                <div class="tt-bg-standings__bar-city">${yourBar.city || ''}, ${yourBar.state || ''}</div>
+                ${yourDeltaHTML}
+              </div>
+              <div class="tt-bg-standings__bar-index">
+                <span class="tt-bg-standings__index-num">${(yourBar.index || 0).toLocaleString()}</span>
+                <span class="tt-bg-standings__index-label">SCORE INDEX</span>
+              </div>
+            </div>
+          </div>
           <div class="tt-bg-standings__ranking">${rankingRows}</div>
         </div>
         <div class="tt-bg-standings__right">
           <div class="tt-glass tt-bg-standings__explainer" style="animation:slideUp .5s ease-out .3s both">
-            <div class="tt-bg-standings__explainer-icon">📊</div>
-            <div class="tt-bg-standings__explainer-title">Score Index</div>
-            <div class="tt-bg-standings__explainer-desc">Average points per question across all players at your bar this week.</div>
+            <div class="tt-bg-standings__explainer-title">📊 SCORE INDEX</div>
+            <div class="tt-bg-standings__explainer-desc">Average points per player, per question. The higher your bar's index, the sharper your regulars.</div>
+            <div class="tt-bg-standings__explainer-note">Resets every <strong>Monday</strong></div>
           </div>
           <div class="tt-glass tt-bg-standings__national" style="animation:slideUp .5s ease-out .4s both">
             <div class="tt-bg-standings__national-flag">🇺🇸</div>
-            <div class="tt-bg-standings__national-label">Nationally</div>
+            <div class="tt-bg-standings__national-label">NATIONALLY</div>
             <div class="tt-bg-standings__national-rank">#${yourBar.nationalRank || '—'}</div>
             <div class="tt-bg-standings__national-total">of ${yourBar.totalBars || 0} bars</div>
           </div>
-          ${qrBadgeHTML('br')}
+          ${betweenQRBadgeHTML('Boost your bar\'s rank!')}
         </div>
       </div>`;
     bindResetArrow();
@@ -2128,62 +2161,81 @@
   function renderBetweenNational(data) {
     const { top25 = [], stats = {}, cutoffScore = 0, yourBarBest = null } = data;
 
-    // Split into two columns: 1-13 and 14-25
-    const col1 = top25.slice(0, 13);
-    const col2 = top25.slice(13, 25);
+    // Split into two columns: 1-12 and 13-25
+    const col1 = top25.slice(0, 12);
+    const col2 = top25.slice(12, 25);
 
     function playerRow(p, rank) {
       const isTop3 = rank <= 3;
-      const scoreK = p.score >= 1000 ? `${(p.score / 1000).toFixed(1)}K` : p.score;
+      const scoreK = p.score >= 1000 ? `${(p.score / 1000).toFixed(1)}k` : p.score;
+      const barCity = [p.bar, p.city].filter(Boolean).join(', ');
       return `
         <div class="tt-bg-nat-row${isTop3 ? ' tt-bg-nat-row--gold' : ''}" style="animation:rankSlide .3s ease-out ${rank * 0.03}s both">
           <span class="tt-bg-nat-row__rank">${rank}</span>
           ${avatarHTML(p.name || 'Anon', { size: 'xs', rank: isTop3 ? rank : 0 })}
-          <span class="tt-bg-nat-row__name">${p.name || 'Anonymous'}</span>
+          <div class="tt-bg-nat-row__info">
+            <span class="tt-bg-nat-row__name">${p.name || 'Anonymous'}</span>
+            ${barCity ? `<span class="tt-bg-nat-row__bar">${barCity}</span>` : ''}
+          </div>
           <span class="tt-bg-nat-row__score">${scoreK}</span>
         </div>`;
     }
 
     let col1HTML = col1.map((p, i) => playerRow(p, i + 1)).join('');
-    let col2HTML = col2.map((p, i) => playerRow(p, i + 14)).join('');
+    let col2HTML = col2.map((p, i) => playerRow(p, i + 13)).join('');
 
     const statItems = [
       { icon: '👥', label: 'Players', value: (stats.players || 0).toLocaleString() },
-      { icon: '🎮', label: 'Games', value: (stats.games || 0).toLocaleString() },
-      { icon: '❓', label: 'Questions', value: stats.questions >= 1000000 ? `${(stats.questions / 1000000).toFixed(1)}M` : (stats.questions || 0).toLocaleString() },
-      { icon: '🍺', label: 'Bars', value: (stats.bars || 0).toLocaleString() },
+      { icon: '🎮', label: 'Games Played', value: (stats.games || 0).toLocaleString() },
+      { icon: '❓', label: 'Questions Answered', value: stats.questions >= 1000000 ? `${(stats.questions / 1000000).toFixed(1)}M` : (stats.questions || 0).toLocaleString() },
+      { icon: '🍺', label: 'Bars Active', value: (stats.bars || 0).toLocaleString() },
     ];
     const statsHTML = statItems.map(s =>
-      `<div class="tt-bg-stat"><span class="tt-bg-stat__icon">${s.icon}</span><span class="tt-bg-stat__value">${s.value}</span><span class="tt-bg-stat__label">${s.label}</span></div>`
+      `<div class="tt-bg-stat"><span class="tt-bg-stat__icon">${s.icon}</span><span class="tt-bg-stat__label">${s.label}</span><span class="tt-bg-stat__value">${s.value}</span></div>`
     ).join('');
 
     let cutoffHTML = '';
-    if (cutoffScore > 0) {
-      const cutoffK = cutoffScore >= 1000 ? `${(cutoffScore / 1000).toFixed(1)}K` : cutoffScore;
-      cutoffHTML = `
-        <div class="tt-glass tt-bg-cutoff" style="animation:slideUp .5s ease-out .4s both">
-          <div class="tt-bg-cutoff__icon">🎯</div>
-          <div class="tt-bg-cutoff__title">Top 25 Cutoff</div>
-          <div class="tt-bg-cutoff__score">${cutoffK} pts</div>
-          ${yourBarBest ? `<div class="tt-bg-cutoff__closest">Closest from your bar: <strong>${yourBarBest.name}</strong> (${yourBarBest.score >= 1000 ? `${(yourBarBest.score / 1000).toFixed(1)}K` : yourBarBest.score})</div>` : ''}
-        </div>`;
-    }
+    const cutoffK = cutoffScore >= 1000 ? `${(cutoffScore / 1000).toFixed(1)}k` : (cutoffScore || 0);
+    const yourBarBestHTML = yourBarBest
+      ? `<div class="tt-bg-cutoff__your-bar">
+          ${avatarHTML(yourBarBest.name, { size: 'xs' })}
+          <div>
+            <div class="tt-bg-cutoff__your-name">Your bar's best: ${yourBarBest.name}</div>
+            <div class="tt-bg-cutoff__your-score">${yourBarBest.score >= 1000 ? `${(yourBarBest.score / 1000).toFixed(1)}k` : yourBarBest.score} pts${cutoffScore > yourBarBest.score ? ` — ${((cutoffScore - yourBarBest.score) / 1000).toFixed(1)}k to go` : ''}</div>
+          </div>
+        </div>` : '';
+    cutoffHTML = `
+      <div class="tt-glass tt-bg-cutoff" style="animation:slideUp .5s ease-out .4s both">
+        <div class="tt-bg-cutoff__title">🎯 TOP 25 CUTOFF</div>
+        <div class="tt-bg-cutoff__score">${cutoffK}<span class="tt-bg-cutoff__unit">k</span></div>
+        <div class="tt-bg-cutoff__desc">pts to make the board</div>
+        ${yourBarBestHTML}
+      </div>`;
 
     screenEl.innerHTML = `
       <div class="tt-bg-national">
         ${betweenCountdownBarHTML()}
         ${resetArrowHTML()}
         <div class="tt-bg-national__left">
-          <div class="tt-bg-national__header" style="animation:fadeDown .5s ease-out both">🌎 National Top 25</div>
+          <div class="tt-bg-national__header" style="animation:fadeDown .5s ease-out both">
+            <span class="tt-bg-national__header-icon">🌎</span>
+            <div>
+              <div class="tt-bg-national__header-title">National Top 25</div>
+              <div class="tt-bg-national__header-sub">This week's top players across all bars</div>
+            </div>
+          </div>
           <div class="tt-bg-national__columns">
             <div class="tt-bg-national__col">${col1HTML}</div>
             <div class="tt-bg-national__col">${col2HTML}</div>
           </div>
         </div>
         <div class="tt-bg-national__right">
-          <div class="tt-bg-national__stats" style="animation:slideUp .5s ease-out .2s both">${statsHTML}</div>
+          <div class="tt-glass tt-bg-national__stats-card" style="animation:slideUp .5s ease-out .2s both">
+            <div class="tt-bg-national__stats-title">TAPTRIVIA THIS WEEK</div>
+            <div class="tt-bg-national__stats">${statsHTML}</div>
+          </div>
           ${cutoffHTML}
-          ${qrBadgeHTML('br')}
+          ${betweenQRBadgeHTML('Join the Next Game!')}
         </div>
       </div>`;
     bindResetArrow();
@@ -2191,16 +2243,12 @@
 
   /** BETWEEN-GAME HYPE — Logo, next game categories, big QR + bar code */
   function renderBetweenHype(data) {
-    const { categories: allCats = [], startsAt } = data;
-    const categories = allCats.slice(0, 4);
+    const { categories: allCats = [] } = data;
+    const categories = allCats.slice(0, 5);
 
     const catPills = categories.map((cat, i) =>
       `<span class="tt-bg-hype__pill" style="animation:popIn .3s ease-out ${i * 0.1 + 0.3}s both">${getCategoryIcon(cat)} ${cat}</span>`
     ).join('');
-
-    const secsLeft = startsAt ? Math.max(0, Math.ceil((startsAt - getServerNow()) / 1000)) : 0;
-    const mins = Math.floor(secsLeft / 60);
-    const secs = secsLeft % 60;
 
     screenEl.innerHTML = `
       <div class="tt-bg-hype">
@@ -2209,14 +2257,17 @@
         <div class="tt-bg-hype__content">
           <div class="tt-bg-hype__logo" style="animation:breathe 3s ease-in-out infinite">${logoHTML('xl')}</div>
           <div class="tt-bg-hype__tagline" style="animation:fadeDown .5s ease-out .2s both">Next round starting soon!</div>
-          <div class="tt-bg-hype__categories" style="animation:slideUp .5s ease-out .3s both">${catPills}</div>
+          ${categories.length > 0 ? `
+            <div class="tt-bg-hype__cat-label" style="animation:fadeDown .4s ease-out .25s both">COMING UP NEXT</div>
+            <div class="tt-bg-hype__categories" style="animation:slideUp .5s ease-out .3s both">${catPills}</div>
+          ` : ''}
           <div class="tt-bg-hype__qr-section" style="animation:slideUp .5s ease-out .5s both">
             ${qrCodeHTML(240)}
             <div class="tt-bg-hype__code-display">
-              <div class="tt-bg-hype__code-label">JOIN CODE</div>
+              <div class="tt-bg-hype__code-label">SCAN TO JOIN</div>
               <div class="tt-bg-hype__code-value">${barCode}</div>
+              <div class="tt-bg-hype__url">play.taptrivia.tv</div>
             </div>
-            <div class="tt-bg-hype__url">play.taptrivia.tv</div>
           </div>
         </div>
       </div>`;
@@ -2703,7 +2754,7 @@
     const gs = {
       screen: 'lobby',
       gameCode: barCode,
-      playerCount: apiState.state === 'active_game' ? (apiState.barLeaderboard || []).length : 0,
+      playerCount: apiState.activePlayers || (apiState.barLeaderboard || []).length || 0,
       players: [],
       scores: [],
       question: {},
@@ -3115,6 +3166,7 @@
         const key = demoScreen._betweenData;
         betweenGameData = DEMO_BETWEEN_DATA;
         renderers[key](DEMO_BETWEEN_DATA[key]);
+        updateBetweenGameCountdown();
         currentScreen = demoScreen.screen;
       } else {
         renderScreen(demoScreen);

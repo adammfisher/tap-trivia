@@ -18,21 +18,25 @@
     <!-- ═══ LEFT SIDE: Two-column top 25 ═══ -->
     <Group id="leftArea" translation="[0, 80]">
 
-      <!-- Globe + heading -->
+      <!-- Globe + heading + subtitle -->
       <Poster id="globeIcon" uri="pkg:/images/emoji-lg-1f30e.png"
-              width="56" height="56" translation="[420, 0]" />
-      <Label id="headingLabel" text="NATIONAL TOP 25"
-             translation="[0, 60]" width="960" horizAlign="center" color="#ffd200">
+              width="56" height="56" translation="[30, 0]" />
+      <Label id="headingLabel" text="National Top 25"
+             translation="[96, 0]" width="840" color="#f0f0f0">
         <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
+      </Label>
+      <Label id="headingSubLabel" text="This week's top players across all bars"
+             translation="[96, 42]" width="840" color="#ffffff60">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="18" />
       </Label>
 
       <!-- Column 1: Ranks 1-13 -->
-      <Group id="col1" translation="[30, 110]">
+      <Group id="col1" translation="[30, 80]">
         <Group id="col1Rows" />
       </Group>
 
       <!-- Column 2: Ranks 14-25 -->
-      <Group id="col2" translation="[490, 110]">
+      <Group id="col2" translation="[490, 80]">
         <Group id="col2Rows" />
       </Group>
     </Group>
@@ -41,7 +45,7 @@
     <Group id="rightCol" translation="[960, 100]">
 
       <!-- Platform stats -->
-      <Label id="statsHeading" text="THIS WEEK"
+      <Label id="statsHeading" text="TAPTRIVIA THIS WEEK"
              translation="[0, 0]" width="880" horizAlign="center" color="#ffffffCC">
         <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
       </Label>
@@ -75,9 +79,9 @@
       <Group id="cutoffCard" translation="[40, 170]">
         <Rectangle width="860" height="90" color="#ffffff" opacity="0.06" />
         <Poster uri="pkg:/images/emoji-sm-1f3af.png" width="36" height="36" translation="[16, 27]" />
-        <Label id="cutoffLabel" text="Top 25 Cutoff"
-               translation="[64, 10]" width="760" color="#ffffff80">
-          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="20" />
+        <Label id="cutoffLabel" text="TOP 25 CUTOFF"
+               translation="[64, 10]" width="760" color="#ffd200">
+          <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="20" />
         </Label>
         <Label id="cutoffValue" text=""
                translation="[64, 38]" width="760" color="#ffd200">

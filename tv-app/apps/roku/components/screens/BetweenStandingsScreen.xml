@@ -18,10 +18,16 @@
     <!-- LEFT COLUMN: Bar score callout + state rankings -->
     <Group id="leftCol" translation="[0, 80]">
 
-      <!-- "TAP STANDINGS" heading -->
-      <Label id="headingLabel" text="TAP STANDINGS"
-             translation="[0, 10]" width="960" horizAlign="center" color="#ffd200">
+      <!-- Trophy + "Tap Standings" heading + subtitle -->
+      <Poster id="trophyIcon" uri="pkg:/images/emoji-lg-1f3c6.png"
+              width="56" height="56" translation="[40, 10]" />
+      <Label id="headingLabel" text="Tap Standings"
+             translation="[108, 8]" width="840" color="#f0f0f0">
         <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="40" />
+      </Label>
+      <Label id="headingSubLabel" text=""
+             translation="[108, 52]" width="840" color="#ffffff60">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="20" />
       </Label>
 
       <!-- Your bar callout card -->
@@ -69,21 +75,25 @@
 
       <!-- Score Index explainer card -->
       <Group id="explainerCard" translation="[40, 10]">
-        <Rectangle width="860" height="100" color="#ffffff" opacity="0.06" />
+        <Rectangle width="860" height="140" color="#ffffff" opacity="0.06" />
         <Poster id="chartIcon" uri="pkg:/images/emoji-lg-1f4ca.png"
-                width="56" height="56" translation="[20, 22]" />
-        <Label id="explainerTitle" text="What is Score Index?"
-               translation="[88, 12]" width="740" color="#f0f0f0">
-          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
+                width="36" height="36" translation="[20, 14]" />
+        <Label id="explainerTitle" text="SCORE INDEX"
+               translation="[64, 12]" width="760" color="#ffd200">
+          <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="22" />
         </Label>
-        <Label id="explainerText" text="Average points per question across all players at your bar this week."
-               translation="[88, 40]" width="740" color="#ffffff80" maxLines="2">
+        <Label id="explainerText" text="Average points per player, per question. The higher your bar's index, the sharper your regulars."
+               translation="[20, 52]" width="820" color="#ffffff80" maxLines="2">
           <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="18" />
+        </Label>
+        <Label id="explainerNote" text="Resets every Monday"
+               translation="[20, 104]" width="820" color="#ffffff60">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="16" />
         </Label>
       </Group>
 
       <!-- National rank card -->
-      <Group id="nationalCard" translation="[40, 140]">
+      <Group id="nationalCard" translation="[40, 180]">
         <Rectangle width="860" height="100" color="#ffffff" opacity="0.06" />
         <Poster id="flagIcon" uri="pkg:/images/emoji-lg-1f1fa-1f1f8.png"
                 width="56" height="56" translation="[20, 22]" />

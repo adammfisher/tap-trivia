@@ -31,7 +31,7 @@ export function BetweenHypeScreen() {
 
   if (!hype) return <View style={s.root} />;
 
-  const categories = (hype.categories || []).slice(0, 4);
+  const categories = (hype.categories || []).slice(0, 5);
 
   return (
     <>
@@ -44,10 +44,10 @@ export function BetweenHypeScreen() {
           </ZoomInView>
 
           {/* Next Game heading */}
-          <FadeInText delay={200} style={s.heading}>NEXT GAME</FadeInText>
+          <FadeInText delay={200} style={s.heading}>Next round starting soon!</FadeInText>
 
           {/* Categories label */}
-          <FadeInText delay={300} style={s.catLabel}>Categories</FadeInText>
+          <FadeInText delay={300} style={s.catLabel}>COMING UP NEXT</FadeInText>
 
           {/* Category pills */}
           <View style={s.pillGrid}>
@@ -58,18 +58,20 @@ export function BetweenHypeScreen() {
 
           {/* Big QR code */}
           <FadeInView delay={600} style={s.qrArea}>
-            {QRCode && (
-              <QRCode
-                value={PLAYER_APP_URL}
-                size={200}
-                color="#1e0f4a"
-                backgroundColor="#ffffff"
-              />
-            )}
-            <Text style={s.url}>play.taptrivia.tv</Text>
-            <View style={s.codeRow}>
-              <Text style={s.codeLabel}>CODE</Text>
-              <Text style={s.codeValue}>{barCode}</Text>
+            <View style={s.qrRow}>
+              {QRCode && (
+                <QRCode
+                  value={PLAYER_APP_URL}
+                  size={200}
+                  color="#1e0f4a"
+                  backgroundColor="#ffffff"
+                />
+              )}
+              <View style={s.qrInfo}>
+                <Text style={s.scanLabel}>SCAN TO JOIN</Text>
+                <Text style={s.codeValue}>{barCode}</Text>
+                <Text style={s.url}>play.taptrivia.tv</Text>
+              </View>
             </View>
           </FadeInView>
         </View>
@@ -89,8 +91,8 @@ const s = StyleSheet.create({
   logoWrap: { marginBottom: 16 },
   heading: {
     fontFamily: fonts.fredoka.bold,
-    fontSize: 48,
-    color: colors.gold,
+    fontSize: 42,
+    color: '#f0f0f0',
     marginBottom: 8,
   },
   catLabel: {
@@ -122,26 +124,31 @@ const s = StyleSheet.create({
     fontSize: 32,
     color: '#f0f0f0',
   },
-  qrArea: { alignItems: 'center', gap: 8 },
-  url: {
-    fontFamily: fonts.outfit.semiBold,
-    fontSize: 26,
-    color: colors.gold,
-    marginTop: 8,
-  },
-  codeRow: {
+  qrArea: { alignItems: 'center' },
+  qrRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 32,
   },
-  codeLabel: {
+  qrInfo: {
+    alignItems: 'flex-start',
+    gap: 4,
+  },
+  scanLabel: {
     fontFamily: fonts.outfit.semiBold,
     fontSize: 20,
-    color: w(0.3),
+    color: w(0.4),
+    letterSpacing: 2,
+  },
+  url: {
+    fontFamily: fonts.outfit.semiBold,
+    fontSize: 22,
+    color: w(0.5),
+    marginTop: 4,
   },
   codeValue: {
     fontFamily: fonts.fredoka.bold,
-    fontSize: 28,
+    fontSize: 52,
     color: colors.gold,
   },
 });

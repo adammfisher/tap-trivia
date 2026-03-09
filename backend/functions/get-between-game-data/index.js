@@ -280,7 +280,7 @@ async function buildHype(nowEpoch) {
 
     return {
       nextGameId: nextPK,
-      categories: categories.slice(0, 4),
+      categories: categories.slice(0, 5),
       startsAt: nextGameEpoch
     };
   } catch (err) {

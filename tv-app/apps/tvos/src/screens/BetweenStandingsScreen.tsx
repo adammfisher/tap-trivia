@@ -27,19 +27,33 @@ export function BetweenStandingsScreen() {
         <View style={s.body}>
           {/* Left: Bar callout + state rankings */}
           <View style={s.leftCol}>
-            <FadeInText delay={0} style={s.heading}>TAP STANDINGS</FadeInText>
+            <FadeInView delay={0} style={s.headingWrap}>
+              <Text style={s.headingIcon}>{'\u{1F3C6}'}</Text>
+              <View>
+                <Text style={s.heading}>Tap Standings</Text>
+                <Text style={s.headingSub}>Weekly Score Index · {standings.stateName}</Text>
+              </View>
+            </FadeInView>
 
             {/* Your bar callout card */}
             <FadeInView delay={100} style={s.calloutCard}>
               <View style={s.calloutLeft}>
+                <Text style={s.yourBarLabel}>YOUR BAR</Text>
                 <Text style={s.barName}>{yourBar.name}</Text>
                 <Text style={s.barCity}>
                   {[yourBar.city, yourBar.state].filter(Boolean).join(', ')}
                 </Text>
+                {yourBar.delta !== 0 && (
+                  <View style={[s.deltaPill, yourBar.delta > 0 ? s.deltaPillUp : s.deltaPillDown]}>
+                    <Text style={s.deltaText}>
+                      {yourBar.delta > 0 ? '\u25B2' : '\u25BC'} {Math.abs(yourBar.delta)} spots this week
+                    </Text>
+                  </View>
+                )}
               </View>
               <View style={s.calloutRight}>
-                <Text style={s.indexLabel}>Score Index</Text>
                 <Text style={s.indexValue}>{formatNumber(yourBar.index)}</Text>
+                <Text style={s.indexLabel}>SCORE INDEX</Text>
               </View>
             </FadeInView>
 
@@ -63,12 +77,12 @@ export function BetweenStandingsScreen() {
           <View style={s.rightCol}>
             {/* Score Index explainer */}
             <FadeInView delay={200} style={s.card}>
-              <Text style={s.cardEmoji}>{'\u{1F4CA}'}</Text>
               <View style={s.cardContent}>
-                <Text style={s.cardTitle}>What is Score Index?</Text>
+                <Text style={s.cardTitle}>{'\u{1F4CA}'} SCORE INDEX</Text>
                 <Text style={s.cardDesc}>
-                  Average points per question across all players at your bar this week.
+                  Average points per player, per question. The higher your bar's index, the sharper your regulars.
                 </Text>
+                <Text style={s.cardNote}>Resets every <Text style={s.cardNoteBold}>Monday</Text></Text>
               </View>
             </FadeInView>
 
@@ -100,12 +114,23 @@ const s = StyleSheet.create({
   body: { flex: 1, flexDirection: 'row', paddingTop: 80 },
   leftCol: { flex: 1, padding: 48 },
   rightCol: { flex: 1, padding: 48 },
+  headingWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 20,
+  },
+  headingIcon: { fontSize: 48 },
   heading: {
     fontFamily: fonts.fredoka.bold,
     fontSize: 40,
-    color: colors.gold,
-    textAlign: 'center',
-    marginBottom: 20,
+    color: '#f0f0f0',
+  },
+  headingSub: {
+    fontFamily: fonts.outfit.regular,
+    fontSize: 20,
+    color: w(0.4),
+    marginTop: 2,
   },
   calloutCard: {
     flexDirection: 'row',
@@ -114,7 +139,28 @@ const s = StyleSheet.create({
     padding: 20,
     marginBottom: 24,
   },
-  calloutLeft: { flex: 1 },
+  calloutLeft: { flex: 1, gap: 2 },
+  yourBarLabel: {
+    fontFamily: fonts.outfit.semiBold,
+    fontSize: 14,
+    color: w(0.4),
+    letterSpacing: 2,
+    marginBottom: 2,
+  },
+  deltaPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginTop: 6,
+  },
+  deltaPillUp: { backgroundColor: 'rgba(0,212,170,0.15)' },
+  deltaPillDown: { backgroundColor: 'rgba(255,71,87,0.15)' },
+  deltaText: {
+    fontFamily: fonts.outfit.semiBold,
+    fontSize: 16,
+    color: colors.green,
+  },
   calloutRight: { alignItems: 'flex-end' },
   barName: {
     fontFamily: fonts.outfit.bold,
@@ -185,18 +231,28 @@ const s = StyleSheet.create({
     gap: 16,
     alignItems: 'center',
   },
-  cardEmoji: { fontSize: 48 },
   cardContent: { flex: 1 },
   cardTitle: {
-    fontFamily: fonts.outfit.semiBold,
+    fontFamily: fonts.outfit.bold,
     fontSize: 22,
-    color: '#f0f0f0',
-    marginBottom: 4,
+    color: colors.gold,
+    marginBottom: 8,
   },
   cardDesc: {
     fontFamily: fonts.outfit.regular,
     fontSize: 18,
     color: w(0.5),
+    lineHeight: 24,
+  },
+  cardNote: {
+    fontFamily: fonts.outfit.regular,
+    fontSize: 16,
+    color: w(0.4),
+    marginTop: 8,
+  },
+  cardNoteBold: {
+    fontFamily: fonts.outfit.bold,
+    color: w(0.6),
   },
   cardLabel: {
     fontFamily: fonts.outfit.regular,

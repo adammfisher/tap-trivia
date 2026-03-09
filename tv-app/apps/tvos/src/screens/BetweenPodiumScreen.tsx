@@ -38,7 +38,7 @@ export function BetweenPodiumScreen() {
           {/* Left: Trophy + Podium */}
           <View style={s.leftCol}>
             <ZoomInText spring style={s.trophy}>{'\u{1F3C6}'}</ZoomInText>
-            <FadeInText delay={100} style={s.heading}>PODIUM</FadeInText>
+            <FadeInText delay={100} style={s.heading}>Game Over!</FadeInText>
             <FadeInText delay={200} style={s.stats}>
               {podium.questionCount} questions · {podium.playerCount} players
             </FadeInText>
@@ -51,7 +51,7 @@ export function BetweenPodiumScreen() {
 
           {/* Right: Ranks 4-10 */}
           <View style={s.rightCol}>
-            <Text style={s.runnersTitle}>RUNNERS UP</Text>
+            <Text style={s.runnersTitle}>ALSO IN THE TOP 10</Text>
             {runners.map((p, i) => (
               <FadeInView key={p.name + i} delay={400 + i * 80} style={s.rankRow}>
                 <Text style={[s.rankNum, p.rank <= 3 && s.rankGold]}>

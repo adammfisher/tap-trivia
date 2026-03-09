@@ -21,39 +21,36 @@
       <!-- Logo (hero size) -->
       <Logo id="logo" translation="[760, 30]" />
 
-      <!-- "NEXT GAME" heading -->
-      <Label id="headingLabel" text="NEXT GAME"
-             translation="[0, 160]" width="1920" horizAlign="center" color="#ffd200">
-        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="48" />
+      <!-- "Next round starting soon!" heading -->
+      <Label id="headingLabel" text="Next round starting soon!"
+             translation="[0, 160]" width="1920" horizAlign="center" color="#f0f0f0">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="42" />
       </Label>
 
       <!-- Categories heading -->
-      <Label id="categoriesLabel" text="Categories"
-             translation="[0, 230]" width="1920" horizAlign="center" color="#ffffff80">
-        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="24" />
+      <Label id="categoriesLabel" text="COMING UP NEXT"
+             translation="[0, 225]" width="1920" horizAlign="center" color="#ffffff80">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
       </Label>
 
       <!-- Category pills (dynamically created) -->
-      <Group id="pillContainer" translation="[0, 280]" />
+      <Group id="pillContainer" translation="[0, 270]" />
 
-      <!-- Big QR code -->
-      <Group id="qrArea" translation="[660, 580]">
+      <!-- Big QR code — horizontal layout -->
+      <Group id="qrArea" translation="[520, 520]">
         <Poster id="qrBig" uri="pkg:/images/qr-play-360.png"
-                width="240" height="240" translation="[130, 0]" />
-        <!-- URL below QR -->
-        <Label id="urlLabel" text="play.taptrivia.tv"
-               translation="[0, 255]" width="600" horizAlign="center" color="#ffd200">
-          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
+                width="240" height="240" translation="[0, 0]" />
+        <!-- Right: SCAN TO JOIN + code + URL -->
+        <Label text="SCAN TO JOIN" translation="[280, 40]" width="400" color="#ffffff60">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="20" />
         </Label>
-        <!-- Bar code -->
-        <Group translation="[0, 295]">
-          <Label text="CODE" translation="[200, 4]" width="80" color="#ffffff4D">
-            <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
-          </Label>
-          <Label id="bigCodeLabel" text="" translation="[285, 0]" color="#ffd200">
-            <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="32" />
-          </Label>
-        </Group>
+        <Label id="bigCodeLabel" text="" translation="[280, 70]" color="#ffd200">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="52" />
+        </Label>
+        <Label id="urlLabel" text="play.taptrivia.tv"
+               translation="[280, 135]" width="400" color="#ffffff80">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
+        </Label>
       </Group>
     </Group>
   </children>

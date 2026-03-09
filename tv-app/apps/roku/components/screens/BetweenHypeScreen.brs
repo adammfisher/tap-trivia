@@ -28,9 +28,9 @@ sub onDataChanged(event as Object)
   ' Build category pills
   categories = []
   if hype.categories <> invalid then categories = hype.categories
-  if categories.count() > 4 then
+  if categories.count() > 5 then
     trimmed = []
-    for ti = 0 to 3
+    for ti = 0 to 4
       trimmed.push(categories[ti])
     end for
     categories = trimmed

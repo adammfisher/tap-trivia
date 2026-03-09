@@ -341,7 +341,7 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
         barCode: api.barCode,
         barName: api.barName,
         gameId: api.gameId,
-        activePlayers: api.state === 'active_game' ? (api.barLeaderboard || []).length : 0,
+        activePlayers: api.activePlayers || (api.barLeaderboard || []).length || 0,
         questionNumber: api.questionNumber,
         totalQuestions: api.totalQuestions || 15,
         question: api.question,

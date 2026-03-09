@@ -60,9 +60,13 @@ sub init()
   end for
   m.errorOverlay = m.top.findNode("errorOverlay")
 
-  ' ── API Task ──
+  ' ── API Tasks ──
   m.apiTask = m.top.findNode("apiTask")
   m.apiTask.observeField("response", "onApiResponse")
+
+  ' Separate task for between-game data (avoids race with poll timer)
+  m.betweenApiTask = m.top.findNode("betweenApiTask")
+  m.betweenApiTask.observeField("response", "onBetweenApiResponse")
 
   ' ── Timers ──
   m.pollTimer = CreateObject("roSGNode", "Timer")
@@ -726,8 +730,6 @@ sub onApiResponse()
 
   if callId = "tvState"
     processGameState(response)
-  else if callId = "betweenGameData"
-    onBetweenGameDataResponse(response)
   else if callId = "verifyBar"
     onVerifyBarResponse(response)
   else if callId = "registerBar"
@@ -794,7 +796,21 @@ end sub
 
 sub fetchBetweenGameData(gameId as String)
   print ">>> betweenGame: fetching data for gameId=" + gameId
-  makeApiCall("GET", "/game/between?barCode=" + m.barCode + "&gameId=" + gameId, invalid, "betweenGameData")
+  ' Use separate API task to avoid race condition with poll timer
+  m.betweenApiTask.setField("callId", "betweenGameData")
+  m.betweenApiTask.setField("requestMethod", "GET")
+  m.betweenApiTask.setField("requestUrl", m.API_BASE + "/game/between?barCode=" + m.barCode + "&gameId=" + gameId)
+  m.betweenApiTask.setField("requestBody", "")
+  m.betweenApiTask.control = "run"
+end sub
+
+sub onBetweenApiResponse()
+  response = m.betweenApiTask.getField("response")
+  if response = invalid or (response.error <> invalid and response.error <> "")
+    print ">>> betweenGame: API error"
+    return
+  end if
+  onBetweenGameDataResponse(response)
 end sub
 
 sub onBetweenGameDataResponse(response as Object)

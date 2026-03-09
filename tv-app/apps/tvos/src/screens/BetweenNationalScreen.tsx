@@ -47,9 +47,13 @@ export function BetweenNationalScreen() {
         <View style={s.body}>
           {/* Left: Two-column top 25 */}
           <View style={s.leftArea}>
-            <FadeInText delay={0} style={s.heading}>
-              {'\u{1F30E}'} NATIONAL TOP 25
-            </FadeInText>
+            <FadeInView delay={0} style={s.headingWrap}>
+              <Text style={s.headingIcon}>{'\u{1F30E}'}</Text>
+              <View>
+                <Text style={s.heading}>National Top 25</Text>
+                <Text style={s.headingSub}>This week's top players across all bars</Text>
+              </View>
+            </FadeInView>
             <View style={s.columns}>
               <View style={s.col}>
                 {col1.map((p, i) => (
@@ -66,7 +70,7 @@ export function BetweenNationalScreen() {
 
           {/* Right: Stats + cutoff */}
           <View style={s.rightCol}>
-            <Text style={s.statsHeading}>THIS WEEK</Text>
+            <Text style={s.statsHeading}>TAPTRIVIA THIS WEEK</Text>
 
             {/* Stats row */}
             <FadeInView delay={200} style={s.statsRow}>
@@ -84,9 +88,8 @@ export function BetweenNationalScreen() {
 
             {/* Cutoff card */}
             <FadeInView delay={400} style={s.cutoffCard}>
-              <Text style={s.cutoffEmoji}>{'\u{1F3AF}'}</Text>
               <View style={s.cutoffContent}>
-                <Text style={s.cutoffLabel}>Top 25 Cutoff</Text>
+                <Text style={s.cutoffLabel}>{'\u{1F3AF}'} TOP 25 CUTOFF</Text>
                 <Text style={s.cutoffValue}>
                   {national.cutoffScore > 0 ? `${formatNumber(national.cutoffScore)} pts` : '—'}
                 </Text>
@@ -121,12 +124,23 @@ const s = StyleSheet.create({
   body: { flex: 1, flexDirection: 'row', paddingTop: 80 },
   leftArea: { flex: 1.2, padding: 32 },
   rightCol: { flex: 0.8, padding: 32 },
+  headingWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 16,
+  },
+  headingIcon: { fontSize: 44 },
   heading: {
     fontFamily: fonts.fredoka.bold,
     fontSize: 36,
-    color: colors.gold,
-    textAlign: 'center',
-    marginBottom: 16,
+    color: '#f0f0f0',
+  },
+  headingSub: {
+    fontFamily: fonts.outfit.regular,
+    fontSize: 18,
+    color: w(0.4),
+    marginTop: 2,
   },
   columns: { flexDirection: 'row', gap: 12 },
   col: { flex: 1 },
@@ -203,13 +217,12 @@ const s = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  cutoffEmoji: { fontSize: 32 },
   cutoffContent: { flex: 1 },
   cutoffLabel: {
-    fontFamily: fonts.outfit.regular,
-    fontSize: 18,
-    color: w(0.5),
-    marginBottom: 2,
+    fontFamily: fonts.outfit.bold,
+    fontSize: 20,
+    color: colors.gold,
+    marginBottom: 6,
   },
   cutoffValue: {
     fontFamily: fonts.fredoka.bold,
