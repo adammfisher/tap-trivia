@@ -23,14 +23,14 @@
       <Logo id="logo" translation="[100, 40]" />
 
       <!-- Bar name -->
-      <Label id="barNameLabel" text="" translation="[100, 92]" color="#ffffff60">
-        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+      <Label id="barNameLabel" text="" translation="[100, 92]" color="#f0f0f0">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
       </Label>
 
       <!-- "AFTER QUESTION N" label -->
       <Label id="afterLabel" text="AFTER QUESTION 1"
-             translation="[100, 130]" color="#ffffffB0">
-        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="28" />
+             translation="[100, 140]" color="#ffffff40">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="26" />
       </Label>
 
       <!-- ═══ PODIUM: 2nd | 1st | 3rd ═══ -->
@@ -44,7 +44,7 @@
 
       <!-- "Next question in 5s..." label -->
       <Label id="nextLabel" text="Next question in 5s..."
-             translation="[100, 680]" color="#ffffff60">
+             translation="[100, 680]" color="#ffffff40">
         <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
       </Label>
     </Group>
@@ -52,8 +52,8 @@
     <!-- ═══ RIGHT COLUMN: TOP 10 list (no-signage mode) ═══ -->
     <Group id="rightCol" translation="[960, 40]">
       <Label id="topLabel" text="TOP 10"
-             translation="[0, 0]" width="880" horizAlign="center" color="#ffffffCC">
-        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="32" />
+             translation="[0, 0]" width="880" horizAlign="center" color="#ffffff58">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
       </Label>
 
       <!-- Ranks 4-10 list -->

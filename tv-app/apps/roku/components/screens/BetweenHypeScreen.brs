@@ -41,57 +41,79 @@ sub onDataChanged(event as Object)
 
   if categories.count() = 0 then return
 
-  ' Calculate pill layout — centered, wrapping rows
-  pillW = 360
+  ' Calculate pill widths based on text length (web: padding 18px 36px, icon 52+14 gap)
   pillH = 72
-  pillGap = 24
-  maxPerRow = 4
+  pillGap = 20
   totalW = 1920
+  iconW = 52
+  iconGap = 14
+  padH = 36  ' horizontal padding each side
 
-  ' Split into rows
-  rowCount = 0
-  idx = 0
+  ' Measure pill widths
+  pillWidths = []
+  for i = 0 to categories.count() - 1
+    ' ~16px per char at 28px Outfit-SemiBold
+    textW = Len(categories[i]) * 16
+    pw = padH + iconW + iconGap + textW + padH
+    if pw < 200 then pw = 200
+    pillWidths.push(pw)
+  end for
+
+  ' Layout rows: fill rows until width exceeds screen, then wrap
   rows = []
-  while idx < categories.count()
-    rowItems = []
-    rowEnd = idx + maxPerRow
-    if rowEnd > categories.count() then rowEnd = categories.count()
-    while idx < rowEnd
-      rowItems.push(categories[idx])
-      idx = idx + 1
-    end while
-    rows.push(rowItems)
-    rowCount = rowCount + 1
-  end while
+  rowWidths = []
+  curRow = []
+  curRowW = 0
+  maxRowW = 1700
+  for i = 0 to categories.count() - 1
+    pw = pillWidths[i]
+    needed = pw
+    if curRow.count() > 0 then needed = needed + pillGap
+    if curRowW + needed > maxRowW and curRow.count() > 0
+      rows.push(curRow)
+      rowWidths.push(curRowW)
+      curRow = []
+      curRowW = 0
+      needed = pw
+    end if
+    curRow.push(i)
+    curRowW = curRowW + needed
+  end for
+  if curRow.count() > 0
+    rows.push(curRow)
+    rowWidths.push(curRowW)
+  end if
 
   ' Render each row centered
   for rowIdx = 0 to rows.count() - 1
     rowItems = rows[rowIdx]
-    rowW = rowItems.count() * pillW + (rowItems.count() - 1) * pillGap
+    rowW = rowWidths[rowIdx]
     startX = Int((totalW - rowW) / 2)
     yPos = rowIdx * (pillH + pillGap)
+    xPos = startX
 
     for colIdx = 0 to rowItems.count() - 1
-      cat = rowItems[colIdx]
-      xPos = startX + colIdx * (pillW + pillGap)
-      addCategoryPill(cat, xPos, yPos)
+      catIdx = rowItems[colIdx]
+      addCategoryPill(categories[catIdx], xPos, yPos, pillWidths[catIdx])
+      xPos = xPos + pillWidths[catIdx] + pillGap
     end for
   end for
 end sub
 
-sub addCategoryPill(category as String, xPos as Integer, yPos as Integer)
+sub addCategoryPill(category as String, xPos as Integer, yPos as Integer, pillW as Integer)
   pill = CreateObject("roSGNode", "Group")
   pill.translation = [xPos, yPos]
 
-  ' Glass background
+  ' Glass background with pill shape (cornerRadius requires Roku OS 12.5+)
   bg = CreateObject("roSGNode", "Rectangle")
-  bg.width = 360
+  bg.width = pillW
   bg.height = 72
   bg.color = "#ffffff"
   bg.opacity = 0.10
+  if bg.hasField("cornerRadius") then bg.cornerRadius = 36.0
   pill.appendChild(bg)
 
-  ' Category icon (small, 36px)
+  ' Category icon (small, 52px)
   icon = CreateObject("roSGNode", "Poster")
   icon.translation = [14, 10]
   icon.width = 52
@@ -99,10 +121,10 @@ sub addCategoryPill(category as String, xPos as Integer, yPos as Integer)
   icon.uri = getCategoryIconSmall(category)
   pill.appendChild(icon)
 
-  ' Category name
+  ' Category name (full width, no truncation)
   nameLabel = CreateObject("roSGNode", "Label")
-  nameLabel.translation = [76, 18]
-  nameLabel.width = 268
+  nameLabel.translation = [80, 18]
+  nameLabel.width = pillW - 80 - 36
   nameLabel.font = makeFont("Outfit-SemiBold", 28)
   nameLabel.color = "#f0f0f0"
   nameLabel.text = category
@@ -111,43 +133,8 @@ sub addCategoryPill(category as String, xPos as Integer, yPos as Integer)
   m.pillContainer.appendChild(pill)
 end sub
 
-' Small category icon for pills (48px versions)
+' Small category icon for pills (48px versions) — uses getCategoryIconUri from Utils.brs
 function getCategoryIconSmall(category as String) as String
-  uri = getCategoryIcon(category)
+  uri = getCategoryIconUri(category)
   return uri.Replace("cat-", "cat-sm-")
-end function
-
-' Category icon lookup (same as TapTriviaScene)
-function getCategoryIcon(category as String) as String
-  if category = "" then return "pkg:/images/cat-default.png"
-  c = LCase(category)
-  if Instr(1, c, "nhl") > 0 then return "pkg:/images/cat-nhl.png"
-  if Instr(1, c, "nfl") > 0 then return "pkg:/images/cat-nfl.png"
-  if Instr(1, c, "nba") > 0 then return "pkg:/images/cat-nba.png"
-  if Instr(1, c, "mlb") > 0 then return "pkg:/images/cat-mlb.png"
-  if Instr(1, c, "olympic") > 0 then return "pkg:/images/cat-olympics.png"
-  if Instr(1, c, "disney") > 0 then return "pkg:/images/cat-disney.png"
-  if Instr(1, c, "pop culture") > 0 then return "pkg:/images/cat-pop-culture.png"
-  if Instr(1, c, "science") > 0 then return "pkg:/images/cat-science.png"
-  if Instr(1, c, "history") > 0 then return "pkg:/images/cat-history.png"
-  if Instr(1, c, "geography") > 0 then return "pkg:/images/cat-geography.png"
-  if Instr(1, c, "soccer") > 0 then return "pkg:/images/cat-soccer.png"
-  if Instr(1, c, "sport") > 0 then return "pkg:/images/cat-sports.png"
-  if Instr(1, c, "entertain") > 0 then return "pkg:/images/cat-entertainment.png"
-  if Instr(1, c, "music") > 0 then return "pkg:/images/cat-music.png"
-  if Instr(1, c, "art") > 0 then return "pkg:/images/cat-art.png"
-  if Instr(1, c, "literature") > 0 then return "pkg:/images/cat-literature.png"
-  if Instr(1, c, "tech") > 0 then return "pkg:/images/cat-technology.png"
-  if Instr(1, c, "nature") > 0 then return "pkg:/images/cat-nature.png"
-  if Instr(1, c, "food") > 0 then return "pkg:/images/cat-food.png"
-  if Instr(1, c, "movie") > 0 then return "pkg:/images/cat-movies.png"
-  if Instr(1, c, "tv") > 0 or Instr(1, c, "television") > 0 then return "pkg:/images/cat-tv.png"
-  if Instr(1, c, "gaming") > 0 or Instr(1, c, "video game") > 0 then return "pkg:/images/cat-gaming.png"
-  if Instr(1, c, "animal") > 0 then return "pkg:/images/cat-animals.png"
-  if Instr(1, c, "math") > 0 or Instr(1, c, "number") > 0 then return "pkg:/images/cat-math.png"
-  if Instr(1, c, "politic") > 0 then return "pkg:/images/cat-politics.png"
-  if Instr(1, c, "space") > 0 or Instr(1, c, "astrono") > 0 then return "pkg:/images/cat-space.png"
-  if Instr(1, c, "myth") > 0 then return "pkg:/images/cat-mythology.png"
-  if Instr(1, c, "language") > 0 then return "pkg:/images/cat-language.png"
-  return "pkg:/images/cat-default.png"
 end function

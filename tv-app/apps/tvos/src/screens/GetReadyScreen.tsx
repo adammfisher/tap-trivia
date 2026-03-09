@@ -117,7 +117,7 @@ const s = StyleSheet.create({
   sub: {
     fontFamily: fonts.outfit.semiBold,
     fontSize: 36,
-    color: '#ffffff',
+    color: w(0.5),
     marginTop: 56,
   },
   info: {

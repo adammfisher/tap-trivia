@@ -210,7 +210,8 @@ exports.handler = async (event) => {
     }
 
     const barName = bar.barName;
-    const activePlayers = bar.activePlayers || 0;
+    // NOTE: bar.activePlayers is a stale counter (increments on join, rarely decrements).
+    // Real-time player count is derived from barLeaderboard length during active games.
 
     // --- Determine current/next game ---
 
@@ -250,7 +251,7 @@ exports.handler = async (event) => {
         state: 'break',
         barCode,
         barName,
-        activePlayers,
+        activePlayers: 0,
         nextGameStartEpoch: gameStartEpoch,
         secondsUntilNextGame: Math.ceil((gameStartEpoch - now) / 1000),
         showBarCode: true,
@@ -288,7 +289,7 @@ exports.handler = async (event) => {
             state: 'game_over',
             barCode,
             barName,
-            activePlayers,
+            activePlayers: barLeaderboard.length,
             gameId: prevGame.gameId,
             totalQuestions: 15,
             barLeaderboard,
@@ -308,7 +309,7 @@ exports.handler = async (event) => {
         state: 'break',
         barCode,
         barName,
-        activePlayers,
+        activePlayers: 0,
         nextGameStartEpoch: game.startTimeEpoch,
         secondsUntilNextGame: gameState.secondsUntilStart,
         showBarCode: true,
@@ -335,7 +336,7 @@ exports.handler = async (event) => {
         state: 'game_over',
         barCode,
         barName,
-        activePlayers,
+        activePlayers: barLeaderboard.length,
         gameId: game.gameId,
         totalQuestions: 15,
         barLeaderboard,
@@ -360,7 +361,7 @@ exports.handler = async (event) => {
         state: 'active_game',
         barCode,
         barName,
-        activePlayers,
+        activePlayers: 0,
         gameId: game.gameId,
         questionNumber,
         totalQuestions: 15,
@@ -458,7 +459,7 @@ exports.handler = async (event) => {
       state: 'active_game',
       barCode,
       barName,
-      activePlayers,
+      activePlayers: barLeaderboard.length,
       gameId: game.gameId,
       gameStartEpoch: game.startTimeEpoch,
       questionNumber,

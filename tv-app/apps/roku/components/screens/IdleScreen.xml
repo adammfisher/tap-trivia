@@ -131,7 +131,7 @@
             </Label>
             <Label id="happyhourFreq" text="" color="#ffffff80"
                    horizAlign="center" width="1200" translation="[-600, -57]">
-              <Font role="font" uri="pkg:/fonts/Outfit-Medium.ttf" size="36" />
+              <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="36" />
             </Label>
             <!-- Deal cards (dynamically built as horizontal row) -->
             <Group id="happyhourDeals" translation="[-600, 34]" />
@@ -155,7 +155,7 @@
             </Label>
             <Label id="eventDetails" text="" color="#ffffff80"
                    horizAlign="center" width="1200" translation="[-600, 43]">
-              <Font role="font" uri="pkg:/fonts/Outfit-Medium.ttf" size="36" />
+              <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="36" />
             </Label>
             <!-- Prize cards (dynamically built as horizontal row) -->
             <Group id="eventPrizes" translation="[-400, 134]" />
@@ -220,7 +220,7 @@
             <Label id="announcementMessage" text="" color="#ffffff8C"
                    horizAlign="center" width="1200" translation="[-600, 49]"
                    wrap="true" maxLines="4">
-              <Font role="font" uri="pkg:/fonts/Outfit-Medium.ttf" size="40" />
+              <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="40" />
             </Label>
             <Label id="announcementSubtext" text="" color="#ffffff4D"
                    horizAlign="center" width="1000" translation="[-500, 209]">
@@ -246,7 +246,7 @@
             </Label>
             <Label id="sportsWhen" text="" color="#ffffff80"
                    horizAlign="center" width="1200" translation="[-600, 49]">
-              <Font role="font" uri="pkg:/fonts/Outfit-Medium.ttf" size="36" />
+              <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="36" />
             </Label>
             <!-- Promo box -->
             <Group id="sportsPromoGroup" translation="[-350, 188]">
@@ -277,7 +277,7 @@
             <Label id="customBody" text="" color="#ffffff8C"
                    horizAlign="center" width="1200" translation="[-600, 44]"
                    wrap="true" maxLines="3">
-              <Font role="font" uri="pkg:/fonts/Outfit-Medium.ttf" size="40" />
+              <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="40" />
             </Label>
             <!-- Custom items (dynamically built as horizontal row) -->
             <Group id="customItems" translation="[-600, 160]" />

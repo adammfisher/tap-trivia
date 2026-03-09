@@ -25,15 +25,15 @@
       <Logo id="logo" translation="[374, 0]" />
 
       <!-- Bar name — centered -->
-      <Label id="barNameLabel" text="" translation="[0, 66]" color="#ffffff60"
+      <Label id="barNameLabel" text="" translation="[0, 66]" color="#f0f0f0"
              width="960" horizAlign="center">
-        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="32" />
       </Label>
 
       <!-- "Standings" heading — centered -->
       <Label id="standingsLabel" text="Standings"
-             translation="[0, 110]" color="#ffffffCC" width="960" horizAlign="center">
-        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
+             translation="[0, 110]" color="#ffffff80" width="960" horizAlign="center">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="34" />
       </Label>
 
       <!-- 5 standings rows (860px wide, centered in 960px → X=50) -->
@@ -47,7 +47,7 @@
 
       <!-- Countdown label — centered (Y positioned dynamically in BRS) -->
       <Label id="countdownLabel" text=""
-             translation="[0, 500]" color="#ffffff60" width="960" horizAlign="center">
+             translation="[0, 500]" color="#ffffff40" width="960" horizAlign="center">
         <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
       </Label>
     </Group>

@@ -194,11 +194,13 @@ sub updateCountdown()
     nextEpoch = gameState.nextGameStartEpoch
   end if
 
-  ' Ensure next game epoch is in the future; if stale, compute next 15-min slot
+  ' Ensure next game epoch is in the future; if stale, advance to next 15-min slot
   SLOT_MS = 15& * 60 * 1000
   nowMs = getEpochMs()
-  if nextEpoch > 0 and nextEpoch <= nowMs
-    nextEpoch = nowMs + SLOT_MS - (nowMs mod SLOT_MS)
+  if nextEpoch > 0
+    while nextEpoch <= nowMs
+      nextEpoch = nextEpoch + SLOT_MS
+    end while
   end if
 
   if nextEpoch > 0

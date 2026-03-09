@@ -69,11 +69,12 @@ function flattenSlide(raw: any): SignageSlide {
   switch (raw.template) {
     case 'specials':
       slide.customLabel = data.label;
+      slide.subheadline = data.subheadline;
       slide.items = (data.menuItems || []).map((m: any) => ({
         icon: m.icon, name: m.name, price: m.price, desc: m.desc,
       }));
       if (data.featuredName) {
-        slide.featured = { name: data.featuredName, price: data.featuredPrice, icon: data.featuredIcon };
+        slide.featured = { name: data.featuredName, price: data.featuredPrice, icon: data.featuredIcon, desc: data.featuredDesc };
       }
       break;
     case 'happyhour':

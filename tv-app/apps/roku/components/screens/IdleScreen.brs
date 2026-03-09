@@ -172,11 +172,13 @@ sub updateCountdown()
     nextEpoch = gameState.nextGameStartEpoch
   end if
 
-  ' Ensure next game epoch is in the future; if stale, compute next 15-min slot
+  ' Ensure next game epoch is in the future; if stale, advance to next 15-min slot
   SLOT_MS = 15& * 60 * 1000
   nowMs = getEpochMs()
-  if nextEpoch > 0 and nextEpoch <= nowMs
-    nextEpoch = nowMs + SLOT_MS - (nowMs mod SLOT_MS)
+  if nextEpoch > 0
+    while nextEpoch <= nowMs
+      nextEpoch = nextEpoch + SLOT_MS
+    end while
   end if
 
   newValue = ""
@@ -827,13 +829,13 @@ sub renderAnnouncement(data as Object)
   if m.announcementEmoji.visible
     elements.push({node: m.announcementEmoji, xOff: -64, h: 128, gap: 40})
   end if
-  elements.push({node: m.announcementHeadline, xOff: -600, h: -1, gap: 16})
+  elements.push({node: m.announcementHeadline, xOff: -700, h: -1, gap: 16})
   msgText = safeField(data, "message")
   if msgText <> ""
     elements.push({node: m.announcementMessage, xOff: -600, h: -1, gap: 40})
   end if
   if subtext <> ""
-    elements.push({node: m.announcementSubtext, xOff: -600, h: -1, gap: 0})
+    elements.push({node: m.announcementSubtext, xOff: -500, h: -1, gap: 0})
   end if
   centerElementsVertically(elements)
 end sub

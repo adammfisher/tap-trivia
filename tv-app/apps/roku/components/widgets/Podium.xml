@@ -13,10 +13,10 @@
     <Group id="place2" translation="[0, 40]">
       <Avatar id="avatar2" translation="[80, 0]" />
       <Label id="name2" text="" translation="[80, 110]" horizAlign="center" width="200" color="#ffffffB0">
-        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
+        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="22" />
       </Label>
       <Label id="score2" text="" translation="[80, 136]" horizAlign="center" width="200" color="#ffd200">
-        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="20" />
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="26" />
       </Label>
       <!-- Podium bar (pre-rendered gradient PNG) -->
       <Poster id="bar2" uri="pkg:/images/podium-bar-silver.png" width="200" height="100" translation="[0, 170]" />
@@ -32,7 +32,7 @@
         <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="26" />
       </Label>
       <Label id="score1" text="" translation="[100, 170]" horizAlign="center" width="280" color="#ffd200">
-        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="24" />
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="32" />
       </Label>
       <!-- Podium bar (tallest, pre-rendered gradient PNG) -->
       <Poster id="bar1" uri="pkg:/images/podium-bar-gold.png" width="280" height="140" translation="[0, 210]" />
@@ -45,10 +45,10 @@
     <Group id="place3" translation="[560, 60]">
       <Avatar id="avatar3" translation="[80, 0]" />
       <Label id="name3" text="" translation="[80, 100]" horizAlign="center" width="200" color="#ffffffB0">
-        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
+        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="22" />
       </Label>
       <Label id="score3" text="" translation="[80, 126]" horizAlign="center" width="200" color="#ffd200">
-        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="20" />
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="26" />
       </Label>
       <!-- Podium bar (pre-rendered gradient PNG) -->
       <Poster id="bar3" uri="pkg:/images/podium-bar-bronze.png" width="200" height="80" translation="[0, 160]" />

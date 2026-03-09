@@ -34,7 +34,7 @@
       <Label id="categoryName" text=""
              translation="[0, 312]" width="1400" horizAlign="center" color="#f0f0f0"
              wrap="true" maxLines="2">
-        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="80" />
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="84" />
       </Label>
 
       <!-- Subcategory -->

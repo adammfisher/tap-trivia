@@ -50,7 +50,9 @@ async function buildPodium(gameId, barCode) {
       ExpressionAttributeValues: { ':gbc': `${gameId}#${barCode}` }
     });
 
-    if (!answers || answers.length === 0) return null;
+    if (!answers || answers.length === 0) {
+      return { players: [], questionCount: 15, playerCount: 0 };
+    }
 
     // Aggregate scores by player
     const playerScores = new Map();
@@ -184,7 +186,9 @@ async function buildNational(barCode) {
       Limit: 25
     });
 
-    if (!topPlayers || topPlayers.length === 0) return null;
+    if (!topPlayers || topPlayers.length === 0) {
+      return { top25: [], stats: { players: 0, games: 0, questions: 0, bars: 0 }, cutoffScore: 0, yourBarBest: null };
+    }
 
     const top25 = topPlayers.map((p, i) => ({
       name: p.displayName || 'Anonymous',

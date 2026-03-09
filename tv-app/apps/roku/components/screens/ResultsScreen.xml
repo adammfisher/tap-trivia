@@ -27,7 +27,7 @@
       <!-- Countdown value -->
       <Label id="countdownValueCenter" text=""
              translation="[0, 200]" width="960" horizAlign="center" color="#ffd200">
-        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="64" />
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="56" />
       </Label>
       <!-- Trophy emoji -->
       <Poster id="trophyEmoji" uri="pkg:/images/emoji-lg-1f3c6.png"
@@ -35,7 +35,7 @@
       <!-- "Game Over!" -->
       <Label id="gameOverTitleCenter" text="Game Over!"
              translation="[0, 400]" width="960" horizAlign="center" color="#f0f0f0">
-        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="72" />
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="48" />
       </Label>
       <!-- Stats line -->
       <Label id="statsLineCenter" text="15 questions · 0 players"
@@ -96,7 +96,7 @@
     <Group id="rightCol" translation="[960, 40]">
       <Label id="standingsLabel" text="FINAL STANDINGS"
              translation="[0, 0]" width="880" horizAlign="center" color="#ffffffCC">
-        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="32" />
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
       </Label>
 
       <!-- Ranks 1-10 list -->

@@ -21,16 +21,16 @@
         <Logo id="logo" />
         <Label id="headerBarName" text="" color="#f0f0f0"
                translation="[0, 38]">
-          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
         </Label>
       </Group>
 
       <!-- Center: "Answer Revealed" -->
       <Group id="headerCenter" translation="[960, 10]">
         <Label id="revealLabel" text="Answer Revealed" color="#00d4aa"
-               width="300" horizAlign="center"
-               translation="[-150, 12]">
-          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
+               width="400" horizAlign="center"
+               translation="[-200, 12]">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="40" />
         </Label>
       </Group>
 
@@ -85,7 +85,7 @@
         <Label id="questionText" text=""
                translation="[0, 60]" width="960" color="#f0f0f0"
                wrap="true" maxLines="5" lineSpacing="-12">
-          <Font role="font" uri="pkg:/fonts/Outfit-Black.ttf" size="64" />
+          <Font role="font" uri="pkg:/fonts/Outfit-ExtraBold.ttf" size="60" />
         </Label>
 
         <!-- Progress bar -->

@@ -24,7 +24,7 @@
         <Logo id="logo" />
         <Label id="headerBarName" text=""
                translation="[0, 38]" color="#f0f0f0">
-          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
         </Label>
       </Group>
 
@@ -33,12 +33,12 @@
         <Label id="pointsValue" text="1000"
                width="300" horizAlign="center"
                translation="[-150, 0]" color="#00d4aa">
-          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="64" />
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="76" />
         </Label>
         <Label id="pointsLabel" text="POINTS AVAILABLE"
                width="300" horizAlign="center"
-               translation="[-150, 64]" color="#ffffff40">
-          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="18" />
+               translation="[-150, 76]" color="#ffffff40">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="20" />
         </Label>
       </Group>
 
@@ -85,11 +85,11 @@
           <!-- Question counter -->
           <Label id="qCounter" text="Q1"
                  translation="[260, 8]" color="#ffffff58">
-            <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
+            <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
           </Label>
           <Label id="qCounterSep" text="/15"
                  translation="[310, 8]" color="#ffffff30">
-            <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
+            <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
           </Label>
         </Group>
 
@@ -97,7 +97,7 @@
         <Label id="questionText" text=""
                translation="[0, 60]" width="960" color="#f0f0f0"
                wrap="true" maxLines="5" lineSpacing="-12">
-          <Font role="font" uri="pkg:/fonts/Outfit-Black.ttf" size="64" />
+          <Font role="font" uri="pkg:/fonts/Outfit-ExtraBold.ttf" size="60" />
         </Label>
 
         <!-- Progress bar -->

@@ -9,9 +9,8 @@ import { fonts, tvFontSizes } from '../theme/typography';
 import { colors, w } from '../theme/colors';
 import { spacing, borderRadius } from '../theme/spacing';
 
-// Unified dark navy gradient matching the screenshot — all slides use this
-// so transitions between them are seamless (no color flash).
-const BG_GRADIENT = ['#040a12', '#0a1628', '#122040', '#0a1628'] as const;
+// Main app gradient — matches web TV source of truth and GradientBackground
+const BG_GRADIENT = ['#0f0326', '#1e0f4a', '#3d1866', '#6b2358', '#a8334a'] as const;
 
 interface Props {
   slides: SignageSlide[];
@@ -90,10 +89,14 @@ function SpecialsFS({ slide, barCode, barName, logoUrl, secondsUntilNextGame }: 
             {slide.emoji || ''} {slide.customLabel || "Today's Specials"}
           </Text>
           <Text style={fs.headline}>{slide.headline || ''}</Text>
+          {slide.subheadline ? (
+            <Text style={fs.subheadline}>{slide.subheadline}</Text>
+          ) : null}
           {slide.featured && (
             <View style={fs.featured}>
               <View style={{ flex: 1 }}>
                 <Text style={fs.featuredName}>{slide.featured.name || ''}</Text>
+                {slide.featured.desc ? <Text style={fs.featuredDesc}>{slide.featured.desc}</Text> : null}
               </View>
               <Text style={fs.featuredPrice}>{slide.featured.price || ''}</Text>
             </View>
@@ -105,6 +108,7 @@ function SpecialsFS({ slide, barCode, barName, logoUrl, secondsUntilNextGame }: 
               <Text style={fs.menuIcon}>{item.icon || ''}</Text>
               <View style={{ flex: 1 }}>
                 <Text style={fs.menuName}>{item.name || ''}</Text>
+                {item.desc ? <Text style={fs.menuDesc}>{item.desc}</Text> : null}
               </View>
               <Text style={fs.menuPrice}>{item.price || ''}</Text>
             </View>
@@ -154,7 +158,8 @@ function EventFS({ slide, barName, logoUrl, secondsUntilNextGame }: any) {
             {(slide.prize || slide.items || []).map((p: any, i: number) => (
               <View key={i} style={fs.prize}>
                 <Text style={fs.prizeEmoji}>{p.emoji || ''}</Text>
-                <Text style={fs.prizePlace}>{p.place || p.label || ''}</Text>
+                <Text style={fs.prizePlace}>{p.place || ''}</Text>
+                {p.label ? <Text style={fs.prizeLabel}>{p.label}</Text> : null}
               </View>
             ))}
           </View>
@@ -294,14 +299,21 @@ const fs = StyleSheet.create({
   subtitle: {
     fontFamily: fonts.outfit.medium,
     fontSize: 36,
-    color: w(0.6),
+    color: w(0.5),
     textAlign: 'center',
     marginBottom: 24,
   },
+  subheadline: {
+    fontFamily: fonts.fredoka.bold,
+    fontSize: 88,
+    color: colors.gold,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
   body: {
-    fontFamily: fonts.outfit.regular,
+    fontFamily: fonts.outfit.medium,
     fontSize: 40,
-    color: w(0.7),
+    color: w(0.55),
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 52,
@@ -309,7 +321,7 @@ const fs = StyleSheet.create({
   subtext: {
     fontFamily: fonts.outfit.regular,
     fontSize: 28,
-    color: w(0.4),
+    color: w(0.3),
     textAlign: 'center',
     marginTop: 16,
   },
@@ -338,7 +350,8 @@ const fs = StyleSheet.create({
   },
   menuIcon: { fontSize: 56 },
   menuName: { fontFamily: fonts.outfit.semiBold, fontSize: 32, color: '#ffffff' },
-  menuPrice: { fontFamily: fonts.fredoka.bold, fontSize: 44, color: colors.gold },
+  menuDesc: { fontFamily: fonts.outfit.regular, fontSize: 26, color: w(0.5), marginTop: 4 },
+  menuPrice: { fontFamily: fonts.fredoka.bold, fontSize: 44, color: colors.green },
   // Featured
   featured: {
     flexDirection: 'row',
@@ -351,7 +364,8 @@ const fs = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.06)',
   },
-  featuredName: { fontFamily: fonts.fredoka.bold, fontSize: 44, color: '#ffffff' },
+  featuredName: { fontFamily: fonts.outfit.bold, fontSize: 44, color: '#ffffff' },
+  featuredDesc: { fontFamily: fonts.outfit.regular, fontSize: 26, color: w(0.4), marginTop: 8 },
   featuredPrice: { fontFamily: fonts.fredoka.bold, fontSize: 72, color: colors.green },
   // Deals
   dealsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 40, marginTop: 24 },
@@ -379,12 +393,13 @@ const fs = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.06)',
   },
   prizeEmoji: { fontSize: 56, marginBottom: 8 },
-  prizePlace: { fontFamily: fonts.outfit.semiBold, fontSize: 28, color: colors.gold },
+  prizePlace: { fontFamily: fonts.fredoka.bold, fontSize: 32, color: colors.gold },
+  prizeLabel: { fontFamily: fonts.outfit.regular, fontSize: 24, color: w(0.5), marginTop: 4 },
   // Hours
   hoursGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 64, marginTop: 16 },
   hoursItem: { alignItems: 'center', minWidth: 140 },
   hoursLabel: { fontFamily: fonts.outfit.semiBold, fontSize: 26, color: w(0.5), marginBottom: 4 },
-  hoursValue: { fontFamily: fonts.outfit.bold, fontSize: 30, color: colors.gold },
+  hoursValue: { fontFamily: fonts.outfit.semiBold, fontSize: 30, color: colors.gold },
   dividerLine: { width: 120, height: 6, backgroundColor: w(0.2), marginVertical: 24 },
   // Custom items
   customItem: { flexDirection: 'row', alignItems: 'center', marginVertical: 8 },

@@ -19,7 +19,7 @@ export function SignageHeader({ barName, logoUrl, secondsUntilNextGame }: Props)
   return (
     <View style={styles.container}>
       <View style={styles.left}>
-        <BarLogo logoUrl={logoUrl} barName={barName} size={72} />
+        <BarLogo logoUrl={logoUrl} barName={barName} size={88} />
         <Text style={styles.barName} numberOfLines={1}>{barName}</Text>
       </View>
       <View style={styles.right}>
@@ -71,16 +71,16 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   countdownLabel: {
-    fontFamily: fonts.outfit.medium,
+    fontFamily: fonts.outfit.semiBold,
     fontSize: 18,
-    color: w(0.5),
+    color: w(0.35),
     letterSpacing: 3,
     textTransform: 'uppercase',
   },
   countdownValue: {
     fontFamily: fonts.fredoka.bold,
     fontSize: tvFontSizes.h4,
-    color: '#ffffff',
+    color: '#ffd200',
     letterSpacing: 1,
   },
   divider: {

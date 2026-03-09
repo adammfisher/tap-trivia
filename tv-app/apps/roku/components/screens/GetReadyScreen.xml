@@ -19,14 +19,14 @@
 
       <!-- Bar name -->
       <Label id="barNameLabel" text=""
-             translation="[-200, 72]" width="400" horizAlign="center" color="#ffffffB0">
-        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
+             translation="[-200, 72]" width="400" horizAlign="center" color="#ffffff80">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="56" />
       </Label>
 
       <!-- "GAME STARTING" label -->
       <Label id="gameStartingLabel" text="GAME STARTING"
-             translation="[-200, 140]" width="400" horizAlign="center" color="#ffffff60">
-        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
+             translation="[-200, 150]" width="400" horizAlign="center" color="#ffffff40">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="32" />
       </Label>
 
       <!-- Countdown ring -->
@@ -45,14 +45,14 @@
 
       <!-- "Get ready!" text -->
       <Label id="getReadyText" text="Get ready!"
-             translation="[-200, 480]" width="400" horizAlign="center" color="#ffd200">
-        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="32" />
+             translation="[-200, 480]" width="400" horizAlign="center" color="#ffffff80">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="36" />
       </Label>
 
       <!-- Info line -->
       <Label id="infoLine" text="15 questions . Answer fast for more points"
-             translation="[-300, 530]" width="600" horizAlign="center" color="#ffffff50">
-        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
+             translation="[-300, 540]" width="600" horizAlign="center" color="#ffffff4D">
+        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="28" />
       </Label>
     </Group>
 

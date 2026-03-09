@@ -45,6 +45,25 @@ sub onDataChanged(event as Object)
   players = []
   if podium.players <> invalid then players = podium.players
 
+  if players.count() = 0
+    ' Empty state — no players this round
+    m.statsLabel.text = Str(qCount).trim() + " questions"
+    m.podium.visible = false
+    m.rightCol.visible = false
+    ' Show "No players" label (create dynamically)
+    emptyLabel = CreateObject("roSGNode", "Label")
+    emptyLabel.translation = [0, 300]
+    emptyLabel.width = 960
+    emptyLabel.horizAlign = "center"
+    emptyLabel.color = "#ffffff80"
+    emptyLabel.text = "No players this round"
+    emptyLabel.font = makeFont("Outfit-Regular", 32)
+    m.leftCol.appendChild(emptyLabel)
+    return
+  end if
+
+  m.podium.visible = true
+
   ' Podium widget wants an array of {name, score}
   m.podium.setField("scores", players)
 

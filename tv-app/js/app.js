@@ -2049,6 +2049,26 @@
     const top3 = players.slice(0, 3);
     const rest = players.slice(3, 10);
 
+    // Empty state — no players this game
+    if (players.length === 0) {
+      screenEl.innerHTML = `
+        <div class="tt-bg-podium">
+          ${betweenCountdownBarHTML()}
+          ${resetArrowHTML()}
+          <div class="tt-bg-podium__left" style="justify-content:center">
+            <div class="tt-bg-podium__trophy" style="animation:trophy .6s ease-out both">🏆</div>
+            <div class="tt-bg-podium__title" style="animation:fadeDown .5s ease-out .2s both">Game Over!</div>
+            <div class="tt-bg-podium__subtitle" style="animation:fadeDown .5s ease-out .3s both">${questionCount} questions</div>
+            <div style="margin-top:40px;font-family:'Outfit',sans-serif;font-size:32px;color:rgba(255,255,255,0.5);animation:fadeDown .5s ease-out .4s both">No players this round</div>
+          </div>
+          <div class="tt-bg-podium__right" style="display:flex;align-items:center;justify-content:center">
+            ${betweenQRBadgeHTML('Scan to Play Next Round!')}
+          </div>
+        </div>`;
+      bindResetArrow();
+      return;
+    }
+
     let rankRows = '';
     rest.forEach((p, i) => {
       rankRows += `
@@ -2541,7 +2561,7 @@
     const SIZE = 96, STROKE = 6;
     const r = (SIZE - STROKE * 2) / 2;
     const circ = 2 * Math.PI * r;
-    const TIMER_TOTAL = 34;
+    const TIMER_TOTAL = 35;
 
     function tick() {
       const cs = getGameState(localGameStartEpoch, getServerNow());
@@ -2856,18 +2876,54 @@
     return gs;
   }
 
-  /** Map category name to emoji icon — best-effort */
+  /** Map category name to emoji icon — covers all 60 topic_tree categories.
+   *  Order matters: specific multi-word phrases first, then single keywords,
+   *  then broad categories last (first match wins via substring search). */
   function getCategoryIcon(category) {
     if (!category) return '🧠';
     const c = category.toLowerCase();
     const map = {
-      'science': '🔬', 'history': '📜', 'geography': '🌍', 'sports': '⚽',
-      'entertainment': '🎬', 'music': '🎵', 'art': '🎨', 'literature': '📚',
-      'technology': '💻', 'nature': '🌿', 'food': '🍕', 'movies': '🎬',
-      'tv': '📺', 'gaming': '🎮', 'animals': '🐾', 'math': '🔢',
-      'politics': '🏛️', 'space': '🚀', 'mythology': '⚡', 'language': '💬',
-      'pop culture': '🌟', 'nhl': '🏒', 'nfl': '🏈', 'nba': '🏀',
-      'mlb': '⚾', 'soccer': '⚽', 'olympics': '🏅', 'disney': '🏰',
+      // ── Sport leagues (most specific) ──
+      'nhl': '🏒', 'nfl': '🏈', 'nba': '🏀', 'mlb': '⚾',
+      'ncaa': '🎓', 'nascar': '🏁', 'olympic': '🏅', 'soccer': '⚽',
+      // ── Multi-word specifics (before broad keywords) ──
+      'disney': '🏰', 'pop culture': '🌟', 'true crime': '🔍',
+      'social media': '📱', 'road trip': '🚗', 'national park': '🏕️',
+      'board game': '🎮', 'video game': '🎮', 'human body': '🧬',
+      'planet earth': '🌎', 'world record': '🤯',
+      // ── Specific categories (prevent wrong broad matches) ──
+      'broadway': '🎭', 'theater': '🎭', 'performing': '🎭',
+      'movie': '🎬', 'hollywood': '🎬', 'blockbuster': '🎬',
+      'president': '🏛️', 'government': '⚖️', 'constitution': '⚖️',
+      'beer': '🍺', 'wine': '🍺', 'cocktail': '🍺',
+      'biology': '🧬', 'chemistry': '⚗️', 'physics': '⚗️',
+      'brand': '📢', 'advertising': '📢',
+      'building': '🏗️', 'architecture': '🏗️',
+      'fashion': '👗', 'holiday': '🎄', 'tradition': '🎄',
+      'decade': '📻', 'nostalgia': '📻',
+      'medicine': '🩺', 'health': '🩺',
+      'river': '🏔️', 'mountain': '🏔️', 'ocean': '🌊',
+      'bible': '📖', 'religion': '📖',
+      'celebrity': '🌟', 'wrestling': '🥊', 'combat': '🥊',
+      'crime': '🔍', 'infamous': '🔍',
+      'weird': '🤯', 'travel': '✈️', 'famous cities': '✈️',
+      'business': '💼', 'entrepreneur': '💼',
+      'invention': '💡', 'environment': '🌎',
+      'weather': '🌦️', 'geology': '🌋',
+      'streaming': '📺', 'television': '📺',
+      'song': '🎵', 'lyric': '🎵', 'album': '🎵',
+      'computer': '💻', 'internet': '💻',
+      'landmark': '📍', 'flag': '🗺️',
+      // ── Broad categories (last — fallback matches) ──
+      'science': '🔬', 'history': '📜', 'geography': '🌍',
+      'sport': '⚽', 'entertainment': '🎭', 'music': '🎵',
+      'art': '🎨', 'literature': '📚', 'technology': '💻', 'tech': '💻',
+      'nature': '🌿', 'food': '🍕', 'dining': '🍕',
+      'tv': '📺', 'gaming': '🎮', 'animal': '🐾', 'wildlife': '🐾',
+      'math': '🔢', 'number': '🔢', 'logic': '🔢',
+      'politic': '🏛️', 'space': '🚀', 'astrono': '🚀',
+      'myth': '⚡', 'folklore': '⚡',
+      'language': '💬', 'word': '💬', 'phrase': '💬',
     };
     for (const [key, icon] of Object.entries(map)) {
       if (c.includes(key)) return icon;

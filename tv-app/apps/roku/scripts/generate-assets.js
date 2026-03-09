@@ -1033,11 +1033,12 @@ function generateCategoryIcons() {
   console.log('Generating category icons...');
 
   const icons = [
+    // Original icons
     { key: 'science',       emoji: '🔬' },
     { key: 'history',       emoji: '📜' },
     { key: 'geography',     emoji: '🌍' },
     { key: 'sports',        emoji: '⚽' },
-    { key: 'entertainment', emoji: '🎬' },
+    { key: 'entertainment', emoji: '🎭' },
     { key: 'music',         emoji: '🎵' },
     { key: 'art',           emoji: '🎨' },
     { key: 'literature',    emoji: '📚' },
@@ -1062,6 +1063,38 @@ function generateCategoryIcons() {
     { key: 'olympics',      emoji: '🏅' },
     { key: 'disney',        emoji: '🏰' },
     { key: 'default',       emoji: '🧠' },
+    // New icons for full category coverage
+    { key: 'beer',          emoji: '🍺' },
+    { key: 'biology',       emoji: '🧬' },
+    { key: 'brand',         emoji: '📢' },
+    { key: 'chemistry',     emoji: '⚗️' },
+    { key: 'building',      emoji: '🏗️' },
+    { key: 'fashion',       emoji: '👗' },
+    { key: 'holiday',       emoji: '🎄' },
+    { key: 'decade',        emoji: '📻' },
+    { key: 'medicine',      emoji: '🩺' },
+    { key: 'mountain',      emoji: '🏔️' },
+    { key: 'ocean',         emoji: '🌊' },
+    { key: 'religion',      emoji: '📖' },
+    { key: 'theater',       emoji: '🎭' },
+    { key: 'crime',         emoji: '🔍' },
+    { key: 'government',    emoji: '⚖️' },
+    { key: 'park',          emoji: '🏕️' },
+    { key: 'weird',         emoji: '🤯' },
+    { key: 'travel',        emoji: '✈️' },
+    { key: 'business',      emoji: '💼' },
+    { key: 'invention',     emoji: '💡' },
+    { key: 'earth',         emoji: '🌎' },
+    { key: 'weather',       emoji: '🌦️' },
+    { key: 'geology',       emoji: '🌋' },
+    { key: 'nascar',        emoji: '🏁' },
+    { key: 'ncaa',          emoji: '🎓' },
+    { key: 'socialmedia',   emoji: '📱' },
+    { key: 'roadtrip',      emoji: '🚗' },
+    { key: 'wrestling',     emoji: '🥊' },
+    { key: 'landmark',      emoji: '📍' },
+    { key: 'flag',          emoji: '🗺️' },
+    { key: 'celebrity',     emoji: '🌟' },
   ];
 
   const size = 176;

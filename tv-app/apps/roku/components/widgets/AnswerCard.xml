@@ -24,7 +24,7 @@
       <Label id="answerLabel" text=""
              translation="[100, 0]" width="560" height="136" color="#1e0f4a"
              vertAlign="center" wrap="true" maxLines="2" lineSpacing="-8">
-        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="34" />
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="40" />
       </Label>
 
       <!-- Percentage label (for reveal) -->

@@ -102,7 +102,12 @@ sub onGameStateChanged(event as Object)
   ' Handle rotation mode countdown (next game)
   if gs.nextGameStartEpoch <> invalid and gs.nextGameStartEpoch > 0
     nowEpoch = getEpochMs()
-    secsLeft = Int((gs.nextGameStartEpoch - nowEpoch) / 1000)
+    nextEpoch = gs.nextGameStartEpoch
+    SLOT_MS = 15& * 60 * 1000
+    while nextEpoch <= nowEpoch
+      nextEpoch = nextEpoch + SLOT_MS
+    end while
+    secsLeft = Int((nextEpoch - nowEpoch) / 1000)
     if secsLeft > 0 and secsLeft < 3600
       m.countdownLabel.text = "Next game in " + formatCountdown(secsLeft)
     end if

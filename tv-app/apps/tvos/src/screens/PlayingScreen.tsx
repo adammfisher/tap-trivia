@@ -277,7 +277,7 @@ const s = StyleSheet.create({
     marginBottom: 36,
   },
   qCounter: {
-    fontFamily: fonts.fredoka.semiBold,
+    fontFamily: fonts.outfit.semiBold,
     fontSize: 28,
     color: w(0.35),
   },
@@ -285,7 +285,7 @@ const s = StyleSheet.create({
     color: w(0.18),
   },
   questionText: {
-    fontFamily: fonts.fredoka.bold,
+    fontFamily: fonts.outfit.extraBold,
     fontSize: 60,
     color: '#f0f0f0',
     lineHeight: 75,

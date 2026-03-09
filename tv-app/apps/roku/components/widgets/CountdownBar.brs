@@ -37,7 +37,16 @@ sub updateDisplay()
   end if
 
   nowMs = getEpochMs()
-  secsLeft = Int((m.nextGameEpoch - nowMs) / 1000)
+
+  ' Ensure epoch is in the future; if stale, advance to next 15-min slot
+  epoch = m.nextGameEpoch
+  SLOT_MS = 15& * 60 * 1000
+  while epoch <= nowMs
+    epoch = epoch + SLOT_MS
+  end while
+  if epoch <> m.nextGameEpoch then m.nextGameEpoch = epoch
+
+  secsLeft = Int((epoch - nowMs) / 1000)
   if secsLeft < 0 then secsLeft = 0
 
   m.valueLabel.text = " " + formatCountdown(secsLeft)

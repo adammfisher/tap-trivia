@@ -28,10 +28,11 @@ export function BetweenPodiumScreen() {
     name: p.name,
   }));
   const runners = players.slice(3, 10);
+  const isEmpty = players.length === 0;
 
   return (
     <>
-      <Confetti />
+      {!isEmpty && <Confetti />}
       <CountdownBar />
       <View style={s.root}>
         <View style={s.body}>
@@ -40,29 +41,39 @@ export function BetweenPodiumScreen() {
             <ZoomInText spring style={s.trophy}>{'\u{1F3C6}'}</ZoomInText>
             <FadeInText delay={100} style={s.heading}>Game Over!</FadeInText>
             <FadeInText delay={200} style={s.stats}>
-              {podium.questionCount} questions · {podium.playerCount} players
+              {isEmpty
+                ? `${podium.questionCount} questions`
+                : `${podium.questionCount} questions · ${podium.playerCount} players`}
             </FadeInText>
-            {podiumEntries.length > 0 && (
-              <FadeInView delay={300} style={s.podiumWrap}>
-                <Podium entries={podiumEntries} />
-              </FadeInView>
+            {isEmpty ? (
+              <FadeInText delay={300} style={s.emptyMsg}>No players this round</FadeInText>
+            ) : (
+              podiumEntries.length > 0 && (
+                <FadeInView delay={300} style={s.podiumWrap}>
+                  <Podium entries={podiumEntries} />
+                </FadeInView>
+              )
             )}
           </View>
 
-          {/* Right: Ranks 4-10 */}
-          <View style={s.rightCol}>
-            <Text style={s.runnersTitle}>ALSO IN THE TOP 10</Text>
-            {runners.map((p, i) => (
-              <FadeInView key={p.name + i} delay={400 + i * 80} style={s.rankRow}>
-                <Text style={[s.rankNum, p.rank <= 3 && s.rankGold]}>
-                  {p.rank}
-                </Text>
-                <Avatar name={p.name} size="sm" />
-                <Text style={s.rankName} numberOfLines={1}>{p.name}</Text>
-                <Text style={s.rankScore}>{formatNumber(p.score)}</Text>
-              </FadeInView>
-            ))}
-            <View style={s.qrWrap}>
+          {/* Right: Ranks 4-10 or QR CTA */}
+          <View style={[s.rightCol, isEmpty && s.rightColEmpty]}>
+            {!isEmpty && (
+              <>
+                <Text style={s.runnersTitle}>ALSO IN THE TOP 10</Text>
+                {runners.map((p, i) => (
+                  <FadeInView key={p.name + i} delay={400 + i * 80} style={s.rankRow}>
+                    <Text style={[s.rankNum, p.rank <= 3 && s.rankGold]}>
+                      {p.rank}
+                    </Text>
+                    <Avatar name={p.name} size="sm" />
+                    <Text style={s.rankName} numberOfLines={1}>{p.name}</Text>
+                    <Text style={s.rankScore}>{formatNumber(p.score)}</Text>
+                  </FadeInView>
+                ))}
+              </>
+            )}
+            <View style={isEmpty ? s.qrCenter : s.qrWrap}>
               <QRBadge barCode={barCode} />
             </View>
           </View>
@@ -140,5 +151,20 @@ const s = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 40,
+  },
+  qrCenter: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  rightColEmpty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyMsg: {
+    fontFamily: fonts.outfit.medium,
+    fontSize: 32,
+    color: w(0.4),
+    marginTop: 40,
   },
 });

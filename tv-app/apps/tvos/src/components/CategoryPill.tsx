@@ -34,8 +34,8 @@ const styles = StyleSheet.create({
     fontSize: 36,
   },
   category: {
-    fontFamily: fonts.outfit.bold,
-    fontSize: 26,
+    fontFamily: fonts.outfit.semiBold,
+    fontSize: 28,
     color: 'rgba(255,255,255,0.85)',
     letterSpacing: 0.8,
   },
