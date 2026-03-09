@@ -786,17 +786,19 @@
   const SIGNAGE_FS = {
     _default_cta() {
       return `
-        <div class="tt-signage-fs tt-signage-fade-in" style="background:linear-gradient(150deg,#0f0326,#1e0f4a 30%,#3d1866 50%,#6b2358 75%,#a8334a)">
-          <div class="tt-signage-center" style="gap:24px">
-            ${logoHTML('xl')}
-            <div class="tt-signage-headline" style="font-size:56px;margin-top:8px">Live Trivia Every 15 Minutes</div>
-            <div class="tt-signage-body" style="font-size:28px;color:rgba(255,255,255,0.55);max-width:700px;text-align:center">Grab your phone and join the game — compete with the whole bar!</div>
-            <div style="display:flex;align-items:center;gap:32px;margin-top:24px;background:rgba(0,0,0,0.35);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:28px 40px;border-radius:20px">
-              ${qrCodeHTML(180)}
-              <div style="display:flex;flex-direction:column;gap:8px">
-                <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:2px">SCAN TO JOIN</div>
-                <div style="font-family:'Fredoka',sans-serif;font-size:48px;font-weight:700;color:#ffd200;letter-spacing:4px">${barCode}</div>
-                <div style="font-family:'Outfit',sans-serif;font-size:24px;color:rgba(255,255,255,0.5)">play.taptrivia.tv</div>
+        <div class="tt-signage-fs tt-signage-fade-in" style="background:linear-gradient(150deg,#040812,#0a1628 30%,#122040 50%,#0a1628)">
+          ${signageHeaderHTML()}
+          <div class="tt-signage-center">
+            <div class="tt-signage-big-emoji">🧠</div>
+            <div class="tt-signage-headline">Play TapTrivia!</div>
+            <div class="tt-signage-body">Live trivia every 15 minutes — grab your phone and join the game!</div>
+            <div class="tt-signage-subtext">Scan the QR code or visit play.taptrivia.tv</div>
+            <div style="display:flex;align-items:center;gap:24px;margin-top:24px">
+              ${qrCodeHTML(140)}
+              <div>
+                <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:2px">SCAN TO JOIN</div>
+                <div style="font-family:'Fredoka',sans-serif;font-size:36px;font-weight:700;color:#ffd200;letter-spacing:3px">${barCode}</div>
+                <div style="font-family:'Outfit',sans-serif;font-size:20px;color:rgba(255,255,255,0.45)">play.taptrivia.tv</div>
               </div>
             </div>
           </div>
@@ -977,8 +979,9 @@
     _default_cta() {
       return `
         <div class="tt-signage-panel__content" style="align-items:center;text-align:center">
-          ${logoHTML('md')}
-          <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:600;color:rgba(255,255,255,0.6);margin-top:12px">Live trivia every 15 min</div>
+          <div style="font-size:48px;margin-bottom:8px">🧠</div>
+          <div style="font-family:'Fredoka',sans-serif;font-size:28px;font-weight:700;color:#f0f0f0">Play TapTrivia!</div>
+          <div style="font-family:'Outfit',sans-serif;font-size:18px;color:rgba(255,255,255,0.5);margin-top:4px">Live trivia every 15 min</div>
           <div style="display:flex;align-items:center;gap:16px;margin-top:16px">
             ${qrCodeHTML(80)}
             <div style="text-align:left">
@@ -2056,36 +2059,7 @@
     const { players = [], questionCount = 15, playerCount = 0 } = data;
     const top3 = players.slice(0, 3);
     const rest = players.slice(3, 10);
-
-    // Empty state — no players this game
-    if (players.length === 0) {
-      screenEl.innerHTML = `
-        <div class="tt-bg-podium">
-          ${betweenCountdownBarHTML()}
-          ${resetArrowHTML()}
-          <div class="tt-bg-podium__left" style="justify-content:center">
-            <div class="tt-bg-podium__trophy" style="animation:trophy .6s ease-out both">🏆</div>
-            <div class="tt-bg-podium__title" style="animation:fadeDown .5s ease-out .2s both">Game Over!</div>
-            <div class="tt-bg-podium__subtitle" style="animation:fadeDown .5s ease-out .3s both">${questionCount} questions</div>
-            <div style="margin-top:40px;font-family:'Outfit',sans-serif;font-size:32px;color:rgba(255,255,255,0.5);animation:fadeDown .5s ease-out .4s both">No players this round</div>
-          </div>
-          <div class="tt-bg-podium__right" style="align-items:center;justify-content:center">
-            <div class="tt-qr-badge" style="position:relative;bottom:auto;right:auto">
-              ${qrCodeHTML(120)}
-              <div class="tt-qr-badge__info">
-                <div class="tt-qr-badge__title">Scan to Play Next Round!</div>
-                <div class="tt-qr-badge__url">play.taptrivia.tv</div>
-                <div class="tt-qr-badge__code-row">
-                  <span class="tt-qr-badge__code-label">CODE</span>
-                  <span class="tt-qr-badge__code">${barCode}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>`;
-      bindResetArrow();
-      return;
-    }
+    const isEmpty = players.length === 0;
 
     let rankRows = '';
     rest.forEach((p, i) => {
@@ -2098,34 +2072,47 @@
         </div>`;
     });
 
+    const statsText = isEmpty
+      ? `${questionCount} questions`
+      : `${questionCount} questions · ${playerCount} player${playerCount === 1 ? '' : 's'}`;
+
     const hasRunners = rest.length > 0;
+
     screenEl.innerHTML = `
-      <div class="tt-bg-podium">
+      <div style="position:relative;width:100%;height:100%;display:flex;flex-direction:column">
         ${betweenCountdownBarHTML()}
         ${resetArrowHTML()}
-        <div class="tt-bg-podium__left">
-          <div class="tt-bg-podium__trophy" style="animation:trophy .6s ease-out both">🏆</div>
-          <div class="tt-bg-podium__title" style="animation:fadeDown .5s ease-out .2s both">Game Over!</div>
-          <div class="tt-bg-podium__subtitle" style="animation:fadeDown .5s ease-out .3s both">${questionCount} questions · ${playerCount} player${playerCount === 1 ? '' : 's'}</div>
-          ${podiumHTML(top3, { avatarSizes: ['xl', '2xl', 'xl'] })}
-          ${confettiHTML(20)}
-        </div>
-        <div class="tt-bg-podium__right"${!hasRunners ? ' style="align-items:center;justify-content:center"' : ''}>
+        ${!isEmpty ? confettiHTML(20) : ''}
+
+        <!-- Main content row -->
+        <div style="flex:1;display:flex;padding:72px 60px 0">
+          <!-- Left: Trophy + Podium -->
+          <div style="flex:${hasRunners ? '1.2' : '1'};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+            <div class="tt-bg-podium__trophy" style="animation:trophy .6s ease-out both">🏆</div>
+            <div class="tt-bg-podium__title" style="animation:fadeDown .5s ease-out .2s both">Game Over!</div>
+            <div class="tt-bg-podium__subtitle" style="animation:fadeDown .5s ease-out .3s both">${statsText}</div>
+            ${!isEmpty ? podiumHTML(top3, { avatarSizes: ['xl', '2xl', 'xl'] }) : `
+              <div style="margin-top:20px;font-family:'Outfit',sans-serif;font-size:32px;color:rgba(255,255,255,0.5);animation:fadeDown .5s ease-out .4s both">No players this round</div>
+            `}
+          </div>
+
           ${hasRunners ? `
+          <!-- Right: Ranks 4-10 -->
+          <div style="flex:0.8;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:0 40px">
             <div class="tt-bg-podium__ranks-header" style="animation:fadeDown .3s ease-out both">ALSO IN THE TOP 10</div>
-            <div class="tt-bg-podium__ranks">
-              ${rankRows}
-            </div>
+            <div class="tt-bg-podium__ranks">${rankRows}</div>
+          </div>
           ` : ''}
-          <div class="tt-qr-badge" style="position:relative;bottom:auto;right:auto;${hasRunners ? 'margin-top:auto' : ''}">
-            ${qrCodeHTML(120)}
-            <div class="tt-qr-badge__info">
-              <div class="tt-qr-badge__title">Play Next Round!</div>
-              <div class="tt-qr-badge__url">play.taptrivia.tv</div>
-              <div class="tt-qr-badge__code-row">
-                <span class="tt-qr-badge__code-label">CODE</span>
-                <span class="tt-qr-badge__code">${barCode}</span>
-              </div>
+        </div>
+
+        <!-- Bottom: Large centered QR -->
+        <div style="display:flex;justify-content:center;padding:0 0 40px;animation:slideUp .5s ease-out .5s both">
+          <div style="display:flex;align-items:center;gap:28px;background:rgba(0,0,0,0.35);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:20px 36px;border-radius:16px">
+            ${qrCodeHTML(140)}
+            <div>
+              <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:2px">SCAN TO JOIN</div>
+              <div style="font-family:'Fredoka',sans-serif;font-size:40px;font-weight:700;color:#ffd200;letter-spacing:4px">${barCode}</div>
+              <div style="font-family:'Outfit',sans-serif;font-size:22px;color:rgba(255,255,255,0.5)">play.taptrivia.tv</div>
             </div>
           </div>
         </div>

@@ -81,4 +81,11 @@ sub onDataChanged(event as Object)
 
   ' Show/hide right column based on whether there are runners up
   m.rightCol.visible = (players.count() > 3)
+
+  ' Center QR badge when no runners (move from bottom-right to center-right)
+  if players.count() <= 3
+    m.qrBadge.translation = [660, 400]
+  else
+    m.qrBadge.translation = [1520, 920]
+  end if
 end sub
