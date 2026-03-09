@@ -388,13 +388,8 @@
             </div>
           </div>`;
       } else {
-        // Empty pedestal — show the bar with rank number but no avatar/name/score
-        html += `
-          <div class="tt-podium__place tt-podium__place--empty" style="animation:slideUp .5s ease-out ${idx * 0.1}s both">
-            <div class="tt-podium__bar tt-podium__bar--${item.bar}">
-              <span class="tt-podium__rank tt-podium__rank--other">${item.rank}</span>
-            </div>
-          </div>`;
+        // Empty slot — just a spacer, no pedestal bar
+        html += `<div class="tt-podium__place tt-podium__place--empty" style="visibility:hidden"></div>`;
       }
     });
     html += '</div>';
@@ -1114,22 +1109,8 @@
         data: {
           emoji: '🧠',
           headline: 'Play TapTrivia!',
-          message: 'Live trivia every 15 minutes — compete with the whole bar!',
-          subtext: 'Scan the QR code or visit play.taptrivia.tv',
-        },
-      },
-      {
-        template: 'custom',
-        enabled: true,
-        data: {
-          emoji: '📱',
-          headline: 'How to Play',
-          items: [
-            { emoji: '📱', text: 'Scan the QR code or visit play.taptrivia.tv' },
-            { emoji: '🔤', text: 'Enter your bar code: ' + barCode },
-            { emoji: '🏆', text: 'Answer fast for more points!' },
-            { emoji: '🍻', text: 'Top the leaderboard, win bragging rights' },
-          ],
+          message: 'Live trivia every 15 minutes — grab your phone and join the game!',
+          subtext: 'Scan the QR code or visit play.taptrivia.tv · Code: ' + barCode,
         },
       },
     ];
@@ -2061,8 +2042,18 @@
             <div class="tt-bg-podium__subtitle" style="animation:fadeDown .5s ease-out .3s both">${questionCount} questions</div>
             <div style="margin-top:40px;font-family:'Outfit',sans-serif;font-size:32px;color:rgba(255,255,255,0.5);animation:fadeDown .5s ease-out .4s both">No players this round</div>
           </div>
-          <div class="tt-bg-podium__right" style="display:flex;align-items:center;justify-content:center">
-            ${betweenQRBadgeHTML('Scan to Play Next Round!')}
+          <div class="tt-bg-podium__right" style="align-items:center;justify-content:center">
+            <div class="tt-qr-badge" style="position:relative;bottom:auto;right:auto">
+              ${qrCodeHTML(120)}
+              <div class="tt-qr-badge__info">
+                <div class="tt-qr-badge__title">Scan to Play Next Round!</div>
+                <div class="tt-qr-badge__url">play.taptrivia.tv</div>
+                <div class="tt-qr-badge__code-row">
+                  <span class="tt-qr-badge__code-label">CODE</span>
+                  <span class="tt-qr-badge__code">${barCode}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>`;
       bindResetArrow();
@@ -2080,6 +2071,7 @@
         </div>`;
     });
 
+    const hasRunners = rest.length > 0;
     screenEl.innerHTML = `
       <div class="tt-bg-podium">
         ${betweenCountdownBarHTML()}
@@ -2087,16 +2079,28 @@
         <div class="tt-bg-podium__left">
           <div class="tt-bg-podium__trophy" style="animation:trophy .6s ease-out both">🏆</div>
           <div class="tt-bg-podium__title" style="animation:fadeDown .5s ease-out .2s both">Game Over!</div>
-          <div class="tt-bg-podium__subtitle" style="animation:fadeDown .5s ease-out .3s both">${questionCount} questions · ${playerCount} players</div>
+          <div class="tt-bg-podium__subtitle" style="animation:fadeDown .5s ease-out .3s both">${questionCount} questions · ${playerCount} player${playerCount === 1 ? '' : 's'}</div>
           ${podiumHTML(top3, { avatarSizes: ['xl', '2xl', 'xl'] })}
           ${confettiHTML(20)}
         </div>
-        <div class="tt-bg-podium__right">
-          <div class="tt-bg-podium__ranks-header" style="animation:fadeDown .3s ease-out both">ALSO IN THE TOP 10</div>
-          <div class="tt-bg-podium__ranks">
-            ${rankRows}
+        <div class="tt-bg-podium__right"${!hasRunners ? ' style="align-items:center;justify-content:center"' : ''}>
+          ${hasRunners ? `
+            <div class="tt-bg-podium__ranks-header" style="animation:fadeDown .3s ease-out both">ALSO IN THE TOP 10</div>
+            <div class="tt-bg-podium__ranks">
+              ${rankRows}
+            </div>
+          ` : ''}
+          <div class="tt-qr-badge" style="position:relative;bottom:auto;right:auto;${hasRunners ? 'margin-top:auto' : ''}">
+            ${qrCodeHTML(120)}
+            <div class="tt-qr-badge__info">
+              <div class="tt-qr-badge__title">Play Next Round!</div>
+              <div class="tt-qr-badge__url">play.taptrivia.tv</div>
+              <div class="tt-qr-badge__code-row">
+                <span class="tt-qr-badge__code-label">CODE</span>
+                <span class="tt-qr-badge__code">${barCode}</span>
+              </div>
+            </div>
           </div>
-          ${betweenQRBadgeHTML('Play Next Round!')}
         </div>
       </div>`;
     bindResetArrow();
@@ -2706,13 +2710,14 @@
     consecutiveErrors = 0;
     hideError();
 
-    // Capture signage configuration
-    if (state.signage) {
-      signageSlides = state.signage.slides || [];
+    // Capture signage configuration — clear when bar has none (prevents cross-bar bleed)
+    if (state.signage && state.signage.slides && state.signage.slides.length > 0) {
+      signageSlides = state.signage.slides;
       signageRotationSpeed = state.signage.rotationSpeed || 60;
       console.log('[Signage] Loaded', signageSlides.length, 'slides from API, speed:', signageRotationSpeed);
     } else {
-      console.log('[Signage] No signage in response, state:', state.state, 'keeping', signageSlides.length, 'cached slides');
+      signageSlides = [];
+      console.log('[Signage] No custom signage for this bar, using defaults');
     }
 
     // Update logo if hash changed (avoids redundant downloads)
