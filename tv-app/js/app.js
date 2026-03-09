@@ -784,6 +784,24 @@
   // --- Full-Screen Signage Renderers (7 templates, all at 2×) ---
 
   const SIGNAGE_FS = {
+    _default_cta() {
+      return `
+        <div class="tt-signage-fs tt-signage-fade-in" style="background:linear-gradient(150deg,#0f0326,#1e0f4a 30%,#3d1866 50%,#6b2358 75%,#a8334a)">
+          <div class="tt-signage-center" style="gap:24px">
+            ${logoHTML('xl')}
+            <div class="tt-signage-headline" style="font-size:56px;margin-top:8px">Live Trivia Every 15 Minutes</div>
+            <div class="tt-signage-body" style="font-size:28px;color:rgba(255,255,255,0.55);max-width:700px;text-align:center">Grab your phone and join the game — compete with the whole bar!</div>
+            <div style="display:flex;align-items:center;gap:32px;margin-top:24px;background:rgba(0,0,0,0.35);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:28px 40px;border-radius:20px">
+              ${qrCodeHTML(180)}
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:2px">SCAN TO JOIN</div>
+                <div style="font-family:'Fredoka',sans-serif;font-size:48px;font-weight:700;color:#ffd200;letter-spacing:4px">${barCode}</div>
+                <div style="font-family:'Outfit',sans-serif;font-size:24px;color:rgba(255,255,255,0.5)">play.taptrivia.tv</div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    },
     specials(d) {
       const items = (d.menuItems || []).map(item => `
         <div class="tt-signage-menu-item">
@@ -956,6 +974,20 @@
   // --- In-Game Panel Renderers (7 templates, 680px at 2×) ---
 
   const SIGNAGE_PANEL = {
+    _default_cta() {
+      return `
+        <div class="tt-signage-panel__content" style="align-items:center;text-align:center">
+          ${logoHTML('md')}
+          <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:600;color:rgba(255,255,255,0.6);margin-top:12px">Live trivia every 15 min</div>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:16px">
+            ${qrCodeHTML(80)}
+            <div style="text-align:left">
+              <div style="font-family:'Fredoka',sans-serif;font-size:28px;font-weight:700;color:#ffd200;letter-spacing:3px">${barCode}</div>
+              <div style="font-size:16px;color:rgba(255,255,255,0.4)">play.taptrivia.tv</div>
+            </div>
+          </div>
+        </div>`;
+    },
     specials(d) {
       const items = (d.menuItems || []).map(item => `
         <div class="tt-signage-panel__menu-item">
@@ -1104,14 +1136,9 @@
   function getDefaultSignageSlides() {
     return [
       {
-        template: 'announcement',
+        template: '_default_cta',
         enabled: true,
-        data: {
-          emoji: '🧠',
-          headline: 'Play TapTrivia!',
-          message: 'Live trivia every 15 minutes — grab your phone and join the game!',
-          subtext: 'Scan the QR code or visit play.taptrivia.tv · Code: ' + barCode,
-        },
+        data: {},
       },
     ];
   }
