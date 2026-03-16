@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { Logo } from '../components/Logo';
 import { BarLogo } from '../components/BarLogo';
@@ -14,7 +14,20 @@ interface Props {
 }
 
 export const SignageHeader = React.memo(function SignageHeader({ barName, logoUrl, secondsUntilNextGame }: Props) {
-  const countdownText = formatCountdown(secondsUntilNextGame || 0);
+  const [localSeconds, setLocalSeconds] = useState(secondsUntilNextGame || 0);
+
+  // Sync when prop updates (every ~2s poll)
+  useEffect(() => {
+    setLocalSeconds(secondsUntilNextGame || 0);
+  }, [secondsUntilNextGame]);
+
+  // Tick down every second locally
+  useEffect(() => {
+    const t = setInterval(() => setLocalSeconds(s => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const countdownText = formatCountdown(localSeconds);
 
   return (
     <View style={styles.container}>
@@ -35,7 +48,7 @@ export const SignageHeader = React.memo(function SignageHeader({ barName, logoUr
 }, (prev, next) =>
   prev.barName === next.barName &&
   prev.logoUrl === next.logoUrl &&
-  Math.floor((prev.secondsUntilNextGame || 0) / 60) === Math.floor((next.secondsUntilNextGame || 0) / 60)
+  prev.secondsUntilNextGame === next.secondsUntilNextGame
 );
 
 export function SignagePanelHeader({ barName, logoUrl }: { barName: string; logoUrl?: string | null }) {

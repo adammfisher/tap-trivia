@@ -63,6 +63,35 @@
 | 06:00 | 24057 | VISIBLE | 458 MB | 1 | 445 min |
 | 06:15 | 24057 | VISIBLE | 461 MB | 1 | 460 min |
 | 06:30 | 24057 | VISIBLE | 466 MB | 1 | 475 min |
+| 06:45 | 24057 | VISIBLE | 467 MB | 1 | 490 min |
+| 07:00 | 24057 | VISIBLE | 469 MB | 1 | 505 min |
+| 07:15 | 24057 | VISIBLE | 473 MB | 1 | 520 min |
+| 07:30 | 24057 | VISIBLE | 473 MB | 1 | 535 min |
+| 07:45 | 24057 | VISIBLE | 478 MB | 1 | 550 min |
+| 08:00 | 24057 | VISIBLE | 479 MB | 1 | 565 min |
+| 08:15 | 24057 | VISIBLE | 484 MB | 1 | 580 min |
+| 08:30 | 24057 | VISIBLE | 484 MB | 1 | 595 min |
+| 08:45 | 24057 | VISIBLE | 489 MB | 1 | 610 min — **10h milestone** ✓ |
+| 09:01 | 24057 | VISIBLE | 490 MB | 1 | 626 min |
+| 09:15 | 24057 | VISIBLE | 490 MB | 1 | 640 min |
+| 09:31 | 24057 | VISIBLE | 496 MB | 1 | 656 min |
+| 09:46 | 24057 | VISIBLE | 498 MB | 1 | 671 min |
+| 10:01 | 24057 | VISIBLE | 510 MB | 1 | 686 min |
+| 10:16 | 24057 | VISIBLE | 518 MB | 1 | 701 min |
+| 10:30 | 2702 | VISIBLE | — | — | R8 deployed: gradient bg + JS animations + countdown tick |
+| 10:30 | 6954 | VISIBLE | 466 MB | — | 715 min — R8b deployed: flat #2d1250 bg (no bands) |
+| 14:44 | 19815 | VISIBLE | — | — | R9 deployed: GetReadyScreen tick marks ring (36 segments, deplete 3→2→1) |
+| 10:46 | 19815 | VISIBLE | 487 MB | 1 | 731 min |
+| 11:01 | 19815 | VISIBLE | 515 MB | 1 | 746 min |
+| 11:16 | 19815 | VISIBLE | 522 MB | 1 | 761 min |
+| 11:30 | 19815 | VISIBLE | 519 MB | 1 | 775 min |
+| 11:45 | 19815 | VISIBLE | 522 MB | 1 | 790 min |
+| 11:57 | 19897 | VISIBLE | — | — | R10 deployed: TimerRing tick marks (36 segments, color-coded) |
+| 12:01 | 19897 | VISIBLE | 479 MB | 1 | 806 min |
+| 12:15 | 19897 | VISIBLE | 522 MB | 1 | 820 min |
+| 12:30 | 19897 | VISIBLE | 526 MB | 1 | 835 min |
+| 12:45 | 19897 | VISIBLE | 529 MB | 1 | 850 min |
+| 13:00 | 19897 | VISIBLE | 534 MB | 1 | 865 min |
 
 ---
 

@@ -1,6 +1,6 @@
 // R5: Animated.loop disabled — replaced with static View (last useNativeDriver usage)
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 
 import { Logo } from '../components/Logo';
 import { QRBadge } from '../components/QRBadge';
@@ -8,6 +8,34 @@ import { ZoomInText } from '../utils/animations';
 import { useTVState } from '../contexts/TVStateContext';
 import { fonts } from '../theme/typography';
 import { colors, w } from '../theme/colors';
+
+const NUM_TICKS = 36;
+const RING_SIZE = 280;
+const TICK_W = 8;
+const TICK_H = 14;
+const TICK_RADIUS = 129; // translateY to center ticks on ring border
+
+function CountdownTicks({ count }: { count: number }) {
+  const activeTicks = Math.round((count / 3) * NUM_TICKS);
+  return (
+    <View style={s.tickOverlay} pointerEvents="none">
+      {Array.from({ length: NUM_TICKS }).map((_, i) => {
+        const angle = (i / NUM_TICKS) * 360;
+        const active = i < activeTicks;
+        return (
+          <View
+            key={i}
+            style={[
+              s.tick,
+              { backgroundColor: active ? colors.blue : 'rgba(102,126,234,0.18)' },
+              { transform: [{ rotate: `${angle}deg` }, { translateY: -TICK_RADIUS }] } as ViewStyle,
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+}
 
 export function GetReadyScreen() {
   const { state } = useTVState();
@@ -34,11 +62,14 @@ export function GetReadyScreen() {
 
         <Text style={s.label}>GAME STARTING</Text>
 
-        {/* R5: static ring — Animated.loop disabled */}
-        <View style={s.ring}>
-          <ZoomInText key={count} spring style={s.number}>
-            {count}
-          </ZoomInText>
+        {/* Ring with depleting tick marks */}
+        <View style={s.ringContainer}>
+          <View style={s.ring}>
+            <ZoomInText key={count} spring style={s.number}>
+              {count}
+            </ZoomInText>
+          </View>
+          <CountdownTicks count={count} />
         </View>
 
         <Text style={s.sub}>Get ready!</Text>
@@ -76,15 +107,36 @@ const s = StyleSheet.create({
     marginTop: 72,
     marginBottom: 40,
   },
+  ringContainer: {
+    width: RING_SIZE,
+    height: RING_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   ring: {
-    width: 280,
-    height: 280,
-    borderRadius: 140,
+    width: RING_SIZE,
+    height: RING_SIZE,
+    borderRadius: RING_SIZE / 2,
     borderWidth: 6,
-    borderColor: colors.blue,
+    borderColor: 'rgba(102,126,234,0.12)',
     backgroundColor: 'rgba(102,126,234,0.08)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  tickOverlay: {
+    position: 'absolute',
+    width: RING_SIZE,
+    height: RING_SIZE,
+    top: 0,
+    left: 0,
+  },
+  tick: {
+    position: 'absolute',
+    top: RING_SIZE / 2 - TICK_H / 2,
+    left: RING_SIZE / 2 - TICK_W / 2,
+    width: TICK_W,
+    height: TICK_H,
+    borderRadius: 2,
   },
   number: {
     fontFamily: fonts.fredoka.bold,
