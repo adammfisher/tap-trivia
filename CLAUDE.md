@@ -1,5 +1,8 @@
 # TapTrivia
 
+
+ NEVER EVER Modify the tv os on any system like fire tv everything must be done in the app.
+
 Live trivia game platform for bars. Synchronized global gameplay every 15 minutes (5 PM–2 AM ET). Players play on mobile browsers, bars optionally display on TVs.
 
 ## Architecture

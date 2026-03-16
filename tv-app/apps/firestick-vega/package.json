@@ -15,10 +15,8 @@
     "run:device": "vega device install-app --packagePath build/armv7-release/*.vpkg && vega device launch-app --appName tv.taptrivia.firestick.main"
   },
   "dependencies": {
-    "@amazon-devices/kepler-media-controls": "^1.0.17",
     "@amazon-devices/react-native-kepler": "^2.0.1758683737",
     "@amazon-devices/react-native-w3cmedia": "^2.2.20",
-    "@amazon-devices/webview": "^3.3.0",
     "react": "18.2.0",
     "react-native": "0.72.0"
   },

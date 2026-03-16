@@ -14,10 +14,6 @@ launch-type = "singleton"
 categories = ["com.amazon.category.main", "com.amazon.category.kepler.media"]
 
 [wants]
-# Web renderer service (REQUIRED for WebView)
-[[wants.service]]
-id = "com.amazon.webview.renderer_service"
-
 # Keyboard support (for bar code entry)
 [[wants.service]]
 id = "com.amazon.inputmethod.service"
@@ -34,15 +30,6 @@ id = "com.amazon.audio.stream"
 
 [[wants.service]]
 id = "com.amazon.audio.system"
-
-[[wants.service]]
-id = "com.amazon.mediametrics.service"
-
-[[wants.service]]
-id = "com.amazon.mediabuffer.service"
-
-[[wants.service]]
-id = "com.amazon.mediatransform.service"
 
 # Player session (required for PlayerSession API to inhibit screensaver)
 [[wants.service]]

@@ -1,6 +1,12 @@
 {
   "extends": "@tsconfig/react-native/tsconfig.json",
   "compilerOptions": {
-    "types": ["@amazon-devices/react-native-kepler"]
+    "types": ["@amazon-devices/react-native-kepler"],
+    "baseUrl": ".",
+    "paths": {
+      "react-native-linear-gradient": ["./src/shims/react-native-linear-gradient"],
+      "react-native-qrcode-svg": ["./src/shims/react-native-qrcode-svg"],
+      "@react-native-async-storage/async-storage": ["./src/shims/async-storage"]
+    }
   }
 }
