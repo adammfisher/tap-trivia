@@ -99,8 +99,13 @@ export const App: React.FC = () => {
         ref={webViewRef}
         source={{ uri: TV_URL }}
         style={StyleSheet.absoluteFill}
-        onLoad={() => console.log('[WEBVIEW] loaded:', TV_URL)}
-        onError={(e: any) => console.log('[WEBVIEW] error:', e?.nativeEvent?.description)}
+        javaScriptEnabled={true}
+        domStorageEnabled={true}
+        mediaPlaybackRequiresUserAction={false}
+        onLoadStart={(e: any) => console.log('[WEBVIEW] loadStart:', e?.nativeEvent?.url)}
+        onLoad={(e: any) => console.log('[WEBVIEW] loaded:', e?.nativeEvent?.url)}
+        onError={(e: any) => console.log('[WEBVIEW] error:', e?.nativeEvent?.code, e?.nativeEvent?.description)}
+        onHttpError={(e: any) => console.log('[WEBVIEW] httpError:', e?.nativeEvent?.statusCode, e?.nativeEvent?.description)}
       />
     </View>
   );
