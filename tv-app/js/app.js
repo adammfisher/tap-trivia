@@ -978,15 +978,23 @@
   const SIGNAGE_PANEL = {
     _default_cta() {
       return `
-        <div class="tt-signage-panel__content" style="align-items:center;text-align:center">
-          <div style="font-size:48px;margin-bottom:8px">🧠</div>
-          <div style="font-family:'Fredoka',sans-serif;font-size:28px;font-weight:700;color:#f0f0f0">Play TapTrivia!</div>
-          <div style="font-family:'Outfit',sans-serif;font-size:18px;color:rgba(255,255,255,0.5);margin-top:4px">Live trivia every 15 min</div>
-          <div style="display:flex;align-items:center;gap:16px;margin-top:16px">
-            ${qrCodeHTML(80)}
-            <div style="text-align:left">
-              <div style="font-family:'Fredoka',sans-serif;font-size:28px;font-weight:700;color:#ffd200;letter-spacing:3px">${barCode}</div>
-              <div style="font-size:16px;color:rgba(255,255,255,0.4)">play.taptrivia.tv</div>
+        <div class="tt-signage-panel__inner">
+          ${signagePanelHeaderHTML()}
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:8px">
+            <div style="font-size:96px">🧠</div>
+            <div class="tt-signage-panel__label" style="color:#667eea">EVERY 15 MINUTES</div>
+            <div class="tt-signage-panel__headline">Play TapTrivia!</div>
+            <div class="tt-signage-panel__subtitle">Free to play · Win prizes · Have fun</div>
+          </div>
+          <div class="tt-signage-panel__qr" style="padding:16px 20px;gap:20px">
+            ${qrCodeHTML(140)}
+            <div>
+              <div class="tt-signage-panel__qr-text">Join Trivia!</div>
+              <div class="tt-signage-panel__qr-url">play.taptrivia.tv</div>
+              <div class="tt-signage-panel__qr-code-row">
+                <span class="tt-signage-panel__qr-code-label">CODE</span>
+                <span class="tt-signage-panel__qr-code">${barCode}</span>
+              </div>
             </div>
           </div>
         </div>`;
@@ -2300,7 +2308,7 @@
             <div class="tt-bg-hype__categories" style="animation:slideUp .5s ease-out .3s both">${catPills}</div>
           ` : ''}
           <div class="tt-bg-hype__qr-section" style="animation:slideUp .5s ease-out .5s both">
-            ${qrCodeHTML(240)}
+            ${qrCodeHTML(180)}
             <div class="tt-bg-hype__code-display">
               <div class="tt-bg-hype__code-label">SCAN TO JOIN</div>
               <div class="tt-bg-hype__code-value">${barCode}</div>

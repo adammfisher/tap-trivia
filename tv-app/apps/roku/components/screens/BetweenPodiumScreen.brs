@@ -9,6 +9,7 @@ sub init()
   m.podium = m.top.findNode("podium")
   m.qrBadge = m.top.findNode("qrBadge")
   m.countdownBar = m.top.findNode("countdownBar")
+  m.trophyIcon = m.top.findNode("trophyIcon")
 
   ' Rank rows 4-10
   m.rankRows = []
@@ -22,6 +23,42 @@ end sub
 
 sub onEpochChanged(event as Object)
   m.countdownBar.setField("nextGameEpoch", event.getData())
+end sub
+
+' Reposition layout: centered full-width (no runners) vs two-column (with runners)
+sub layoutForPlayers(playerCount as Integer)
+  hasRunners = (playerCount > 3)
+  m.rightCol.visible = hasRunners
+
+  if hasRunners
+    ' Two-column: left half for podium, right half for ranks 4-10
+    m.leftCol.translation = [0, 80]
+    m.trophyIcon.translation = [430, 10]
+    m.headingLabel.width = 960
+    m.statsLabel.width = 960
+    m.podium.translation = [80, 220]
+    ' QR bottom-right
+    m.qrBadge.translation = [1520, 920]
+  else
+    ' Centered full-width layout matching web
+    m.leftCol.translation = [0, 60]
+    m.trophyIcon.translation = [910, 10]
+    m.headingLabel.width = 1920
+    m.statsLabel.width = 1920
+    if playerCount = 2
+      ' 2 players: only place1 (x=240,w=280) + place2 (x=0,w=200) visible
+      ' Visual center ~260px into widget, shift right to center on screen
+      m.podium.translation = [700, 220]
+    else if playerCount = 1
+      ' 1 player: only place1 (x=240,w=280), center of widget ~380px
+      m.podium.translation = [580, 220]
+    else
+      ' 3 players: full 760px widget, (1920-760)/2 = 580
+      m.podium.translation = [580, 220]
+    end if
+    ' QR badge 360px wide at bottom center: (1920-360)/2 = 780
+    m.qrBadge.translation = [780, 880]
+  end if
 end sub
 
 sub onDataChanged(event as Object)
@@ -46,14 +83,13 @@ sub onDataChanged(event as Object)
   if podium.players <> invalid then players = podium.players
 
   if players.count() = 0
-    ' Empty state — no players this round
     m.statsLabel.text = Str(qCount).trim() + " questions"
     m.podium.visible = false
-    m.rightCol.visible = false
-    ' Show "No players" label (create dynamically)
+    layoutForPlayers(0)
+    ' Show "No players" label
     emptyLabel = CreateObject("roSGNode", "Label")
     emptyLabel.translation = [0, 300]
-    emptyLabel.width = 960
+    emptyLabel.width = 1920
     emptyLabel.horizAlign = "center"
     emptyLabel.color = "#ffffff80"
     emptyLabel.text = "No players this round"
@@ -63,13 +99,11 @@ sub onDataChanged(event as Object)
   end if
 
   m.podium.visible = true
-
-  ' Podium widget wants an array of {name, score}
   m.podium.setField("scores", players)
 
   ' Ranks 4-10 in right column
   for i = 0 to 6
-    idx = i + 3  ' players[3] = rank 4, etc.
+    idx = i + 3
     if idx < players.count()
       m.rankRows[i].setField("playerData", players[idx])
       m.rankRows[i].setField("playerRank", idx + 1)
@@ -79,13 +113,5 @@ sub onDataChanged(event as Object)
     end if
   end for
 
-  ' Show/hide right column based on whether there are runners up
-  m.rightCol.visible = (players.count() > 3)
-
-  ' Center QR badge when no runners (move from bottom-right to center-right)
-  if players.count() <= 3
-    m.qrBadge.translation = [660, 400]
-  else
-    m.qrBadge.translation = [1520, 920]
-  end if
+  layoutForPlayers(players.count())
 end sub
