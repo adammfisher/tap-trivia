@@ -1,0 +1,36 @@
+{
+  "name": "@amazon-devices/taptriviatv-web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "clean": "rm -rf node_modules buildinfo.json dist build",
+    "start": "react-native start",
+    "build:release": "react-native build-vega --build-type Release",
+    "build:debug": "react-native build-vega --build-type Debug",
+    "build": "npm run build:release",
+    "run:device": "vega device install-app --packagePath build/armv7-release/*.vpkg && vega device launch-app --appName tv.taptrivia.firestick.web.main"
+  },
+  "dependencies": {
+    "@amazon-devices/react-native-kepler": "^2.0.1758683737",
+    "@amazon-devices/react-native-w3cmedia": "^2.2.20",
+    "@amazon-devices/webview": "^3.3.1769932800",
+    "react": "18.2.0",
+    "react-native": "0.72.0"
+  },
+  "devDependencies": {
+    "@amazon-devices/kepler-cli-platform": "^0",
+    "@react-native-community/cli": "11.3.2",
+    "@react-native/metro-config": "^0.72.6",
+    "@tsconfig/react-native": "^3.0.2",
+    "@types/react": "^18.0.24",
+    "metro-react-native-babel-preset": "^0.76.5",
+    "typescript": "4.8.4"
+  },
+  "kepler": {
+    "projectType": "application",
+    "appName": "TapTriviaTV-Web",
+    "targets": [
+      "tv"
+    ]
+  }
+}

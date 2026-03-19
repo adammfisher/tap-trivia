@@ -1,0 +1,66 @@
+schema-version = 1
+
+[package]
+title = "TapTrivia TV Web"
+version = "1.0.0"
+id = "tv.taptrivia.firestick.web"
+icon = "@image/taptrivia-icon.png"
+
+[components]
+[[components.interactive]]
+id = "tv.taptrivia.firestick.web.main"
+runtime-module = "/com.amazon.kepler.keplerscript.runtime.loader_2@IKeplerScript_2_0"
+launch-type = "singleton"
+categories = ["com.amazon.category.main", "com.amazon.category.kepler.media"]
+
+[wants]
+# WebView renderer
+[[wants.service]]
+id = "com.amazon.webview.renderer_service"
+
+# Keyboard support
+[[wants.service]]
+id = "com.amazon.inputmethod.service"
+
+# Media services (signals media app to idle-manager for screensaver inhibition)
+[[wants.service]]
+id = "com.amazon.media.server"
+
+[[wants.service]]
+id = "com.amazon.audio.control"
+
+[[wants.service]]
+id = "com.amazon.audio.stream"
+
+[[wants.service]]
+id = "com.amazon.audio.system"
+
+# Player session (required for PlayerSession API to inhibit screensaver)
+[[wants.service]]
+id = "com.amazon.media.playersession.service"
+
+# Input service (for media remote integration)
+[[wants.service]]
+id = "com.amazon.inputd.service"
+
+# Group-IPC for service access
+[[wants.service]]
+id = "com.amazon.gipc.uuid.*"
+
+[needs]
+[[needs.privilege]]
+id = "com.amazon.media.secureplayback"
+
+[[extras]]
+key = "interface.provider"
+component-id = "tv.taptrivia.firestick.web.main"
+
+[[extras.value.application.interface]]
+interface_name = "com.amazon.kepler.media.IMediaPlaybackServer"
+command_options = ["Play", "Pause", "StartOver", "Previous", "Next", "SkipForward", "SkipBackward"]
+attribute_options = ["AudioAdvanceMuted"]
+features = ["AdvancedSeek", "VariableSpeed", "AudioTracks", "TextTracks"]
+
+[offers]
+[[offers.service]]
+id = "com.amazon.gipc.uuid.*"
