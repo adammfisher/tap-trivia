@@ -2,6 +2,10 @@
 
 const { TABLE, put } = require('./shared/dynamo');
 const crypto = require('crypto');
+const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
+
+const ses = new SESClient({ region: 'us-east-1' });
+const FEEDBACK_EMAIL = 'adam.fisher@visudolabs.com';
 
 const headers = {
   'Content-Type': 'application/json',
@@ -57,6 +61,28 @@ exports.handler = async (event) => {
     });
 
     console.log(`Feedback submitted: ${feedbackId} (${feedbackCategory}) from ${playerId || 'anonymous'}`);
+
+    // Send email notification (fire-and-forget)
+    ses.send(new SendEmailCommand({
+      Source: 'noreply@taptrivia.tv',
+      Destination: { ToAddresses: [FEEDBACK_EMAIL] },
+      Message: {
+        Subject: { Data: `TapTrivia Feedback [${feedbackCategory}] from ${nickname || playerId || 'anonymous'}` },
+        Body: {
+          Text: { Data: [
+            `Category: ${feedbackCategory}`,
+            `From: ${nickname || 'anonymous'} (${playerId || 'no-id'})`,
+            email ? `Email: ${email}` : '',
+            barCode ? `Bar: ${barCode}` : '',
+            platform ? `Platform: ${platform}` : '',
+            appVersion ? `App Version: ${appVersion}` : '',
+            '',
+            `Message:`,
+            message.trim(),
+          ].filter(Boolean).join('\n') },
+        },
+      },
+    })).catch(err => console.error('Failed to send feedback email:', err.message));
 
     return response(200, { success: true, feedbackId });
   } catch (err) {

@@ -18,7 +18,6 @@ export function EditNicknameScreen({ navigation }: Props) {
   const [name, setName] = useState(savedNickname || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [suggestion, setSuggestion] = useState<string | null>(null);
 
   const isValid = name.trim().length >= 2 && name.trim().length <= 20;
   const hasChanged = name.trim() !== (savedNickname || '');
@@ -27,7 +26,6 @@ export function EditNicknameScreen({ navigation }: Props) {
     if (!isValid || !hasChanged || !deviceId) return;
     setLoading(true);
     setError('');
-    setSuggestion(null);
     Keyboard.dismiss();
 
     try {
@@ -38,19 +36,7 @@ export function EditNicknameScreen({ navigation }: Props) {
         return;
       }
 
-      const effectiveName = result.displayName || name.trim();
-
-      if (result.nameWasAdjusted) {
-        // Name was taken — show suggestion, pre-fill input, let user edit or accept
-        await setNickname(effectiveName);
-        setSuggestion(effectiveName);
-        setName(effectiveName);
-        setLoading(false);
-        return;
-      }
-
-      // Name was accepted as-is
-      await setNickname(effectiveName);
+      await setNickname(result.displayName || name.trim());
     } catch {
       setError('Failed to save nickname.');
       setLoading(false);
@@ -67,7 +53,6 @@ export function EditNicknameScreen({ navigation }: Props) {
         style={[styles.container, { paddingTop: insets.top }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Edit Name</Text>
           <Pressable onPress={() => navigation.goBack()} style={styles.closeButton}>
@@ -75,32 +60,17 @@ export function EditNicknameScreen({ navigation }: Props) {
           </Pressable>
         </View>
 
-        {/* Center */}
         <ScrollView contentContainerStyle={styles.center} keyboardShouldPersistTaps="handled" bounces={false}>
           <Text style={styles.subtitle}>This is shown on the leaderboard</Text>
-
-          {suggestion ? (
-            <View style={styles.suggestionBanner}>
-              <Text style={styles.suggestionText}>
-                That name was taken — we saved you as{' '}
-                <Text style={styles.suggestionName}>{suggestion}</Text>.
-                {'\n'}Change it below or tap Save to keep it.
-              </Text>
-            </View>
-          ) : null}
 
           <View style={styles.inputContainer}>
             <TextInput
               value={name}
-              onChangeText={(t) => {
-                setName(t);
-                setError('');
-                setSuggestion(null);
-              }}
+              onChangeText={(t) => { setName(t); setError(''); }}
               maxLength={20}
               autoCapitalize="words"
               autoCorrect={false}
-              autoFocus={!suggestion}
+              autoFocus
               placeholder="Your nickname"
               placeholderTextColor={w(0.25)}
               style={styles.input}
@@ -143,11 +113,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 2,
   },
-  headerTitle: {
-    fontFamily: fonts.fredoka.bold,
-    fontSize: 20,
-    color: '#fff',
-  },
+  headerTitle: { fontFamily: fonts.fredoka.bold, fontSize: 20, color: '#fff' },
   closeButton: {
     backgroundColor: w(0.08),
     borderRadius: 10,
@@ -161,38 +127,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 32,
   },
-  subtitle: {
-    fontFamily: fonts.outfit.regular,
-    fontSize: 14,
-    color: w(0.4),
-    marginBottom: 24,
-  },
-  suggestionBanner: {
-    backgroundColor: w(0.06),
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.gold,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    width: '100%',
-  },
-  suggestionText: {
-    fontFamily: fonts.outfit.regular,
-    fontSize: 13,
-    color: w(0.6),
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  suggestionName: {
-    fontFamily: fonts.outfit.bold,
-    color: colors.gold,
-  },
-  inputContainer: {
-    width: '100%',
-    position: 'relative',
-    marginBottom: 8,
-  },
+  subtitle: { fontFamily: fonts.outfit.regular, fontSize: 14, color: w(0.4), marginBottom: 24 },
+  inputContainer: { width: '100%', position: 'relative', marginBottom: 8 },
   input: {
     width: '100%',
     paddingVertical: 16,
@@ -216,12 +152,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: w(0.25),
   },
-  error: {
-    fontFamily: fonts.outfit.medium,
-    fontSize: 13,
-    color: colors.red,
-    marginBottom: 4,
-  },
+  error: { fontFamily: fonts.outfit.medium, fontSize: 13, color: colors.red, marginBottom: 4 },
   saveButton: {
     width: '100%',
     minWidth: 280,
@@ -231,9 +162,5 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   saveDisabled: { opacity: 0.5 },
-  saveText: {
-    fontFamily: fonts.outfit.bold,
-    fontSize: 16,
-    color: '#fff',
-  },
+  saveText: { fontFamily: fonts.outfit.bold, fontSize: 16, color: '#fff' },
 });

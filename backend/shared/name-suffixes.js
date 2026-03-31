@@ -1,70 +1,56 @@
 'use strict';
 
-const { TABLE, scan } = require('./dynamo');
-
 /**
- * Global name uniqueness with _N suffix.
- * Scans the Players table for matching names and finds the lowest available number.
+ * Display-time name deduplication.
+ * No database access — pure function that deduplicates an array of player names.
+ * Used by leaderboard, TV state, and between-game endpoints.
+ *
+ * Names are only deduplicated within the same context (same bar, same game).
+ * Players keep whatever name they chose — suffixes are display-only.
  */
 
 /**
- * Find all players whose displayName matches the base name or baseName_N pattern.
- * Case-insensitive. Returns just the matching displayNames (lowercased).
+ * Deduplicate player names for display within a single context.
+ *
+ * @param {Array<{playerId: string, playerName: string}>} players
+ * @returns {Map<string, string>} playerId -> deduplicated display name
+ *
+ * Rules:
+ * - Case-insensitive collision detection
+ * - If only one player has a name, no suffix added
+ * - If N players share a name, sort by playerId for stability (same player
+ *   always gets the same suffix across polls). First keeps bare name,
+ *   subsequent get _2, _3, etc.
  */
-async function findMatchingNames(baseName, excludePlayerId) {
-  const lower = baseName.toLowerCase().trim();
+function deduplicateNames(players) {
+  const result = new Map();
+  if (!players || players.length === 0) return result;
 
-  // Scan Players table — only pull back displayName and playerId
-  const players = await scan(TABLE.PLAYERS, {
-    ProjectionExpression: 'playerId, displayName'
-  });
-
-  const matches = new Set();
+  // Group by lowercase name
+  const groups = new Map();
   for (const p of players) {
-    if (p.playerId === excludePlayerId || !p.displayName) continue;
-    const pLower = p.displayName.toLowerCase().trim();
-    // Exact match or baseName_N pattern
-    if (pLower === lower) {
-      matches.add(pLower);
-    } else if (pLower.startsWith(lower + '_')) {
-      const suffix = pLower.slice(lower.length + 1);
-      if (/^\d+$/.test(suffix)) {
-        matches.add(pLower);
+    const name = (p.playerName || 'Anonymous').trim();
+    const key = name.toLowerCase();
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push({ playerId: p.playerId, originalName: name });
+  }
+
+  for (const [, group] of groups) {
+    if (group.length === 1) {
+      // No collision — use name as-is
+      result.set(group[0].playerId, group[0].originalName);
+    } else {
+      // Collision — sort by playerId for deterministic ordering
+      group.sort((a, b) => a.playerId.localeCompare(b.playerId));
+      // First player keeps bare name, rest get _2, _3, etc.
+      result.set(group[0].playerId, group[0].originalName);
+      for (let i = 1; i < group.length; i++) {
+        result.set(group[i].playerId, `${group[i].originalName}_${i + 1}`);
       }
     }
   }
-  return matches;
+
+  return result;
 }
 
-/**
- * Check if a name is globally available (case-insensitive).
- * Returns { available, suggestedName }.
- *   - available=true:  name is free, suggestedName === desiredName
- *   - available=false: name is taken, suggestedName = "name_N" (lowest N)
- */
-async function findAvailableName(desiredName, excludePlayerId) {
-  const lower = desiredName.toLowerCase().trim();
-  const matches = await findMatchingNames(desiredName, excludePlayerId);
-
-  // No collision — name is available
-  if (!matches.has(lower)) {
-    return { available: true, suggestedName: desiredName };
-  }
-
-  // Find the lowest available _N
-  for (let n = 1; n <= 999; n++) {
-    const candidate = `${lower}_${n}`;
-    if (!matches.has(candidate)) {
-      // Preserve the user's original casing for the base name
-      return { available: false, suggestedName: `${desiredName.trim()}_${n}` };
-    }
-  }
-
-  // Extremely unlikely — 999 variants taken
-  return { available: false, suggestedName: `${desiredName.trim()}_${Date.now() % 10000}` };
-}
-
-module.exports = {
-  findMatchingNames,
-  findAvailableName
-};
+module.exports = { deduplicateNames };

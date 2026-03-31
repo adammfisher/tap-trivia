@@ -10,7 +10,6 @@ import { LeaderboardRow } from '../components/LeaderboardRow';
 import { Confetti } from '../components/Confetti';
 import { useGameState } from '../hooks/useGameState';
 import { usePlayerIdentity } from '../hooks/usePlayerIdentity';
-import { useSubscription } from '../hooks/useSubscription';
 import { useGame } from '../contexts/GameContext';
 import { getNextGameTime } from '../utils/game-clock';
 import { getServerNow, getCurrentGame, isApiError } from '../services/api';
@@ -26,8 +25,6 @@ export function ResultsScreen({ navigation, route }: Props) {
   const { gameState } = useGameState({ barCode, playerId, barName });
   const { nickname } = usePlayerIdentity();
   const { resetGame } = useGame();
-  const { isPro } = useSubscription();
-  const paywallShown = useRef(false);
   const stats = gameState.playerStats;
   const playerName = nickname || 'Player';
   const isSolo = barCode === 'SOLO';
@@ -35,16 +32,6 @@ export function ResultsScreen({ navigation, route }: Props) {
   const [nextGameSecs, setNextGameSecs] = useState<number | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const navigatedRef = useRef(false);
-
-  // Soft paywall — show once after game ends if not subscribed
-  useEffect(() => {
-    if (isPro || paywallShown.current) return;
-    const timer = setTimeout(() => {
-      paywallShown.current = true;
-      navigation.navigate('Subscription');
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [isPro, navigation]);
 
   // Navigate to lobby (reused by countdown tick and foreground handler)
   const goToLobby = useCallback(() => {

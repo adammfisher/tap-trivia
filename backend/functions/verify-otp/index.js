@@ -22,7 +22,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'A valid email address is required', statusCode: 400 })
+        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'A valid email address is required' })
       };
     }
 
@@ -30,7 +30,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Bar code is required', statusCode: 400 })
+        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Bar code is required' })
       };
     }
 
@@ -38,7 +38,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'A 6-digit code is required', statusCode: 400 })
+        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'A 6-digit code is required' })
       };
     }
 
@@ -52,7 +52,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 401,
         headers,
-        body: JSON.stringify({ error: 'INVALID_CREDENTIALS', message: 'Invalid email or bar code', statusCode: 401 })
+        body: JSON.stringify({ error: 'INVALID_CREDENTIALS', message: 'Invalid email or bar code' })
       };
     }
 
@@ -61,7 +61,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 429,
         headers,
-        body: JSON.stringify({ error: 'TOO_MANY_ATTEMPTS', message: 'Too many attempts. Request a new code.', statusCode: 429 })
+        body: JSON.stringify({ error: 'TOO_MANY_ATTEMPTS', message: 'Too many attempts. Request a new code.' })
       };
     }
 
@@ -70,7 +70,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 401,
         headers,
-        body: JSON.stringify({ error: 'CODE_EXPIRED', message: 'Code expired. Request a new one.', statusCode: 401 })
+        body: JSON.stringify({ error: 'CODE_EXPIRED', message: 'Code expired. Request a new one.' })
       };
     }
 
@@ -86,7 +86,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 401,
         headers,
-        body: JSON.stringify({ error: 'INVALID_CODE', message: 'Invalid code', statusCode: 401 })
+        body: JSON.stringify({ error: 'INVALID_CODE', message: 'Invalid code' })
       };
     }
 
@@ -129,7 +129,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred', statusCode: 500 })
+      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred' })
     };
   }
 };

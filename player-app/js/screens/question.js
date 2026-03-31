@@ -12,6 +12,7 @@ const QuestionScreen = {
   answerResult: null,
   pendingResult: null,
   totalGameScore: 0,
+  _deferredScore: null,
   animFrame: null,
   fetchingQuestion: false,
   submitting: false,
@@ -25,6 +26,7 @@ const QuestionScreen = {
     this.gameStartEpoch = gameStartEpoch;
     this.answerResult = null;
     this.pendingResult = null;
+    this._deferredScore = null;
     this.questionData = null;
     this.currentQuestionNumber = null;
     this.totalGameScore = 0;
@@ -67,6 +69,11 @@ const QuestionScreen = {
     const state = getGameState(this.gameStartEpoch, getServerNow());
 
     if (state.gamePhase === 'post_game') {
+      // Apply any deferred score before leaving game
+      if (this._deferredScore !== null) {
+        this.totalGameScore = this._deferredScore;
+        this._deferredScore = null;
+      }
       Player.clearActiveGame();
 
       // Check if another game is coming soon — stay in-game if so
@@ -89,6 +96,11 @@ const QuestionScreen = {
 
     // New question?
     if (state.questionNumber !== this.currentQuestionNumber) {
+      // Apply any pending score before moving to next question
+      if (this._deferredScore !== null) {
+        this.totalGameScore = this._deferredScore;
+        this._deferredScore = null;
+      }
       this.currentQuestionNumber = state.questionNumber;
       this.answerResult = null;
       this.pendingResult = null;
@@ -168,8 +180,15 @@ const QuestionScreen = {
         this.answerResult.pointsAwarded = pr.pointsAwarded;
         this.answerResult.correctAnswer = pr.correctAnswer;
       }
-      this.totalGameScore = pr.totalGameScore;
+      // Defer total score update to scores phase
+      this._deferredScore = pr.totalGameScore;
       this.pendingResult = null;
+    }
+
+    // Apply deferred score during scores phase (total updates after reveal, not during)
+    if (state.questionPhase === 'scores' && this._deferredScore !== null) {
+      this.totalGameScore = this._deferredScore;
+      this._deferredScore = null;
     }
 
     const eliminatedIndices = (hintsVisible || []).map(h => q.eliminateOrder[h]);
@@ -564,6 +583,7 @@ const QuestionScreen = {
         this.gameId = data.gameId;
         this.gameStartEpoch = data.startTimeEpoch;
         this.answerResult = null;
+        this._deferredScore = null;
         this.questionData = null;
         this.currentQuestionNumber = null;
         this.totalGameScore = 0;

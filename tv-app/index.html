@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fredoka:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260309a">
+  <script>var _v = Date.now();</script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 </head>
 <body>
@@ -38,12 +38,23 @@
       }
       scaleToFit();
       window.addEventListener('resize', scaleToFit);
+
+      // Dynamic cache buster — load CSS + JS with timestamp
+      var v = _v;
+      var css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = 'css/styles.css?v=' + v;
+      document.head.appendChild(css);
+
+      var scripts = ['js/config.js','js/scoring.js','js/game-clock.js','js/api.js','js/app.js'];
+      (function loadNext(i) {
+        if (i >= scripts.length) return;
+        var s = document.createElement('script');
+        s.src = scripts[i] + '?v=' + v;
+        s.onload = function() { loadNext(i + 1); };
+        document.body.appendChild(s);
+      })(0);
     })();
   </script>
-  <script src="js/config.js?v=20260309a"></script>
-  <script src="js/scoring.js?v=20260309a"></script>
-  <script src="js/game-clock.js?v=20260309a"></script>
-  <script src="js/api.js?v=20260309a"></script>
-  <script src="js/app.js?v=20260309a"></script>
 </body>
 </html>

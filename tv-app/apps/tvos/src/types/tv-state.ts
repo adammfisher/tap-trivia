@@ -76,6 +76,7 @@ export interface TVState {
   eliminated?: Array<{ index: number; answer: string; display: string }>;
   answerPercentages?: number[] | null;
   pctCorrect?: number | null;
+  funFact?: string;
 
   // Timer / points
   gameStartEpoch?: number;

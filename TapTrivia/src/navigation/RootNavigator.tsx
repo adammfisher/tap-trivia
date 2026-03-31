@@ -24,7 +24,7 @@ export type RootStackParamList = {
   Welcome: undefined;
   Join: undefined;
   CreateGroup: undefined;
-  Nickname: { barCode: string; barName: string };
+  Nickname: { barCode: string; barName: string; nameCollision?: boolean };
   Lobby: { barCode: string; barName: string; playerId: string };
   Countdown: { barCode: string; playerId: string; barName: string };
   Category: { barCode: string; playerId: string; barName: string };

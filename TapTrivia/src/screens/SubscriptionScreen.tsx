@@ -1,8 +1,10 @@
 import { View, Text, Pressable, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useRef } from 'react';
 import { FadeInView } from '../utils/animations';
 import { useSubscription } from '../hooks/useSubscription';
+import { isConfigured } from '../services/revenuecat';
 import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -16,32 +18,57 @@ const FEATURES = [
   { icon: '\u{1F4CA}', text: 'Personal stats & game history' },
   { icon: '\u2B50', text: 'Save your favorite bars' },
   { icon: '\u{1F3C6}', text: 'Compete on all-time leaderboards' },
-  { icon: '\u{1F3A8}', text: 'Custom avatar & profile' },
 ];
 
 export function SubscriptionScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { isPro, isLoading, offering, purchase, restore } = useSubscription();
+  const { isPro, isLoading, trialStatus, offering, purchase, restore, activateTrial, devBypass } = useSubscription();
+  const tapCountRef = useRef(0);
+  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Derive price string from offering (never hardcoded)
+  const rcActive = isConfigured();
   const pkg = offering?.availablePackages[0] ?? null;
-  const priceString = pkg?.product.priceString ?? '...';
+  const priceString = pkg?.product.priceString ?? '$2.99';
   const periodLabel = 'per month';
 
-  // If already subscribed, auto-dismiss
+  const isNewUser = trialStatus === 'never_started';
+  const trialExpired = trialStatus === 'expired';
+
+  // If already subscribed or in trial, auto-dismiss
   if (isPro && !isLoading) {
     navigation.goBack();
     return null;
   }
 
   const handlePurchase = async () => {
+    if (!rcActive) return;
     const ok = await purchase();
     if (ok) navigation.goBack();
   };
 
   const handleRestore = async () => {
+    if (!rcActive) return;
     const ok = await restore();
     if (ok) navigation.goBack();
+  };
+
+  const handleStartTrial = async () => {
+    await activateTrial();
+    navigation.goBack();
+  };
+
+  // Secret dev bypass: triple-tap the crown emoji (works on all builds)
+  const handleCrownTap = () => {
+    tapCountRef.current += 1;
+    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+    if (tapCountRef.current >= 5) {
+      tapCountRef.current = 0;
+      devBypass();
+      navigation.goBack();
+      return;
+    }
+    tapTimerRef.current = setTimeout(() => { tapCountRef.current = 0; }, 800);
   };
 
   return (
@@ -55,11 +82,15 @@ export function SubscriptionScreen({ navigation }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Hero */}
-        <Text style={styles.heroEmoji}>{'\u{1F451}'}</Text>
+        {/* Hero — crown is secret dev bypass (5 taps) */}
+        <Pressable onPress={handleCrownTap}>
+          <Text style={styles.heroEmoji}>{'\u{1F451}'}</Text>
+        </Pressable>
         <Text style={styles.title}>TapTrivia Pro</Text>
         <Text style={styles.subtitle}>
-          Unlock the full experience. Play unlimited games at any bar.
+          {trialExpired
+            ? 'Your free trial has ended. Subscribe to keep playing unlimited games at any bar.'
+            : 'Play unlimited trivia at any bar. Try it free for 7 days!'}
         </Text>
 
         {/* Features */}
@@ -72,6 +103,20 @@ export function SubscriptionScreen({ navigation }: Props) {
           ))}
         </View>
 
+        {/* Start Free Trial button — only shown for users who haven't tried yet */}
+        {isNewUser && (
+          <Pressable
+            onPress={handleStartTrial}
+            style={({ pressed }) => [
+              styles.trialButton,
+              pressed && { opacity: 0.85 },
+            ]}
+          >
+            <Text style={styles.trialButtonText}>Start Free Trial</Text>
+            <Text style={styles.trialButtonSub}>7 days free, no payment required</Text>
+          </Pressable>
+        )}
+
         {/* Price card */}
         <View style={styles.priceCard}>
           <Text style={styles.price}>{priceString}</Text>
@@ -81,10 +126,10 @@ export function SubscriptionScreen({ navigation }: Props) {
         {/* Subscribe button */}
         <Pressable
           onPress={handlePurchase}
-          disabled={isLoading || !pkg}
+          disabled={isLoading || (!pkg && rcActive)}
           style={({ pressed }) => [
             styles.subscribeButton,
-            (isLoading || !pkg) && styles.buttonDisabled,
+            (isLoading || (!pkg && rcActive)) && styles.buttonDisabled,
             pressed && !isLoading && { opacity: 0.85 },
           ]}
         >
@@ -99,6 +144,13 @@ export function SubscriptionScreen({ navigation }: Props) {
         <Pressable onPress={handleRestore} disabled={isLoading}>
           <Text style={styles.restoreText}>Restore Purchases</Text>
         </Pressable>
+
+        {/* Visible dev bypass — only in development builds */}
+        {__DEV__ && (
+          <Pressable onPress={() => { devBypass(); navigation.goBack(); }} style={styles.devButton}>
+            <Text style={styles.devText}>Skip (Dev)</Text>
+          </Pressable>
+        )}
       </ScrollView>
 
       {/* Footer */}
@@ -175,13 +227,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.7)',
   },
+  trialButton: {
+    width: '100%',
+    paddingVertical: 18,
+    borderRadius: 16,
+    alignItems: 'center',
+    backgroundColor: '#00d4aa',
+    marginBottom: 16,
+  },
+  trialButtonText: {
+    fontFamily: fonts.outfit.bold,
+    fontSize: 17,
+    color: BG,
+  },
+  trialButtonSub: {
+    fontFamily: fonts.outfit.regular,
+    fontSize: 11,
+    color: 'rgba(0,0,0,0.5)',
+    marginTop: 2,
+  },
   priceCard: {
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 20,
     paddingVertical: 20,
     paddingHorizontal: 28,
     borderWidth: 1,
-    borderColor: ACCENT + '30', // 30 = ~19% opacity
+    borderColor: ACCENT + '30',
     alignItems: 'center',
     width: '100%',
     marginBottom: 16,
@@ -216,6 +287,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'rgba(255,255,255,0.3)',
     marginTop: 14,
+  },
+  devButton: {
+    marginTop: 20,
+    backgroundColor: 'rgba(255,100,0,0.2)',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,100,0,0.4)',
+  },
+  devText: {
+    fontFamily: fonts.outfit.bold,
+    fontSize: 14,
+    color: '#ff6400',
   },
   footer: {
     paddingHorizontal: 32,

@@ -323,6 +323,7 @@ function translateApiState(apiState as Object) as Object
       gs.screen = "between"
       elapsed = safeInt(apiState.elapsedSeconds, 45)
       gs.nextQuestionIn = maxInt(1, ceilInt(m.QUESTION_DURATION_MS / 1000 - elapsed))
+      gs.funFact = safeStr(apiState.funFact)
     else
       ' Playing phase (read_time, answer_time, etc.)
       gs.screen = "playing"

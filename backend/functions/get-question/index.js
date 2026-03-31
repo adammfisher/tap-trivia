@@ -74,8 +74,7 @@ exports.handler = async (event) => {
     if (!gameId || !questionNumberStr) {
       return response(400, {
         error: 'MISSING_PARAMETERS',
-        message: 'gameId and questionNumber are required',
-        statusCode: 400
+        message: 'gameId and questionNumber are required'
       });
     }
 
@@ -83,8 +82,7 @@ exports.handler = async (event) => {
     if (isNaN(questionNumber) || questionNumber < 1 || questionNumber > 15) {
       return response(400, {
         error: 'INVALID_QUESTION_NUMBER',
-        message: 'questionNumber must be between 1 and 15',
-        statusCode: 400
+        message: 'questionNumber must be between 1 and 15'
       });
     }
 
@@ -98,8 +96,7 @@ exports.handler = async (event) => {
     if (!games || games.length === 0) {
       return response(404, {
         error: 'GAME_NOT_FOUND',
-        message: 'Game not found',
-        statusCode: 404
+        message: 'Game not found'
       });
     }
 
@@ -113,7 +110,6 @@ exports.handler = async (event) => {
       return response(403, {
         error: 'QUESTION_NOT_AVAILABLE',
         message: 'This question is not available yet',
-        statusCode: 403,
         questionStartEpoch,
         secondsUntilAvailable: Math.ceil((questionStartEpoch - now) / 1000)
       });
@@ -124,8 +120,7 @@ exports.handler = async (event) => {
     if (!q) {
       return response(404, {
         error: 'QUESTION_NOT_FOUND',
-        message: 'Question not found in game data',
-        statusCode: 404
+        message: 'Question not found in game data'
       });
     }
 
@@ -143,6 +138,7 @@ exports.handler = async (event) => {
       question: q.question,
       category: q.category,
       subcategory: q.subcategory || '',
+      funFact: q.funFact || '',
       difficulty: q.difficulty,
       answers: shuffledAnswers,
       correctIndex,
@@ -154,8 +150,7 @@ exports.handler = async (event) => {
     console.error('get-question error:', err);
     return response(500, {
       error: 'INTERNAL_ERROR',
-      message: 'An unexpected error occurred',
-      statusCode: 500
+      message: 'An unexpected error occurred'
     });
   }
 };

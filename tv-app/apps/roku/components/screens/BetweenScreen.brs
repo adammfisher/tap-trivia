@@ -1,5 +1,5 @@
-' BetweenScreen — Standings rows between questions + signage panel
-' Left: Logo + bar name + "Standings" + 5 LeaderRows + countdown (vertically centered)
+' BetweenScreen — Fun fact + standings (left) + signage panel (right)
+' Left: Logo + bar name + fun fact card + "Standings" + 5 LeaderRows + countdown
 ' Right: SignagePanel (when signage data available)
 
 sub init()
@@ -8,6 +8,11 @@ sub init()
   m.barNameLabel = m.top.findNode("barNameLabel")
   m.standingsLabel = m.top.findNode("standingsLabel")
   m.countdownLabel = m.top.findNode("countdownLabel")
+
+  ' Fun fact refs
+  m.funFactBg = m.top.findNode("funFactBg")
+  m.funFactLabel = m.top.findNode("funFactLabel")
+  m.funFactText = m.top.findNode("funFactText")
 
   ' Widget refs
   m.logo = m.top.findNode("logo")
@@ -59,6 +64,27 @@ sub onGameStateChanged(event as Object)
   ' ── Bar name + code ──
   m.barNameLabel.text = barName
   m.qrBadge.setField("barCode", barCode)
+
+  ' ── Fun fact ──
+  funFact = ""
+  if gs.funFact <> invalid then funFact = gs.funFact
+  hasFunFact = (Len(funFact) > 0)
+
+  m.funFactBg.visible = hasFunFact
+  m.funFactLabel.visible = hasFunFact
+  m.funFactText.visible = hasFunFact
+  if hasFunFact
+    m.funFactText.text = funFact
+    ' Measure fun fact text height (approx: 26px font × lines, max 3)
+    lineH = 34
+    textW = 804
+    charPerLine = Int(textW / 14)
+    numLines = Int(Len(funFact) / charPerLine) + 1
+    if numLines > 3 then numLines = 3
+    textH = numLines * lineH
+    cardH = 40 + textH + 12
+    m.funFactBg.height = cardH
+  end if
 
   ' ── Standings label ──
   m.standingsLabel.text = "Standings"
@@ -114,25 +140,46 @@ sub onGameStateChanged(event as Object)
   end if
 
   ' ── Vertical centering ──
-  ' Content: logo(58px) + gap(8) + barName(28) + gap(16) + standingsLabel(44) + gap(12) = 166px
-  ' Then: visible rows at 80px spacing (68px row height)
-  ' Then: gap(24) + countdown(28)
-  baseH = 166
+  ' Content: logo(58px) + gap(8) + barName(28) + gap(16) = 110px
+  baseH = 110
+  funFactH = 0
+  if hasFunFact
+    funFactH = m.funFactBg.height + 12
+  end if
+  ' standingsLabel(44) + gap(12) = 56
+  labelH = 56
+  ' rows at 80px spacing (68px row height)
   rowsH = 0
   if visibleRows > 0
     rowsH = (visibleRows - 1) * 80 + 68
   end if
   countdownGap = 24
   countdownH = 28
-  totalH = baseH + rowsH + countdownGap + countdownH
+  totalH = baseH + funFactH + labelH + rowsH + countdownGap + countdownH
   offsetY = Int((1080 - totalH) / 2)
   m.leftCol.translation = [0, offsetY]
 
+  ' Position fun fact card
+  funFactY = 110
+  if hasFunFact
+    m.funFactBg.translation = [50, funFactY]
+    m.funFactLabel.translation = [50, funFactY + 14]
+    m.funFactText.translation = [78, funFactY + 40]
+  end if
+
+  ' Position standings label after fun fact
+  standingsLabelY = funFactY + funFactH
+  m.standingsLabel.translation = [0, standingsLabelY]
+
+  ' Position standings list
+  standingsY = standingsLabelY + 56
+  m.top.findNode("standingsList").translation = [50, standingsY]
+
   ' Position countdown after last visible row
   if visibleRows > 0
-    countdownY = 170 + (visibleRows - 1) * 80 + 68 + countdownGap
+    countdownY = standingsY + (visibleRows - 1) * 80 + 68 + countdownGap
   else
-    countdownY = 170
+    countdownY = standingsY
   end if
   m.countdownLabel.translation = [0, countdownY]
 

@@ -1,16 +1,18 @@
 /**
- * Scoring Engine — ported from backend/shared/scoring.js
+ * Scoring Engine — TypeScript port of backend/shared/scoring.js
+ * MUST stay in sync with backend + player-app + tv-app.
+ *
  * 1000 points max per question.
- * 9-second read time (4s-13s): full 1000 points.
- * Speed bump (13s-17s): 1000->800 (fast linear drop).
- * Linear decay (17s-39s): 800->0 (steady ~36.4 pts/sec).
+ * 8-second read time (3s-11s): full 1000 points.
+ * Speed bump (11s-15s): 1000->800 (fast linear drop).
+ * Linear decay (15s-31s): 800->0 (steady 50 pts/sec).
  */
 
-const ANSWER_START_MS = 4000;
-const READ_TIME_END_MS = 13000;
-const SPEED_BUMP_END_MS = 17000;
-const REVEAL_START_MS = 39000;
-const ANSWER_END_MS = 45000;
+const ANSWER_START_MS = 3000;
+const READ_TIME_END_MS = 11000;
+const SPEED_BUMP_END_MS = 15000;
+const REVEAL_START_MS = 31000;
+const ANSWER_END_MS = 37000;
 
 export function calculatePoints(elapsedMs: number): number {
   if (elapsedMs < ANSWER_START_MS || elapsedMs > ANSWER_END_MS) return 0;

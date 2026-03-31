@@ -7,6 +7,7 @@
  *   node seed-questions.js --local             (DynamoDB Local on port 8000)
  *   node seed-questions.js --stage prod        (AWS DynamoDB, full overwrite)
  *   node seed-questions.js --stage prod --incremental  (skip existing questions)
+ *   node seed-questions.js --stage prod --wipe --source docs/sample_10000.json  (wipe + reseed)
  */
 
 const path = require('path');
@@ -16,22 +17,58 @@ const fs = require('fs');
 const args = process.argv.slice(2);
 const isLocal = args.includes('--local');
 const isIncremental = args.includes('--incremental');
+const isWipe = args.includes('--wipe');
 const stageIdx = args.indexOf('--stage');
 const stage = stageIdx >= 0 ? args[stageIdx + 1] : 'prod';
+const sourceIdx = args.indexOf('--source');
+const sourcePath = sourceIdx >= 0 ? args[sourceIdx + 1] : null;
 
 if (isLocal) {
   process.env.DYNAMODB_LOCAL = 'true';
 }
 
-const { TABLE, batchWrite, get, put } = require('../shared/dynamo');
+const { TABLE, docClient, BatchWriteCommand, batchWrite, scan, get, put } = require('../shared/dynamo');
 
-const QUESTIONS_FILE = path.resolve(__dirname, '../../trivia_questions.json');
+const QUESTIONS_FILE = sourcePath
+  ? path.resolve(process.cwd(), sourcePath)
+  : path.resolve(__dirname, '../../trivia_questions.json');
 
 async function seed() {
   console.log(`\nTap Trivia — Seed Questions`);
   console.log(`Mode: ${isLocal ? 'DynamoDB Local' : `AWS (${stage})`}`);
   console.log(`Incremental: ${isIncremental ? 'YES (skip existing)' : 'NO (overwrite)'}`);
+  console.log(`Wipe: ${isWipe ? 'YES (delete all before seeding)' : 'NO'}`);
   console.log(`Source: ${QUESTIONS_FILE}\n`);
+
+  // Wipe existing questions and usage data if --wipe flag is set
+  if (isWipe) {
+    async function batchDelete(tableName, items) {
+      for (let i = 0; i < items.length; i += 25) {
+        const batch = items.slice(i, i + 25);
+        const deleteRequests = batch.map(item => ({
+          DeleteRequest: { Key: { PK: item.PK } }
+        }));
+        await docClient.send(new BatchWriteCommand({
+          RequestItems: { [tableName]: deleteRequests }
+        }));
+        if ((i + 25) % 1000 < 25 || i + 25 >= items.length) {
+          console.log(`  Deleted ${Math.min(i + 25, items.length)}/${items.length}`);
+        }
+      }
+    }
+
+    console.log('Wiping all existing questions...');
+    const existingQuestions = await scan(TABLE.QUESTIONS, { ProjectionExpression: 'PK' });
+    console.log(`  Found ${existingQuestions.length} questions to delete`);
+    await batchDelete(TABLE.QUESTIONS, existingQuestions);
+    console.log('  Questions wiped.\n');
+
+    console.log('Wiping all question usage data...');
+    const existingUsage = await scan(TABLE.QUESTION_USAGE, { ProjectionExpression: 'PK' });
+    console.log(`  Found ${existingUsage.length} usage records to delete`);
+    await batchDelete(TABLE.QUESTION_USAGE, existingUsage);
+    console.log('  Usage data wiped.\n');
+  }
 
   // Read questions file
   if (!fs.existsSync(QUESTIONS_FILE)) {
@@ -58,6 +95,7 @@ async function seed() {
       category: q.category,
       subcategory: q.subcategory || '',
       topicLeaf: q.topicLeaf || q.topic_leaf || '',
+      funFact: q.funFact || q.fun_fact || (args.includes('--filler-funfact') ? 'This is a fun fact placeholder — real fun facts will appear once the full question set is loaded.' : ''),
       difficulty: q.difficulty,
       difficultySort: `${q.difficulty}#${q.id}`,
       sourceType: q.sourceType || q.source_type || 'static',

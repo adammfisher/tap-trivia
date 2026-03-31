@@ -138,6 +138,7 @@ async function selectQuestionsForGame(allCategories, tonightUsedIds, questionCac
       question: question.question,
       answer: question.answer,
       wrongAnswers: wrongAnswers,
+      funFact: question.funFact || '',
       eliminateOrder
     });
 

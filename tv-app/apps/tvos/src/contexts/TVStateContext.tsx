@@ -354,6 +354,7 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
         eliminated: api.eliminated,
         answerPercentages: api.answerPercentages,
         pctCorrect: api.pctCorrect,
+        funFact: api.funFact || '',
         gameStartEpoch: api.gameStartEpoch,
         elapsedSeconds: api.elapsedSeconds,
         currentPointsAvailable: api.currentPointsAvailable,

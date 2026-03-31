@@ -1083,12 +1083,15 @@ function attachFormListeners(el, data) {
     });
   });
 
-  // Close emoji dropdowns on outside click
-  document.addEventListener('click', function closeEmoji(e) {
-    if (!e.target.closest('.emoji-picker-group') && !e.target.closest('.inline-emoji-picker')) {
-      el.querySelectorAll('.emoji-dropdown').forEach(d => d.classList.add('hidden'));
-    }
-  }, { once: false });
+  // Close emoji dropdowns on outside click (single global listener, not per-render)
+  if (!attachFormListeners._emojiCloseAttached) {
+    attachFormListeners._emojiCloseAttached = true;
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.emoji-picker-group') && !e.target.closest('.inline-emoji-picker')) {
+        document.querySelectorAll('.emoji-dropdown').forEach(d => d.classList.add('hidden'));
+      }
+    });
+  }
 }
 
 function attachMenuItemListeners(el, d) {

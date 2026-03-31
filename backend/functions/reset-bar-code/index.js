@@ -27,7 +27,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'MISSING_FIELDS', message: 'barCode and tvDeviceId are required', statusCode: 400 })
+        body: JSON.stringify({ error: 'MISSING_FIELDS', message: 'barCode and tvDeviceId are required' })
       };
     }
 
@@ -38,7 +38,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 404,
         headers,
-        body: JSON.stringify({ error: 'BAR_NOT_FOUND', message: 'Bar not found', statusCode: 404 })
+        body: JSON.stringify({ error: 'BAR_NOT_FOUND', message: 'Bar not found' })
       };
     }
 
@@ -49,8 +49,7 @@ exports.handler = async (event) => {
         headers,
         body: JSON.stringify({
           error: 'UNAUTHORIZED_TV',
-          message: 'This TV is not authorized to manage this bar.',
-          statusCode: 403
+          message: 'This TV is not authorized to manage this bar.'
         })
       };
     }
@@ -103,7 +102,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'CODE_GENERATION_FAILED', message: 'Unable to generate unique bar code. Please try again.', statusCode: 500 })
+        body: JSON.stringify({ error: 'CODE_GENERATION_FAILED', message: 'Unable to generate unique bar code. Please try again.' })
       };
     }
 
@@ -121,7 +120,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred', statusCode: 500 })
+      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred' })
     };
   }
 };

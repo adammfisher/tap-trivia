@@ -2,6 +2,7 @@ import { View, Text, Pressable, StyleSheet, ScrollView, Share, AppState } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSubscription } from '../hooks/useSubscription';
 import { useIsOnTop } from '../hooks/useIsOnTop';
 import { FadeInView } from '../utils/animations';
 import { GradientBackground } from '../components/GradientBackground';
@@ -34,6 +35,23 @@ export function LobbyScreen({ navigation, route }: Props) {
   const { saveBar } = useSavedBars();
   const { startGame, gameState } = useGame();
   const isOnTop = useIsOnTop(route.key);
+  const { isPro, isLoading: subLoading } = useSubscription();
+  const paywallShown = useRef(false);
+
+  // Gate: show paywall if not subscribed and no active trial
+  // When paywall is dismissed and still not pro, kick back to Welcome
+  useEffect(() => {
+    if (subLoading) return;
+    if (!isPro) {
+      if (!paywallShown.current) {
+        paywallShown.current = true;
+        navigation.navigate('Subscription');
+      } else if (isOnTop) {
+        // Paywall was shown and dismissed but user still isn't pro — go back
+        navigation.navigate('Welcome');
+      }
+    }
+  }, [subLoading, isPro, isOnTop, navigation]);
 
   const [statusText, setStatusText] = useState('Checking for games...');
   const [playerCount, setPlayerCount] = useState(0);
@@ -44,6 +62,8 @@ export function LobbyScreen({ navigation, route }: Props) {
   const startedRef = useRef(false);
   const isOnTopRef = useRef(isOnTop);
   isOnTopRef.current = isOnTop;
+  const isProRef = useRef(isPro);
+  isProRef.current = isPro;
 
   const playerName = nickname || 'Player';
 
@@ -77,7 +97,7 @@ export function LobbyScreen({ navigation, route }: Props) {
 
     if (result.status === 'active' && result.startTimeEpoch) {
       const clock = clockGetGameState(result.startTimeEpoch, getServerNow());
-      if (clock.gamePhase === 'active' && !startedRef.current) {
+      if (clock.gamePhase === 'active' && !startedRef.current && isProRef.current) {
         startedRef.current = true;
         if (pollRef.current) clearInterval(pollRef.current);
         if (countdownRef.current) clearInterval(countdownRef.current);
@@ -131,15 +151,15 @@ export function LobbyScreen({ navigation, route }: Props) {
     return undefined;
   }, []);
 
-  // Poll every 10 seconds — interval is created once, never recreated
+  // Poll every 10 seconds — wait for identity AND subscription check before starting
   useEffect(() => {
-    if (!identityLoaded) return;
+    if (!identityLoaded || subLoading || !isPro) return;
     checkGameStatus();
     pollRef.current = setInterval(checkGameStatus, 10000);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [checkGameStatus, identityLoaded]);
+  }, [checkGameStatus, identityLoaded, subLoading, isPro]);
 
   // Refresh immediately when app returns to foreground
   useEffect(() => {
@@ -168,14 +188,14 @@ export function LobbyScreen({ navigation, route }: Props) {
     };
   }, [checkGameStatus]);
 
-  // If game context phase changes, navigate (skip while a modal is on top)
+  // If game context phase changes, navigate (skip while a modal is on top or not authorized)
   useEffect(() => {
-    if (!isOnTop) return;
+    if (!isOnTop || !isPro) return;
     if (gameState.gamePhase === 'category' && !startedRef.current) {
       startedRef.current = true;
       navigation.replace('Category', { barCode, playerId: deviceId || playerId, barName });
     }
-  }, [gameState.gamePhase, isOnTop, navigation, barCode, playerId, deviceId, barName]);
+  }, [gameState.gamePhase, isOnTop, isPro, navigation, barCode, playerId, deviceId, barName]);
 
   const showCountdown = countdownSecs !== null && countdownSecs > 0;
 

@@ -130,7 +130,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'MISSING_FIELDS', message: 'barName is required', statusCode: 400 })
+        body: JSON.stringify({ error: 'MISSING_FIELDS', message: 'barName is required' })
       };
     }
 
@@ -217,7 +217,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'CODE_GENERATION_FAILED', message: 'Unable to generate unique bar code. Please try again.', statusCode: 500 })
+        body: JSON.stringify({ error: 'CODE_GENERATION_FAILED', message: 'Unable to generate unique bar code. Please try again.' })
       };
     }
 
@@ -249,7 +249,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred', statusCode: 500 })
+      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred' })
     };
   }
 };

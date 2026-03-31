@@ -27,7 +27,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'MISSING_PLAYER_ID', message: 'X-Player-ID header is required', statusCode: 400 })
+        body: JSON.stringify({ error: 'MISSING_PLAYER_ID', message: 'X-Player-ID header is required' })
       };
     }
 
@@ -36,7 +36,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_NAME', message: 'Group name must be 2-30 characters', statusCode: 400 })
+        body: JSON.stringify({ error: 'INVALID_NAME', message: 'Group name must be 2-30 characters' })
       };
     }
 
@@ -71,7 +71,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'CODE_GENERATION_FAILED', message: 'Unable to generate unique code. Please try again.', statusCode: 500 })
+        body: JSON.stringify({ error: 'CODE_GENERATION_FAILED', message: 'Unable to generate unique code. Please try again.' })
       };
     }
 
@@ -85,7 +85,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred', statusCode: 500 })
+      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred' })
     };
   }
 };

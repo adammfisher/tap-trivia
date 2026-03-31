@@ -15,7 +15,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'MISSING_BAR_CODE', message: 'barCode is required', statusCode: 400 })
+        body: JSON.stringify({ error: 'MISSING_BAR_CODE', message: 'barCode is required' })
       };
     }
 
@@ -25,7 +25,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 404,
         headers,
-        body: JSON.stringify({ error: 'BAR_NOT_FOUND', message: 'Bar not found', statusCode: 404 })
+        body: JSON.stringify({ error: 'BAR_NOT_FOUND', message: 'Bar not found' })
       };
     }
 
@@ -46,7 +46,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred', statusCode: 500 })
+      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred' })
     };
   }
 };

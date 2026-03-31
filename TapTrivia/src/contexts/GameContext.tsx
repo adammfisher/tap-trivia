@@ -109,6 +109,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     rawQuestionData: null as { eliminateOrder: number[]; correctIndex?: number } | null,
     answerResult: null as AnswerResult | null,
     totalScore: 0,
+    deferredTotalScore: null as number | null,
     fetchingQuestion: false,
     submitting: false,
     leaderboardFetched: false,
@@ -140,6 +141,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
         g.playerStats.streak = 0;
       }
 
+      // Apply any pending score before moving to next question
+      if (g.deferredTotalScore !== null) {
+        g.totalScore = g.deferredTotalScore;
+        g.deferredTotalScore = null;
+      }
       g.currentQuestionNumber = clockState.questionNumber!;
       g.questionData = null;
       g.rawQuestionData = null;
@@ -247,7 +253,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
           correctIndex: correctIdx,
         };
         g.answerResult = answerResult;
-        g.totalScore = pr.totalGameScore;
+        // Defer totalScore update to scores phase so Correct/Wrong screens show old total
+        g.deferredTotalScore = pr.totalGameScore;
         // Update stats now that we're revealing
         if (pr.correct) {
           g.playerStats.correct += 1;
@@ -276,6 +283,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
         answerResult = { ...answerResult, correctIndex: g.rawQuestionData.correctIndex };
         g.answerResult = answerResult;
       }
+    }
+
+    // Apply deferred total score during scores phase (so Correct/Wrong show old total)
+    if (clockState.questionPhase === 'scores' && g.deferredTotalScore !== null) {
+      g.totalScore = g.deferredTotalScore;
+      g.deferredTotalScore = null;
     }
 
     // Functional update: skip re-render if nothing meaningful changed
@@ -347,6 +360,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     g.rawQuestionData = null;
     g.answerResult = null;
     g.totalScore = 0;
+    g.deferredTotalScore = null;
     g.fetchingQuestion = false;
     g.submitting = false;
     g.leaderboardFetched = false;
@@ -446,6 +460,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     g.answerResult = null;
     g.pendingResult = null;
     g.totalScore = 0;
+    g.deferredTotalScore = null;
     g.leaderboard = [];
     g.playerStats = { ...INITIAL_STATS };
     setGameState(INITIAL_STATE);

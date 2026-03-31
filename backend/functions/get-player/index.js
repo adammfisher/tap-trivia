@@ -1,7 +1,6 @@
 'use strict';
 
 const { TABLE, get, put, update } = require('./shared/dynamo');
-const { findAvailableName } = require('./shared/name-suffixes');
 
 function response(statusCode, body) {
   return {
@@ -13,7 +12,6 @@ function response(statusCode, body) {
 
 /**
  * Validate displayName: 2-20 characters, alphanumeric, spaces, and underscores.
- * Allows up to 20 to accommodate system-generated _N suffixes.
  */
 function isValidDisplayName(name) {
   if (typeof name !== 'string') return false;
@@ -25,6 +23,9 @@ function isValidDisplayName(name) {
 /**
  * GET /player/{playerId}  — Fetch player profile
  * PUT /player/{playerId}  — Create or update player profile
+ *
+ * Names are stored as-is (no global dedup). Deduplication happens at display
+ * time in the leaderboard/TV endpoints, scoped to the current bar + game.
  */
 exports.handler = async (event) => {
   try {
@@ -34,8 +35,7 @@ exports.handler = async (event) => {
     if (!playerId) {
       return response(400, {
         error: 'MISSING_PLAYER_ID',
-        message: 'playerId is required',
-        statusCode: 400
+        message: 'playerId is required'
       });
     }
 
@@ -48,8 +48,7 @@ exports.handler = async (event) => {
       if (!player) {
         return response(404, {
           error: 'PLAYER_NOT_FOUND',
-          message: 'Player not found',
-          statusCode: 404
+          message: 'Player not found'
         });
       }
 
@@ -60,21 +59,29 @@ exports.handler = async (event) => {
         gamesPlayed: player.gamesPlayed || 0,
         totalPoints: player.totalPoints || 0,
         createdAt: player.createdAt,
-        lastPlayedAt: player.lastPlayedAt || null
+        lastPlayedAt: player.lastPlayedAt || null,
+        trialStartedAt: player.trialStartedAt || null
       });
     }
 
     // ---- PUT /player/{playerId} ----
     if (method === 'PUT') {
       const body = typeof event.body === 'string' ? JSON.parse(event.body) : (event.body || {});
-      const { displayName, currentBarCode } = body;
+      const { displayName, currentBarCode, trialStartedAt } = body;
 
       // Validate displayName if provided
       if (displayName !== undefined && !isValidDisplayName(displayName)) {
         return response(400, {
           error: 'INVALID_DISPLAY_NAME',
-          message: 'displayName must be 2-20 characters, alphanumeric, spaces, and underscores only',
-          statusCode: 400
+          message: 'displayName must be 2-20 characters, alphanumeric, spaces, and underscores only'
+        });
+      }
+
+      // Validate trialStartedAt if provided
+      if (trialStartedAt !== undefined && (typeof trialStartedAt !== 'number' || !Number.isFinite(trialStartedAt) || trialStartedAt <= 0)) {
+        return response(400, {
+          error: 'INVALID_TRIAL_START',
+          message: 'trialStartedAt must be a positive epoch millisecond timestamp'
         });
       }
 
@@ -82,29 +89,25 @@ exports.handler = async (event) => {
       const existing = await get(TABLE.PLAYERS, playerKey);
 
       if (!existing) {
-        // Create new player
+        // Create new player — name stored as-is
         if (!displayName) {
           return response(400, {
             error: 'MISSING_DISPLAY_NAME',
-            message: 'displayName is required when creating a new player',
-            statusCode: 400
+            message: 'displayName is required when creating a new player'
           });
         }
-
-        // Global name dedup
-        const { available, suggestedName } = await findAvailableName(displayName, playerId);
-        const effectiveName = suggestedName;
 
         const now = new Date().toISOString();
         const newPlayer = {
           PK: `PLAYER#${playerId}`,
           playerId,
-          displayName: effectiveName,
+          displayName: displayName.trim(),
           currentBarCode: currentBarCode || null,
           gamesPlayed: 0,
           totalPoints: 0,
           createdAt: now,
-          lastPlayedAt: null
+          lastPlayedAt: null,
+          ...(trialStartedAt !== undefined && { trialStartedAt })
         };
 
         await put(TABLE.PLAYERS, newPlayer);
@@ -117,7 +120,7 @@ exports.handler = async (event) => {
           totalPoints: newPlayer.totalPoints,
           createdAt: newPlayer.createdAt,
           lastPlayedAt: newPlayer.lastPlayedAt,
-          nameWasAdjusted: !available
+          trialStartedAt: newPlayer.trialStartedAt || null
         });
       }
 
@@ -125,14 +128,10 @@ exports.handler = async (event) => {
       const expressionParts = [];
       const expressionValues = {};
       const expressionNames = {};
-      let nameWasAdjusted = false;
 
       if (displayName !== undefined) {
-        // Global name dedup
-        const { available, suggestedName } = await findAvailableName(displayName, playerId);
-        nameWasAdjusted = !available;
         expressionParts.push('#displayName = :displayName');
-        expressionValues[':displayName'] = suggestedName;
+        expressionValues[':displayName'] = displayName.trim();
         expressionNames['#displayName'] = 'displayName';
       }
 
@@ -142,11 +141,16 @@ exports.handler = async (event) => {
         expressionNames['#currentBarCode'] = 'currentBarCode';
       }
 
+      // trialStartedAt is write-once: if_not_exists ensures the original value is never overwritten
+      if (trialStartedAt !== undefined) {
+        expressionParts.push('trialStartedAt = if_not_exists(trialStartedAt, :trialStartedAt)');
+        expressionValues[':trialStartedAt'] = trialStartedAt;
+      }
+
       if (expressionParts.length === 0) {
         return response(400, {
           error: 'NO_FIELDS',
-          message: 'At least one field (displayName, currentBarCode) must be provided',
-          statusCode: 400
+          message: 'At least one field (displayName, currentBarCode, trialStartedAt) must be provided'
         });
       }
 
@@ -173,22 +177,20 @@ exports.handler = async (event) => {
         totalPoints: updated.totalPoints || 0,
         createdAt: updated.createdAt,
         lastPlayedAt: updated.lastPlayedAt || null,
-        nameWasAdjusted
+        trialStartedAt: updated.trialStartedAt || null
       });
     }
 
     // Unsupported method
     return response(405, {
       error: 'METHOD_NOT_ALLOWED',
-      message: `Method ${method} not allowed`,
-      statusCode: 405
+      message: `Method ${method} not allowed`
     });
   } catch (err) {
     console.error('get-player error:', err);
     return response(500, {
       error: 'INTERNAL_ERROR',
-      message: 'An unexpected error occurred',
-      statusCode: 500
+      message: 'An unexpected error occurred'
     });
   }
 };

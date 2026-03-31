@@ -22,10 +22,12 @@ export function BetweenScreen() {
     barCode,
     barName,
     logoUrl,
+    funFact,
   } = state;
 
   const isLastQuestion = (questionNumber || 1) >= totalQuestions;
   const hasSignage = signageSlides.length > 0;
+  const hasFunFact = !!funFact;
 
   // Compute seconds until next question (matches web: QUESTION_DURATION_MS/1000 - elapsed)
   const nextQuestionIn = elapsedSeconds != null
@@ -36,11 +38,20 @@ export function BetweenScreen() {
     <>
       <View style={s.root}>
         <View style={s.body}>
-          {/* ── Left: Standings ─────────── */}
+          {/* ── Left: Fun fact + Standings ─────────── */}
           <View style={[s.standingsCol, hasSignage && s.standingsColHalf]}>
             <View style={s.centeredContent}>
               <Logo size="sm" />
               {barName ? <Text style={s.barName}>{barName}</Text> : null}
+
+              {/* Fun fact card */}
+              {hasFunFact && (
+                <View style={s.funFactCard}>
+                  <Text style={s.funFactLabel}>DID YOU KNOW?</Text>
+                  <Text style={s.funFactText} numberOfLines={3}>{funFact}</Text>
+                </View>
+              )}
+
               <Text style={s.title}>Standings</Text>
 
               {/* Standings list */}
@@ -121,6 +132,34 @@ const s = StyleSheet.create({
     color: '#f0f0f0',
     marginTop: 12,
     textAlign: 'center',
+  },
+
+  funFactCard: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    paddingHorizontal: 28,
+    paddingVertical: 20,
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  funFactLabel: {
+    fontFamily: fonts.outfit.bold,
+    fontSize: 16,
+    letterSpacing: 3,
+    color: colors.gold,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  funFactText: {
+    fontFamily: fonts.fredoka.medium,
+    fontSize: 26,
+    color: '#f0f0f0',
+    textAlign: 'center',
+    lineHeight: 34,
   },
 
   title: {

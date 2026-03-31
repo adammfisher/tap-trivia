@@ -23,10 +23,12 @@ export function BetweenScreen() {
     barName,
     logoUrl,
     gameStartEpoch,
+    funFact,
   } = state;
 
   const isLastQuestion = (questionNumber || 1) >= totalQuestions;
   const hasSignage = signageSlides.length > 0;
+  const hasFunFact = !!funFact;
 
   // Local countdown from gameStartEpoch — avoids depending on elapsedSeconds from state
   const [nextQuestionIn, setNextQuestionIn] = useState(5);
@@ -50,57 +52,64 @@ export function BetweenScreen() {
   }, [gameStartEpoch, questionNumber]);
 
   return (
-    <>
-      <View style={s.root}>
-        <View style={s.body}>
-          {/* ── Left: Standings ─────────── */}
-          <View style={[s.standingsCol, hasSignage && s.standingsColHalf]}>
-            <View style={s.centeredContent}>
-              <Logo size="sm" />
-              {barName ? <Text style={s.barName}>{barName}</Text> : null}
-              <Text style={s.title}>Standings</Text>
+    <View style={s.root}>
+      <View style={s.body}>
+        {/* ── Left: Fun fact + Standings ─────────── */}
+        <View style={[s.standingsCol, hasSignage && s.standingsColHalf]}>
+          <View style={s.centeredContent}>
+            <Logo size="sm" />
+            {barName ? <Text style={s.barName}>{barName}</Text> : null}
 
-              {/* Standings list */}
-              {barLeaderboard.length > 0 ? (
-                <View style={s.standingsList}>
-                  {barLeaderboard.slice(0, 5).map((entry, i) => (
-                    <FadeInView key={entry.playerName + i} delay={i * 60}>
-                      <StandingRow entry={entry} index={i} />
-                    </FadeInView>
-                  ))}
-                </View>
-              ) : null}
+            {/* Fun fact card */}
+            {hasFunFact && (
+              <View style={s.funFactCard}>
+                <Text style={s.funFactLabel}>DID YOU KNOW?</Text>
+                <Text style={s.funFactText} numberOfLines={3}>{funFact}</Text>
+              </View>
+            )}
 
-              {/* Countdown */}
-              <Text style={s.countdown}>
-                {isLastQuestion ? (
-                  'Final results coming...'
-                ) : (
-                  <>
-                    Next question in{' '}
-                    <Text style={s.countdownNum}>{nextQuestionIn}</Text>
-                    s...
-                  </>
-                )}
-              </Text>
-            </View>
+            <Text style={s.title}>Standings</Text>
+
+            {/* Standings list */}
+            {barLeaderboard.length > 0 ? (
+              <View style={s.standingsList}>
+                {barLeaderboard.slice(0, 5).map((entry, i) => (
+                  <FadeInView key={entry.playerName + i} delay={i * 60}>
+                    <StandingRow entry={entry} index={i} />
+                  </FadeInView>
+                ))}
+              </View>
+            ) : null}
+
+            {/* Countdown */}
+            <Text style={s.countdown}>
+              {isLastQuestion ? (
+                'Final results coming...'
+              ) : (
+                <>
+                  Next question in{' '}
+                  <Text style={s.countdownNum}>{nextQuestionIn}</Text>
+                  s...
+                </>
+              )}
+            </Text>
           </View>
-
-          {/* ── Right: Signage ─────────── */}
-          {hasSignage && (
-            <View style={s.signageCol}>
-              <SignagePanel
-                slides={signageSlides}
-                currentIndex={signageCurrentIndex}
-                barCode={barCode}
-                barName={barName}
-                logoUrl={logoUrl}
-              />
-            </View>
-          )}
         </View>
+
+        {/* ── Right: Signage ─────────── */}
+        {hasSignage && (
+          <View style={s.signageCol}>
+            <SignagePanel
+              slides={signageSlides}
+              currentIndex={signageCurrentIndex}
+              barCode={barCode}
+              barName={barName}
+              logoUrl={logoUrl}
+            />
+          </View>
+        )}
       </View>
-    </>
+    </View>
   );
 }
 
@@ -138,6 +147,34 @@ const s = StyleSheet.create({
     color: '#f0f0f0',
     marginTop: 12,
     textAlign: 'center',
+  },
+
+  funFactCard: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    paddingHorizontal: 28,
+    paddingVertical: 20,
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  funFactLabel: {
+    fontFamily: fonts.outfit.bold,
+    fontSize: 16,
+    letterSpacing: 3,
+    color: colors.gold,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  funFactText: {
+    fontFamily: fonts.fredoka.medium,
+    fontSize: 26,
+    color: '#f0f0f0',
+    textAlign: 'center',
+    lineHeight: 34,
   },
 
   title: {

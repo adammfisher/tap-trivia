@@ -25,7 +25,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'signage object is required', statusCode: 400 })
+        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'signage object is required' })
       };
     }
 
@@ -34,7 +34,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'signage.slides must be an array', statusCode: 400 })
+        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'signage.slides must be an array' })
       };
     }
 
@@ -42,7 +42,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_INPUT', message: `Maximum ${MAX_SLIDES} slides allowed`, statusCode: 400 })
+        body: JSON.stringify({ error: 'INVALID_INPUT', message: `Maximum ${MAX_SLIDES} slides allowed` })
       };
     }
 
@@ -50,7 +50,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'rotationSpeed must be a number between 5 and 60', statusCode: 400 })
+        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'rotationSpeed must be a number between 5 and 60' })
       };
     }
 
@@ -58,7 +58,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'enabled must be a boolean', statusCode: 400 })
+        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'enabled must be a boolean' })
       };
     }
 
@@ -68,7 +68,7 @@ exports.handler = async (event) => {
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Each slide must have a string id', statusCode: 400 })
+          body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Each slide must have a string id' })
         };
       }
 
@@ -76,7 +76,7 @@ exports.handler = async (event) => {
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: 'INVALID_INPUT', message: `Invalid template: ${slide.template}. Valid templates: ${VALID_TEMPLATES.join(', ')}`, statusCode: 400 })
+          body: JSON.stringify({ error: 'INVALID_INPUT', message: `Invalid template: ${slide.template}. Valid templates: ${VALID_TEMPLATES.join(', ')}` })
         };
       }
 
@@ -84,7 +84,7 @@ exports.handler = async (event) => {
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Each slide must have a boolean enabled field', statusCode: 400 })
+          body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Each slide must have a boolean enabled field' })
         };
       }
 
@@ -92,7 +92,7 @@ exports.handler = async (event) => {
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Each slide must have a data object', statusCode: 400 })
+          body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Each slide must have a data object' })
         };
       }
 
@@ -100,7 +100,7 @@ exports.handler = async (event) => {
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Each slide must have a schedule object', statusCode: 400 })
+          body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Each slide must have a schedule object' })
         };
       }
 
@@ -110,7 +110,7 @@ exports.handler = async (event) => {
             return {
               statusCode: 400,
               headers,
-              body: JSON.stringify({ error: 'INVALID_INPUT', message: `Invalid day: ${day}. Valid days: ${VALID_DAYS.join(', ')}`, statusCode: 400 })
+              body: JSON.stringify({ error: 'INVALID_INPUT', message: `Invalid day: ${day}. Valid days: ${VALID_DAYS.join(', ')}` })
             };
           }
         }
@@ -123,7 +123,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Signage configuration is too large (max 50KB)', statusCode: 400 })
+        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Signage configuration is too large (max 50KB)' })
       };
     }
 
@@ -152,7 +152,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred', statusCode: 500 })
+      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred' })
     };
   }
 };

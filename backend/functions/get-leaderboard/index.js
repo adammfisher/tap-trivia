@@ -2,6 +2,7 @@
 
 const { TABLE, get, query } = require('./shared/dynamo');
 const { GAME_DURATION_MS } = require('./shared/game-clock');
+const { deduplicateNames } = require('./shared/name-suffixes');
 
 function response(statusCode, body) {
   return {
@@ -63,8 +64,7 @@ exports.handler = async (event) => {
     if (!gameId) {
       return response(400, {
         error: 'MISSING_GAME_ID',
-        message: 'gameId is required',
-        statusCode: 400
+        message: 'gameId is required'
       });
     }
 
@@ -73,8 +73,7 @@ exports.handler = async (event) => {
       if (!barCode) {
         return response(400, {
           error: 'MISSING_BAR_CODE',
-          message: 'barCode is required for bar leaderboard',
-          statusCode: 400
+          message: 'barCode is required for bar leaderboard'
         });
       }
 
@@ -86,6 +85,10 @@ exports.handler = async (event) => {
       });
 
       const leaderboard = aggregateScores(answers);
+
+      // Per-bar name dedup (display-only)
+      const dedupMap = deduplicateNames(leaderboard.map(e => ({ playerId: e.playerId, playerName: e.playerName })));
+      for (const e of leaderboard) e.playerName = dedupMap.get(e.playerId) || e.playerName;
 
       // Get bar info for barName
       const bar = await get(TABLE.BARS, { PK: `BAR#${barCode}` });
@@ -135,8 +138,7 @@ exports.handler = async (event) => {
       if (!games || games.length === 0) {
         return response(404, {
           error: 'GAME_NOT_FOUND',
-          message: 'Game not found',
-          statusCode: 404
+          message: 'Game not found'
         });
       }
 
@@ -147,7 +149,6 @@ exports.handler = async (event) => {
         return response(403, {
           error: 'GLOBAL_LEADERBOARD_NOT_READY',
           message: 'The global leaderboard is available after the game ends',
-          statusCode: 403,
           availableAtEpoch: gameEndEpoch,
           secondsUntilAvailable: Math.ceil((gameEndEpoch - Date.now()) / 1000)
         });
@@ -161,6 +162,10 @@ exports.handler = async (event) => {
       });
 
       const leaderboard = aggregateScores(allAnswers);
+
+      // Global name dedup (display-only)
+      const dedupMap = deduplicateNames(leaderboard.map(e => ({ playerId: e.playerId, playerName: e.playerName })));
+      for (const e of leaderboard) e.playerName = dedupMap.get(e.playerId) || e.playerName;
 
       // For top 20, look up bar names
       const top20 = leaderboard.slice(0, 20);
@@ -199,15 +204,13 @@ exports.handler = async (event) => {
 
     return response(400, {
       error: 'INVALID_TYPE',
-      message: 'type must be "bar" or "global"',
-      statusCode: 400
+      message: 'type must be "bar" or "global"'
     });
   } catch (err) {
     console.error('get-leaderboard error:', err);
     return response(500, {
       error: 'INTERNAL_ERROR',
-      message: 'An unexpected error occurred',
-      statusCode: 500
+      message: 'An unexpected error occurred'
     });
   }
 };

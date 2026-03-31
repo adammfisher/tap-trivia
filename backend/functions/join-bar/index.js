@@ -1,6 +1,6 @@
 'use strict';
 
-const { TABLE, get, update, docClient, UpdateCommand } = require('./shared/dynamo');
+const { TABLE, get, update, scan, docClient, UpdateCommand } = require('./shared/dynamo');
 
 const headers = {
   'Content-Type': 'application/json',
@@ -17,7 +17,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'MISSING_BAR_CODE', message: 'barCode is required', statusCode: 400 })
+        body: JSON.stringify({ error: 'MISSING_BAR_CODE', message: 'barCode is required' })
       };
     }
 
@@ -25,7 +25,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'MISSING_PLAYER_ID', message: 'X-Player-ID header is required', statusCode: 400 })
+        body: JSON.stringify({ error: 'MISSING_PLAYER_ID', message: 'X-Player-ID header is required' })
       };
     }
 
@@ -38,8 +38,7 @@ exports.handler = async (event) => {
         headers,
         body: JSON.stringify({
           error: 'INVALID_BAR_CODE',
-          message: "That code doesn't match any active location or group. Double-check and try again.",
-          statusCode: 404
+          message: "That code doesn't match any active location or group. Double-check and try again."
         })
       };
     }
@@ -93,8 +92,26 @@ exports.handler = async (event) => {
       updatedBar = bar;
     }
 
-    // Return the player's current displayName (name uniqueness is handled by get-player)
+    // Return the player's current displayName
     const updatedPlayer = await get(TABLE.PLAYERS, { PK: `PLAYER#${playerId}` });
+    const playerName = updatedPlayer?.displayName || null;
+
+    // Check for name collision at this bar — scan players with same barCode and same name
+    let nameCollision = false;
+    if (playerName) {
+      const nameLower = playerName.toLowerCase().trim();
+      const barPlayers = await scan(TABLE.PLAYERS, {
+        FilterExpression: 'currentBarCode = :bc AND playerId <> :pid',
+        ExpressionAttributeValues: {
+          ':bc': barCode,
+          ':pid': playerId
+        },
+        ProjectionExpression: 'displayName'
+      });
+      nameCollision = barPlayers.some(p =>
+        p.displayName && p.displayName.toLowerCase().trim() === nameLower
+      );
+    }
 
     return {
       statusCode: 200,
@@ -104,7 +121,8 @@ exports.handler = async (event) => {
         barName: bar.barName,
         activePlayers: updatedBar.activePlayers,
         type: bar.type || 'bar',
-        displayName: updatedPlayer?.displayName || null
+        displayName: playerName,
+        nameCollision
       })
     };
   } catch (err) {
@@ -112,7 +130,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred', statusCode: 500 })
+      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred' })
     };
   }
 };

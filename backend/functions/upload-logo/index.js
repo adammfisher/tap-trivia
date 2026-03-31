@@ -36,7 +36,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Base64-encoded image data is required', statusCode: 400 })
+        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Base64-encoded image data is required' })
       };
     }
 
@@ -44,7 +44,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'contentType must be image/png or image/jpeg', statusCode: 400 })
+        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'contentType must be image/png or image/jpeg' })
       };
     }
 
@@ -53,7 +53,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Image must be less than 5MB', statusCode: 400 })
+        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Image must be less than 5MB' })
       };
     }
 
@@ -83,13 +83,13 @@ exports.handler = async (event) => {
           return {
             statusCode: 400,
             headers,
-            body: JSON.stringify({ error: 'IMAGE_TOO_SMALL', message: 'Image is too small. Please use an image at least 256x256 pixels.', statusCode: 400 })
+            body: JSON.stringify({ error: 'IMAGE_TOO_SMALL', message: 'Image is too small. Please use an image at least 256x256 pixels.' })
           };
         }
         return {
           statusCode: 500,
           headers,
-          body: JSON.stringify({ error: 'PROCESSING_FAILED', message: 'Background removal failed. Try a larger or different image.', statusCode: 500 })
+          body: JSON.stringify({ error: 'PROCESSING_FAILED', message: 'Background removal failed. Try a larger or different image.' })
         };
       }
     }
@@ -150,7 +150,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred', statusCode: 500 })
+      body: JSON.stringify({ error: 'INTERNAL_ERROR', message: 'An unexpected error occurred' })
     };
   }
 };

@@ -61,10 +61,10 @@ export function WelcomeScreen({ navigation }: Props) {
       return;
     }
     await setBarCode(code);
-    if (nickname) {
-      navigation.navigate('Lobby', { barCode: result.barCode, barName: result.barName, playerId: deviceId });
+    if (result.nameCollision || !nickname) {
+      navigation.navigate('Nickname', { barCode: result.barCode, barName: result.barName, nameCollision: result.nameCollision });
     } else {
-      navigation.navigate('Nickname', { barCode: result.barCode, barName: result.barName });
+      navigation.navigate('Lobby', { barCode: result.barCode, barName: result.barName, playerId: deviceId });
     }
   };
 

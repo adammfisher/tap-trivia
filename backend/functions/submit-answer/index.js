@@ -36,24 +36,21 @@ exports.handler = async (event) => {
     if (!gameId) {
       return response(400, {
         error: 'MISSING_GAME_ID',
-        message: 'gameId is required',
-        statusCode: 400
+        message: 'gameId is required'
       });
     }
 
     if (!playerId) {
       return response(400, {
         error: 'MISSING_PLAYER_ID',
-        message: 'X-Player-ID header is required',
-        statusCode: 400
+        message: 'X-Player-ID header is required'
       });
     }
 
     if (!questionNumber || !selectedAnswer) {
       return response(400, {
         error: 'MISSING_FIELDS',
-        message: 'questionNumber and selectedAnswer are required',
-        statusCode: 400
+        message: 'questionNumber and selectedAnswer are required'
       });
     }
 
@@ -61,8 +58,7 @@ exports.handler = async (event) => {
     if (isNaN(qNum) || qNum < 1 || qNum > 15) {
       return response(400, {
         error: 'INVALID_QUESTION_NUMBER',
-        message: 'questionNumber must be between 1 and 15',
-        statusCode: 400
+        message: 'questionNumber must be between 1 and 15'
       });
     }
 
@@ -77,8 +73,7 @@ exports.handler = async (event) => {
     if (!games || games.length === 0) {
       return response(404, {
         error: 'GAME_NOT_FOUND',
-        message: 'Game not found',
-        statusCode: 404
+        message: 'Game not found'
       });
     }
 
@@ -88,8 +83,7 @@ exports.handler = async (event) => {
     if (!question) {
       return response(404, {
         error: 'QUESTION_NOT_FOUND',
-        message: 'Question not found in game data',
-        statusCode: 404
+        message: 'Question not found in game data'
       });
     }
 
@@ -102,16 +96,14 @@ exports.handler = async (event) => {
     if (elapsedMs < 4000) {
       return response(403, {
         error: 'QUESTION_NOT_AVAILABLE',
-        message: 'Answers are not being accepted yet for this question',
-        statusCode: 403
+        message: 'Answers are not being accepted yet for this question'
       });
     }
 
     if (elapsedMs > 45000) {
       return response(403, {
         error: 'ANSWER_WINDOW_CLOSED',
-        message: 'The answer window for this question has closed',
-        statusCode: 403
+        message: 'The answer window for this question has closed'
       });
     }
 
@@ -224,8 +216,7 @@ exports.handler = async (event) => {
     console.error('submit-answer error:', err);
     return response(500, {
       error: 'INTERNAL_ERROR',
-      message: 'An unexpected error occurred',
-      statusCode: 500
+      message: 'An unexpected error occurred'
     });
   }
 };

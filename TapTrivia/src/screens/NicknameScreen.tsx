@@ -7,6 +7,7 @@ import { GradientBackground } from '../components/GradientBackground';
 import { Logo } from '../components/Logo';
 import { usePlayerIdentity } from '../hooks/usePlayerIdentity';
 import { updatePlayer, isApiError } from '../services/api';
+import { getTrialStart } from '../services/trial';
 import { gradients, w, colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -15,19 +16,13 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Nickname'>;
 
 export function NicknameScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
-  const { barCode, barName } = route.params;
+  const { barCode, barName, nameCollision } = route.params;
   const { nickname: savedNickname, deviceId, setNickname } = usePlayerIdentity();
   const [name, setName] = useState(savedNickname || '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [suggestion, setSuggestion] = useState<string | null>(null);
 
   const isValid = name.trim().length >= 2 && name.trim().length <= 20;
-
-  const goToLobby = () => {
-    if (!deviceId) return;
-    navigation.navigate('Lobby', { barCode, barName, playerId: deviceId });
-  };
 
   const handleSubmit = async () => {
     if (!isValid || !deviceId) return;
@@ -35,11 +30,11 @@ export function NicknameScreen({ navigation, route }: Props) {
     const trimmed = name.trim();
     setLoading(true);
     setError('');
-    setSuggestion(null);
     Keyboard.dismiss();
 
     try {
-      const result = await updatePlayer(deviceId, trimmed, barCode);
+      const trialStartedAt = await getTrialStart();
+      const result = await updatePlayer(deviceId, trimmed, barCode, trialStartedAt ?? undefined);
       if (isApiError(result)) {
         setError(result.message || 'Failed to save nickname.');
         setLoading(false);
@@ -48,14 +43,6 @@ export function NicknameScreen({ navigation, route }: Props) {
 
       const effectiveName = result.displayName || trimmed;
       await setNickname(effectiveName);
-
-      if (result.nameWasAdjusted) {
-        // Name was taken — show suggestion, pre-fill input, let user edit or accept
-        setSuggestion(effectiveName);
-        setName(effectiveName);
-        setLoading(false);
-        return;
-      }
     } catch {
       setError('Failed to save nickname.');
       setLoading(false);
@@ -63,7 +50,7 @@ export function NicknameScreen({ navigation, route }: Props) {
     }
 
     setLoading(false);
-    goToLobby();
+    navigation.navigate('Lobby', { barCode, barName, playerId: deviceId });
   };
 
   return (
@@ -86,12 +73,11 @@ export function NicknameScreen({ navigation, route }: Props) {
           <Text style={styles.title}>What should we call you?</Text>
           <Text style={styles.subtitle}>This is shown on the leaderboard</Text>
 
-          {suggestion ? (
-            <View style={styles.suggestionBanner}>
-              <Text style={styles.suggestionText}>
-                That name was taken — we saved you as{' '}
-                <Text style={styles.suggestionName}>{suggestion}</Text>.
-                {'\n'}Change it below or tap Let's Go to keep it.
+          {nameCollision && savedNickname ? (
+            <View style={styles.collisionBanner}>
+              <Text style={styles.collisionText}>
+                Someone named <Text style={styles.collisionName}>{savedNickname}</Text> is already at this bar.
+                Pick a different name or you'll appear as {savedNickname}_2 on the leaderboard.
               </Text>
             </View>
           ) : null}
@@ -102,12 +88,11 @@ export function NicknameScreen({ navigation, route }: Props) {
               onChangeText={(text) => {
                 setName(text);
                 setError('');
-                setSuggestion(null);
               }}
               maxLength={20}
               autoCapitalize="words"
               autoCorrect={false}
-              autoFocus={!suggestion}
+              autoFocus
               placeholder="Your nickname"
               placeholderTextColor={w(0.25)}
               style={styles.input}
@@ -120,7 +105,7 @@ export function NicknameScreen({ navigation, route }: Props) {
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <Pressable
-            onPress={suggestion ? goToLobby : handleSubmit}
+            onPress={handleSubmit}
             disabled={!isValid || loading}
             style={({ pressed }) => [pressed && { opacity: 0.9 }]}
           >
@@ -142,9 +127,7 @@ export function NicknameScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -152,36 +135,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 2,
   },
-  backButton: {
-    padding: 4,
-  },
-  backText: {
-    fontSize: 20,
-    color: w(0.5),
-  },
+  backButton: { padding: 4 },
+  backText: { fontSize: 20, color: w(0.5) },
   center: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
   },
-  emoji: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  title: {
-    fontFamily: fonts.fredoka.bold,
-    fontSize: 24,
-    color: '#fff',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontFamily: fonts.outfit.regular,
-    fontSize: 14,
-    color: w(0.4),
-    marginBottom: 32,
-  },
-  suggestionBanner: {
+  emoji: { fontSize: 48, marginBottom: 16 },
+  title: { fontFamily: fonts.fredoka.bold, fontSize: 24, color: '#fff', marginBottom: 8 },
+  subtitle: { fontFamily: fonts.outfit.regular, fontSize: 14, color: w(0.4), marginBottom: 32 },
+  collisionBanner: {
     backgroundColor: w(0.06),
     borderRadius: 12,
     borderWidth: 1,
@@ -191,22 +156,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     width: '100%',
   },
-  suggestionText: {
+  collisionText: {
     fontFamily: fonts.outfit.regular,
     fontSize: 13,
     color: w(0.6),
     textAlign: 'center',
     lineHeight: 20,
   },
-  suggestionName: {
+  collisionName: {
     fontFamily: fonts.outfit.bold,
     color: colors.gold,
   },
-  inputContainer: {
-    width: '100%',
-    position: 'relative',
-    marginBottom: 8,
-  },
+  inputContainer: { width: '100%', position: 'relative', marginBottom: 8 },
   input: {
     width: '100%',
     paddingVertical: 16,
@@ -230,12 +191,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: w(0.25),
   },
-  error: {
-    fontFamily: fonts.outfit.medium,
-    fontSize: 13,
-    color: colors.red,
-    marginBottom: 8,
-  },
+  error: { fontFamily: fonts.outfit.medium, fontSize: 13, color: colors.red, marginBottom: 8 },
   submitButton: {
     width: '100%',
     minWidth: 280,
@@ -249,12 +205,6 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 6,
   },
-  submitDisabled: {
-    opacity: 0.5,
-  },
-  submitText: {
-    fontFamily: fonts.outfit.bold,
-    fontSize: 16,
-    color: '#fff',
-  },
+  submitDisabled: { opacity: 0.5 },
+  submitText: { fontFamily: fonts.outfit.bold, fontSize: 16, color: '#fff' },
 });

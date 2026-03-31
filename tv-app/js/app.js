@@ -1824,18 +1824,18 @@
     bindResetArrow();
   }
 
-  /** BETWEEN QUESTIONS / SCOREBOARD FLASH — left-half + optional signage panel */
+  /** BETWEEN QUESTIONS — left: fun fact + standings, right: signage panel */
   function renderBetween(state) {
     const scores = state.scores || [];
     const num = state.questionNumber || 1;
     const totalQ = state.totalQuestions || 15;
     const nextIn = state.nextQuestionIn || 5;
     const isLastQuestion = num >= totalQ;
+    const funFact = state.funFact || '';
     const panel = signagePanelWrapHTML();
 
     let countdownLine = '';
     if (rotationActive) {
-      // During screen rotation, no game-clock countdown — show next game countdown if available
       if (state.nextGameStartEpoch) {
         const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - getServerNow()) / 1000));
         if (secsLeft > 0) {
@@ -1852,7 +1852,17 @@
       countdownLine = `<div id="tv-between-countdown" class="tt-between__next">${countdownText}</div>`;
     }
 
-    // Full-width glass bar rows for standings
+    // Fun fact card (only if non-empty)
+    let funFactHTML = '';
+    if (funFact) {
+      funFactHTML = `
+        <div class="tt-between__funfact-card">
+          <div class="tt-between__funfact-label">DID YOU KNOW?</div>
+          <div class="tt-between__funfact-text">${funFact}</div>
+        </div>`;
+    }
+
+    // Standings rows (top 5 for half-width layout)
     let standingsHTML = '';
     scores.slice(0, 5).forEach((p, i) => {
       const rank = i + 1;
@@ -1881,6 +1891,8 @@
       <div class="tt-between tt-between--half${panelFinal ? ' tt-between--with-panel' : ''}">
         ${resetArrowHTML()}
         <div class="tt-between__panel">
+          ${funFactHTML}
+          <div class="tt-between__spacer"></div>
           ${logoHTML('sm')}
           ${barNameHTML('md')}
           <div class="tt-between__section-label">Standings</div>
@@ -2867,6 +2879,7 @@
         gs.screen = 'between';
         const elapsed = apiState.elapsedSeconds || 37;
         gs.nextQuestionIn = Math.max(1, Math.ceil(QUESTION_DURATION_MS / 1000 - elapsed));
+        gs.funFact = apiState.funFact || '';
       } else {
         // Playing phase (read_time, answer_time, etc.)
         gs.screen = 'playing';
@@ -2876,10 +2889,10 @@
           category: apiState.category,
           categoryIcon: getCategoryIcon(apiState.category),
         };
-        // Calculate timer (answer window: 4s–39s = 35s countdown)
+        // Calculate timer (answer window: 3s–31s = 28s countdown)
         const elapsed = apiState.elapsedSeconds || 0;
-        const remaining = Math.max(0, 39 - elapsed);
-        gs.timer = { remaining, total: 35 };
+        const remaining = Math.max(0, 31 - elapsed);
+        gs.timer = { remaining, total: 28 };
         gs.pointsAvailable = apiState.currentPointsAvailable;
         gs.maxPoints = 1000;
         gs.eliminated = apiState.eliminated || [];

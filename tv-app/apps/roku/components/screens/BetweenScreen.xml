@@ -17,7 +17,7 @@
     <!-- Dark panel behind right/signage half -->
     <Rectangle id="rightPanelBg" translation="[960, 0]" width="960" height="1080" color="#000000" opacity="0.2" />
 
-    <!-- ═══ LEFT COLUMN (960px): Vertically centered standings ═══ -->
+    <!-- ═══ LEFT COLUMN (960px): Fun fact + standings ═══ -->
 
     <Group id="leftCol" translation="[0, 0]">
 
@@ -30,14 +30,27 @@
         <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="32" />
       </Label>
 
+      <!-- Fun fact card (glass morphism background) -->
+      <Rectangle id="funFactBg" translation="[50, 114]" width="860" height="140"
+                 color="#FFFFFF" opacity="0.06" cornerRadius="16" visible="false" />
+      <Label id="funFactLabel" text="DID YOU KNOW?" translation="[50, 128]"
+             width="860" horizAlign="center" color="#ffd200" visible="false">
+        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="16" />
+      </Label>
+      <Label id="funFactText" text="" translation="[78, 154]"
+             width="804" horizAlign="center" wrap="true" maxLines="3"
+             color="#f0f0f0" visible="false">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Medium.ttf" size="26" />
+      </Label>
+
       <!-- "Standings" heading — centered -->
       <Label id="standingsLabel" text="Standings"
-             translation="[0, 110]" color="#ffffff80" width="960" horizAlign="center">
+             translation="[0, 270]" color="#ffffff80" width="960" horizAlign="center">
         <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="34" />
       </Label>
 
       <!-- 5 standings rows (860px wide, centered in 960px → X=50) -->
-      <Group id="standingsList" translation="[50, 170]">
+      <Group id="standingsList" translation="[50, 320]">
         <LeaderRow id="standing1" translation="[0, 0]" />
         <LeaderRow id="standing2" translation="[0, 80]" />
         <LeaderRow id="standing3" translation="[0, 160]" />
@@ -47,7 +60,7 @@
 
       <!-- Countdown label — centered (Y positioned dynamically in BRS) -->
       <Label id="countdownLabel" text=""
-             translation="[0, 500]" color="#ffffff40" width="960" horizAlign="center">
+             translation="[0, 740]" color="#ffffff40" width="960" horizAlign="center">
         <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
       </Label>
     </Group>

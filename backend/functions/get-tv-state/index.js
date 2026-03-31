@@ -3,6 +3,7 @@
 const { TABLE, get, query, update } = require('./shared/dynamo');
 const { getGameState, getNextGameTime, gameTimeslotPK, GAME_DURATION_MS, RESULTS_DURATION_MS } = require('./shared/game-clock');
 const { calculatePoints } = require('./shared/scoring');
+const { deduplicateNames } = require('./shared/name-suffixes');
 
 function response(statusCode, body) {
   return {
@@ -108,9 +109,10 @@ async function getBarLeaderboard(gameId, barCode, limit, excludeQuestion) {
     : answers;
 
   const leaderboard = aggregateBarScores(filtered);
+  const dedupMap = deduplicateNames(leaderboard.map(e => ({ playerId: e.playerId, playerName: e.playerName })));
   return leaderboard.slice(0, limit || 10).map(e => ({
     rank: e.rank,
-    playerName: e.playerName,
+    playerName: dedupMap.get(e.playerId) || e.playerName,
     score: e.score
   }));
 }
@@ -161,9 +163,10 @@ async function getGlobalLeaderboard(gameId, limit) {
     barNameMap[bc] = bar?.barName || bc;
   }
 
+  const dedupMap = deduplicateNames(sorted.map(e => ({ playerId: e.playerId, playerName: e.playerName })));
   return topEntries.map(e => ({
     rank: e.rank,
-    playerName: e.playerName,
+    playerName: dedupMap.get(e.playerId) || e.playerName,
     score: e.score,
     barName: barNameMap[e.barCode] || ''
   }));
@@ -176,8 +179,7 @@ exports.handler = async (event) => {
     if (!barCode) {
       return response(400, {
         error: 'MISSING_BAR_CODE',
-        message: 'barCode query parameter is required',
-        statusCode: 400
+        message: 'barCode query parameter is required'
       });
     }
 
@@ -204,8 +206,7 @@ exports.handler = async (event) => {
     if (!bar || bar.status !== 'active') {
       return response(404, {
         error: 'BAR_NOT_FOUND',
-        message: 'Bar not found or inactive',
-        statusCode: 404
+        message: 'Bar not found or inactive'
       });
     }
 
@@ -468,6 +469,7 @@ exports.handler = async (event) => {
       question: currentQ.question,
       category: currentQ.category,
       subcategory: currentQ.subcategory || '',
+      funFact: currentQ.funFact || '',
       difficulty: currentQ.difficulty,
       answers: shuffledAnswers,
       correctIndex: isRevealOrScores ? correctIndex : undefined,
@@ -487,8 +489,7 @@ exports.handler = async (event) => {
     console.error('get-tv-state error:', err);
     return response(500, {
       error: 'INTERNAL_ERROR',
-      message: 'An unexpected error occurred',
-      statusCode: 500
+      message: 'An unexpected error occurred'
     });
   }
 };

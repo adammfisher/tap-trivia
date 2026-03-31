@@ -89,8 +89,28 @@ export async function joinBar(
 }
 
 /**
+ * GET /player/{playerId} — fetch player profile (includes trialStartedAt).
+ */
+export interface PlayerResponse {
+  playerId: string;
+  displayName: string;
+  currentBarCode: string | null;
+  gamesPlayed: number;
+  totalPoints: number;
+  createdAt: string;
+  lastPlayedAt: string | null;
+  trialStartedAt: number | null;
+}
+
+export async function getPlayer(playerId: string): Promise<ApiResult<PlayerResponse>> {
+  return apiCall<PlayerResponse>('GET', `/player/${encodeURIComponent(playerId)}`, undefined, {
+    'X-Player-ID': playerId,
+  });
+}
+
+/**
  * PUT /player/{playerId} — create or update player profile.
- * Used for setting displayName with server-side dedup.
+ * trialStartedAt is write-once: the backend ignores it if already set.
  */
 export interface UpdatePlayerResponse {
   playerId: string;
@@ -98,16 +118,19 @@ export interface UpdatePlayerResponse {
   currentBarCode: string | null;
   gamesPlayed: number;
   totalPoints: number;
-  nameWasAdjusted?: boolean;
+  trialStartedAt: number | null;
 }
 
 export async function updatePlayer(
   playerId: string,
-  displayName: string,
+  displayName?: string,
   currentBarCode?: string,
+  trialStartedAt?: number,
 ): Promise<ApiResult<UpdatePlayerResponse>> {
-  const body: Record<string, unknown> = { displayName };
+  const body: Record<string, unknown> = {};
+  if (displayName !== undefined) body.displayName = displayName;
   if (currentBarCode) body.currentBarCode = currentBarCode;
+  if (trialStartedAt !== undefined) body.trialStartedAt = trialStartedAt;
   return apiCall<UpdatePlayerResponse>('PUT', `/player/${encodeURIComponent(playerId)}`, body, {
     'X-Player-ID': playerId,
   });

@@ -2,6 +2,7 @@
 
 const { TABLE, get, query, scan } = require('./shared/dynamo');
 const { getNextGameTime, gameTimeslotPK, GAME_DURATION_MS, RESULTS_DURATION_MS } = require('./shared/game-clock');
+const { deduplicateNames } = require('./shared/name-suffixes');
 
 function response(statusCode, body) {
   return {
@@ -68,8 +69,9 @@ async function buildPodium(gameId, barCode) {
 
     // Sort by score descending
     const sorted = [...playerScores.values()].sort((a, b) => b.score - a.score);
+    const dedupMap = deduplicateNames(sorted.map(p => ({ playerId: p.playerId, playerName: p.name })));
     const top10 = sorted.slice(0, 10).map((p, i) => ({
-      name: p.name,
+      name: dedupMap.get(p.playerId) || p.name,
       score: p.score,
       rank: i + 1
     }));

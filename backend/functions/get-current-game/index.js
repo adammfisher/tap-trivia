@@ -85,8 +85,7 @@ exports.handler = async (event) => {
     console.error('get-current-game error:', err);
     return response(500, {
       error: 'INTERNAL_ERROR',
-      message: 'An unexpected error occurred',
-      statusCode: 500
+      message: 'An unexpected error occurred'
     });
   }
 };

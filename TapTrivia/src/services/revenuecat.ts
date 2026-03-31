@@ -5,7 +5,7 @@ import Purchases, {
   type CustomerInfo,
   type PurchasesOffering,
 } from 'react-native-purchases';
-import { RC_API_KEY, RC_ENTITLEMENT_ID, RC_OFFERING_ID } from '../constants/revenuecat';
+import { RC_API_KEY_APPLE, RC_API_KEY_GOOGLE, RC_ENTITLEMENT_ID, RC_OFFERING_ID } from '../constants/revenuecat';
 
 let _configured = false;
 
@@ -16,28 +16,35 @@ export function isConfigured(): boolean {
   return _configured;
 }
 
-/** Call once at app startup (App.tsx). iOS only — no-ops on Android/web/Expo Go. */
+/** Call once at app startup (App.tsx). Works on iOS and Android (no-ops on web/Expo Go). */
 export function configureRevenueCat(appUserID?: string): void {
-  if (_configured || Platform.OS !== 'ios') return;
+  if (_configured) return;
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') return;
   if (isExpoGo) return;
-  if (RC_API_KEY.startsWith('test_')) return;
+
+  const apiKey = Platform.OS === 'ios' ? RC_API_KEY_APPLE : RC_API_KEY_GOOGLE;
+  // Don't configure with placeholder keys
+  if (apiKey.startsWith('test_') || apiKey.includes('PLACEHOLDER')) return;
+
   try {
     Purchases.setLogLevel(LOG_LEVEL.DEBUG);
-    Purchases.configure({ apiKey: RC_API_KEY, appUserID: appUserID ?? undefined });
+    Purchases.configure({ apiKey, appUserID: appUserID ?? undefined });
     _configured = true;
-  } catch {
+  } catch (e) {
+    console.warn('[RevenueCat] configure failed:', e);
     _configured = false;
   }
 }
 
 /** Check whether the user has an active "TapTrivia Pro" entitlement. */
 export async function checkSubscription(): Promise<boolean> {
-  if (Platform.OS !== 'ios' || !_configured) return true;
+  if (!_configured) return false;
   try {
     const info: CustomerInfo = await Purchases.getCustomerInfo();
     return info.entitlements.active[RC_ENTITLEMENT_ID] !== undefined;
-  } catch {
-    return true; // degrade to unlocked if RC fails
+  } catch (e) {
+    console.warn('[RevenueCat] checkSubscription failed:', e);
+    return false;
   }
 }
 
@@ -47,7 +54,8 @@ export async function getOffering(): Promise<PurchasesOffering | null> {
   try {
     const offerings = await Purchases.getOfferings();
     return offerings.current ?? offerings.all[RC_OFFERING_ID] ?? null;
-  } catch {
+  } catch (e) {
+    console.warn('[RevenueCat] getOffering failed:', e);
     return null;
   }
 }
@@ -62,7 +70,8 @@ export async function purchaseMonthly(): Promise<boolean> {
     if (!pkg) return false;
     const { customerInfo } = await Purchases.purchasePackage(pkg);
     return customerInfo.entitlements.active[RC_ENTITLEMENT_ID] !== undefined;
-  } catch {
+  } catch (e) {
+    console.warn('[RevenueCat] purchaseMonthly failed:', e);
     return false;
   }
 }
@@ -73,7 +82,8 @@ export async function restorePurchases(): Promise<boolean> {
   try {
     const info: CustomerInfo = await Purchases.restorePurchases();
     return info.entitlements.active[RC_ENTITLEMENT_ID] !== undefined;
-  } catch {
+  } catch (e) {
+    console.warn('[RevenueCat] restorePurchases failed:', e);
     return false;
   }
 }
