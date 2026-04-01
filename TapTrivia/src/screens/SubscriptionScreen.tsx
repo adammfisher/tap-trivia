@@ -14,9 +14,9 @@ const ACCENT = '#00E5FF';
 const BG = '#0D0D0F';
 
 const FEATURES = [
-  { icon: '\u{1F3AE}', text: 'Unlimited games at every bar' },
+  { icon: '\u{1F3AE}', text: 'Unlimited games at every location' },
   { icon: '\u{1F4CA}', text: 'Personal stats & game history' },
-  { icon: '\u2B50', text: 'Save your favorite bars' },
+  { icon: '\u2B50', text: 'Save your favorite locations' },
   { icon: '\u{1F3C6}', text: 'Compete on all-time leaderboards' },
 ];
 
@@ -32,8 +32,8 @@ export function SubscriptionScreen({ navigation }: Props) {
   const priceString = pkg?.product.priceString ?? '$2.99';
   const periodLabel = 'per month';
 
-  const isNewUser = trialStatus === 'never_started';
-  const trialExpired = trialStatus === 'expired';
+  // Check if the product has a free trial offer from Google Play / App Store
+  const hasStoreTrial = pkg?.product?.introPrice != null;
 
   // If already subscribed or in trial, auto-dismiss
   if (isPro && !isLoading) {
@@ -41,6 +41,9 @@ export function SubscriptionScreen({ navigation }: Props) {
     return null;
   }
 
+  // Both "Start Free Trial" and "Subscribe Now" go through Google Play purchase flow.
+  // If the product has a free trial offer configured in the store, Google/Apple
+  // will show the trial terms and collect payment info upfront.
   const handlePurchase = async () => {
     if (!rcActive) return;
     const ok = await purchase();
@@ -51,11 +54,6 @@ export function SubscriptionScreen({ navigation }: Props) {
     if (!rcActive) return;
     const ok = await restore();
     if (ok) navigation.goBack();
-  };
-
-  const handleStartTrial = async () => {
-    await activateTrial();
-    navigation.goBack();
   };
 
   // Secret dev bypass: triple-tap the crown emoji (works on all builds)
@@ -88,9 +86,7 @@ export function SubscriptionScreen({ navigation }: Props) {
         </Pressable>
         <Text style={styles.title}>TapTrivia Pro</Text>
         <Text style={styles.subtitle}>
-          {trialExpired
-            ? 'Your free trial has ended. Subscribe to keep playing unlimited games at any bar.'
-            : 'Play unlimited trivia at any bar. Try it free for 7 days!'}
+          Play unlimited trivia at any location. Try it free for 7 days!
         </Text>
 
         {/* Features */}
@@ -103,17 +99,24 @@ export function SubscriptionScreen({ navigation }: Props) {
           ))}
         </View>
 
-        {/* Start Free Trial button — only shown for users who haven't tried yet */}
-        {isNewUser && (
+        {/* Start Free Trial button — goes through Google Play / App Store purchase flow.
+            The store handles the trial period and collects payment info upfront. */}
+        {hasStoreTrial && (
           <Pressable
-            onPress={handleStartTrial}
+            onPress={handlePurchase}
+            disabled={isLoading || (!pkg && rcActive)}
             style={({ pressed }) => [
               styles.trialButton,
+              (isLoading || (!pkg && rcActive)) && styles.buttonDisabled,
               pressed && { opacity: 0.85 },
             ]}
           >
             <Text style={styles.trialButtonText}>Start Free Trial</Text>
-            <Text style={styles.trialButtonSub}>7 days free, no payment required</Text>
+            <Text style={styles.trialButtonSub}>
+              {pkg?.product.introPrice?.periodNumberOfUnits
+                ? `${pkg.product.introPrice.periodNumberOfUnits} ${pkg.product.introPrice.periodUnit === 'DAY' ? 'days' : 'week'} free, then ${priceString}/month`
+                : `7 days free, then ${priceString}/month`}
+            </Text>
           </Pressable>
         )}
 

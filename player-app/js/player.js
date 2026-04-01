@@ -1,6 +1,6 @@
 /**
  * Tap Trivia Player App — Player State Management
- * Manages UUID, display name, bar state in localStorage.
+ * Manages UUID, display name, location state in localStorage.
  */
 
 const STORAGE_KEYS = {
@@ -105,7 +105,7 @@ const Player = {
     // Remove existing entry for this code (will re-add at front)
     history = history.filter(b => b.code !== code);
     history.unshift({ code, name, type: type || 'bar', joinedAt: Date.now() });
-    // Cap at 20 bars
+    // Cap at 20 locations
     if (history.length > 20) history = history.slice(0, 20);
     localStorage.setItem(STORAGE_KEYS.BAR_HISTORY, JSON.stringify(history));
   }

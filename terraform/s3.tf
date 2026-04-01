@@ -1,45 +1,50 @@
 # =============================================================================
-# S3 Buckets for Tap Trivia
-# =============================================================================
-# Three buckets:
-#   1. Lambda deployment artifacts (zip files)
-#   2. Player web app (static SPA served via CloudFront)
-#   3. TV web app (static SPA served via CloudFront)
+# S3 Buckets for Tap Trivia (prod-only — skipped in dev workspace)
 # =============================================================================
 
-# -----------------------------------------------------------------------------
-# Data source: current AWS account ID (used in bucket policies)
-# -----------------------------------------------------------------------------
 data "aws_caller_identity" "current" {}
 
 # =============================================================================
 # 1. Lambda Deployment Bucket
 # =============================================================================
 resource "aws_s3_bucket" "lambda_deploy" {
+  count  = local.is_dev ? 0 : 1
   bucket = "tap-trivia-lambda-deploy"
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Purpose     = "Lambda deployment artifacts"
   }
+}
+
+moved {
+  from = aws_s3_bucket.lambda_deploy
+  to   = aws_s3_bucket.lambda_deploy[0]
 }
 
 # =============================================================================
 # 2. Player Web App Bucket
 # =============================================================================
 resource "aws_s3_bucket" "player_app" {
+  count  = local.is_dev ? 0 : 1
   bucket = "tap-trivia-player-app"
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Purpose     = "Player web app static files"
   }
 }
 
+moved {
+  from = aws_s3_bucket.player_app
+  to   = aws_s3_bucket.player_app[0]
+}
+
 resource "aws_s3_bucket_public_access_block" "player_app" {
-  bucket = aws_s3_bucket.player_app.id
+  count  = local.is_dev ? 0 : 1
+  bucket = aws_s3_bucket.player_app[0].id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -47,16 +52,28 @@ resource "aws_s3_bucket_public_access_block" "player_app" {
   restrict_public_buckets = true
 }
 
+moved {
+  from = aws_s3_bucket_public_access_block.player_app
+  to   = aws_s3_bucket_public_access_block.player_app[0]
+}
+
 resource "aws_s3_bucket_versioning" "player_app" {
-  bucket = aws_s3_bucket.player_app.id
+  count  = local.is_dev ? 0 : 1
+  bucket = aws_s3_bucket.player_app[0].id
 
   versioning_configuration {
     status = "Enabled"
   }
 }
 
+moved {
+  from = aws_s3_bucket_versioning.player_app
+  to   = aws_s3_bucket_versioning.player_app[0]
+}
+
 resource "aws_s3_bucket_policy" "player_app" {
-  bucket = aws_s3_bucket.player_app.id
+  count  = local.is_dev ? 0 : 1
+  bucket = aws_s3_bucket.player_app[0].id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -68,10 +85,10 @@ resource "aws_s3_bucket_policy" "player_app" {
           Service = "cloudfront.amazonaws.com"
         }
         Action   = "s3:GetObject"
-        Resource = "${aws_s3_bucket.player_app.arn}/*"
+        Resource = "${aws_s3_bucket.player_app[0].arn}/*"
         Condition = {
           StringEquals = {
-            "AWS:SourceArn" = aws_cloudfront_distribution.player_app.arn
+            "AWS:SourceArn" = aws_cloudfront_distribution.player_app[0].arn
           }
         }
       }
@@ -81,21 +98,33 @@ resource "aws_s3_bucket_policy" "player_app" {
   depends_on = [aws_s3_bucket_public_access_block.player_app]
 }
 
+moved {
+  from = aws_s3_bucket_policy.player_app
+  to   = aws_s3_bucket_policy.player_app[0]
+}
+
 # =============================================================================
 # 3. TV Web App Bucket
 # =============================================================================
 resource "aws_s3_bucket" "tv_app" {
+  count  = local.is_dev ? 0 : 1
   bucket = "tap-trivia-tv-app"
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Purpose     = "TV web app static files"
   }
 }
 
+moved {
+  from = aws_s3_bucket.tv_app
+  to   = aws_s3_bucket.tv_app[0]
+}
+
 resource "aws_s3_bucket_public_access_block" "tv_app" {
-  bucket = aws_s3_bucket.tv_app.id
+  count  = local.is_dev ? 0 : 1
+  bucket = aws_s3_bucket.tv_app[0].id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -103,16 +132,28 @@ resource "aws_s3_bucket_public_access_block" "tv_app" {
   restrict_public_buckets = true
 }
 
+moved {
+  from = aws_s3_bucket_public_access_block.tv_app
+  to   = aws_s3_bucket_public_access_block.tv_app[0]
+}
+
 resource "aws_s3_bucket_versioning" "tv_app" {
-  bucket = aws_s3_bucket.tv_app.id
+  count  = local.is_dev ? 0 : 1
+  bucket = aws_s3_bucket.tv_app[0].id
 
   versioning_configuration {
     status = "Enabled"
   }
 }
 
+moved {
+  from = aws_s3_bucket_versioning.tv_app
+  to   = aws_s3_bucket_versioning.tv_app[0]
+}
+
 resource "aws_s3_bucket_policy" "tv_app" {
-  bucket = aws_s3_bucket.tv_app.id
+  count  = local.is_dev ? 0 : 1
+  bucket = aws_s3_bucket.tv_app[0].id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -124,10 +165,10 @@ resource "aws_s3_bucket_policy" "tv_app" {
           Service = "cloudfront.amazonaws.com"
         }
         Action   = "s3:GetObject"
-        Resource = "${aws_s3_bucket.tv_app.arn}/*"
+        Resource = "${aws_s3_bucket.tv_app[0].arn}/*"
         Condition = {
           StringEquals = {
-            "AWS:SourceArn" = aws_cloudfront_distribution.tv_app.arn
+            "AWS:SourceArn" = aws_cloudfront_distribution.tv_app[0].arn
           }
         }
       }
@@ -137,21 +178,33 @@ resource "aws_s3_bucket_policy" "tv_app" {
   depends_on = [aws_s3_bucket_public_access_block.tv_app]
 }
 
+moved {
+  from = aws_s3_bucket_policy.tv_app
+  to   = aws_s3_bucket_policy.tv_app[0]
+}
+
 # =============================================================================
 # 4. Logos Bucket
 # =============================================================================
 resource "aws_s3_bucket" "logos" {
+  count  = local.is_dev ? 0 : 1
   bucket = "taptrivia-logos"
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Purpose     = "Bar logo images"
   }
 }
 
+moved {
+  from = aws_s3_bucket.logos
+  to   = aws_s3_bucket.logos[0]
+}
+
 resource "aws_s3_bucket_public_access_block" "logos" {
-  bucket = aws_s3_bucket.logos.id
+  count  = local.is_dev ? 0 : 1
+  bucket = aws_s3_bucket.logos[0].id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -159,8 +212,14 @@ resource "aws_s3_bucket_public_access_block" "logos" {
   restrict_public_buckets = true
 }
 
+moved {
+  from = aws_s3_bucket_public_access_block.logos
+  to   = aws_s3_bucket_public_access_block.logos[0]
+}
+
 resource "aws_s3_bucket_policy" "logos" {
-  bucket = aws_s3_bucket.logos.id
+  count  = local.is_dev ? 0 : 1
+  bucket = aws_s3_bucket.logos[0].id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -172,10 +231,10 @@ resource "aws_s3_bucket_policy" "logos" {
           Service = "cloudfront.amazonaws.com"
         }
         Action   = "s3:GetObject"
-        Resource = "${aws_s3_bucket.logos.arn}/*"
+        Resource = "${aws_s3_bucket.logos[0].arn}/*"
         Condition = {
           StringEquals = {
-            "AWS:SourceArn" = aws_cloudfront_distribution.tv_app.arn
+            "AWS:SourceArn" = aws_cloudfront_distribution.tv_app[0].arn
           }
         }
       }
@@ -185,21 +244,33 @@ resource "aws_s3_bucket_policy" "logos" {
   depends_on = [aws_s3_bucket_public_access_block.logos]
 }
 
+moved {
+  from = aws_s3_bucket_policy.logos
+  to   = aws_s3_bucket_policy.logos[0]
+}
+
 # =============================================================================
 # 5. Dashboard Web App Bucket
 # =============================================================================
 resource "aws_s3_bucket" "dashboard_app" {
+  count  = local.is_dev ? 0 : 1
   bucket = "taptrivia-dashboard"
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Purpose     = "Dashboard web app static files"
   }
 }
 
+moved {
+  from = aws_s3_bucket.dashboard_app
+  to   = aws_s3_bucket.dashboard_app[0]
+}
+
 resource "aws_s3_bucket_public_access_block" "dashboard_app" {
-  bucket = aws_s3_bucket.dashboard_app.id
+  count  = local.is_dev ? 0 : 1
+  bucket = aws_s3_bucket.dashboard_app[0].id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -207,16 +278,28 @@ resource "aws_s3_bucket_public_access_block" "dashboard_app" {
   restrict_public_buckets = true
 }
 
+moved {
+  from = aws_s3_bucket_public_access_block.dashboard_app
+  to   = aws_s3_bucket_public_access_block.dashboard_app[0]
+}
+
 resource "aws_s3_bucket_versioning" "dashboard_app" {
-  bucket = aws_s3_bucket.dashboard_app.id
+  count  = local.is_dev ? 0 : 1
+  bucket = aws_s3_bucket.dashboard_app[0].id
 
   versioning_configuration {
     status = "Enabled"
   }
 }
 
+moved {
+  from = aws_s3_bucket_versioning.dashboard_app
+  to   = aws_s3_bucket_versioning.dashboard_app[0]
+}
+
 resource "aws_s3_bucket_policy" "dashboard_app" {
-  bucket = aws_s3_bucket.dashboard_app.id
+  count  = local.is_dev ? 0 : 1
+  bucket = aws_s3_bucket.dashboard_app[0].id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -228,10 +311,10 @@ resource "aws_s3_bucket_policy" "dashboard_app" {
           Service = "cloudfront.amazonaws.com"
         }
         Action   = "s3:GetObject"
-        Resource = "${aws_s3_bucket.dashboard_app.arn}/*"
+        Resource = "${aws_s3_bucket.dashboard_app[0].arn}/*"
         Condition = {
           StringEquals = {
-            "AWS:SourceArn" = aws_cloudfront_distribution.dashboard_app.arn
+            "AWS:SourceArn" = aws_cloudfront_distribution.dashboard_app[0].arn
           }
         }
       }
@@ -239,4 +322,9 @@ resource "aws_s3_bucket_policy" "dashboard_app" {
   })
 
   depends_on = [aws_s3_bucket_public_access_block.dashboard_app]
+}
+
+moved {
+  from = aws_s3_bucket_policy.dashboard_app
+  to   = aws_s3_bucket_policy.dashboard_app[0]
 }

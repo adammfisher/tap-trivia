@@ -73,7 +73,7 @@ function DefaultBrandedSlide({ barName, logoUrl, secondsUntilNextGame }: {
         <Text style={[fs.label, { color: colors.blue }]}>EVERY 15 MINUTES</Text>
         <Text style={fs.headline}>Play TapTrivia!</Text>
         <Text style={fs.subtitle}>Free to play · Win prizes · Have fun</Text>
-        <Text style={fs.subtext}>Scan the QR code on screen or visit play.taptrivia.tv</Text>
+        <Text style={fs.subtext}>Scan the QR code on screen or visit app.taptrivia.tv</Text>
       </View>
       <PoweredBy />
     </LinearGradient>

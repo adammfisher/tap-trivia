@@ -37,6 +37,7 @@ export interface QuestionData {
   categoryEmoji: string;
   difficulty: 1 | 2 | 3;
   eliminatedIndices: number[];
+  funFact: string;
 }
 
 export interface AnswerResult {
@@ -71,7 +72,7 @@ export interface SavedBar {
   type?: 'bar' | 'group';
 }
 
-/** POST /bar/join response */
+/** POST /bar/join response (location join) */
 export interface BarJoinResponse {
   barCode: string;
   barName: string;
@@ -111,6 +112,7 @@ export interface QuestionResponse {
   difficulty: number;
   eliminateOrder: number[];
   correctIndex?: number;
+  funFact?: string;
 }
 
 /** POST /game/{gameId}/answer response */

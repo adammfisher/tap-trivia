@@ -82,7 +82,7 @@ function generateOrbs() {
 
 async function generateQRCodes() {
   console.log('Generating QR codes...');
-  const url = 'https://play.taptrivia.tv';
+  const url = 'https://app.taptrivia.tv';
   const opts = { color: { dark: '#1e0f4a', light: '#ffffff' }, type: 'png' };
 
   // 120px QR for badges

@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import type {
   BarJoinResponse,
   CreateGroupResponse,
@@ -7,7 +8,7 @@ import type {
   LeaderboardResponse,
 } from '../types/game';
 
-const API_BASE = 'https://api.taptrivia.tv';
+const API_BASE = Constants.expoConfig?.extra?.apiBaseUrl ?? 'https://api.taptrivia.tv';
 
 // Server time offset: serverTime - clientTime (positive = client behind server)
 let _serverTimeOffset = 0;
@@ -76,7 +77,7 @@ async function apiCall<T>(
 }
 
 /**
- * POST /bar/join — validates bar code AND joins the player.
+ * POST /bar/join — validates location code AND joins the player.
  * Requires X-Player-ID header.
  */
 export async function joinBar(

@@ -1,15 +1,12 @@
 # =============================================================================
-# CloudFront Distributions for Tap Trivia
-# =============================================================================
-# Two distributions serve the Player and TV single-page applications from S3.
-# Origin Access Control (OAC) restricts S3 access to CloudFront only.
-# Custom error responses redirect 403/404 to index.html for SPA client routing.
+# CloudFront Distributions for Tap Trivia (prod-only — skipped in dev workspace)
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# Origin Access Control (shared by both distributions)
+# Origin Access Control (shared by all distributions)
 # -----------------------------------------------------------------------------
 resource "aws_cloudfront_origin_access_control" "s3_oac" {
+  count                             = local.is_dev ? 0 : 1
   name                              = "TapTrivia-S3-OAC"
   description                       = "OAC for Tap Trivia S3 origins"
   origin_access_control_origin_type = "s3"
@@ -17,10 +14,16 @@ resource "aws_cloudfront_origin_access_control" "s3_oac" {
   signing_protocol                  = "sigv4"
 }
 
+moved {
+  from = aws_cloudfront_origin_access_control.s3_oac
+  to   = aws_cloudfront_origin_access_control.s3_oac[0]
+}
+
 # =============================================================================
 # 1. Player App Distribution
 # =============================================================================
 resource "aws_cloudfront_distribution" "player_app" {
+  count               = local.is_dev ? 0 : 1
   enabled             = true
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
@@ -28,9 +31,9 @@ resource "aws_cloudfront_distribution" "player_app" {
   aliases             = ["play.taptrivia.tv", "taptrivia.tv"]
 
   origin {
-    domain_name              = aws_s3_bucket.player_app.bucket_regional_domain_name
+    domain_name              = aws_s3_bucket.player_app[0].bucket_regional_domain_name
     origin_id                = "S3-player-app"
-    origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac.id
+    origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac[0].id
   }
 
   default_cache_behavior {
@@ -39,12 +42,9 @@ resource "aws_cloudfront_distribution" "player_app" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     compress               = true
-
-    # AWS Managed CachingOptimized policy
-    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
   }
 
-  # SPA routing: serve index.html for paths that don't match S3 objects
   custom_error_response {
     error_code            = 403
     response_code         = 200
@@ -66,22 +66,28 @@ resource "aws_cloudfront_distribution" "player_app" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate_validation.main.certificate_arn
+    acm_certificate_arn      = aws_acm_certificate_validation.main[0].certificate_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     App         = "PlayerApp"
   }
+}
+
+moved {
+  from = aws_cloudfront_distribution.player_app
+  to   = aws_cloudfront_distribution.player_app[0]
 }
 
 # =============================================================================
 # 2. TV App Distribution
 # =============================================================================
 resource "aws_cloudfront_distribution" "tv_app" {
+  count               = local.is_dev ? 0 : 1
   enabled             = true
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
@@ -89,15 +95,15 @@ resource "aws_cloudfront_distribution" "tv_app" {
   aliases             = ["tv.taptrivia.tv"]
 
   origin {
-    domain_name              = aws_s3_bucket.tv_app.bucket_regional_domain_name
+    domain_name              = aws_s3_bucket.tv_app[0].bucket_regional_domain_name
     origin_id                = "S3-tv-app"
-    origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac.id
+    origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac[0].id
   }
 
   origin {
-    domain_name              = aws_s3_bucket.logos.bucket_regional_domain_name
+    domain_name              = aws_s3_bucket.logos[0].bucket_regional_domain_name
     origin_id                = "S3-logos"
-    origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac.id
+    origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac[0].id
   }
 
   default_cache_behavior {
@@ -106,12 +112,9 @@ resource "aws_cloudfront_distribution" "tv_app" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     compress               = true
-
-    # AWS Managed CachingOptimized policy
-    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
   }
 
-  # Serve logos from the logos S3 bucket via /logos/* path
   ordered_cache_behavior {
     path_pattern           = "/logos/*"
     target_origin_id       = "S3-logos"
@@ -119,12 +122,9 @@ resource "aws_cloudfront_distribution" "tv_app" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     compress               = true
-
-    # AWS Managed CachingOptimized policy
-    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
   }
 
-  # SPA routing: serve index.html for paths that don't match S3 objects
   custom_error_response {
     error_code            = 403
     response_code         = 200
@@ -146,22 +146,28 @@ resource "aws_cloudfront_distribution" "tv_app" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate_validation.main.certificate_arn
+    acm_certificate_arn      = aws_acm_certificate_validation.main[0].certificate_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     App         = "TVApp"
   }
+}
+
+moved {
+  from = aws_cloudfront_distribution.tv_app
+  to   = aws_cloudfront_distribution.tv_app[0]
 }
 
 # =============================================================================
 # 3. Dashboard App Distribution
 # =============================================================================
 resource "aws_cloudfront_distribution" "dashboard_app" {
+  count               = local.is_dev ? 0 : 1
   enabled             = true
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
@@ -169,9 +175,9 @@ resource "aws_cloudfront_distribution" "dashboard_app" {
   aliases             = ["admin.taptrivia.tv"]
 
   origin {
-    domain_name              = aws_s3_bucket.dashboard_app.bucket_regional_domain_name
+    domain_name              = aws_s3_bucket.dashboard_app[0].bucket_regional_domain_name
     origin_id                = "S3-dashboard-app"
-    origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac.id
+    origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac[0].id
   }
 
   default_cache_behavior {
@@ -180,12 +186,9 @@ resource "aws_cloudfront_distribution" "dashboard_app" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     compress               = true
-
-    # AWS Managed CachingOptimized policy
-    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
   }
 
-  # SPA routing: serve index.html for paths that don't match S3 objects
   custom_error_response {
     error_code            = 403
     response_code         = 200
@@ -207,14 +210,19 @@ resource "aws_cloudfront_distribution" "dashboard_app" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate_validation.main.certificate_arn
+    acm_certificate_arn      = aws_acm_certificate_validation.main[0].certificate_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     App         = "DashboardApp"
   }
+}
+
+moved {
+  from = aws_cloudfront_distribution.dashboard_app
+  to   = aws_cloudfront_distribution.dashboard_app[0]
 }

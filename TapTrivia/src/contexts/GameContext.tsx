@@ -176,6 +176,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
             categoryEmoji: getCategoryEmoji(result.category),
             difficulty: (result.difficulty as 1 | 2 | 3) || 1,
             eliminatedIndices: [],
+            funFact: result.funFact || '',
           };
           g.questionData = qd;
           g.rawQuestionData = {
@@ -294,7 +295,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
     // Functional update: skip re-render if nothing meaningful changed
     setGameState(prev => {
       const qNum = clockState.questionNumber || 0;
-      const timeRem = clockState.questionSecondsRemaining || 0;
+      // During reveal/scores phases, count down until next question (52s - elapsed)
+      const elapsed = clockState.elapsedInQuestion || 0;
+      const phase = clockState.questionPhase;
+      const timeRem = (phase === 'scores' || phase === 'reveal')
+        ? Math.max(0, Math.ceil((52000 - elapsed) / 1000))
+        : (clockState.questionSecondsRemaining || 0);
       if (
         prev.gamePhase === mobilePhase &&
         prev.questionNumber === qNum &&

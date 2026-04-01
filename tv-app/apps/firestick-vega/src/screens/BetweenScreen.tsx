@@ -28,7 +28,7 @@ export function BetweenScreen() {
 
   const isLastQuestion = (questionNumber || 1) >= totalQuestions;
   const hasSignage = signageSlides.length > 0;
-  const hasFunFact = !!funFact;
+  const hasFunFact = !!funFact && !funFact.startsWith('This is a fun fact placeholder');
 
   // Local countdown from gameStartEpoch — avoids depending on elapsedSeconds from state
   const [nextQuestionIn, setNextQuestionIn] = useState(5);

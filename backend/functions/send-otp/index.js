@@ -45,6 +45,10 @@ async function sendOtpEmail(email, barName, otp) {
     }
   };
 
+  if (process.env.SKIP_SES === 'true') {
+    console.log(`[DEV] OTP for ${barName}: ${otp} (SES skipped)`);
+    return;
+  }
   await ses.send(new SendEmailCommand(params));
 }
 
@@ -66,7 +70,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_BAR_CODE', message: 'A valid bar code is required' })
+        body: JSON.stringify({ error: 'INVALID_BAR_CODE', message: 'A valid location code is required' })
       };
     }
 

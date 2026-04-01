@@ -305,7 +305,7 @@
                 <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="48" />
               </Label>
             </Group>
-            <Label text="play.taptrivia.tv" color="#ffd200"
+            <Label text="app.taptrivia.tv" color="#ffd200"
                    horizAlign="center" width="600" translation="[-300, 110]">
               <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="30" />
             </Label>
@@ -350,7 +350,7 @@
                   uri="pkg:/images/qr-play-360.png" />
         </Group>
 
-        <Label text="play.taptrivia.tv" color="#ffd200"
+        <Label text="app.taptrivia.tv" color="#ffd200"
                horizAlign="center" width="500" translation="[-250, 640]">
           <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="30" />
         </Label>

@@ -56,7 +56,7 @@ export function WelcomeScreen({ navigation }: Props) {
     if (!deviceId) return;
     const result = await joinBar(code, deviceId);
     if (isApiError(result)) {
-      // Bar may no longer be active — just go to Join screen
+      // Location may no longer be active — just go to Join screen
       navigation.navigate('Join');
       return;
     }
@@ -111,12 +111,12 @@ export function WelcomeScreen({ navigation }: Props) {
               <FadeInView duration={500} delay={200} direction="none" style={styles.didYouKnowBanner}>
                 <Text style={styles.didYouKnowTitle}>Did you know?</Text>
                 <Text style={styles.didYouKnowMessage}>
-                  The TapTrivia TV app is available on most platforms like Fire TV, Samsung, and Roku. Ask your favorite bar to turn it on — it's free! Or download it and host your own trivia night!
+                  The TapTrivia TV app is available on most platforms like Fire TV, Samsung, and Roku. Ask your favorite location to turn it on — it's free! Or download it and host your own trivia night!
                 </Text>
               </FadeInView>
             </>
           ) : (
-            /* Live — show join/play buttons + saved bars */
+            /* Live — show join/play buttons + saved locations */
             <>
               {/* Join a Game */}
               <Pressable
@@ -158,7 +158,7 @@ export function WelcomeScreen({ navigation }: Props) {
                 <Text style={styles.soloButtonText}>Play Solo</Text>
               </Pressable>
 
-              {/* Saved bars */}
+              {/* Saved locations */}
               {bars.length > 0 && (
                 <>
                   <View style={styles.divider}>

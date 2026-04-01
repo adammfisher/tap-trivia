@@ -10,7 +10,7 @@
 # Shared Lambda Execution Role
 # -----------------------------------------------------------------------------
 resource "aws_iam_role" "lambda_execution" {
-  name = "TapTrivia-LambdaExecutionRole"
+  name = "${local.name_prefix}-LambdaExecutionRole"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -26,7 +26,7 @@ resource "aws_iam_role" "lambda_execution" {
   })
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
   }
 }
@@ -36,7 +36,7 @@ resource "aws_iam_role" "lambda_execution" {
 # Allows all Lambda functions to create and write to log groups/streams.
 # -----------------------------------------------------------------------------
 resource "aws_iam_role_policy" "lambda_cloudwatch" {
-  name = "TapTrivia-CloudWatchLogs"
+  name = "${local.name_prefix}-CloudWatchLogs"
   role = aws_iam_role.lambda_execution.id
 
   policy = jsonencode({
@@ -62,7 +62,7 @@ resource "aws_iam_role_policy" "lambda_cloudwatch" {
 # permissions to only TapTrivia resources.
 # -----------------------------------------------------------------------------
 resource "aws_iam_role_policy" "lambda_dynamodb" {
-  name = "TapTrivia-DynamoDB"
+  name = "${local.name_prefix}-DynamoDB"
   role = aws_iam_role.lambda_execution.id
 
   policy = jsonencode({
@@ -72,8 +72,8 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
         Effect = "Allow"
         Action = "dynamodb:*"
         Resource = [
-          "arn:aws:dynamodb:*:*:table/TapTrivia-*",
-          "arn:aws:dynamodb:*:*:table/TapTrivia-*/index/*"
+          "arn:aws:dynamodb:*:*:table/${local.name_prefix}-*",
+          "arn:aws:dynamodb:*:*:table/${local.name_prefix}-*/index/*"
         ]
       }
     ]
@@ -85,7 +85,7 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
 # Allows Lambda functions to send emails via SES for OTP and welcome emails.
 # -----------------------------------------------------------------------------
 resource "aws_iam_role_policy" "lambda_ses" {
-  name = "TapTrivia-SES"
+  name = "${local.name_prefix}-SES"
   role = aws_iam_role.lambda_execution.id
 
   policy = jsonencode({
@@ -108,7 +108,7 @@ resource "aws_iam_role_policy" "lambda_ses" {
 # Allows Lambda functions to read/write bar logos in the logos bucket.
 # -----------------------------------------------------------------------------
 resource "aws_iam_role_policy" "lambda_s3_logos" {
-  name = "TapTrivia-S3-Logos"
+  name = "${local.name_prefix}-S3-Logos"
   role = aws_iam_role.lambda_execution.id
 
   policy = jsonencode({
@@ -132,7 +132,7 @@ resource "aws_iam_role_policy" "lambda_s3_logos" {
 # Allows Lambda functions to invoke Titan Image Generator for logo processing.
 # -----------------------------------------------------------------------------
 resource "aws_iam_role_policy" "lambda_bedrock" {
-  name = "TapTrivia-Bedrock"
+  name = "${local.name_prefix}-Bedrock"
   role = aws_iam_role.lambda_execution.id
 
   policy = jsonencode({
@@ -154,7 +154,7 @@ resource "aws_iam_role_policy" "lambda_bedrock" {
 # Allows upload-logo Lambda to invalidate cached logos after replacement.
 # -----------------------------------------------------------------------------
 resource "aws_iam_role_policy" "lambda_cloudfront" {
-  name = "TapTrivia-CloudFront"
+  name = "${local.name_prefix}-CloudFront"
   role = aws_iam_role.lambda_execution.id
 
   policy = jsonencode({

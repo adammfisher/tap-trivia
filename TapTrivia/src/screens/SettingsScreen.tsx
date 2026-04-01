@@ -76,12 +76,12 @@ export function SettingsScreen({ navigation }: Props) {
             </View>
           </View>
 
-          {/* Saved Bars */}
+          {/* Saved Locations */}
           <View style={styles.card}>
             <Text style={styles.cardLabel}>Saved Games</Text>
             <View style={styles.barsList}>
               {bars.length === 0 ? (
-                <Text style={styles.emptyText}>No saved bars yet</Text>
+                <Text style={styles.emptyText}>No saved locations yet</Text>
               ) : (
                 bars.map((bar, i) => (
                   <View
@@ -107,7 +107,7 @@ export function SettingsScreen({ navigation }: Props) {
             <View style={styles.card}>
               <Text style={styles.cardLabel}>Current Game</Text>
               <Text style={styles.leaveDescription}>
-                Leave the current game and go back to the home screen. You can join a different bar or play solo.
+                Leave the current game and go back to the home screen. You can join a different location or play solo.
               </Text>
               <Pressable
                 onPress={handleLeaveGame}

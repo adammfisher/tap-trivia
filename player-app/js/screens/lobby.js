@@ -1,6 +1,6 @@
 /**
  * Tap Trivia Player App — Lobby Screen
- * "You're In!" celebration after joining a bar.
+ * "You're In!" celebration after joining a location.
  * Polls for game start, then transitions to game screen.
  */
 
@@ -13,7 +13,7 @@ const LobbyScreen = {
     const barCode = Player.getBarCode();
     const playerName = Player.getName();
 
-    // Display bar code and name
+    // Display location code and name
     document.getElementById('lobby-bar-code').textContent = barCode;
     const barNameEl = document.getElementById('lobby-bar-name');
     if (barNameEl) barNameEl.textContent = Player.getBarName();
@@ -88,7 +88,7 @@ const LobbyScreen = {
       this._nextGameEpoch = game.startTimeEpoch;
     }
 
-    // Update player count if bar info is available
+    // Update player count if location info is available
     if (game && game.activePlayers !== undefined) {
       document.getElementById('lobby-player-count').innerHTML =
         `👥 ${game.activePlayers} player${game.activePlayers !== 1 ? 's' : ''}`;

@@ -176,4 +176,5 @@ export interface TvStateResponse {
   signage?: { slides: SignageSlide[]; rotationSpeed?: number } | null;
   logoUrl?: string | null;
   logoHash?: string | null;
+  funFact?: string;
 }

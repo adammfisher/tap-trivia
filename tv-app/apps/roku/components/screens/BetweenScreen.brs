@@ -68,6 +68,7 @@ sub onGameStateChanged(event as Object)
   ' ── Fun fact ──
   funFact = ""
   if gs.funFact <> invalid then funFact = gs.funFact
+  if Left(funFact, 30) = "This is a fun fact placeholder" then funFact = ""
   hasFunFact = (Len(funFact) > 0)
 
   m.funFactBg.visible = hasFunFact

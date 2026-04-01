@@ -10,8 +10,8 @@ const TEMPLATES = [
   {id:'happyhour',name:'Happy Hour',icon:'\u{1F379}',desc:'Time-based drink & food deals',color:'#e879f9',
     defaults:{emoji:'\u{1F379}',timeRange:'4 PM \u2013 7 PM',frequency:'Every weekday',deals:[{deal:'50% OFF',item:'All Drafts',color:'#f59e0b'},{deal:'$5',item:'House Wine',color:'#e879f9'},{deal:'$6',item:'Appetizers',color:'#00d4aa'}]}},
   {id:'event',name:'Event Promo',icon:'\u{1F3A7}',desc:'Promote upcoming events',color:'#667eea',
-    defaults:{emoji:'\u{1F3A7}',eventName:'Trivia Night',when:'This Thursday',details:'8 PM \u2022 Free to play \u2022 Prizes for top 3',prizes:[{place:'1st',prize:'$50 Bar Tab',emoji:'\u{1F947}'},{place:'2nd',prize:'$25 Bar Tab',emoji:'\u{1F948}'},{place:'3rd',prize:'Free Appetizer',emoji:'\u{1F949}'}]}},
-  {id:'brand',name:'Bar Branding',icon:'\u{1F3DB}',desc:'Logo, tagline & hours',color:'#764ba2',
+    defaults:{emoji:'\u{1F3A7}',eventName:'Trivia Night',when:'This Thursday',details:'8 PM \u2022 Free to play \u2022 Prizes for top 3',prizes:[{place:'1st',prize:'$50 Tab',emoji:'\u{1F947}'},{place:'2nd',prize:'$25 Tab',emoji:'\u{1F948}'},{place:'3rd',prize:'Free Appetizer',emoji:'\u{1F949}'}]}},
+  {id:'brand',name:'Location Branding',icon:'\u{1F3DB}',desc:'Logo, tagline & hours',color:'#764ba2',
     defaults:{tagline:'Cold Drinks \u2022 Good Times \u2022 Live Trivia',hours:[{label:'Mon\u2013Thu',hours:'4 PM \u2013 12 AM'},{label:'Fri\u2013Sat',hours:'4 PM \u2013 2 AM'},{label:'Sunday',hours:'12 PM \u2013 10 PM'}]}},
   {id:'announcement',name:'Announcement',icon:'\u{1F4E2}',desc:'Custom message or alert',color:'#00d4aa',
     defaults:{emoji:'\u{1F4E2}',headline:'Big News!',message:"We're expanding our patio \u2014 more seating, more fun starting next month!",subtext:'Stay tuned for the grand reveal'}},
@@ -57,10 +57,10 @@ let signageState = {
 function getBarInfo() {
   const { bar } = getAuthState();
   return {
-    name: bar ? bar.barName : 'Your Bar',
+    name: bar ? bar.barName : 'Your Location',
     logoUrl: bar ? bar.logoUrl : null,
     barCode: bar ? bar.barCode : 'XXXXX',
-    initial: (bar ? bar.barName : 'Y').charAt(0)
+    initial: (bar ? bar.barName : 'L').charAt(0)
   };
 }
 
@@ -94,7 +94,7 @@ function tvQrBadgeHTML(pos) {
       <div class="tvp-qr__code-box"></div>
       <div class="tvp-qr__info">
         <div class="tvp-qr__title">Join Trivia!</div>
-        <div class="tvp-qr__url">play.taptrivia.tv</div>
+        <div class="tvp-qr__url">app.taptrivia.tv</div>
         <div class="tvp-qr__code-row"><span class="tvp-qr__label">CODE</span> <span class="tvp-qr__code">${b.barCode}</span></div>
       </div>
     </div>
@@ -118,7 +118,7 @@ function tvPanelQrHTML() {
       <div class="tvp-qr__code-box tvp-qr__code-box--sm"></div>
       <div>
         <div class="tvp-panel__qr-title">Join Trivia!</div>
-        <div class="tvp-panel__qr-url">play.taptrivia.tv</div>
+        <div class="tvp-panel__qr-url">app.taptrivia.tv</div>
         <div class="tvp-panel__qr-code-row"><span class="tvp-panel__qr-label">CODE</span> <span class="tvp-panel__qr-code">${b.barCode}</span></div>
       </div>
     </div>
@@ -853,7 +853,7 @@ function buildEventForm(el, d) {
         <div class="menu-row" data-idx="${i}">
           ${inlineEmojiPickerHTML('prizeEmoji-' + i, p.emoji || '\u{1F3C6}')}
           <input class="field-input field-sm field-price" value="${esc(p.place)}" placeholder="1st" data-field="place" data-idx="${i}">
-          <input class="field-input field-sm" value="${esc(p.prize)}" placeholder="$50 Bar Tab" data-field="prize" data-idx="${i}" style="flex:2">
+          <input class="field-input field-sm" value="${esc(p.prize)}" placeholder="$50 Tab" data-field="prize" data-idx="${i}" style="flex:2">
         </div>
       `).join('')}
     </div>
@@ -865,7 +865,7 @@ function buildEventForm(el, d) {
 function buildBrandForm(el, d) {
   const { bar } = getAuthState();
   const logoUrl = bar ? bar.logoUrl : null;
-  const barName = bar ? bar.barName : 'Your Bar';
+  const barName = bar ? bar.barName : 'Your Location';
 
   el.innerHTML = `
     <div class="brand-logo-row">

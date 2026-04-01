@@ -70,7 +70,7 @@ export function BetweenHypeScreen() {
               <View style={s.qrInfo}>
                 <Text style={s.scanLabel}>SCAN TO JOIN</Text>
                 <Text style={s.codeValue}>{barCode}</Text>
-                <Text style={s.url}>play.taptrivia.tv</Text>
+                <Text style={s.url}>app.taptrivia.tv</Text>
               </View>
             </View>
           </FadeInView>

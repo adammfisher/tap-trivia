@@ -36,10 +36,13 @@ export function JoinScreen({ navigation }: Props) {
     const cleaned = text.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
     setCode(cleaned);
     setError('');
+  };
 
-    if (cleaned.length === 5) {
-      handleSubmit(cleaned);
-    }
+  const handleBoxTap = (index: number) => {
+    // Tap a box to clear from that position onward and refocus input
+    setCode(code.slice(0, index));
+    setError('');
+    inputRef.current?.focus();
   };
 
   const handleSubmit = async (submittedCode?: string) => {
@@ -55,14 +58,14 @@ export function JoinScreen({ navigation }: Props) {
     setLoading(false);
 
     if (isApiError(result)) {
-      setError(result.message || "That code doesn't match any active bar.");
+      setError(result.message || "That code doesn't match any active location.");
       triggerShake(shakeX);
       return;
     }
 
     await setBarCode(codeToSubmit);
 
-    // If name collision at this bar, send to Nickname screen to change it
+    // If name collision at this location, send to Nickname screen to change it
     // If no nickname yet, also send to Nickname screen
     if (result.nameCollision || !nickname) {
       navigation.navigate('Nickname', {
@@ -106,15 +109,17 @@ export function JoinScreen({ navigation }: Props) {
                 delay={i * 60}
                 duration={300}
               >
-                <View
-                  style={[
-                    styles.codeBox,
-                    i < code.length && styles.codeBoxFilled,
-                    i === code.length && styles.codeBoxActive,
-                  ]}
-                >
-                  <Text style={styles.codeChar}>{ch === ' ' ? '' : ch}</Text>
-                </View>
+                <Pressable onPress={() => handleBoxTap(i)}>
+                  <View
+                    style={[
+                      styles.codeBox,
+                      i < code.length && styles.codeBoxFilled,
+                      i === code.length && styles.codeBoxActive,
+                    ]}
+                  >
+                    <Text style={styles.codeChar}>{ch === ' ' ? '' : ch}</Text>
+                  </View>
+                </Pressable>
               </FadeInView>
             ))}
           </Animated.View>

@@ -10,6 +10,9 @@ import {
 import { checkTrial, startTrial } from '../services/trial';
 import type { TrialStatus } from '../services/trial';
 
+// Module-level dev bypass flag — shared across all hook instances
+let _devBypassed = false;
+
 interface UseSubscription {
   /** True if user can play (active trial OR active subscription) */
   isPro: boolean;
@@ -32,7 +35,7 @@ interface UseSubscription {
 }
 
 export function useSubscription(): UseSubscription {
-  const [isPro, setIsPro] = useState(false);
+  const [isPro, setIsPro] = useState(_devBypassed);
   const [isLoading, setIsLoading] = useState(true);
   const [trialStatus, setTrialStatus] = useState<TrialStatus>('never_started');
   const [trialDaysRemaining, setTrialDaysRemaining] = useState(0);
@@ -110,9 +113,13 @@ export function useSubscription(): UseSubscription {
   }, []);
 
   const devBypass = useCallback(() => {
+    _devBypassed = true;
     setIsPro(true);
     setIsLoading(false);
   }, []);
 
-  return { isPro, isLoading, trialStatus, trialDaysRemaining, offering, purchase, restore, activateTrial, devBypass };
+  // _devBypassed ensures all hook instances see isPro=true after dev bypass,
+  // even if this instance's async check already set isPro=false
+  const effectiveIsPro = isPro || _devBypassed;
+  return { isPro: effectiveIsPro, isLoading: effectiveIsPro ? false : isLoading, trialStatus, trialDaysRemaining, offering, purchase, restore, activateTrial, devBypass };
 }

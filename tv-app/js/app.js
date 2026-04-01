@@ -233,9 +233,9 @@
     return `<div class="${cls}" style="background:linear-gradient(135deg,hsl(${h},65%,52%),hsl(${h2},65%,42%))" aria-label="${name}">${initial}${medal}</div>`;
   }
 
-  /** Build real QR code SVG pointing to play.taptrivia.tv */
+  /** Build real QR code SVG pointing to app.taptrivia.tv */
   function qrCodeHTML(size, cssClass = '') {
-    const url = 'https://play.taptrivia.tv';
+    const url = 'https://app.taptrivia.tv';
     const qr = qrcode(0, 'M');
     qr.addData(url);
     qr.make();
@@ -260,7 +260,7 @@
         ${qrCodeHTML(120)}
         <div class="tt-qr-badge__info">
           <div class="tt-qr-badge__title">Join Trivia!</div>
-          <div class="tt-qr-badge__url">play.taptrivia.tv</div>
+          <div class="tt-qr-badge__url">app.taptrivia.tv</div>
           <div class="tt-qr-badge__code-row">
             <span class="tt-qr-badge__code-label">JOIN</span>
             <span class="tt-qr-badge__code">${barCode}</span>
@@ -276,7 +276,7 @@
         ${qrCodeHTML(120)}
         <div class="tt-qr-badge__info">
           <div class="tt-qr-badge__title">${title}</div>
-          <div class="tt-qr-badge__url">play.taptrivia.tv</div>
+          <div class="tt-qr-badge__url">app.taptrivia.tv</div>
           <div class="tt-qr-badge__code-row">
             <span class="tt-qr-badge__code-label">CODE</span>
             <span class="tt-qr-badge__code">${barCode}</span>
@@ -292,7 +292,7 @@
         ${qrCodeHTML(120)}
         <div>
           <div style="font-family:'Fredoka',sans-serif;font-size:36px;font-weight:700;color:#f0f0f0;line-height:1.2">Join Trivia!</div>
-          <div style="font-size:26px;font-weight:600;color:#ffd200;margin-top:6px">play.taptrivia.tv</div>
+          <div style="font-size:26px;font-weight:600;color:#ffd200;margin-top:6px">app.taptrivia.tv</div>
           <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
             <span style="font-size:20px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:2px">JOIN</span>
             <span style="font-family:'Fredoka',sans-serif;font-size:30px;font-weight:700;color:#ffd200;letter-spacing:4px">${barCode}</span>
@@ -475,7 +475,7 @@
   // SIGNAGE — Full-Screen & In-Game Panel Renderers
   // ═══════════════════════════════════════════════════════════════
 
-  /** Bar logo HTML for signage contexts */
+  /** Location logo HTML for signage contexts */
   function signageBarLogoHTML(context) {
     if (barLogoUrl) {
       return `<img src="${barLogoUrl}" alt="${barName}">`;
@@ -505,7 +505,7 @@
     return 15 - (nowMin - WINDOW_START) % 15;
   }
 
-  /** Full-screen signage header (bar logo + name + countdown + TapTrivia logo) */
+  /** Full-screen signage header (location logo + name + countdown + TapTrivia logo) */
   function signageHeaderHTML() {
     var totalMins = minutesUntilNextGame();
     var hours = Math.floor(totalMins / 60);
@@ -554,7 +554,7 @@
         ${qrCodeHTML(88)}
         <div>
           <div class="tt-signage-panel__qr-text">Join Trivia!</div>
-          <div class="tt-signage-panel__qr-url">play.taptrivia.tv</div>
+          <div class="tt-signage-panel__qr-url">app.taptrivia.tv</div>
           <div class="tt-signage-panel__qr-code-row">
             <span class="tt-signage-panel__qr-code-label">CODE</span>
             <span class="tt-signage-panel__qr-code">${barCode}</span>
@@ -792,13 +792,13 @@
             <div class="tt-signage-big-emoji">🧠</div>
             <div class="tt-signage-headline">Play TapTrivia!</div>
             <div class="tt-signage-body">Live trivia every 15 minutes — grab your phone and join the game!</div>
-            <div class="tt-signage-subtext">Scan the QR code or visit play.taptrivia.tv</div>
+            <div class="tt-signage-subtext">Scan the QR code or visit app.taptrivia.tv</div>
             <div style="display:flex;align-items:center;gap:24px;margin-top:24px">
               ${qrCodeHTML(140)}
               <div>
                 <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:2px">SCAN TO JOIN</div>
                 <div style="font-family:'Fredoka',sans-serif;font-size:36px;font-weight:700;color:#ffd200;letter-spacing:3px">${barCode}</div>
-                <div style="font-family:'Outfit',sans-serif;font-size:20px;color:rgba(255,255,255,0.45)">play.taptrivia.tv</div>
+                <div style="font-family:'Outfit',sans-serif;font-size:20px;color:rgba(255,255,255,0.45)">app.taptrivia.tv</div>
               </div>
             </div>
           </div>
@@ -960,7 +960,7 @@
               <span style="font-size:28px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:3px">BAR CODE</span>
               <span style="font-family:'Fredoka',sans-serif;font-size:48px;font-weight:700;color:#ffd200;letter-spacing:6px">${barCode}</span>
             </div>
-            <div style="font-size:30px;color:#ffd200;margin-top:16px;font-weight:600">play.taptrivia.tv</div>
+            <div style="font-size:30px;color:#ffd200;margin-top:16px;font-weight:600">app.taptrivia.tv</div>
           </div>
           <div class="tt-signage-powered">
             <div class="tt-signage-powered__inner">
@@ -990,7 +990,7 @@
             ${qrCodeHTML(140)}
             <div>
               <div class="tt-signage-panel__qr-text">Join Trivia!</div>
-              <div class="tt-signage-panel__qr-url">play.taptrivia.tv</div>
+              <div class="tt-signage-panel__qr-url">app.taptrivia.tv</div>
               <div class="tt-signage-panel__qr-code-row">
                 <span class="tt-signage-panel__qr-code-label">CODE</span>
                 <span class="tt-signage-panel__qr-code">${barCode}</span>
@@ -1143,7 +1143,7 @@
     return renderer(slide.data || {});
   }
 
-  /** Built-in default signage slides shown when bar has no custom signage */
+  /** Built-in default signage slides shown when location has no custom signage */
   function getDefaultSignageSlides() {
     return [
       {
@@ -1623,7 +1623,7 @@
           <div class="tt-lobby__code-section">
             <div class="tt-lobby__code-label">Or Enter Code</div>
             <div class="tt-lobby__code">${barCode}</div>
-            <div class="tt-lobby__url">play.taptrivia.tv</div>
+            <div class="tt-lobby__url">app.taptrivia.tv</div>
           </div>
         </div>
         <div class="tt-lobby__right">
@@ -1831,7 +1831,8 @@
     const totalQ = state.totalQuestions || 15;
     const nextIn = state.nextQuestionIn || 5;
     const isLastQuestion = num >= totalQ;
-    const funFact = state.funFact || '';
+    const funFactRaw = state.funFact || '';
+    const funFact = funFactRaw && !funFactRaw.startsWith('This is a fun fact placeholder') ? funFactRaw : '';
     const panel = signagePanelWrapHTML();
 
     let countdownLine = '';
@@ -1852,7 +1853,7 @@
       countdownLine = `<div id="tv-between-countdown" class="tt-between__next">${countdownText}</div>`;
     }
 
-    // Fun fact card (only if non-empty)
+    // Fun fact card (only if non-empty and not placeholder)
     let funFactHTML = '';
     if (funFact) {
       funFactHTML = `
@@ -2132,7 +2133,7 @@
             <div>
               <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:2px">SCAN TO JOIN</div>
               <div style="font-family:'Fredoka',sans-serif;font-size:40px;font-weight:700;color:#ffd200;letter-spacing:4px">${barCode}</div>
-              <div style="font-family:'Outfit',sans-serif;font-size:22px;color:rgba(255,255,255,0.5)">play.taptrivia.tv</div>
+              <div style="font-family:'Outfit',sans-serif;font-size:22px;color:rgba(255,255,255,0.5)">app.taptrivia.tv</div>
             </div>
           </div>
         </div>
@@ -2140,7 +2141,7 @@
     bindResetArrow();
   }
 
-  /** BETWEEN-GAME STANDINGS — Bar's weekly Score Index, state rankings */
+  /** BETWEEN-GAME STANDINGS — Location's weekly Score Index, state rankings */
   function renderBetweenStandings(data) {
     const { yourBar = {}, stateRanking = [], stateName = '' } = data;
 
@@ -2184,7 +2185,7 @@
           <div class="tt-bg-standings__your-bar tt-glass" style="animation:slideUp .5s ease-out .1s both">
             <div class="tt-bg-standings__your-bar-header">
               <div>
-                <div class="tt-bg-standings__your-label">YOUR BAR</div>
+                <div class="tt-bg-standings__your-label">YOUR LOCATION</div>
                 <div class="tt-bg-standings__bar-name">${yourBar.name || barName}</div>
                 <div class="tt-bg-standings__bar-city">${yourBar.city || ''}, ${yourBar.state || ''}</div>
                 ${yourDeltaHTML}
@@ -2200,16 +2201,16 @@
         <div class="tt-bg-standings__right">
           <div class="tt-glass tt-bg-standings__explainer" style="animation:slideUp .5s ease-out .3s both">
             <div class="tt-bg-standings__explainer-title">📊 SCORE INDEX</div>
-            <div class="tt-bg-standings__explainer-desc">Average points per player, per question. The higher your bar's index, the sharper your regulars.</div>
+            <div class="tt-bg-standings__explainer-desc">Average points per player, per question. The higher your location's index, the sharper your regulars.</div>
             <div class="tt-bg-standings__explainer-note">Resets every <strong>Monday</strong></div>
           </div>
           <div class="tt-glass tt-bg-standings__national" style="animation:slideUp .5s ease-out .4s both">
             <div class="tt-bg-standings__national-flag">🇺🇸</div>
             <div class="tt-bg-standings__national-label">NATIONALLY</div>
             <div class="tt-bg-standings__national-rank">#${yourBar.nationalRank || '—'}</div>
-            <div class="tt-bg-standings__national-total">of ${yourBar.totalBars || 0} bars</div>
+            <div class="tt-bg-standings__national-total">of ${yourBar.totalBars || 0} locations</div>
           </div>
-          ${betweenQRBadgeHTML('Boost your bar\'s rank!')}
+          ${betweenQRBadgeHTML('Boost your location\'s rank!')}
         </div>
       </div>`;
     bindResetArrow();
@@ -2246,7 +2247,7 @@
       { icon: '👥', label: 'Players', value: (stats.players || 0).toLocaleString() },
       { icon: '🎮', label: 'Games Played', value: (stats.games || 0).toLocaleString() },
       { icon: '❓', label: 'Questions Answered', value: stats.questions >= 1000000 ? `${(stats.questions / 1000000).toFixed(1)}M` : (stats.questions || 0).toLocaleString() },
-      { icon: '🍺', label: 'Bars Active', value: (stats.bars || 0).toLocaleString() },
+      { icon: '🍺', label: 'Locations Active', value: (stats.bars || 0).toLocaleString() },
     ];
     const statsHTML = statItems.map(s =>
       `<div class="tt-bg-stat"><span class="tt-bg-stat__icon">${s.icon}</span><span class="tt-bg-stat__label">${s.label}</span><span class="tt-bg-stat__value">${s.value}</span></div>`
@@ -2258,7 +2259,7 @@
       ? `<div class="tt-bg-cutoff__your-bar">
           ${avatarHTML(yourBarBest.name, { size: 'xs' })}
           <div>
-            <div class="tt-bg-cutoff__your-name">Your bar's best: ${yourBarBest.name}</div>
+            <div class="tt-bg-cutoff__your-name">Your location's best: ${yourBarBest.name}</div>
             <div class="tt-bg-cutoff__your-score">${yourBarBest.score >= 1000 ? `${(yourBarBest.score / 1000).toFixed(1)}k` : yourBarBest.score} pts${cutoffScore > yourBarBest.score ? ` — ${((cutoffScore - yourBarBest.score) / 1000).toFixed(1)}k to go` : ''}</div>
           </div>
         </div>` : '';
@@ -2279,7 +2280,7 @@
             <span class="tt-bg-national__header-icon">🌎</span>
             <div>
               <div class="tt-bg-national__header-title">National Top 25</div>
-              <div class="tt-bg-national__header-sub">This week's top players across all bars</div>
+              <div class="tt-bg-national__header-sub">This week's top players across all locations</div>
             </div>
           </div>
           <div class="tt-bg-national__columns">
@@ -2299,7 +2300,7 @@
     bindResetArrow();
   }
 
-  /** BETWEEN-GAME HYPE — Logo, next game categories, big QR + bar code */
+  /** BETWEEN-GAME HYPE — Logo, next game categories, big QR + location code */
   function renderBetweenHype(data) {
     const { categories: allCats = [] } = data;
     const categories = allCats.slice(0, 5);
@@ -2324,7 +2325,7 @@
             <div class="tt-bg-hype__code-display">
               <div class="tt-bg-hype__code-label">SCAN TO JOIN</div>
               <div class="tt-bg-hype__code-value">${barCode}</div>
-              <div class="tt-bg-hype__url">play.taptrivia.tv</div>
+              <div class="tt-bg-hype__url">app.taptrivia.tv</div>
             </div>
           </div>
         </div>
@@ -2744,14 +2745,14 @@
     consecutiveErrors = 0;
     hideError();
 
-    // Capture signage configuration — clear when bar has none (prevents cross-bar bleed)
+    // Capture signage configuration — clear when location has none (prevents cross-location bleed)
     if (state.signage && state.signage.slides && state.signage.slides.length > 0) {
       signageSlides = state.signage.slides;
       signageRotationSpeed = state.signage.rotationSpeed || 60;
       console.log('[Signage] Loaded', signageSlides.length, 'slides from API, speed:', signageRotationSpeed);
     } else {
       signageSlides = [];
-      console.log('[Signage] No custom signage for this bar, using defaults');
+      console.log('[Signage] No custom signage for this location, using defaults');
     }
 
     // Update logo if hash changed (avoids redundant downloads)
@@ -3034,8 +3035,8 @@
         when: 'Every Thursday · 8 PM',
         details: 'Free to play · Win prizes · Teams welcome',
         prizes: [
-          { place: '1st Place', prize: '$50 Bar Tab', emoji: '🥇' },
-          { place: '2nd Place', prize: '$25 Bar Tab', emoji: '🥈' },
+          { place: '1st Place', prize: '$50 Tab', emoji: '🥇' },
+          { place: '2nd Place', prize: '$25 Tab', emoji: '🥈' },
           { place: '3rd Place', prize: 'Free Appetizer', emoji: '🥉' },
         ],
       },
@@ -3060,7 +3061,7 @@
       data: {
         emoji: '🎉',
         headline: 'Patio Season Is Here!',
-        message: 'We just expanded our outdoor seating — 20 new spots with string lights, fire pits, and full bar service. Come check it out this weekend!',
+        message: 'We just expanded our outdoor seating — 20 new spots with string lights, fire pits, and full service. Come check it out this weekend!',
         subtext: 'Grand opening Saturday at noon · Live music all day',
       },
     },
@@ -3115,7 +3116,7 @@
     national: {
       top25: Array.from({ length: 25 }, (_, i) => ({
         name: ['Sarah M', 'Chris K', 'Jake', 'Mike D', 'Lisa P', 'Tom W', 'Amy R', 'Dan B', 'Nicole S', 'Ryan T', 'Emma L', 'Josh P', 'Alex G', 'Maria H', 'Kevin W', 'Laura S', 'James T', 'Sofia R', 'David M', 'Olivia K', 'Ethan B', 'Mia C', 'Noah L', 'Ava P', 'Liam J'][i],
-        bar: ['The Pub', 'Sports Bar', 'Brew House'][i % 3],
+        bar: ['The Pub', 'Sports Grill', 'Brew House'][i % 3],
         city: ['Austin, TX', 'Denver, CO', 'Nashville, TN', 'Portland, OR'][i % 4],
         score: Math.round(98420 - i * 1800 + Math.random() * 200)
       })),

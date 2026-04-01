@@ -103,7 +103,7 @@ data "archive_file" "get_player" {
 #    DynamoDB: Read/Write Bars (+ tvDeviceId-index GSI)
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "register_bar" {
-  function_name    = "TapTrivia-register-bar"
+  function_name    = "${local.name_prefix}-register-bar"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -113,11 +113,11 @@ resource "aws_lambda_function" "register_bar" {
   source_code_hash = data.archive_file.register_bar.output_base64sha256
 
   environment {
-    variables = local.common_environment_variables
+    variables = merge(local.common_environment_variables, local.is_dev ? { SKIP_SES = "true" } : {})
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "register-bar"
   }
@@ -129,7 +129,7 @@ resource "aws_lambda_function" "register_bar" {
 #    DynamoDB: Read Bars
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "get_bar" {
-  function_name    = "TapTrivia-get-bar"
+  function_name    = "${local.name_prefix}-get-bar"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -143,7 +143,7 @@ resource "aws_lambda_function" "get_bar" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "get-bar"
   }
@@ -155,7 +155,7 @@ resource "aws_lambda_function" "get_bar" {
 #    DynamoDB: Read/Write Bars, Write Players
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "join_bar" {
-  function_name    = "TapTrivia-join-bar"
+  function_name    = "${local.name_prefix}-join-bar"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -169,7 +169,7 @@ resource "aws_lambda_function" "join_bar" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "join-bar"
   }
@@ -181,7 +181,7 @@ resource "aws_lambda_function" "join_bar" {
 #    DynamoDB: Read/Write Bars
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "reset_bar_code" {
-  function_name    = "TapTrivia-reset-bar-code"
+  function_name    = "${local.name_prefix}-reset-bar-code"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -195,7 +195,7 @@ resource "aws_lambda_function" "reset_bar_code" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "reset-bar-code"
   }
@@ -207,7 +207,7 @@ resource "aws_lambda_function" "reset_bar_code" {
 #    DynamoDB: Read Games
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "get_current_game" {
-  function_name    = "TapTrivia-get-current-game"
+  function_name    = "${local.name_prefix}-get-current-game"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -221,7 +221,7 @@ resource "aws_lambda_function" "get_current_game" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "get-current-game"
   }
@@ -233,7 +233,7 @@ resource "aws_lambda_function" "get_current_game" {
 #    DynamoDB: Read Games (+ gameId-index GSI)
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "get_question" {
-  function_name    = "TapTrivia-get-question"
+  function_name    = "${local.name_prefix}-get-question"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -247,7 +247,7 @@ resource "aws_lambda_function" "get_question" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "get-question"
   }
@@ -259,7 +259,7 @@ resource "aws_lambda_function" "get_question" {
 #    DynamoDB: Read Games (gameId-index), Read/Write Answers, Read/Write Players
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "submit_answer" {
-  function_name    = "TapTrivia-submit-answer"
+  function_name    = "${local.name_prefix}-submit-answer"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -273,7 +273,7 @@ resource "aws_lambda_function" "submit_answer" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "submit-answer"
   }
@@ -286,7 +286,7 @@ resource "aws_lambda_function" "submit_answer" {
 #              Read Players
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "get_leaderboard" {
-  function_name    = "TapTrivia-get-leaderboard"
+  function_name    = "${local.name_prefix}-get-leaderboard"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -300,7 +300,7 @@ resource "aws_lambda_function" "get_leaderboard" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "get-leaderboard"
   }
@@ -313,7 +313,7 @@ resource "aws_lambda_function" "get_leaderboard" {
 #    Extra env: PLAYER_APP_URL (custom domain)
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "get_tv_state" {
-  function_name    = "TapTrivia-get-tv-state"
+  function_name    = "${local.name_prefix}-get-tv-state"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -324,12 +324,12 @@ resource "aws_lambda_function" "get_tv_state" {
 
   environment {
     variables = merge(local.common_environment_variables, {
-      PLAYER_APP_URL = "https://play.taptrivia.tv"
+      PLAYER_APP_URL = local.is_dev ? "http://localhost:8091" : "https://app.taptrivia.tv"
     })
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "get-tv-state"
   }
@@ -343,7 +343,7 @@ resource "aws_lambda_function" "get_tv_state" {
 #     Higher memory (256MB) and timeout (60s) for batch processing.
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "generate_games" {
-  function_name    = "TapTrivia-generate-games"
+  function_name    = "${local.name_prefix}-generate-games"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -357,7 +357,7 @@ resource "aws_lambda_function" "generate_games" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "generate-games"
   }
@@ -369,7 +369,7 @@ resource "aws_lambda_function" "generate_games" {
 #     DynamoDB: Read/Write Players
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "get_player" {
-  function_name    = "TapTrivia-get-player"
+  function_name    = "${local.name_prefix}-get-player"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -383,7 +383,7 @@ resource "aws_lambda_function" "get_player" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "get-player"
   }
@@ -534,7 +534,7 @@ data "archive_file" "upload_logo" {
 #     SES: Send email
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "send_otp" {
-  function_name    = "TapTrivia-send-otp"
+  function_name    = "${local.name_prefix}-send-otp"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -544,11 +544,11 @@ resource "aws_lambda_function" "send_otp" {
   source_code_hash = data.archive_file.send_otp.output_base64sha256
 
   environment {
-    variables = local.common_environment_variables
+    variables = merge(local.common_environment_variables, local.is_dev ? { SKIP_SES = "true" } : {})
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "send-otp"
   }
@@ -560,7 +560,7 @@ resource "aws_lambda_function" "send_otp" {
 #     DynamoDB: Read/Write Bars, Write Sessions
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "verify_otp" {
-  function_name    = "TapTrivia-verify-otp"
+  function_name    = "${local.name_prefix}-verify-otp"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -574,7 +574,7 @@ resource "aws_lambda_function" "verify_otp" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "verify-otp"
   }
@@ -586,7 +586,7 @@ resource "aws_lambda_function" "verify_otp" {
 #     DynamoDB: Read Bars, Read Sessions
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "get_dashboard" {
-  function_name    = "TapTrivia-get-dashboard"
+  function_name    = "${local.name_prefix}-get-dashboard"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -600,7 +600,7 @@ resource "aws_lambda_function" "get_dashboard" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "get-dashboard"
   }
@@ -612,7 +612,7 @@ resource "aws_lambda_function" "get_dashboard" {
 #     DynamoDB: Read/Write Bars, Read Sessions
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "save_signage" {
-  function_name    = "TapTrivia-save-signage"
+  function_name    = "${local.name_prefix}-save-signage"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -626,7 +626,7 @@ resource "aws_lambda_function" "save_signage" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "save-signage"
   }
@@ -641,7 +641,7 @@ resource "aws_lambda_function" "save_signage" {
 #     Higher memory (256MB) and timeout (30s) for image processing.
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "upload_logo" {
-  function_name    = "TapTrivia-upload-logo"
+  function_name    = "${local.name_prefix}-upload-logo"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -655,7 +655,7 @@ resource "aws_lambda_function" "upload_logo" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "upload-logo"
   }
@@ -723,7 +723,7 @@ data "archive_file" "get_between_game_data" {
 #               Read Bars (StateScoreIndex GSI), Read Games
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "get_between_game_data" {
-  function_name    = "TapTrivia-get-between-game-data"
+  function_name    = "${local.name_prefix}-get-between-game-data"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -737,7 +737,7 @@ resource "aws_lambda_function" "get_between_game_data" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "get-between-game-data"
   }
@@ -767,7 +767,7 @@ data "archive_file" "create_group" {
 #     DynamoDB: Read/Write Bars
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "create_group" {
-  function_name    = "TapTrivia-create-group"
+  function_name    = "${local.name_prefix}-create-group"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -781,7 +781,7 @@ resource "aws_lambda_function" "create_group" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "create-group"
   }
@@ -811,7 +811,7 @@ data "archive_file" "submit_feedback" {
 #     DynamoDB: Write Feedback
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "submit_feedback" {
-  function_name    = "TapTrivia-submit-feedback"
+  function_name    = "${local.name_prefix}-submit-feedback"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -825,7 +825,7 @@ resource "aws_lambda_function" "submit_feedback" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "submit-feedback"
   }
@@ -855,7 +855,7 @@ data "archive_file" "tv_activate" {
 #     DynamoDB: Read Bars
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "tv_activate" {
-  function_name    = "TapTrivia-tv-activate"
+  function_name    = "${local.name_prefix}-tv-activate"
   role             = aws_iam_role.lambda_execution.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
@@ -869,7 +869,7 @@ resource "aws_lambda_function" "tv_activate" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Function    = "tv-activate"
   }

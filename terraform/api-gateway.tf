@@ -9,7 +9,7 @@
 # HTTP API
 # -----------------------------------------------------------------------------
 resource "aws_apigatewayv2_api" "main" {
-  name          = "TapTrivia-API"
+  name          = "${local.name_prefix}-API"
   protocol_type = "HTTP"
 
   cors_configuration {
@@ -20,7 +20,7 @@ resource "aws_apigatewayv2_api" "main" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
   }
 }
@@ -34,7 +34,7 @@ resource "aws_apigatewayv2_stage" "default" {
   auto_deploy = true
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
   }
 }

@@ -103,7 +103,7 @@ async function sendWelcomeEmail(email, barName, barCode) {
                 </a>
               </div>
               <p style="font-size: 13px; color: #999; text-align: center; margin: 0 0 32px;">
-                Log in with this email + your bar code. No password needed.
+                Log in with this email + your location code. No password needed.
               </p>
               <p style="font-size: 12px; color: #bbb; text-align: center; margin: 0; border-top: 1px solid #eee; padding-top: 20px;">
                 taptrivia.tv &middot; Free for venues &middot; Powered by Visudo Labs
@@ -112,12 +112,16 @@ async function sendWelcomeEmail(email, barName, barCode) {
           `
         },
         Text: {
-          Data: `Welcome to TapTrivia!\n\n${barName} is registered. Your location code: ${barCode}\n\nEnter this code on your TV to activate.\nUse the same code on all your TVs.\n\nDashboard: https://admin.taptrivia.tv\nLog in with this email + your bar code.\n`
+          Data: `Welcome to TapTrivia!\n\n${barName} is registered. Your location code: ${barCode}\n\nEnter this code on your TV to activate.\nUse the same code on all your TVs.\n\nDashboard: https://admin.taptrivia.tv\nLog in with this email + your location code.\n`
         }
       }
     }
   };
 
+  if (process.env.SKIP_SES === 'true') {
+    console.log(`[DEV] Welcome email for ${barName} (${barCode}) skipped`);
+    return;
+  }
   await ses.send(new SendEmailCommand(params));
 }
 
@@ -217,7 +221,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'CODE_GENERATION_FAILED', message: 'Unable to generate unique bar code. Please try again.' })
+        body: JSON.stringify({ error: 'CODE_GENERATION_FAILED', message: 'Unable to generate unique location code. Please try again.' })
       };
     }
 

@@ -11,12 +11,13 @@
 # trivia games so questions are ready before the 10 AM ET start.
 # -----------------------------------------------------------------------------
 resource "aws_cloudwatch_event_rule" "generate_games" {
-  name                = "TapTrivia-GenerateGames"
+  name                = "${local.name_prefix}-GenerateGames"
   description         = "Trigger daily game generation at 9 AM ET (14:00 UTC)"
   schedule_expression = "cron(0 14 * * ? *)"
+  state               = local.is_dev ? "DISABLED" : "ENABLED"
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
   }
 }

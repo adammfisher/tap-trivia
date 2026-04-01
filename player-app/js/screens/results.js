@@ -1,6 +1,6 @@
 /**
  * Tap Trivia Player App — Results Screen
- * Post-game: final score, bar rank, global rank, leaderboards.
+ * Post-game: final score, location rank, global rank, leaderboards.
  */
 
 const ResultsScreen = {
@@ -116,7 +116,7 @@ const ResultsScreen = {
     let barLeaderHtml = '';
     let globalLeaderHtml = '';
 
-    // Bar leaderboard
+    // Location leaderboard
     if (Player.hasBar()) {
       const barData = await apiCall('GET',
         `/game/${this.gameId}/leaderboard?type=bar&barCode=${Player.getBarCode()}`);
@@ -176,11 +176,11 @@ const ResultsScreen = {
         <div class="results-points-label">POINTS</div>
       </div>
       <div class="results-tabs">
-        <button class="tab-btn active" onclick="ResultsScreen.showTab('bar')">YOUR BAR</button>
+        <button class="tab-btn active" onclick="ResultsScreen.showTab('bar')">YOUR LOCATION</button>
         <button class="tab-btn" onclick="ResultsScreen.showTab('global')">GLOBAL</button>
       </div>
       <div id="tab-bar" class="tab-content active">
-        ${barLeaderHtml || '<div class="results-pending">Not at a bar</div>'}
+        ${barLeaderHtml || '<div class="results-pending">Not at a location</div>'}
       </div>
       <div id="tab-global" class="tab-content">
         ${globalLeaderHtml}

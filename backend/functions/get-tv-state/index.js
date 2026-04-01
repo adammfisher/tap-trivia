@@ -206,7 +206,7 @@ exports.handler = async (event) => {
     if (!bar || bar.status !== 'active') {
       return response(404, {
         error: 'BAR_NOT_FOUND',
-        message: 'Bar not found or inactive'
+        message: 'Location not found or inactive'
       });
     }
 

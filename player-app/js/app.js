@@ -16,7 +16,7 @@ const App = {
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         let screen = btn.dataset.screen;
-        // "Play" button is context-aware: lobby if at a bar, home otherwise
+        // "Play" button is context-aware: lobby if at a location, home otherwise
         if (screen === 'home' && Player.hasBar()) screen = 'lobby';
         if (screen) App.showScreen(screen);
       });

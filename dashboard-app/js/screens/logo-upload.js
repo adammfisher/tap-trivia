@@ -14,18 +14,18 @@ function renderLogoUpload() {
 
   const { bar } = getAuthState();
   const currentLogo = bar ? bar.logoUrl : null;
-  const barName = bar ? bar.barName : 'Your Bar';
+  const barName = bar ? bar.barName : 'Your Location';
 
   container.innerHTML = `
     <div class="fade-in">
       <div class="page-header">
         <h1 class="page-title">Logo &amp; Branding</h1>
-        <p class="page-desc">Upload your bar's logo — it appears on TV signage and the player app</p>
+        <p class="page-desc">Upload your location's logo — it appears on TV signage and the player app</p>
       </div>
 
       <div class="logo-upload-grid">
         <div class="dash-card logo-upload-card">
-          <div class="card-title">Bar Logo</div>
+          <div class="card-title">Location Logo</div>
           <div class="logo-current">
             ${currentLogo
               ? `<img src="${currentLogo}" alt="${barName}" class="logo-preview-img">`

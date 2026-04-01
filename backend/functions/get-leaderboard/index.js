@@ -73,7 +73,7 @@ exports.handler = async (event) => {
       if (!barCode) {
         return response(400, {
           error: 'MISSING_BAR_CODE',
-          message: 'barCode is required for bar leaderboard'
+          message: 'barCode is required for location leaderboard'
         });
       }
 

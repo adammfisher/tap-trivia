@@ -12,7 +12,7 @@
 #    TTL enabled to auto-expire old game records.
 # -----------------------------------------------------------------------------
 resource "aws_dynamodb_table" "games" {
-  name         = "TapTrivia-Games"
+  name         = "${local.name_prefix}-Games"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "PK"
 
@@ -38,7 +38,7 @@ resource "aws_dynamodb_table" "games" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Table       = "Games"
   }
@@ -51,7 +51,7 @@ resource "aws_dynamodb_table" "games" {
 #    querying questions by category with difficulty+questionId ordering.
 # -----------------------------------------------------------------------------
 resource "aws_dynamodb_table" "questions" {
-  name         = "TapTrivia-Questions"
+  name         = "${local.name_prefix}-Questions"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "PK"
 
@@ -78,7 +78,7 @@ resource "aws_dynamodb_table" "questions" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Table       = "Questions"
   }
@@ -90,7 +90,7 @@ resource "aws_dynamodb_table" "questions" {
 #    Simple key-value table with no GSIs or TTL.
 # -----------------------------------------------------------------------------
 resource "aws_dynamodb_table" "question_usage" {
-  name         = "TapTrivia-QuestionUsage"
+  name         = "${local.name_prefix}-QuestionUsage"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "PK"
 
@@ -100,7 +100,7 @@ resource "aws_dynamodb_table" "question_usage" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Table       = "QuestionUsage"
   }
@@ -114,7 +114,7 @@ resource "aws_dynamodb_table" "question_usage" {
 #    TTL enabled to auto-expire old answer records.
 # -----------------------------------------------------------------------------
 resource "aws_dynamodb_table" "answers" {
-  name         = "TapTrivia-Answers"
+  name         = "${local.name_prefix}-Answers"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "PK"
   range_key    = "SK"
@@ -186,7 +186,7 @@ resource "aws_dynamodb_table" "answers" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Table       = "Answers"
   }
@@ -198,7 +198,7 @@ resource "aws_dynamodb_table" "answers" {
 #    Simple key-value table with no GSIs or TTL.
 # -----------------------------------------------------------------------------
 resource "aws_dynamodb_table" "players" {
-  name         = "TapTrivia-Players"
+  name         = "${local.name_prefix}-Players"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "PK"
 
@@ -225,7 +225,7 @@ resource "aws_dynamodb_table" "players" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Table       = "Players"
   }
@@ -238,7 +238,7 @@ resource "aws_dynamodb_table" "players" {
 #    GSI state-index: list bars by state, sorted by barCode.
 # -----------------------------------------------------------------------------
 resource "aws_dynamodb_table" "bars" {
-  name         = "TapTrivia-Bars"
+  name         = "${local.name_prefix}-Bars"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "PK"
 
@@ -288,7 +288,7 @@ resource "aws_dynamodb_table" "bars" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Table       = "Bars"
   }
@@ -301,7 +301,7 @@ resource "aws_dynamodb_table" "bars" {
 #    TTL enabled to auto-expire old stats records.
 # -----------------------------------------------------------------------------
 resource "aws_dynamodb_table" "game_stats" {
-  name         = "TapTrivia-GameStats"
+  name         = "${local.name_prefix}-GameStats"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "PK"
 
@@ -328,7 +328,7 @@ resource "aws_dynamodb_table" "game_stats" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Table       = "GameStats"
   }
@@ -341,7 +341,7 @@ resource "aws_dynamodb_table" "game_stats" {
 #    No GSIs needed — sessions are only looked up by token (PK).
 # -----------------------------------------------------------------------------
 resource "aws_dynamodb_table" "sessions" {
-  name         = "TapTrivia-Sessions"
+  name         = "${local.name_prefix}-Sessions"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "PK"
 
@@ -356,7 +356,7 @@ resource "aws_dynamodb_table" "sessions" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Table       = "Sessions"
   }
@@ -368,7 +368,7 @@ resource "aws_dynamodb_table" "sessions" {
 #    Simple key-value table with TTL for auto-expiry after 1 year.
 # -----------------------------------------------------------------------------
 resource "aws_dynamodb_table" "feedback" {
-  name         = "TapTrivia-Feedback"
+  name         = "${local.name_prefix}-Feedback"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "PK"
 
@@ -383,7 +383,7 @@ resource "aws_dynamodb_table" "feedback" {
   }
 
   tags = {
-    Environment = var.stage
+    Environment = local.stage
     Project     = "TapTrivia"
     Table       = "Feedback"
   }

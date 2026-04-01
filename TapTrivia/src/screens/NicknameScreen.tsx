@@ -76,7 +76,7 @@ export function NicknameScreen({ navigation, route }: Props) {
           {nameCollision && savedNickname ? (
             <View style={styles.collisionBanner}>
               <Text style={styles.collisionText}>
-                Someone named <Text style={styles.collisionName}>{savedNickname}</Text> is already at this bar.
+                Someone named <Text style={styles.collisionName}>{savedNickname}</Text> is already at this location.
                 Pick a different name or you'll appear as {savedNickname}_2 on the leaderboard.
               </Text>
             </View>

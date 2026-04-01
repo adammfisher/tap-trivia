@@ -17,7 +17,7 @@
       <Label id="titleLabel" text="Join Trivia!" color="#f0f0f0">
         <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="28" />
       </Label>
-      <Label id="urlLabel" text="play.taptrivia.tv"
+      <Label id="urlLabel" text="app.taptrivia.tv"
              translation="[0, 34]" color="#ffd200">
         <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
       </Label>

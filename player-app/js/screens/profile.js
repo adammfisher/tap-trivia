@@ -1,6 +1,6 @@
 /**
  * Tap Trivia Player App — Profile Screen
- * Display name, bar status, stats, how to play.
+ * Display name, location status, stats, how to play.
  */
 
 const ProfileScreen = {
@@ -26,14 +26,14 @@ const ProfileScreen = {
       </div>
 
       <div class="profile-section">
-        <label class="profile-label">CURRENT BAR</label>
+        <label class="profile-label">CURRENT LOCATION</label>
         ${barCode
           ? `<div class="profile-bar">
               <span>${barName} (${barCode})</span>
-              <button class="btn-link" onclick="App.showScreen('join-bar')">Change Bar</button>
-              <button class="btn-link btn-danger" onclick="ProfileScreen.leaveBar()">Leave Bar</button>
+              <button class="btn-link" onclick="App.showScreen('join-bar')">Change Location</button>
+              <button class="btn-link btn-danger" onclick="ProfileScreen.leaveBar()">Leave Location</button>
             </div>`
-          : `<button class="btn-link" onclick="App.showScreen('join-bar')">Join a Bar</button>`
+          : `<button class="btn-link" onclick="App.showScreen('join-bar')">Join a Location</button>`
         }
       </div>
 
@@ -61,7 +61,7 @@ const ProfileScreen = {
           <p>📖 <strong>8-second read time</strong> — full 1000 points for the first 8 seconds</p>
           <p>🔄 <strong>Change your answer</strong> — switch anytime before the reveal</p>
           <p>💡 <strong>Hints at 20s and 35s</strong> — wrong answers get eliminated</p>
-          <p>🏆 <strong>Bar leaderboard</strong> — compete with people at your bar</p>
+          <p>🏆 <strong>Location leaderboard</strong> — compete with people at your location</p>
           <p>🌎 <strong>Global leaderboard</strong> — see how you rank worldwide after each game</p>
           <p>📅 <strong>Games every 15 min</strong> — 5 PM ET to 12 AM PT, every night</p>
         </div>
@@ -139,7 +139,7 @@ const ProfileScreen = {
 
     return `
       <div class="profile-section">
-        <label class="profile-label">MY BARS</label>
+        <label class="profile-label">MY LOCATIONS</label>
         <div class="profile-bars">${cards}</div>
       </div>
     `;

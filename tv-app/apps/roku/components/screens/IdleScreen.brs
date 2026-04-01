@@ -286,7 +286,7 @@ function getDefaultSignageSlides() as Object
       data: {
         headline: "Play TapTrivia!",
         message: "Live trivia every 15 minutes - play free on your phone!",
-        subtext: "Scan the QR code or visit play.taptrivia.tv"
+        subtext: "Scan the QR code or visit app.taptrivia.tv"
       }
     },
     {
@@ -295,7 +295,7 @@ function getDefaultSignageSlides() as Object
       data: {
         headline: "How to Play",
         items: [
-          { text: "Scan the QR code or visit play.taptrivia.tv" },
+          { text: "Scan the QR code or visit app.taptrivia.tv" },
           { text: "Enter your code: " + barCode },
           { text: "Answer fast for more points!" },
           { text: "Top the leaderboard, win bragging rights" }

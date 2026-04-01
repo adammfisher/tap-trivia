@@ -49,17 +49,17 @@ function renderCredentials(container) {
       <div class="auth-card pop-in">
         <div class="auth-logo-block">
           <span class="logo-text"><span class="logo-tap">Tap</span><span class="logo-trivia">Trivia</span></span>
-          <div class="auth-subtitle">BAR DASHBOARD</div>
+          <div class="auth-subtitle">LOCATION DASHBOARD</div>
         </div>
         <div class="auth-form-card">
           <h2 class="auth-title">Welcome back</h2>
-          <p class="auth-desc">Sign in with your email and bar code</p>
+          <p class="auth-desc">Sign in with your email and location code</p>
           <div class="field-group">
             <label class="field-label">EMAIL ADDRESS</label>
-            <input class="field-input" type="email" id="login-email" placeholder="you@yourbar.com" value="${loginState.email}">
+            <input class="field-input" type="email" id="login-email" placeholder="you@example.com" value="${loginState.email}">
           </div>
           <div class="field-group">
-            <label class="field-label">BAR CODE</label>
+            <label class="field-label">LOCATION CODE</label>
             <input class="field-input" type="text" id="login-barcode" placeholder="e.g., BR7X4" maxlength="6" value="${loginState.barCode}" style="text-transform:uppercase;letter-spacing:4px;font-family:'Fredoka',sans-serif;font-size:20px;text-align:center">
             <div class="field-hint">The code from your TV — shown when you first registered</div>
           </div>
@@ -68,7 +68,7 @@ function renderCredentials(container) {
             ${loginState.loading ? 'Sending...' : 'Send One-Time Passcode'}
           </button>
         </div>
-        <p class="auth-footer">Don't have a bar code? <a href="https://tv.taptrivia.tv" class="link-blue">Register on your TV app</a></p>
+        <p class="auth-footer">Don't have a location code? <a href="https://tv.taptrivia.tv" class="link-blue">Register on your TV app</a></p>
       </div>
     </div>
   `;
@@ -87,7 +87,7 @@ async function handleSendOtp() {
   const barCode = loginState.barCode.trim().toUpperCase();
 
   if (!email || !barCode) {
-    loginState.error = 'Please enter your email and bar code';
+    loginState.error = 'Please enter your email and location code';
     renderLogin();
     return;
   }

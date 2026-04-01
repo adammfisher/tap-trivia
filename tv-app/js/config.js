@@ -1,7 +1,13 @@
 // tv-app/js/config.js
 const CONFIG = {
-  API_BASE: 'https://api.taptrivia.tv',
-  PLAYER_APP_URL: 'https://play.taptrivia.tv',
+  API_BASE: (() => {
+    const params = new URLSearchParams(window.location.search);
+    const apiParam = params.get('api');
+    if (apiParam === 'prod') { localStorage.removeItem('taptrivia_api_override'); return 'https://api.taptrivia.tv'; }
+    if (apiParam) { localStorage.setItem('taptrivia_api_override', apiParam); return apiParam; }
+    return localStorage.getItem('taptrivia_api_override') || 'https://api.taptrivia.tv';
+  })(),
+  PLAYER_APP_URL: 'https://app.taptrivia.tv',
   POLL_INTERVAL_ACTIVE: 2000,  // 2s during active game
   POLL_INTERVAL_IDLE: 5000     // 5s during idle/break/game_over
 };

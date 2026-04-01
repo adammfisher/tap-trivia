@@ -25,7 +25,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 404,
         headers,
-        body: JSON.stringify({ error: 'BAR_NOT_FOUND', message: 'Bar not found' })
+        body: JSON.stringify({ error: 'BAR_NOT_FOUND', message: 'Location not found' })
       };
     }
 

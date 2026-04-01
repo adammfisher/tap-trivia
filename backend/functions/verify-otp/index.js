@@ -30,7 +30,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Bar code is required' })
+        body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Location code is required' })
       };
     }
 
@@ -52,7 +52,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 401,
         headers,
-        body: JSON.stringify({ error: 'INVALID_CREDENTIALS', message: 'Invalid email or bar code' })
+        body: JSON.stringify({ error: 'INVALID_CREDENTIALS', message: 'Invalid email or location code' })
       };
     }
 

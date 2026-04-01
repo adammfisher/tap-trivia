@@ -5,7 +5,7 @@ function renderDashboard() {
   if (!container) return;
 
   const { bar, data } = getAuthState();
-  const barName = bar ? bar.barName : 'Your Bar';
+  const barName = bar ? bar.barName : 'Your Location';
   const signage = bar && bar.signage ? bar.signage : { slides: [], enabled: false };
   const slideCount = signage.slides ? signage.slides.filter(s => s.enabled).length : 0;
   const analytics = data && data.analytics ? data.analytics : {};
@@ -91,7 +91,7 @@ function renderDashboard() {
           <div class="dash-card action-card" id="qa-logo">
             <span class="action-card-icon">&#x1F5BC;</span>
             <div class="action-card-title">Logo &amp; Branding</div>
-            <div class="action-card-desc">Upload your bar logo</div>
+            <div class="action-card-desc">Upload your location logo</div>
           </div>
         </div>
       </div>

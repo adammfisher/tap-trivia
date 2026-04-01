@@ -73,7 +73,7 @@ exports.handler = async (event) => {
             `Category: ${feedbackCategory}`,
             `From: ${nickname || 'anonymous'} (${playerId || 'no-id'})`,
             email ? `Email: ${email}` : '',
-            barCode ? `Bar: ${barCode}` : '',
+            barCode ? `Location: ${barCode}` : '',
             platform ? `Platform: ${platform}` : '',
             appVersion ? `App Version: ${appVersion}` : '',
             '',

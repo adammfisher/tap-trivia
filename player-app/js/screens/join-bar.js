@@ -1,5 +1,5 @@
 /**
- * Tap Trivia Player App — Join Bar Screen
+ * Tap Trivia Player App — Join Location Screen
  * 5-character code entry with auto-advance and submit button.
  */
 
@@ -71,7 +71,7 @@ const JoinBarScreen = {
       return;
     }
 
-    // Success — save bar and go to lobby
+    // Success — save location and go to lobby
     Player.setBar(result.barCode, result.barName);
     App.showScreen('lobby');
   }

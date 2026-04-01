@@ -71,7 +71,7 @@
         </Label>
 
         <!-- URL -->
-        <Label text="play.taptrivia.tv"
+        <Label text="app.taptrivia.tv"
                translation="[0, 172]" color="#ffffff4D"
                horizAlign="center" width="800">
           <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="26" />

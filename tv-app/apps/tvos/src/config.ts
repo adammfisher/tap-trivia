@@ -1,5 +1,6 @@
-export const API_BASE = 'https://api.taptrivia.tv';
-export const PLAYER_APP_URL = 'https://play.taptrivia.tv';
+const DEV_API = 'https://api.taptrivia.tv'; // Replace with dev API Gateway URL after terraform workspace dev apply
+export const API_BASE = __DEV__ ? DEV_API : 'https://api.taptrivia.tv';
+export const PLAYER_APP_URL = 'https://app.taptrivia.tv';
 
 export const POLL_INTERVAL_ACTIVE = 2000;
 export const POLL_INTERVAL_IDLE = 5000;

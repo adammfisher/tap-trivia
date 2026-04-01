@@ -96,13 +96,15 @@ export function CorrectScreen({ navigation, route }: Props) {
           {/* Category + progress */}
           <View style={styles.categoryRow}>
             <CategoryBadge emoji={question.categoryEmoji} category={question.category} />
+          </View>
+          <View style={styles.progressRow}>
+            <View style={styles.progressContainer}>
+              <ProgressBar current={gameState.questionNumber} total={gameState.totalQuestions} />
+            </View>
             <Text style={styles.questionNum}>
-              {gameState.questionNumber || lastQuestionRef.current ? gameState.questionNumber : ''}
+              Q{gameState.questionNumber || lastQuestionRef.current ? gameState.questionNumber : ''}
               <Text style={styles.questionTotal}>/{gameState.totalQuestions}</Text>
             </Text>
-          </View>
-          <View style={styles.progressContainer}>
-            <ProgressBar current={gameState.questionNumber} total={gameState.totalQuestions} />
           </View>
 
           {/* Question */}
@@ -129,8 +131,20 @@ export function CorrectScreen({ navigation, route }: Props) {
             ))}
           </View>
 
+          {/* Fun fact */}
+          {question.funFact && !question.funFact.startsWith('This is a fun fact placeholder') ? (
+            <View style={styles.funFactCard}>
+              <Text style={styles.funFactLabel}>DID YOU KNOW?</Text>
+              <Text style={styles.funFactText}>{question.funFact}</Text>
+            </View>
+          ) : null}
+
           <View style={styles.footer}>
-            <Text style={styles.nextText}>Next question in 5s...</Text>
+            <Text style={styles.nextText}>
+              {gameState.timeRemaining > 0
+                ? `Next question in ${gameState.timeRemaining}s...`
+                : 'Next question starting...'}
+            </Text>
           </View>
         </ScrollView>
       </View>
@@ -216,15 +230,20 @@ const styles = StyleSheet.create({
     color: colors.green,
   },
   categoryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    marginBottom: 4,
+    marginBottom: 6,
   },
-  questionNum: { fontFamily: fonts.fredoka.semiBold, fontSize: 14, color: w(0.5) },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    marginBottom: 8,
+    gap: 10,
+  },
+  progressContainer: { flex: 1 },
+  questionNum: { fontFamily: fonts.outfit.semiBold, fontSize: 12, color: w(0.4) },
   questionTotal: { color: w(0.25) },
-  progressContainer: { paddingHorizontal: 24, marginBottom: 8 },
   questionText: {
     fontFamily: fonts.outfit.bold,
     fontSize: 17,
@@ -235,6 +254,31 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   answers: { paddingHorizontal: 18, gap: 7 },
+  funFactCard: {
+    marginHorizontal: 18,
+    marginTop: 14,
+    backgroundColor: w(0.06),
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: w(0.08),
+  },
+  funFactLabel: {
+    fontFamily: fonts.outfit.bold,
+    fontSize: 11,
+    color: colors.gold,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  funFactText: {
+    fontFamily: fonts.outfit.regular,
+    fontSize: 13,
+    color: w(0.55),
+    lineHeight: 19,
+    textAlign: 'center',
+  },
   footer: {
     alignItems: 'center',
     paddingTop: 16,

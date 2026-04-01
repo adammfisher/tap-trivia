@@ -95,7 +95,7 @@ export function BetweenScreen({ navigation, route }: Props) {
             <StatBox value={stats.timeout} label="Unanswered" color={w(0.4)} />
           </View>
 
-          {/* Leaderboard (bar play only) */}
+          {/* Leaderboard (location play only) */}
           {!isSolo && gameState.leaderboard.length > 0 && (
             <>
               <Text style={styles.sectionLabel}>Leaderboard</Text>
@@ -110,7 +110,11 @@ export function BetweenScreen({ navigation, route }: Props) {
           )}
 
           <View style={styles.footer}>
-            <Text style={styles.nextText}>Next question in 5s...</Text>
+            <Text style={styles.nextText}>
+              {gameState.timeRemaining > 0
+                ? `Next question in ${gameState.timeRemaining}s...`
+                : 'Next question starting...'}
+            </Text>
           </View>
         </ScrollView>
       </View>

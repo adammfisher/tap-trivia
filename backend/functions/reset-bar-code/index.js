@@ -38,7 +38,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 404,
         headers,
-        body: JSON.stringify({ error: 'BAR_NOT_FOUND', message: 'Bar not found' })
+        body: JSON.stringify({ error: 'BAR_NOT_FOUND', message: 'Location not found' })
       };
     }
 
@@ -49,7 +49,7 @@ exports.handler = async (event) => {
         headers,
         body: JSON.stringify({
           error: 'UNAUTHORIZED_TV',
-          message: 'This TV is not authorized to manage this bar.'
+          message: 'This TV is not authorized to manage this location.'
         })
       };
     }
@@ -102,7 +102,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'CODE_GENERATION_FAILED', message: 'Unable to generate unique bar code. Please try again.' })
+        body: JSON.stringify({ error: 'CODE_GENERATION_FAILED', message: 'Unable to generate unique location code. Please try again.' })
       };
     }
 

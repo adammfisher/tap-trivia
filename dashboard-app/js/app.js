@@ -51,7 +51,7 @@ const DashApp = {
 
   renderSidebar(activePage) {
     const { bar } = getAuthState();
-    const barName = bar ? bar.barName : 'Your Bar';
+    const barName = bar ? bar.barName : 'Your Location';
     const barCode = bar ? bar.barCode : '-----';
     const logoUrl = bar ? bar.logoUrl : null;
 
@@ -66,7 +66,7 @@ const DashApp = {
     sidebar.innerHTML = `
       <div class="sidebar-logo">
         <span class="logo-text"><span class="logo-tap">Tap</span><span class="logo-trivia">Trivia</span></span>
-        <div class="sidebar-subtitle">BAR DASHBOARD</div>
+        <div class="sidebar-subtitle">LOCATION DASHBOARD</div>
       </div>
       <div class="sidebar-bar-info">
         <div class="sidebar-bar-logo">${logoUrl

@@ -47,7 +47,7 @@
         <Label id="bigCodeLabel" text="" translation="[280, 70]" color="#ffd200">
           <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="52" />
         </Label>
-        <Label id="urlLabel" text="play.taptrivia.tv"
+        <Label id="urlLabel" text="app.taptrivia.tv"
                translation="[280, 135]" width="400" color="#ffffff80">
           <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
         </Label>

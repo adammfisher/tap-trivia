@@ -14,7 +14,7 @@ import { useGame } from '../contexts/GameContext';
 import { usePlayerIdentity } from '../hooks/usePlayerIdentity';
 import { useSavedBars } from '../hooks/useSavedBars';
 import { getCurrentGame, isApiError, getServerNow } from '../services/api';
-import { getGameState as clockGetGameState } from '../utils/game-clock';
+import { getGameState as clockGetGameState, getNextGameTime } from '../utils/game-clock';
 import { colors, w } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -38,8 +38,10 @@ export function LobbyScreen({ navigation, route }: Props) {
   const { isPro, isLoading: subLoading } = useSubscription();
   const paywallShown = useRef(false);
 
-  // Gate: show paywall if not subscribed and no active trial
-  // When paywall is dismissed and still not pro, kick back to Welcome
+  // Track whether an active game is waiting for the user to become pro
+  const gameReadyRef = useRef(false);
+
+  // Hard gate: show paywall if not pro. If dismissed without subscribing, kick back.
   useEffect(() => {
     if (subLoading) return;
     if (!isPro) {
@@ -47,11 +49,19 @@ export function LobbyScreen({ navigation, route }: Props) {
         paywallShown.current = true;
         navigation.navigate('Subscription');
       } else if (isOnTop) {
-        // Paywall was shown and dismissed but user still isn't pro — go back
-        navigation.navigate('Welcome');
+        // Paywall was dismissed but user still isn't pro — go back
+        navigation.goBack();
       }
     }
   }, [subLoading, isPro, isOnTop, navigation]);
+
+  // After becoming pro, if a game was waiting, join it immediately
+  useEffect(() => {
+    if (isPro && gameReadyRef.current && !startedRef.current && isOnTop) {
+      // Re-trigger poll to pick up the active game
+      checkGameStatusRef.current?.();
+    }
+  }, [isPro, isOnTop]);
 
   const [statusText, setStatusText] = useState('Checking for games...');
   const [playerCount, setPlayerCount] = useState(0);
@@ -67,7 +77,7 @@ export function LobbyScreen({ navigation, route }: Props) {
 
   const playerName = nickname || 'Player';
 
-  // Save bar on entry (skip for solo play)
+  // Save location on entry (skip for solo play)
   useEffect(() => {
     if (barCode !== 'SOLO') saveBar(barCode, barName);
   }, [barCode, barName, saveBar]);
@@ -97,8 +107,18 @@ export function LobbyScreen({ navigation, route }: Props) {
 
     if (result.status === 'active' && result.startTimeEpoch) {
       const clock = clockGetGameState(result.startTimeEpoch, getServerNow());
-      if (clock.gamePhase === 'active' && !startedRef.current && isProRef.current) {
+      if (clock.gamePhase === 'active' && !startedRef.current) {
+        if (!isProRef.current) {
+          // Game is ready but user isn't subscribed — show paywall
+          gameReadyRef.current = true;
+          if (!paywallShown.current) {
+            paywallShown.current = true;
+            navigation.navigate('Subscription');
+          }
+          return;
+        }
         startedRef.current = true;
+        gameReadyRef.current = false;
         if (pollRef.current) clearInterval(pollRef.current);
         if (countdownRef.current) clearInterval(countdownRef.current);
         startGame(
@@ -120,28 +140,22 @@ export function LobbyScreen({ navigation, route }: Props) {
         setStatusText('Game starting soon...');
         return;
       }
-      setStatusText('Checking for games...');
+      nextGameEpochRef.current = getNextGameTime(getServerNow());
+      setStatusText('Next game scheduled');
     } else if (result.status === 'scheduled' && result.startTimeEpoch) {
       nextGameEpochRef.current = result.startTimeEpoch;
       setStatusText('Next game scheduled');
     } else if (result.status === 'no_game') {
-      const epoch = findNextEpoch();
-      if (epoch) {
-        nextGameEpochRef.current = epoch;
-        setStatusText('Next game scheduled');
-      } else {
-        setStatusText('No games scheduled right now');
-      }
+      const epoch = findNextEpoch() ?? getNextGameTime(getServerNow());
+      nextGameEpochRef.current = epoch;
+      setStatusText('Next game scheduled');
     } else if (result.status === 'completed') {
-      const epoch = findNextEpoch();
-      if (epoch) {
-        nextGameEpochRef.current = epoch;
-        setStatusText('Next game scheduled');
-      } else {
-        setStatusText('Checking for games...');
-      }
+      const epoch = findNextEpoch() ?? getNextGameTime(getServerNow());
+      nextGameEpochRef.current = epoch;
+      setStatusText('Next game scheduled');
     } else {
-      setStatusText('Waiting for next game...');
+      nextGameEpochRef.current = getNextGameTime(getServerNow());
+      setStatusText('Next game scheduled');
     }
   };
 
@@ -153,7 +167,7 @@ export function LobbyScreen({ navigation, route }: Props) {
 
   // Poll every 10 seconds — wait for identity AND subscription check before starting
   useEffect(() => {
-    if (!identityLoaded || subLoading || !isPro) return;
+    if (!identityLoaded) return;
     checkGameStatus();
     pollRef.current = setInterval(checkGameStatus, 10000);
     return () => {
@@ -188,7 +202,7 @@ export function LobbyScreen({ navigation, route }: Props) {
     };
   }, [checkGameStatus]);
 
-  // If game context phase changes, navigate (skip while a modal is on top or not authorized)
+  // If game context phase changes, navigate (skip while a modal is on top or not subscribed)
   useEffect(() => {
     if (!isOnTop || !isPro) return;
     if (gameState.gamePhase === 'category' && !startedRef.current) {
@@ -287,7 +301,7 @@ export function LobbyScreen({ navigation, route }: Props) {
           <FadeInView duration={500} delay={300} direction="none" style={styles.didYouKnowBanner}>
             <Text style={styles.didYouKnowTitle}>Did you know?</Text>
             <Text style={styles.didYouKnowMessage}>
-              The TapTrivia TV app is available on most platforms like Fire TV, Samsung, and Roku. Ask your favorite bar to turn it on — it's free! Or download it and host your own trivia night.
+              The TapTrivia TV app is available on most platforms like Fire TV, Samsung, and Roku. Ask your favorite location to turn it on — it's free! Or download it and host your own trivia night.
             </Text>
           </FadeInView>
         </ScrollView>

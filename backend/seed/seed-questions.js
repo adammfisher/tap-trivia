@@ -95,7 +95,7 @@ async function seed() {
       category: q.category,
       subcategory: q.subcategory || '',
       topicLeaf: q.topicLeaf || q.topic_leaf || '',
-      funFact: q.funFact || q.fun_fact || (args.includes('--filler-funfact') ? 'This is a fun fact placeholder — real fun facts will appear once the full question set is loaded.' : ''),
+      funFact: q.funFact || q.fun_fact || '',
       difficulty: q.difficulty,
       difficultySort: `${q.difficulty}#${q.id}`,
       sourceType: q.sourceType || q.source_type || 'static',

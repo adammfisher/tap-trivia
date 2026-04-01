@@ -107,16 +107,18 @@ export function PlayingScreen({ navigation, route }: Props) {
             <TimerRing seconds={gameState.timeRemaining} totalSeconds={35} />
           </View>
 
-          {/* Category + progress */}
+          {/* Category + question number */}
           <View style={styles.categoryRow}>
             <CategoryBadge emoji={question.categoryEmoji} category={question.category} />
+          </View>
+          <View style={styles.progressRow}>
+            <View style={styles.progressContainer}>
+              <ProgressBar current={gameState.questionNumber} total={gameState.totalQuestions} />
+            </View>
             <Text style={styles.questionNum}>
-              {gameState.questionNumber}
+              Q{gameState.questionNumber}
               <Text style={styles.questionTotal}>/{gameState.totalQuestions}</Text>
             </Text>
-          </View>
-          <View style={styles.progressContainer}>
-            <ProgressBar current={gameState.questionNumber} total={gameState.totalQuestions} />
           </View>
 
           {/* Question */}
@@ -195,15 +197,20 @@ const styles = StyleSheet.create({
   totalValue: { fontFamily: fonts.fredoka.bold, fontSize: 16, color: colors.gold },
   timerRow: { alignItems: 'center', paddingVertical: 4 },
   categoryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    marginBottom: 4,
+    marginBottom: 6,
   },
-  questionNum: { fontFamily: fonts.fredoka.semiBold, fontSize: 14, color: w(0.5) },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    marginBottom: 8,
+    gap: 10,
+  },
+  progressContainer: { flex: 1 },
+  questionNum: { fontFamily: fonts.outfit.semiBold, fontSize: 12, color: w(0.4) },
   questionTotal: { color: w(0.25) },
-  progressContainer: { paddingHorizontal: 24, marginBottom: 8 },
   questionText: {
     fontFamily: fonts.outfit.bold,
     fontSize: 17,

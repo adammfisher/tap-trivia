@@ -129,7 +129,7 @@ export function ResultsScreen({ navigation, route }: Props) {
             </View>
           </View>
 
-          {/* Final standings (bar play only) */}
+          {/* Final standings (location play only) */}
           {!isSolo && gameState.leaderboard.length > 0 && (
             <>
               <Text style={styles.sectionLabel}>Final Standings</Text>

@@ -126,7 +126,7 @@ body::-webkit-scrollbar { display: none; }
 .screen.active { display: flex; }
 .hidden { display: none !important; }
 
-/* ─── Bar Name ─────────────────────────────────────────────── */
+/* ─── Location Name ───────────────────────────────────────── */
 .p-bar-name {
   font-family: var(--font-display);
   font-weight: 700;

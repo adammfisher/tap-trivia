@@ -11,7 +11,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PrivacyPolicy'>;
 const SECTIONS = [
   {
     title: '1. Information We Collect',
-    body: 'TapTrivia collects minimal data to provide the game experience:\n\n\u2022 Device identifier \u2014 A randomly generated UUID stored locally on your device. This is not linked to your real identity.\n\u2022 Display name \u2014 The nickname you choose, visible to other players at your venue.\n\u2022 Bar/venue code \u2014 The venue you join to play.\n\u2022 Game data \u2014 Your answers, scores, and response times during gameplay.\n\u2022 Feedback \u2014 If you submit feedback, we store your message and optional email address.',
+    body: 'TapTrivia collects minimal data to provide the game experience:\n\n\u2022 Device identifier \u2014 A randomly generated UUID stored locally on your device. This is not linked to your real identity.\n\u2022 Display name \u2014 The nickname you choose, visible to other players at your venue.\n\u2022 Location/venue code \u2014 The venue you join to play.\n\u2022 Game data \u2014 Your answers, scores, and response times during gameplay.\n\u2022 Feedback \u2014 If you submit feedback, we store your message and optional email address.',
   },
   {
     title: '2. Information We Do NOT Collect',

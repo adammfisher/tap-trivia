@@ -851,10 +851,17 @@ body {
 }
 .tt-category__name {
   font-family: 'Fredoka', sans-serif;
-  font-size: 84px; /* 42×2 */
+  font-size: 56px; /* 28×2, smaller to fit long names */
   font-weight: 700;
   color: #f0f0f0;
   margin-bottom: 16px; /* 8×2 */
+  text-align: center;
+  max-width: 1600px;
+  line-height: 1.15;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   animation: fadeDown 0.5s ease-out 0.2s both;
 }
 .tt-category__sub {
