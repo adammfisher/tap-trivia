@@ -226,3 +226,62 @@ moved {
   from = aws_cloudfront_distribution.dashboard_app
   to   = aws_cloudfront_distribution.dashboard_app[0]
 }
+
+# =============================================================================
+# 4. App Redirect Distribution (app.taptrivia.tv)
+# =============================================================================
+resource "aws_cloudfront_distribution" "app_redirect" {
+  count               = local.is_dev ? 0 : 1
+  enabled             = true
+  default_root_object = "index.html"
+  price_class         = "PriceClass_100"
+  comment             = "Tap Trivia - App Store Redirect"
+  aliases             = ["app.taptrivia.tv"]
+
+  origin {
+    domain_name              = aws_s3_bucket.app_redirect[0].bucket_regional_domain_name
+    origin_id                = "S3-app-redirect"
+    origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac[0].id
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "S3-app-redirect"
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    compress               = true
+    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+  }
+
+  custom_error_response {
+    error_code            = 403
+    response_code         = 200
+    response_page_path    = "/index.html"
+    error_caching_min_ttl = 0
+  }
+
+  custom_error_response {
+    error_code            = 404
+    response_code         = 200
+    response_page_path    = "/index.html"
+    error_caching_min_ttl = 0
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn      = aws_acm_certificate_validation.main[0].certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
+
+  tags = {
+    Environment = local.stage
+    Project     = "TapTrivia"
+    App         = "AppRedirect"
+  }
+}

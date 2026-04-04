@@ -45,11 +45,7 @@ export function WelcomeScreen({ navigation }: Props) {
 
   const handlePlaySolo = () => {
     if (!deviceId) return;
-    if (nickname) {
-      navigation.navigate('Lobby', { barCode: 'SOLO', barName: 'Solo Play', playerId: deviceId });
-    } else {
-      navigation.navigate('Nickname', { barCode: 'SOLO', barName: 'Solo Play' });
-    }
+    navigation.navigate('Nickname', { barCode: 'SOLO', barName: 'Solo Play' });
   };
 
   const handleSavedBar = async (code: string, name: string) => {
@@ -61,11 +57,7 @@ export function WelcomeScreen({ navigation }: Props) {
       return;
     }
     await setBarCode(code);
-    if (result.nameCollision || !nickname) {
-      navigation.navigate('Nickname', { barCode: result.barCode, barName: result.barName, nameCollision: result.nameCollision });
-    } else {
-      navigation.navigate('Lobby', { barCode: result.barCode, barName: result.barName, playerId: deviceId });
-    }
+    navigation.navigate('Nickname', { barCode: result.barCode, barName: result.barName, nameCollision: result.nameCollision });
   };
 
   return (

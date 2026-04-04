@@ -1,7 +1,6 @@
 import { View, Text, Pressable, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useRef } from 'react';
 import { FadeInView } from '../utils/animations';
 import { useSubscription } from '../hooks/useSubscription';
 import { isConfigured } from '../services/revenuecat';
@@ -22,9 +21,7 @@ const FEATURES = [
 
 export function SubscriptionScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { isPro, isLoading, trialStatus, offering, purchase, restore, activateTrial, devBypass } = useSubscription();
-  const tapCountRef = useRef(0);
-  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { isPro, isLoading, offering, purchase, restore } = useSubscription();
 
   // Derive price string from offering (never hardcoded)
   const rcActive = isConfigured();
@@ -33,7 +30,8 @@ export function SubscriptionScreen({ navigation }: Props) {
   const periodLabel = 'per month';
 
   // Check if the product has a free trial offer from Google Play / App Store
-  const hasStoreTrial = pkg?.product?.introPrice != null;
+  // Always show trial button — Google Play handles the actual trial terms
+  const hasStoreTrial = true;
 
   // If already subscribed or in trial, auto-dismiss
   if (isPro && !isLoading) {
@@ -56,18 +54,6 @@ export function SubscriptionScreen({ navigation }: Props) {
     if (ok) navigation.goBack();
   };
 
-  // Secret dev bypass: triple-tap the crown emoji (works on all builds)
-  const handleCrownTap = () => {
-    tapCountRef.current += 1;
-    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
-    if (tapCountRef.current >= 5) {
-      tapCountRef.current = 0;
-      devBypass();
-      navigation.goBack();
-      return;
-    }
-    tapTimerRef.current = setTimeout(() => { tapCountRef.current = 0; }, 800);
-  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: BG }]}>
@@ -80,10 +66,7 @@ export function SubscriptionScreen({ navigation }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Hero — crown is secret dev bypass (5 taps) */}
-        <Pressable onPress={handleCrownTap}>
-          <Text style={styles.heroEmoji}>{'\u{1F451}'}</Text>
-        </Pressable>
+        <Text style={styles.heroEmoji}>{'\u{1F451}'}</Text>
         <Text style={styles.title}>TapTrivia Pro</Text>
         <Text style={styles.subtitle}>
           Play unlimited trivia at any location. Try it free for 7 days!
@@ -148,12 +131,7 @@ export function SubscriptionScreen({ navigation }: Props) {
           <Text style={styles.restoreText}>Restore Purchases</Text>
         </Pressable>
 
-        {/* Visible dev bypass — only in development builds */}
-        {__DEV__ && (
-          <Pressable onPress={() => { devBypass(); navigation.goBack(); }} style={styles.devButton}>
-            <Text style={styles.devText}>Skip (Dev)</Text>
-          </Pressable>
-        )}
+
       </ScrollView>
 
       {/* Footer */}

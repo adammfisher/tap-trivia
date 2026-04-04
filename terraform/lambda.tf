@@ -882,3 +882,42 @@ resource "aws_lambda_permission" "tv_activate_apigw" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }
+
+# =============================================================================
+# Contact Form Lambda
+# =============================================================================
+
+data "archive_file" "contact" {
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/functions/contact"
+  output_path = "${path.module}/zip/contact.zip"
+}
+
+resource "aws_lambda_function" "contact" {
+  function_name    = "${local.name_prefix}-contact"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  memory_size      = 128
+  timeout          = 10
+  filename         = data.archive_file.contact.output_path
+  source_code_hash = data.archive_file.contact.output_base64sha256
+
+  environment {
+    variables = local.common_environment_variables
+  }
+
+  tags = {
+    Environment = local.stage
+    Project     = "TapTrivia"
+    Function    = "contact"
+  }
+}
+
+resource "aws_lambda_permission" "contact_apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.contact.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}

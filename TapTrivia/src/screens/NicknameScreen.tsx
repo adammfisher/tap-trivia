@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,7 +7,6 @@ import { GradientBackground } from '../components/GradientBackground';
 import { Logo } from '../components/Logo';
 import { usePlayerIdentity } from '../hooks/usePlayerIdentity';
 import { updatePlayer, isApiError } from '../services/api';
-import { getTrialStart } from '../services/trial';
 import { gradients, w, colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -17,12 +16,19 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Nickname'>;
 export function NicknameScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { barCode, barName, nameCollision } = route.params;
-  const { nickname: savedNickname, deviceId, setNickname } = usePlayerIdentity();
+  const { nickname: savedNickname, deviceId, setNickname, loaded } = usePlayerIdentity();
   const [name, setName] = useState(savedNickname || '');
+
+  // Sync when saved nickname loads from AsyncStorage
+  useEffect(() => {
+    if (loaded && savedNickname && !name) {
+      setName(savedNickname);
+    }
+  }, [loaded, savedNickname]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const isValid = name.trim().length >= 2 && name.trim().length <= 20;
+  const isValid = name.trim().length >= 2 && name.trim().length <= 30;
 
   const handleSubmit = async () => {
     if (!isValid || !deviceId) return;
@@ -33,8 +39,7 @@ export function NicknameScreen({ navigation, route }: Props) {
     Keyboard.dismiss();
 
     try {
-      const trialStartedAt = await getTrialStart();
-      const result = await updatePlayer(deviceId, trimmed, barCode, trialStartedAt ?? undefined);
+      const result = await updatePlayer(deviceId, trimmed, barCode);
       if (isApiError(result)) {
         setError(result.message || 'Failed to save nickname.');
         setLoading(false);
@@ -89,7 +94,7 @@ export function NicknameScreen({ navigation, route }: Props) {
                 setName(text);
                 setError('');
               }}
-              maxLength={20}
+              maxLength={30}
               autoCapitalize="words"
               autoCorrect={false}
               autoFocus
@@ -99,7 +104,7 @@ export function NicknameScreen({ navigation, route }: Props) {
               returnKeyType="go"
               onSubmitEditing={handleSubmit}
             />
-            <Text style={styles.charCount}>{name.length}/20</Text>
+            <Text style={styles.charCount}>{name.length}/30</Text>
           </View>
 
           {error ? <Text style={styles.error}>{error}</Text> : null}

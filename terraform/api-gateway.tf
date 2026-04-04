@@ -379,3 +379,20 @@ resource "aws_apigatewayv2_route" "submit_feedback" {
   route_key = "POST /feedback"
   target    = "integrations/${aws_apigatewayv2_integration.submit_feedback.id}"
 }
+
+# =============================================================================
+# Contact Route
+# =============================================================================
+
+resource "aws_apigatewayv2_integration" "contact" {
+  api_id                 = aws_apigatewayv2_api.main.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.contact.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "contact" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "POST /contact"
+  target    = "integrations/${aws_apigatewayv2_integration.contact.id}"
+}

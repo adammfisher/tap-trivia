@@ -194,6 +194,20 @@ moved {
   to   = aws_route53_record.dashboard_app[0]
 }
 
+# app.taptrivia.tv → App Redirect CloudFront
+resource "aws_route53_record" "app_redirect" {
+  count   = local.is_dev ? 0 : 1
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = "app.taptrivia.tv"
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.app_redirect[0].domain_name
+    zone_id                = aws_cloudfront_distribution.app_redirect[0].hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
 # =============================================================================
 # SES Configuration for taptrivia.tv
 # =============================================================================

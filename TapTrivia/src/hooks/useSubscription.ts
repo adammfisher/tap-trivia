@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { PurchasesOffering } from 'react-native-purchases';
 import {
   checkSubscription,
@@ -7,66 +7,36 @@ import {
   getOffering,
   isConfigured,
 } from '../services/revenuecat';
-import { checkTrial, startTrial } from '../services/trial';
-import type { TrialStatus } from '../services/trial';
-
-// Module-level dev bypass flag — shared across all hook instances
-let _devBypassed = false;
 
 interface UseSubscription {
-  /** True if user can play (active trial OR active subscription) */
+  /** True if user has an active subscription (RevenueCat only) */
   isPro: boolean;
-  /** True while checking subscription/trial status */
+  /** True while checking subscription status */
   isLoading: boolean;
-  /** Trial status: never_started, active, or expired */
-  trialStatus: TrialStatus;
-  /** Days remaining in trial (0 if not started or expired) */
-  trialDaysRemaining: number;
   /** RevenueCat offering for purchase UI */
   offering: PurchasesOffering | null;
   /** Trigger a purchase. Returns true on success. */
   purchase: () => Promise<boolean>;
   /** Restore previous purchases. Returns true on success. */
   restore: () => Promise<boolean>;
-  /** Start the trial countdown (call when user taps "Start Free Trial"). */
-  activateTrial: () => Promise<void>;
-  /** Dev bypass — set isPro to true without real subscription */
-  devBypass: () => void;
 }
 
+const FORCE_PRO = false;
+
 export function useSubscription(): UseSubscription {
-  const [isPro, setIsPro] = useState(_devBypassed);
-  const [isLoading, setIsLoading] = useState(true);
-  const [trialStatus, setTrialStatus] = useState<TrialStatus>('never_started');
-  const [trialDaysRemaining, setTrialDaysRemaining] = useState(0);
+  // Start with isPro = true and isLoading = true so nothing renders the paywall
+  // until we've confirmed the user is NOT subscribed
+  const [isPro, setIsPro] = useState(true);
+  const [isLoading, setIsLoading] = useState(!FORCE_PRO);
   const [offering, setOffering] = useState<PurchasesOffering | null>(null);
+  const checkedRef = useRef(false);
 
   useEffect(() => {
+    if (FORCE_PRO || checkedRef.current) return;
+    checkedRef.current = true;
     let cancelled = false;
 
     (async () => {
-      // Step 1: Check trial
-      const trial = await checkTrial();
-
-      if (!cancelled) {
-        setTrialStatus(trial.status);
-        setTrialDaysRemaining(trial.daysRemaining);
-      }
-
-      if (trial.status === 'active') {
-        if (!cancelled) {
-          setIsPro(true);
-          setIsLoading(false);
-        }
-        // Fetch offering in background for when trial expires
-        if (isConfigured()) {
-          const off = await getOffering();
-          if (!cancelled) setOffering(off);
-        }
-        return;
-      }
-
-      // Step 2: Trial not active (never_started or expired) — check RevenueCat
       if (isConfigured()) {
         const [entitled, off] = await Promise.all([checkSubscription(), getOffering()]);
         if (!cancelled) {
@@ -75,7 +45,7 @@ export function useSubscription(): UseSubscription {
           setIsLoading(false);
         }
       } else {
-        // RevenueCat not configured (Expo Go, placeholder key)
+        // RevenueCat not configured (Expo Go, emulator)
         if (!cancelled) {
           setIsPro(false);
           setIsLoading(false);
@@ -104,22 +74,5 @@ export function useSubscription(): UseSubscription {
     return ok;
   }, []);
 
-  const activateTrial = useCallback(async () => {
-    await startTrial();
-    const trial = await checkTrial();
-    setTrialStatus(trial.status);
-    setTrialDaysRemaining(trial.daysRemaining);
-    setIsPro(trial.status === 'active');
-  }, []);
-
-  const devBypass = useCallback(() => {
-    _devBypassed = true;
-    setIsPro(true);
-    setIsLoading(false);
-  }, []);
-
-  // _devBypassed ensures all hook instances see isPro=true after dev bypass,
-  // even if this instance's async check already set isPro=false
-  const effectiveIsPro = isPro || _devBypassed;
-  return { isPro: effectiveIsPro, isLoading: effectiveIsPro ? false : isLoading, trialStatus, trialDaysRemaining, offering, purchase, restore, activateTrial, devBypass };
+  return { isPro: FORCE_PRO || isPro, isLoading, offering, purchase, restore };
 }

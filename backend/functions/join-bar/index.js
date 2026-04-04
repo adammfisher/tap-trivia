@@ -96,15 +96,17 @@ exports.handler = async (event) => {
     const updatedPlayer = await get(TABLE.PLAYERS, { PK: `PLAYER#${playerId}` });
     const playerName = updatedPlayer?.displayName || null;
 
-    // Check for name collision at this bar — scan players with same barCode and same name
+    // Check for name collision at this bar — only against recently active players (last 30 min)
     let nameCollision = false;
     if (playerName) {
       const nameLower = playerName.toLowerCase().trim();
+      const recentCutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
       const barPlayers = await scan(TABLE.PLAYERS, {
-        FilterExpression: 'currentBarCode = :bc AND playerId <> :pid',
+        FilterExpression: 'currentBarCode = :bc AND PK <> :pk AND updatedAt > :cutoff',
         ExpressionAttributeValues: {
           ':bc': barCode,
-          ':pid': playerId
+          ':pk': `PLAYER#${playerId}`,
+          ':cutoff': recentCutoff
         },
         ProjectionExpression: 'displayName'
       });

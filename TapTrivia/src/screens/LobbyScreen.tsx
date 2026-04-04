@@ -42,16 +42,28 @@ export function LobbyScreen({ navigation, route }: Props) {
   const gameReadyRef = useRef(false);
 
   // Hard gate: show paywall if not pro. If dismissed without subscribing, kick back.
+  // Don't show until subscription check is complete to prevent flash.
+  const kickbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (subLoading) return;
-    if (!isPro) {
-      if (!paywallShown.current) {
-        paywallShown.current = true;
-        navigation.navigate('Subscription');
-      } else if (isOnTop) {
-        // Paywall was dismissed but user still isn't pro — go back
-        navigation.goBack();
-      }
+    if (isPro) {
+      // Already subscribed — no paywall needed, cancel any pending kickback
+      paywallShown.current = false;
+      if (kickbackTimer.current) clearTimeout(kickbackTimer.current);
+      return;
+    }
+    if (!paywallShown.current) {
+      paywallShown.current = true;
+      navigation.navigate('Subscription');
+    } else if (isOnTop) {
+      // Paywall was dismissed but user still isn't pro — delay kickback
+      // to allow subscription state to propagate after purchase
+      if (kickbackTimer.current) clearTimeout(kickbackTimer.current);
+      kickbackTimer.current = setTimeout(() => {
+        if (!isProRef.current && !subLoading) {
+          navigation.goBack();
+        }
+      }, 3000);
     }
   }, [subLoading, isPro, isOnTop, navigation]);
 

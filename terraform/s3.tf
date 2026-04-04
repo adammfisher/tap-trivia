@@ -328,3 +328,54 @@ moved {
   from = aws_s3_bucket_policy.dashboard_app
   to   = aws_s3_bucket_policy.dashboard_app[0]
 }
+
+# =============================================================================
+# 6. App Redirect Page (app.taptrivia.tv — app store smart redirect)
+# =============================================================================
+resource "aws_s3_bucket" "app_redirect" {
+  count  = local.is_dev ? 0 : 1
+  bucket = "taptrivia-app-redirect"
+
+  tags = {
+    Environment = local.stage
+    Project     = "TapTrivia"
+    Purpose     = "App store redirect page"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "app_redirect" {
+  count  = local.is_dev ? 0 : 1
+  bucket = aws_s3_bucket.app_redirect[0].id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_policy" "app_redirect" {
+  count  = local.is_dev ? 0 : 1
+  bucket = aws_s3_bucket.app_redirect[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowCloudFrontOAC"
+        Effect    = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.app_redirect[0].arn}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.app_redirect[0].arn
+          }
+        }
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket_public_access_block.app_redirect]
+}

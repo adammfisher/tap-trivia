@@ -295,10 +295,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
     // Functional update: skip re-render if nothing meaningful changed
     setGameState(prev => {
       const qNum = clockState.questionNumber || 0;
-      // During reveal/scores phases, count down until next question (52s - elapsed)
+      // During scores phase, count down until next question (52s - elapsed)
+      // During reveal phase, keep showing 0 (don't flash the next-question countdown)
       const elapsed = clockState.elapsedInQuestion || 0;
       const phase = clockState.questionPhase;
-      const timeRem = (phase === 'scores' || phase === 'reveal')
+      const timeRem = phase === 'scores'
         ? Math.max(0, Math.ceil((52000 - elapsed) / 1000))
         : (clockState.questionSecondsRemaining || 0);
       if (

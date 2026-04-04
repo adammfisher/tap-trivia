@@ -65,21 +65,12 @@ export function JoinScreen({ navigation }: Props) {
 
     await setBarCode(codeToSubmit);
 
-    // If name collision at this location, send to Nickname screen to change it
-    // If no nickname yet, also send to Nickname screen
-    if (result.nameCollision || !nickname) {
-      navigation.navigate('Nickname', {
-        barCode: result.barCode,
-        barName: result.barName,
-        nameCollision: result.nameCollision,
-      });
-    } else {
-      navigation.navigate('Lobby', {
-        barCode: result.barCode,
-        barName: result.barName,
-        playerId: deviceId,
-      });
-    }
+    // Always show Nickname screen — pre-populated with last used name
+    navigation.navigate('Nickname', {
+      barCode: result.barCode,
+      barName: result.barName,
+      nameCollision: result.nameCollision,
+    });
   };
 
   const codeChars = code.padEnd(5, ' ').split('');
