@@ -72,23 +72,23 @@
 
         <!-- Category pill + question counter row -->
         <Group id="catRow" translation="[0, 0]">
-          <!-- Category pill (pre-rendered rounded PNG) -->
+          <!-- Category pill (dynamic width rectangle) -->
           <Group id="categoryPill" translation="[0, 0]">
-            <Poster id="pillBg" uri="pkg:/images/category-pill.png" width="240" height="40" />
+            <Rectangle id="pillBg" width="480" height="44" color="#FFFFFF" opacity="0.08" cornerRadius="22" />
             <Poster id="pillIcon" uri="pkg:/images/cat-sm-default.png"
-                    translation="[6, 2]" width="36" height="36" />
-            <Label id="pillText" text="Trivia"
-                   translation="[46, 4]" width="450" color="#ffffffB0">
-              <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
+                    translation="[8, 4]" width="36" height="36" />
+            <Label id="pillText" text="TRIVIA"
+                   translation="[50, 10]" width="420" color="#ffffffD9">
+              <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="22" />
             </Label>
           </Group>
           <!-- Question counter -->
           <Label id="qCounter" text="Q1"
-                 translation="[260, 8]" color="#ffffff58">
+                 translation="[500, 8]" color="#ffffff58">
             <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
           </Label>
           <Label id="qCounterSep" text="/15"
-                 translation="[310, 8]" color="#ffffff30">
+                 translation="[550, 8]" color="#ffffff30">
             <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="28" />
           </Label>
         </Group>

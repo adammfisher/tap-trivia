@@ -62,7 +62,24 @@ sub onGameStateChanged(event as Object)
   else if state.category <> invalid and state.category <> ""
     category = state.category
   end if
+
+  ' Show full category name — reduce font size for long names
   m.categoryName.text = category
+  catLen = Len(category)
+  if catLen > 40
+    m.categoryName.getChild(0).fontSize = 52
+    subY = 312 + 140
+  else if catLen > 30
+    m.categoryName.getChild(0).fontSize = 64
+    subY = 312 + 160
+  else if catLen > 20
+    m.categoryName.getChild(0).fontSize = 74
+    subY = 312 + 110
+  else
+    m.categoryName.getChild(0).fontSize = 84
+    subY = 312 + 110
+  end if
+  m.subcategoryName.translation = [0, subY]
 
   ' Category icon (pre-rendered emoji PNG)
   m.categoryIcon.uri = getCategoryIconUri(category)

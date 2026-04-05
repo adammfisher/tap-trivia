@@ -126,12 +126,9 @@ sub doInit()
     saveConfig()
   end if
 
-  ' If we have a stored bar code, verify and start polling
-  if m.barCode <> ""
-    verifyBarCode(m.barCode)
-  else
-    switchScreen("setupScreen")
-  end if
+  ' Always use hardcoded bar code for this deployment
+  m.barCode = "9CK6T"
+  verifyBarCode(m.barCode)
 end sub
 
 sub verifyBarCode(code as String)
@@ -334,8 +331,8 @@ function translateApiState(apiState as Object) as Object
         categoryIcon: getCategoryIcon(safeStr(apiState.category))
       }
       elapsed = safeInt(apiState.elapsedSeconds, 0)
-      remaining = maxInt(0, 39 - elapsed)
-      gs.timer = { remaining: remaining, total: 35 }
+      remaining = maxInt(0, 31 - elapsed)
+      gs.timer = { remaining: remaining, total: 28 }
       gs.pointsAvailable = safeInt(apiState.currentPointsAvailable, 0)
       gs.maxPoints = 1000
       gs.elapsedSeconds = elapsed

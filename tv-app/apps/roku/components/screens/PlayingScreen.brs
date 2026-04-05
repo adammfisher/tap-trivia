@@ -36,7 +36,7 @@ sub init()
   m.logo.setField("logoSize", "playing")
 
   m.timerRing = m.top.findNode("timerRing")
-  m.timerRing.setField("totalSeconds", 35)
+  m.timerRing.setField("totalSeconds", 28)
 
   m.progressBar = m.top.findNode("progressBar")
   m.progressBar.setField("barWidth", 900)
@@ -115,9 +115,9 @@ sub onGameStateChanged(event as Object)
   m.localTimer.control = "start"
 
   ' ── Timer total (only changes per question, not per tick) ──
-  total = 35
+  total = 28
   if timer <> invalid and timer.total <> invalid
-    total = safeInt(timer.total, 35)
+    total = safeInt(timer.total, 28)
   end if
   m.timerRing.setField("totalSeconds", total)
 
@@ -136,17 +136,18 @@ sub onGameStateChanged(event as Object)
   q = state.question
   if q = invalid then q = {}
 
-  ' Category pill
+  ' Category pill — full name, uppercase, dynamic width
   category = "Trivia"
   if q.category <> invalid and q.category <> "" then category = q.category
   m.pillIcon.uri = getCategoryIconSmallUri(category)
-  m.pillText.text = category
+  m.pillText.text = UCase(category)
 
-  ' Resize pill background to fit category text (28px font ~14px/char)
-  pillW = 48 + Len(category) * 14
+  ' Resize pill to fit text (~11px/char at 22px uppercase)
+  pillW = 60 + Len(category) * 11
   if pillW < 160 then pillW = 160
-  if pillW > 600 then pillW = 600
+  if pillW > 620 then pillW = 620
   m.pillBg.width = pillW
+  m.pillText.width = pillW - 60
 
   ' Question counter — position after pill with 20px gap
   num = safeInt(state.questionNumber, 1)

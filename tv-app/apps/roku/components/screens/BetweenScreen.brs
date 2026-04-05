@@ -21,7 +21,8 @@ sub init()
   m.qrBadge = m.top.findNode("qrBadge")
   m.signagePanel = m.top.findNode("signagePanel")
 
-  ' Standing rows 1-5
+  ' Standings group + rows
+  m.standingsList = m.top.findNode("standingsList")
   m.standingRows = []
   for i = 1 to 5
     row = m.top.findNode("standing" + Str(i).trim())
@@ -74,17 +75,16 @@ sub onGameStateChanged(event as Object)
   m.funFactBg.visible = hasFunFact
   m.funFactLabel.visible = hasFunFact
   m.funFactText.visible = hasFunFact
+
   if hasFunFact
     m.funFactText.text = funFact
-    ' Measure fun fact text height (approx: 26px font × lines, max 3)
-    lineH = 34
-    textW = 804
-    charPerLine = Int(textW / 14)
+    ' Size the card background to fit text (32px font, ~16px/char)
+    lineH = 42
+    charPerLine = Int(780 / 16)
     numLines = Int(Len(funFact) / charPerLine) + 1
-    if numLines > 3 then numLines = 3
+    if numLines > 4 then numLines = 4
     textH = numLines * lineH
-    cardH = 40 + textH + 12
-    m.funFactBg.height = cardH
+    m.funFactBg.height = 56 + textH + 24
   end if
 
   ' ── Standings label ──
@@ -141,46 +141,56 @@ sub onGameStateChanged(event as Object)
   end if
 
   ' ── Vertical centering ──
-  ' Content: logo(58px) + gap(8) + barName(28) + gap(16) = 110px
-  baseH = 110
+  ' Layout order: [fun fact] → logo → barName → standings → countdown
   funFactH = 0
   if hasFunFact
-    funFactH = m.funFactBg.height + 12
+    funFactH = m.funFactBg.height + 16
   end if
+  ' logo(58) + gap(8) + barName(28) + gap(16) = 110
+  baseH = 110
   ' standingsLabel(44) + gap(12) = 56
   labelH = 56
-  ' rows at 80px spacing (68px row height)
   rowsH = 0
   if visibleRows > 0
     rowsH = (visibleRows - 1) * 80 + 68
   end if
   countdownGap = 24
   countdownH = 28
-  totalH = baseH + funFactH + labelH + rowsH + countdownGap + countdownH
-  offsetY = Int((1080 - totalH) / 2)
-  m.leftCol.translation = [0, offsetY]
+  ' Fun fact pinned to top of screen
+  m.leftCol.translation = [0, 0]
 
-  ' Position fun fact card
-  funFactY = 110
+  ' Fun fact card at top
   if hasFunFact
-    m.funFactBg.translation = [50, funFactY]
-    m.funFactLabel.translation = [50, funFactY + 14]
-    m.funFactText.translation = [78, funFactY + 40]
+    m.funFactBg.translation = [30, 30]
+    m.funFactLabel.translation = [30, 48]
+    m.funFactText.translation = [60, 82]
   end if
 
-  ' Position standings label after fun fact
-  standingsLabelY = funFactY + funFactH
-  m.standingsLabel.translation = [0, standingsLabelY]
+  ' Calculate height of logo+bar+standings+countdown block
+  blockH = baseH + labelH + rowsH + countdownGap + countdownH
+  ' Center this block in the space below the fun fact card
+  topOfBlock = 40 + funFactH
+  availableH = 1080 - topOfBlock
+  blockY = topOfBlock + Int((availableH - blockH) / 2)
 
-  ' Position standings list
-  standingsY = standingsLabelY + 56
-  m.top.findNode("standingsList").translation = [50, standingsY]
+  ' Logo + bar name
+  curY = blockY
+  m.logo.translation = [374, curY]
+  m.barNameLabel.translation = [0, curY + 66]
+  curY = curY + 110
 
-  ' Position countdown after last visible row
+  ' Standings label
+  m.standingsLabel.translation = [0, curY]
+  curY = curY + 56
+
+  ' Standings list
+  m.standingsList.translation = [50, curY]
+
+  ' Countdown after last visible row
   if visibleRows > 0
-    countdownY = standingsY + (visibleRows - 1) * 80 + 68 + countdownGap
+    countdownY = curY + (visibleRows - 1) * 80 + 68 + countdownGap
   else
-    countdownY = standingsY
+    countdownY = curY
   end if
   m.countdownLabel.translation = [0, countdownY]
 
