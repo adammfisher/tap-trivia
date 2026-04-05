@@ -88,13 +88,20 @@ export const App: React.FC = () => {
     let audio: AudioPlayer | null = null;
     let seekTimer: ReturnType<typeof setInterval>;
     let recoveryTimer: ReturnType<typeof setInterval>;
+    let refreshTimer: ReturnType<typeof setInterval>;
     let disposed = false;
-    let attempts = 0;
+    let consecutiveFailures = 0;
+    const MAX_CONSECUTIVE_FAILURES = 10;
+
+    const teardown = () => {
+      try { audio?.pause(); (audio as any)?.deinitialize(); } catch (_) {}
+      audio = null;
+    };
 
     const init = async () => {
-      if (disposed || attempts >= 5) return;
-      attempts++;
-      console.log(`[AUDIO] init attempt #${attempts}`);
+      if (disposed || consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) return;
+      consecutiveFailures++;
+      console.log(`[AUDIO] init attempt (consecutive failures: ${consecutiveFailures})`);
       try {
         audio = new AudioPlayer(AudioContentType.CONTENT_TYPE_MUSIC, AudioUsageType.USAGE_MEDIA);
         await withTimeout(audio.setMediaControlFocus(componentInstance), 5000);
@@ -108,11 +115,11 @@ export const App: React.FC = () => {
         audio.src = 'https://tv.taptrivia.tv/silence.wav';
         audio.load();
         await withTimeout(audio.play(), 10000);
-        console.log('[AUDIO] playing');
+        consecutiveFailures = 0; // Reset on success
+        console.log('[AUDIO] playing — session registered');
       } catch (e: any) {
         console.log('[AUDIO] init failed:', e?.message);
-        try { audio?.pause(); (audio as any)?.deinitialize(); } catch (_) {}
-        audio = null;
+        teardown();
       }
     };
 
@@ -120,11 +127,23 @@ export const App: React.FC = () => {
       if (disposed) return;
       if (!audio || audio.error || audio.paused || isNaN(audio.currentTime) || audio.readyState === 0) {
         console.log('[AUDIO] recovering...');
-        try { audio?.pause(); (audio as any)?.deinitialize(); } catch (_) {}
-        audio = null;
+        teardown();
         await new Promise(r => setTimeout(r, 3000));
         if (!disposed) await init();
+      } else {
+        consecutiveFailures = 0;
       }
+    };
+
+    // Forced re-init every 4 min — re-registers session if lost (e.g., after
+    // OS backgrounded the app for profile picker, system dialog, etc.).
+    // Must be under the 5-min idle manager kill threshold.
+    const refresh = async () => {
+      if (disposed) return;
+      console.log('[AUDIO] periodic session refresh');
+      teardown();
+      await new Promise(r => setTimeout(r, 1000));
+      if (!disposed) await init();
     };
 
     init();
@@ -132,12 +151,14 @@ export const App: React.FC = () => {
       try { if (audio && !audio.paused && audio.readyState >= 2) audio.currentTime = 0; } catch (_) {}
     }, 30000);
     recoveryTimer = setInterval(recover, 45000);
+    refreshTimer = setInterval(refresh, 120000); // 2 min — well under 5-min idle kill
 
     return () => {
       disposed = true;
       clearInterval(seekTimer);
       clearInterval(recoveryTimer);
-      try { audio?.pause(); (audio as any)?.deinitialize(); } catch (_) {}
+      clearInterval(refreshTimer);
+      teardown();
     };
   }, [componentInstance]);
 

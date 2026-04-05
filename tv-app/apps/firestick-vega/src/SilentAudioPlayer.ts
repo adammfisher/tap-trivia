@@ -8,10 +8,10 @@
  *   High CPU from 5s intervals caused load average >8 → cgroup OOM kill.
  *
  * CURRENT APPROACH (minimal memory footprint):
- *   The Video component in GradientBackground.tsx already handles:
- *   - "video-playback" display power session via setMediaControlFocus()
- *   - KMC session state via internal MediaControlStateUtil
- *   - Manual loop restart on 'ended' event
+ *   The AudioPlayer in App.tsx handles the PRIMARY keepalive:
+ *   - AUDIO_PLAYBACK session (weight 130) via setMediaControlFocus()
+ *   - Plays local silence.wav from bundled assets (no CDN dependency)
+ *   - Self-recovery on failure with consecutive-failure counter
  *
  *   This module only adds:
  *   1. PlayerSession.setPlaybackState(PLAYING) every 30s — lightweight backup
