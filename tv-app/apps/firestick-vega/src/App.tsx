@@ -1,37 +1,25 @@
 /**
- * TapTrivia TV — Native Vega OS App
+ * TapTrivia TV — Vega OS WebView App
+ *
+ * Loads tv.taptrivia.tv in a WebView. The web TV app handles all game
+ * screens, signage, and polling. This native wrapper only provides the
+ * keepalive mechanism to prevent the Vega OS idle manager from killing the app.
  *
  * KEEPALIVE STRATEGY:
  * AudioPlayer.play(silence.wav) via @amazon-devices/react-native-w3cmedia registers
  * an AUDIO_PLAYBACK session (weight 130) with the Vega OS idle manager, preventing
  * it from backgrounding the app. This is the PRIMARY keepalive mechanism.
  * SilentAudioPlayer (PlayerSession every 30s) is a backup layer.
+ * A 2-min forced refresh re-registers the session if silently lost.
  */
-import React, { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { WebView } from '@amazon-devices/webview';
 import { AudioPlayer, AudioContentType, AudioUsageType } from '@amazon-devices/react-native-w3cmedia';
 import { useComponentInstance } from '@amazon-devices/react-native-kepler';
 import SilentAudioPlayer from './SilentAudioPlayer';
-import { TVStateProvider, useTVState } from './contexts/TVStateContext';
-import { SetupButton } from './components/SetupButton';
-import { GradientBackground } from './components/GradientBackground';
-import { ErrorBoundary } from './components/ErrorBoundary';
 
-// Screens
-import { SetupScreen } from './screens/SetupScreen';
-import { IdleScreen } from './screens/IdleScreen';
-import { LobbyScreen } from './screens/LobbyScreen';
-import { GetReadyScreen } from './screens/GetReadyScreen';
-import { CategoryScreen } from './screens/CategoryScreen';
-import { PlayingScreen } from './screens/PlayingScreen';
-import { RevealScreen } from './screens/RevealScreen';
-import { BetweenScreen } from './screens/BetweenScreen';
-import { LeaderboardScreen } from './screens/LeaderboardScreen';
-import { ResultsScreen } from './screens/ResultsScreen';
-import { BetweenPodiumScreen } from './screens/BetweenPodiumScreen';
-import { BetweenStandingsScreen } from './screens/BetweenStandingsScreen';
-import { BetweenNationalScreen } from './screens/BetweenNationalScreen';
-import { BetweenHypeScreen } from './screens/BetweenHypeScreen';
+const TV_URL = 'https://tv.taptrivia.tv';
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -40,42 +28,9 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   });
 }
 
-function getScreen(screenName: string): React.ReactNode {
-  switch (screenName) {
-    case 'setup': return <SetupScreen />;
-    case 'idle': return <IdleScreen />;
-    case 'lobby': return <LobbyScreen />;
-    case 'getready': return <GetReadyScreen />;
-    case 'category': return <CategoryScreen />;
-    case 'playing': return <PlayingScreen />;
-    case 'reveal': return <RevealScreen />;
-    case 'between': return <BetweenScreen />;
-    case 'leaderboard': return <LeaderboardScreen />;
-    case 'results': return <ResultsScreen />;
-    case 'between-podium': return <BetweenPodiumScreen />;
-    case 'between-standings': return <BetweenStandingsScreen />;
-    case 'between-national': return <BetweenNationalScreen />;
-    case 'between-hype': return <BetweenHypeScreen />;
-    default: return <SetupScreen />;
-  }
-}
-
-function ScreenRouter() {
-  const { state } = useTVState();
-  return (
-    <>
-      {getScreen(state.screen)}
-      {state.screen !== 'setup' && <SetupButton />}
-    </>
-  );
-}
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0f0326' },
-});
-
 export const App: React.FC = () => {
   const componentInstance = useComponentInstance();
+  const webViewRef = useRef<any>(null);
 
   // Backup: PlayerSession heartbeat every 30s
   useEffect(() => {
@@ -135,7 +90,7 @@ export const App: React.FC = () => {
       }
     };
 
-    // Forced re-init every 4 min — re-registers session if lost (e.g., after
+    // Forced re-init every 2 min — re-registers session if lost (e.g., after
     // OS backgrounded the app for profile picker, system dialog, etc.).
     // Must be under the 5-min idle manager kill threshold.
     const refresh = async () => {
@@ -163,14 +118,28 @@ export const App: React.FC = () => {
   }, [componentInstance]);
 
   return (
-    <GradientBackground style={styles.root}>
-      <TVStateProvider>
-        <ErrorBoundary>
-          <ScreenRouter />
-        </ErrorBoundary>
-      </TVStateProvider>
-    </GradientBackground>
+    <View style={styles.container}>
+      <WebView
+        ref={webViewRef}
+        source={{ uri: TV_URL }}
+        style={StyleSheet.absoluteFill}
+        javaScriptEnabled={true}
+        domStorageEnabled={true}
+        mediaPlaybackRequiresUserAction={false}
+        onLoadStart={(e: any) => console.log('[WEBVIEW] loadStart:', e?.nativeEvent?.url)}
+        onLoad={(e: any) => console.log('[WEBVIEW] loaded:', e?.nativeEvent?.url)}
+        onError={(e: any) => console.log('[WEBVIEW] error:', e?.nativeEvent?.code, e?.nativeEvent?.description)}
+        onHttpError={(e: any) => console.log('[WEBVIEW] httpError:', e?.nativeEvent?.statusCode, e?.nativeEvent?.description)}
+      />
+    </View>
   );
 };
 
 export default App;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f0326',
+  },
+});
