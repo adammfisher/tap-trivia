@@ -52,7 +52,6 @@ export const App: React.FC = () => {
   // Primary: AudioPlayer registers AUDIO_PLAYBACK session with idle manager
   useEffect(() => {
     let audio: AudioPlayer | null = null;
-    let seekTimer: ReturnType<typeof setInterval>;
     let recoveryTimer: ReturnType<typeof setInterval>;
     let refreshTimer: ReturnType<typeof setInterval>;
     let disposed = false;
@@ -113,15 +112,14 @@ export const App: React.FC = () => {
     };
 
     init();
-    seekTimer = setInterval(() => {
-      try { if (audio && !audio.paused && audio.readyState >= 2) audio.currentTime = 0; } catch (_) {}
-    }, 30000);
+    // Note: seekTimer removed — on Kepler, currentTime=0 triggers AudioStreamPlaybackVNTK:stop()
+    // + a false EOS event, dropping the session for ~60s until recoveryTimer detects it.
+    // The ended→play() loop handles natural file-end restarts without this side effect.
     recoveryTimer = setInterval(recover, 45000);
     refreshTimer = setInterval(refresh, 120000); // 2 min — well under 5-min idle kill
 
     return () => {
       disposed = true;
-      clearInterval(seekTimer);
       clearInterval(recoveryTimer);
       clearInterval(refreshTimer);
       teardown();
