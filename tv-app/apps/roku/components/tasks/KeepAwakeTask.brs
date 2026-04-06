@@ -32,9 +32,10 @@ end sub
 
 sub ecpPing(port as Object)
   ' Send a Lit_ keypress via ECP — resets inactivity timer
-  ' Lit_ with no character is harmless (no visible effect)
+  ' Lit_a sends a literal 'a' character — ignored by our display-only app
+  ' (avoids null byte %00 which some firmware mishandles as navigation)
   url = CreateObject("roUrlTransfer")
-  url.SetUrl("http://127.0.0.1:8060/keypress/Lit_%00")
+  url.SetUrl("http://127.0.0.1:8060/keypress/Lit_a")
   url.SetPort(port)
   url.SetCertificatesFile("common:/certs/ca-bundle.crt")
   url.AsyncPostFromString("")
