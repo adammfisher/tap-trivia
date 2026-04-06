@@ -9,6 +9,7 @@ sub init()
   m.categoryName = m.top.findNode("categoryName")
   m.subcategoryName = m.top.findNode("subcategoryName")
   m.diffLabel = m.top.findNode("diffLabel")
+  m.difficultyRow = m.top.findNode("difficultyRow")
   m.qrBadge = m.top.findNode("qrBadge")
 
   ' Difficulty dots (filled)
@@ -67,16 +68,16 @@ sub onGameStateChanged(event as Object)
   m.categoryName.text = category
   catLen = Len(category)
   if catLen > 40
-    m.categoryName.getChild(0).fontSize = 52
+    m.categoryName.font = makeFont("Fredoka-Bold", 52)
     subY = 312 + 140
   else if catLen > 30
-    m.categoryName.getChild(0).fontSize = 64
+    m.categoryName.font = makeFont("Fredoka-Bold", 64)
     subY = 312 + 160
   else if catLen > 20
-    m.categoryName.getChild(0).fontSize = 74
+    m.categoryName.font = makeFont("Fredoka-Bold", 74)
     subY = 312 + 110
   else
-    m.categoryName.getChild(0).fontSize = 84
+    m.categoryName.font = makeFont("Fredoka-Bold", 84)
     subY = 312 + 110
   end if
   m.subcategoryName.translation = [0, subY]
@@ -91,8 +92,10 @@ sub onGameStateChanged(event as Object)
   m.subcategoryName.text = sub_cat
   if sub_cat = ""
     m.subcategoryName.visible = false
+    m.difficultyRow.translation = [0, subY + 10]
   else
     m.subcategoryName.visible = true
+    m.difficultyRow.translation = [0, subY + 50]
   end if
 
   ' Difficulty (1-3)

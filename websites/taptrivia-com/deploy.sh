@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-S3_BUCKET="www.taptrivia.com"
-CF_DISTRIBUTION_ID="FILL_AFTER_TERRAFORM"
+S3_BUCKET="www-taptrivia-tv"
+CF_DISTRIBUTION_ID="E29ADLY3MY12LW"
 AWS_PROFILE="default"
 AWS_REGION="us-east-1"
 

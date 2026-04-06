@@ -142,10 +142,19 @@ sub onGameStateChanged(event as Object)
   m.pillIcon.uri = getCategoryIconSmallUri(category)
   m.pillText.text = UCase(category)
 
-  ' Resize pill to fit text (~11px/char at 22px uppercase)
-  pillW = 60 + Len(category) * 11
+  ' Resize pill to fit text — reduce font for very long names
+  catLen = Len(category)
+  if catLen > 38
+    ' ~11px/char at 18px uppercase for long names
+    m.pillText.font = makeFont("Outfit-Bold", 18)
+    pillW = 60 + catLen * 11
+  else
+    ' ~14px/char at 22px uppercase
+    m.pillText.font = makeFont("Outfit-Bold", 22)
+    pillW = 60 + catLen * 14
+  end if
   if pillW < 160 then pillW = 160
-  if pillW > 620 then pillW = 620
+  if pillW > 840 then pillW = 840
   m.pillBg.width = pillW
   m.pillText.width = pillW - 60
 

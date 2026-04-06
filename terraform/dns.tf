@@ -129,8 +129,8 @@ resource "aws_route53_record" "root" {
   type    = "A"
 
   alias {
-    name                   = aws_cloudfront_distribution.player_app[0].domain_name
-    zone_id                = aws_cloudfront_distribution.player_app[0].hosted_zone_id
+    name                   = aws_cloudfront_distribution.taptrivia_tv_redirect[0].domain_name
+    zone_id                = aws_cloudfront_distribution.taptrivia_tv_redirect[0].hosted_zone_id
     evaluate_target_health = false
   }
 }

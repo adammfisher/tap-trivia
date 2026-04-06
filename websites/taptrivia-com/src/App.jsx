@@ -127,14 +127,14 @@ const HeroSection = ({ onNavigate }) => {
         </h1>
 
         <p style={{ fontFamily:"'Outfit',sans-serif",fontSize:"clamp(16px, 2.5vw, 21px)",fontWeight:400,color:T.w(0.6),lineHeight:1.6,maxWidth:660,margin:"0 auto 24px",...anim(0.35) }}>
-          Turn any TV into an interactive trivia experience with built-in promotional signage.
+          Turn your smart TV or streaming device into an interactive trivia experience with built-in promotional signage.
           Guests play along on a free companion app for iOS and Android. No hardware to buy. No fees of any kind.
         </p>
 
         {/* Schedule callout */}
         <div style={{ display:"inline-flex",alignItems:"center",gap:10,background:T.w(0.05),border:`1px solid ${T.w(0.08)}`,borderRadius:T.radius.pill,padding:"8px 20px",marginBottom:32,...anim(0.4) }}>
           <span style={{ fontSize:14 }}>🌙</span>
-          <span style={{ fontFamily:"'Outfit',sans-serif",fontSize:14,color:T.w(0.6) }}>Trivia runs nightly <span style={{ color:T.green,fontWeight:600 }}>5 PM – 5 AM</span></span>
+          <span style={{ fontFamily:"'Outfit',sans-serif",fontSize:14,color:T.w(0.6) }}>Trivia runs nightly <span style={{ color:T.green,fontWeight:600 }}>5 PM – 5 AM EST</span></span>
           <span style={{ color:T.w(0.25),fontSize:13 }}>•</span>
           <span style={{ fontFamily:"'Outfit',sans-serif",fontSize:14,color:T.w(0.45) }}>Your signage runs in the off hours</span>
         </div>
@@ -359,6 +359,9 @@ const WhoItsFor = () => {
     {icon:"🎤",name:"Event Venues",desc:"Add interactive entertainment to any gathering."},
     {icon:"☕",name:"Cafés & Lounges",desc:"Evening programming that draws a new crowd."},
     {icon:"🍷",name:"Wine & Cocktail Lounges",desc:"Sophisticated entertainment for your guests."},
+    {icon:"🏋️",name:"Gyms & Fitness Centers",desc:"Entertainment for the lobby and lounge areas."},
+    {icon:"🎱",name:"Pool Halls & Game Rooms",desc:"Add a team challenge between rounds of play."},
+    {icon:"⛵",name:"Yacht & Social Clubs",desc:"Member programming that runs itself."},
   ];
   return (
     <section id="venues" style={{ padding:"100px 24px",background:T.deepPurple }}>

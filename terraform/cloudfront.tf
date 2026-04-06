@@ -28,7 +28,7 @@ resource "aws_cloudfront_distribution" "player_app" {
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
   comment             = "Tap Trivia - Player App"
-  aliases             = ["play.taptrivia.tv", "taptrivia.tv"]
+  aliases             = ["play.taptrivia.tv"]
 
   origin {
     domain_name              = aws_s3_bucket.player_app[0].bucket_regional_domain_name
@@ -283,5 +283,71 @@ resource "aws_cloudfront_distribution" "app_redirect" {
     Environment = local.stage
     Project     = "TapTrivia"
     App         = "AppRedirect"
+  }
+}
+
+# =============================================================================
+# 5. taptrivia.tv → www.taptrivia.tv redirect
+# =============================================================================
+resource "aws_cloudfront_function" "taptrivia_tv_redirect" {
+  count   = local.is_dev ? 0 : 1
+  name    = "taptrivia-tv-to-com-redirect"
+  runtime = "cloudfront-js-2.0"
+  code    = <<-EOF
+    function handler(event) {
+      return {
+        statusCode: 301,
+        statusDescription: 'Moved Permanently',
+        headers: { location: { value: 'https://www.taptrivia.tv' + event.request.uri } }
+      };
+    }
+  EOF
+}
+
+resource "aws_cloudfront_distribution" "taptrivia_tv_redirect" {
+  count               = local.is_dev ? 0 : 1
+  enabled             = true
+  default_root_object = "index.html"
+  price_class         = "PriceClass_100"
+  comment             = "taptrivia.tv → www.taptrivia.tv redirect"
+  aliases             = ["taptrivia.tv"]
+
+  # Dummy origin — CloudFront function handles all requests before reaching origin
+  origin {
+    domain_name              = aws_s3_bucket.player_app[0].bucket_regional_domain_name
+    origin_id                = "S3-dummy"
+    origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac[0].id
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "S3-dummy"
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    compress               = true
+    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.taptrivia_tv_redirect[0].arn
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn      = aws_acm_certificate_validation.main[0].certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
+
+  tags = {
+    Environment = local.stage
+    Project     = "TapTrivia"
+    App         = "TapTriviaTV-Redirect"
   }
 }

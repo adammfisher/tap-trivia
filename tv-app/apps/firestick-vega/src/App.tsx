@@ -19,7 +19,7 @@ import { AudioPlayer, AudioContentType, AudioUsageType } from '@amazon-devices/r
 import { useComponentInstance } from '@amazon-devices/react-native-kepler';
 import SilentAudioPlayer from './SilentAudioPlayer';
 
-const TV_URL = 'https://tv.taptrivia.tv';
+const TV_URL = 'https://tv.taptrivia.tv?platform=firestickvega';
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -36,6 +36,17 @@ export const App: React.FC = () => {
   useEffect(() => {
     SilentAudioPlayer.startSilentAudio();
     return () => SilentAudioPlayer.stopSilentAudio();
+  }, []);
+
+  // Watchdog: force-reload WebView every 10 min in case Chromium throttles timers
+  useEffect(() => {
+    const reloadTimer = setInterval(() => {
+      if (webViewRef.current) {
+        console.log('[WEBVIEW] watchdog reload');
+        webViewRef.current.reload();
+      }
+    }, 10 * 60 * 1000);
+    return () => clearInterval(reloadTimer);
   }, []);
 
   // Primary: AudioPlayer registers AUDIO_PLAYBACK session with idle manager

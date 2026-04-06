@@ -73,11 +73,19 @@ sub onGameStateChanged(event as Object)
   m.catIcon.uri = getCategoryIconSmallUri(category)
   m.catName.text = category
 
-  ' Resize pill background to fit category text (28px font ~14px/char)
-  pillW = 48 + Len(category) * 14
+  ' Resize pill background + label to fit category text
+  catLen = Len(category)
+  if catLen > 38
+    m.catName.font = makeFont("Outfit-SemiBold", 22)
+    pillW = 48 + catLen * 12
+  else
+    m.catName.font = makeFont("Outfit-SemiBold", 28)
+    pillW = 48 + catLen * 16
+  end if
   if pillW < 160 then pillW = 160
-  if pillW > 600 then pillW = 600
+  if pillW > 840 then pillW = 840
   m.catPillBg.width = pillW
+  m.catName.width = pillW - 50
 
   num = 1
   if gs.questionNumber <> invalid then num = gs.questionNumber
