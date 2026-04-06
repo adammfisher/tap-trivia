@@ -22,6 +22,7 @@ sub init()
   m.currentScreen = ""
   m.consecutiveErrors = 0
   m.localGameStartEpoch = 0&
+  m.clockOffset = 0&        ' server epoch ms - Roku epoch ms (corrects device clock drift)
   m.localQuestionNumber = 0
   m.signageSlides = []
   m.signageRotationSpeed = 60
@@ -187,9 +188,12 @@ sub processGameState(apiState as Object)
     end if
   end if
 
-  ' Capture gameStartEpoch for local clock
+  ' Capture gameStartEpoch + server clock offset for accurate local timer
   if apiState.gameStartEpoch <> invalid
     m.localGameStartEpoch = apiState.gameStartEpoch
+  end if
+  if apiState.serverNow <> invalid
+    m.clockOffset = apiState.serverNow - getEpochMs()
   end if
 
   gameState = translateApiState(apiState)
@@ -318,7 +322,17 @@ function translateApiState(apiState as Object) as Object
       gs.answerPercentages = safeArray(apiState.answerPercentages)
     else if phase = "scores"
       gs.screen = "between"
-      elapsed = safeInt(apiState.elapsedSeconds, 45)
+      if m.localGameStartEpoch > 0&
+        qNum = safeInt(apiState.questionNumber, 1)
+        questionStartMs = m.localGameStartEpoch + (qNum - 1) * 52000&
+        adjNow = getEpochMs() + m.clockOffset
+        elapsedMs = adjNow - questionStartMs
+        if elapsedMs < 0& then elapsedMs = 0&
+        if elapsedMs > 52000& then elapsedMs = 52000&
+        elapsed = Int(elapsedMs / 1000)
+      else
+        elapsed = safeInt(apiState.elapsedSeconds, 45)
+      end if
       gs.nextQuestionIn = maxInt(1, ceilInt(m.QUESTION_DURATION_MS / 1000 - elapsed))
       gs.funFact = safeStr(apiState.funFact)
     else
@@ -330,7 +344,19 @@ function translateApiState(apiState as Object) as Object
         category: safeStr(apiState.category),
         categoryIcon: getCategoryIcon(safeStr(apiState.category))
       }
-      elapsed = safeInt(apiState.elapsedSeconds, 0)
+      ' Compute elapsed from server-adjusted local clock for accurate sync.
+      ' Falls back to API elapsedSeconds if gameStartEpoch not yet captured.
+      if m.localGameStartEpoch > 0&
+        qNum = safeInt(apiState.questionNumber, 1)
+        questionStartMs = m.localGameStartEpoch + (qNum - 1) * 52000&
+        adjNow = getEpochMs() + m.clockOffset
+        elapsedMs = adjNow - questionStartMs
+        if elapsedMs < 0& then elapsedMs = 0&
+        if elapsedMs > 52000& then elapsedMs = 52000&
+        elapsed = Int(elapsedMs / 1000)
+      else
+        elapsed = safeInt(apiState.elapsedSeconds, 0)
+      end if
       remaining = maxInt(0, 31 - elapsed)
       gs.timer = { remaining: remaining, total: 28 }
       gs.pointsAvailable = safeInt(apiState.currentPointsAvailable, 0)

@@ -458,6 +458,7 @@ exports.handler = async (event) => {
 
     return response(200, {
       state: 'active_game',
+      serverNow: now,
       barCode,
       barName,
       activePlayers: barLeaderboard.length,
