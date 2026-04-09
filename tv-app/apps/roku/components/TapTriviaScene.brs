@@ -96,11 +96,19 @@ sub init()
 
   ' ── Polling state ──
   m.currentPollRate = 0
+  m.apiInFlight = false  ' Guard: prevents concurrent ApiTask runs
 
   ' ── Start screensaver prevention ──
   startKeepAwake()
 
-  ' ── Animated gradient background (also prevents screensaver) ──
+  ' ── Watchdog: restart KeepAwakeTask if it ever dies (every 5 min) ──
+  m.keepAliveWatchdog = CreateObject("roSGNode", "Timer")
+  m.keepAliveWatchdog.duration = 300
+  m.keepAliveWatchdog.repeat = true
+  m.keepAliveWatchdog.observeField("fire", "onKeepAliveWatchdog")
+  m.keepAliveWatchdog.control = "start"
+
+  ' ── Animated gradient background ──
   m.bgVideo = m.top.findNode("bgVideo")
   if m.bgVideo <> invalid
     m.bgVideo.content = CreateObject("roSGNode", "ContentNode")
@@ -109,6 +117,7 @@ sub init()
     m.bgVideo.loop = true
     m.bgVideo.control = "play"
     m.bgVideo.enableUI = false
+    m.bgVideo.observeField("state", "onBgVideoState")  ' Auto-recover from EOS/error
   end if
 
   ' ── Load config and initialize ──
@@ -726,6 +735,13 @@ end sub
 ' ══════════════════════════════════════════════════════════════
 
 sub makeApiCall(httpMethod as String, path as String, body as Object, callId as String)
+  ' Guard: don't pile up concurrent requests — skip if previous is still in flight.
+  ' ApiTask has a 15s timeout; at 2s poll intervals this can easily overlap.
+  if m.apiInFlight
+    print ">>> makeApiCall: skipping " + callId + " (previous request still in flight)"
+    return
+  end if
+  m.apiInFlight = true
   m.apiTask.setField("callId", callId)
   m.apiTask.setField("requestMethod", httpMethod)
   m.apiTask.setField("requestUrl", m.API_BASE + path)
@@ -738,6 +754,7 @@ sub makeApiCall(httpMethod as String, path as String, body as Object, callId as 
 end sub
 
 sub onApiResponse()
+  m.apiInFlight = false
   response = m.apiTask.getField("response")
   callId = m.apiTask.getField("callId")
 
@@ -992,12 +1009,31 @@ end sub
 
 sub startKeepAwake()
   ' Screensaver prevention via ECP self-ping every 2 min.
-  ' (Silent video approach removed — an active Video node forces the Roku
-  ' render pipeline to re-composite every frame at ~60fps, causing constant
-  ' re-renders across all screens even when nothing is changing.)
   m.keepAwakeTask = m.top.findNode("keepAwakeTask")
   m.keepAwakeTask.control = "run"
   print ">>> keepAwake: ECP ping task started"
+end sub
+
+sub onKeepAliveWatchdog()
+  ' If KeepAwakeTask exited for any reason, restart it.
+  taskState = m.keepAwakeTask.control
+  if taskState = "done" or taskState = "stop" or taskState = ""
+    print ">>> watchdog: KeepAwakeTask not running (state=" + taskState + "), restarting"
+    m.keepAwakeTask.control = "run"
+  end if
+end sub
+
+sub onBgVideoState()
+  ' Auto-recover if the background video stops (EOS or error).
+  ' On some Roku firmware, a looping local video enters "finished" or "error"
+  ' state after extended uptime — without recovery this freezes the background.
+  state = m.bgVideo.state
+  print ">>> bgVideo: state=" + state
+  if state = "finished" or state = "error"
+    print ">>> bgVideo: restarting"
+    m.bgVideo.control = "prebuffer"
+    m.bgVideo.control = "play"
+  end if
 end sub
 
 ' ══════════════════════════════════════════════════════════════
