@@ -13,7 +13,7 @@
  * recover() checks every 45s and re-inits only if the session actually dropped —
  * no forced teardown (which caused visible display flashes every 2 min).
  */
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WebView } from '@amazon-devices/webview';
 import { AudioPlayer, AudioContentType, AudioUsageType } from '@amazon-devices/react-native-w3cmedia';
@@ -31,23 +31,11 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 
 export const App: React.FC = () => {
   const componentInstance = useComponentInstance();
-  const webViewRef = useRef<any>(null);
 
   // Backup: PlayerSession heartbeat every 30s
   useEffect(() => {
     SilentAudioPlayer.startSilentAudio();
     return () => SilentAudioPlayer.stopSilentAudio();
-  }, []);
-
-  // Watchdog: force-reload WebView every 10 min in case Chromium throttles timers
-  useEffect(() => {
-    const reloadTimer = setInterval(() => {
-      if (webViewRef.current) {
-        console.log('[WEBVIEW] watchdog reload');
-        webViewRef.current.reload();
-      }
-    }, 10 * 60 * 1000);
-    return () => clearInterval(reloadTimer);
   }, []);
 
   // Primary: AudioPlayer registers AUDIO_PLAYBACK session with idle manager
@@ -118,7 +106,6 @@ export const App: React.FC = () => {
   return (
     <View style={styles.container}>
       <WebView
-        ref={webViewRef}
         source={{ uri: TV_URL }}
         style={StyleSheet.absoluteFill}
         javaScriptEnabled={true}
