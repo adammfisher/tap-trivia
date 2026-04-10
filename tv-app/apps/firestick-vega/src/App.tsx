@@ -10,7 +10,8 @@
  * an AUDIO_PLAYBACK session (weight 130) with the Vega OS idle manager, preventing
  * it from backgrounding the app. This is the PRIMARY keepalive mechanism.
  * SilentAudioPlayer (PlayerSession every 30s) is a backup layer.
- * A 2-min forced refresh re-registers the session if silently lost.
+ * recover() checks every 45s and re-inits only if the session actually dropped —
+ * no forced teardown (which caused visible display flashes every 2 min).
  */
 import React, { useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -53,7 +54,6 @@ export const App: React.FC = () => {
   useEffect(() => {
     let audio: AudioPlayer | null = null;
     let recoveryTimer: ReturnType<typeof setInterval>;
-    let refreshTimer: ReturnType<typeof setInterval>;
     let disposed = false;
     let consecutiveFailures = 0;
     const MAX_CONSECUTIVE_FAILURES = 10;
@@ -100,28 +100,17 @@ export const App: React.FC = () => {
       }
     };
 
-    // Forced re-init every 2 min — re-registers session if lost (e.g., after
-    // OS backgrounded the app for profile picker, system dialog, etc.).
-    // Must be under the 5-min idle manager kill threshold.
-    const refresh = async () => {
-      if (disposed) return;
-      console.log('[AUDIO] periodic session refresh');
-      teardown();
-      await new Promise(r => setTimeout(r, 1000));
-      if (!disposed) await init();
-    };
-
     init();
+    // recover() every 45s re-inits only if audio actually dropped — no forced teardown.
+    // The ended→play() loop keeps the session alive indefinitely; recover() catches
+    // silent drops within 45s, well under the 5-min idle manager kill threshold.
     // Note: seekTimer removed — on Kepler, currentTime=0 triggers AudioStreamPlaybackVNTK:stop()
     // + a false EOS event, dropping the session for ~60s until recoveryTimer detects it.
-    // The ended→play() loop handles natural file-end restarts without this side effect.
     recoveryTimer = setInterval(recover, 45000);
-    refreshTimer = setInterval(refresh, 120000); // 2 min — well under 5-min idle kill
 
     return () => {
       disposed = true;
       clearInterval(recoveryTimer);
-      clearInterval(refreshTimer);
       teardown();
     };
   }, [componentInstance]);

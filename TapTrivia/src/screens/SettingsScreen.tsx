@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -122,11 +122,11 @@ export function SettingsScreen({ navigation }: Props) {
           <View style={styles.card}>
             <Text style={styles.cardLabel}>App</Text>
             <View style={styles.linksList}>
-              <Pressable onPress={() => navigation.navigate('TermsOfService')} style={styles.linkRow}>
+              <Pressable onPress={() => Linking.openURL('https://taptrivia.tv/terms.html')} style={styles.linkRow}>
                 <Text style={styles.linkText}>Terms of Service</Text>
                 <Text style={styles.linkArrow}>{'\u2192'}</Text>
               </Pressable>
-              <Pressable onPress={() => navigation.navigate('PrivacyPolicy')} style={styles.linkRow}>
+              <Pressable onPress={() => Linking.openURL('https://taptrivia.tv/privacy.html')} style={styles.linkRow}>
                 <Text style={styles.linkText}>Privacy Policy</Text>
                 <Text style={styles.linkArrow}>{'\u2192'}</Text>
               </Pressable>

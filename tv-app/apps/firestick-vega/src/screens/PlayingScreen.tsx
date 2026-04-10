@@ -115,6 +115,7 @@ export function PlayingScreen() {
     question,
     answers,
     category,
+    subcategory,
     questionNumber,
     totalQuestions,
     activePlayers,
@@ -141,6 +142,10 @@ export function PlayingScreen() {
                 Q{questionNumber}<Text style={s.qCounterSep}>/{totalQuestions}</Text>
               </Text>
             </View>
+
+            {subcategory ? (
+              <Text style={s.subcategoryText}>{subcategory}</Text>
+            ) : null}
 
             {/* DISABLED R2 FadeInText → plain Text */}
             <Text key={questionNumber} style={s.questionText}>
@@ -283,7 +288,14 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 24,
-    marginBottom: 36,
+    marginBottom: 16,
+  },
+  subcategoryText: {
+    fontFamily: fonts.outfit.semiBold,
+    fontSize: 44,
+    color: '#f0f0f0',
+    letterSpacing: -0.5,
+    marginBottom: 24,
   },
   qCounter: {
     fontFamily: fonts.outfit.semiBold,

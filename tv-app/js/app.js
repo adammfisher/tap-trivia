@@ -1681,6 +1681,7 @@
   /** PLAYING SCREEN — v4 lines 557-595 */
   function renderPlaying(state) {
     const q = state.question || {};
+    const sub = q.subcategory || state.subcategory || '';
     const answers = q.answers || [];
     const timer = state.timer || {};
     const remaining = timer.remaining || 0;
@@ -1739,6 +1740,7 @@
               ${categoryPillHTML(icon, category)}
               <span class="tt-play__q-counter">Q${num}<span class="tt-play__q-counter-sep">/${totalQ}</span></span>
             </div>
+            ${sub ? `<div class="tt-play__sub">${sub}</div>` : ''}
             <div class="tt-play__question">${q.text || ''}</div>
             <div class="tt-play__progress">${progressHTML(num, totalQ)}</div>
           </div>

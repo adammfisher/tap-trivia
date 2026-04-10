@@ -39,8 +39,8 @@
 
       <!-- Subcategory -->
       <Label id="subcategoryName" text=""
-             translation="[0, 410]" width="1400" horizAlign="center" color="#ffffff66">
-        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="32" />
+             translation="[0, 410]" width="1400" horizAlign="center" color="#ffffffBF">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="52" />
       </Label>
 
       <!-- Difficulty row -->

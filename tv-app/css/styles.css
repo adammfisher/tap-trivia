@@ -865,9 +865,9 @@ body {
   animation: fadeDown 0.5s ease-out 0.2s both;
 }
 .tt-category__sub {
-  font-size: 32px; /* 16×2 */
-  color: rgba(255,255,255,0.4);
-  font-weight: 500;
+  font-size: 52px; /* 26×2 */
+  color: rgba(255,255,255,0.75);
+  font-weight: 600;
   animation: fadeDown 0.5s ease-out 0.3s both;
 }
 .tt-category__difficulty {
@@ -942,7 +942,14 @@ body {
   display: flex;
   align-items: center;
   gap: 24px; /* 12×2 */
-  margin-bottom: 36px; /* 18×2 */
+  margin-bottom: 16px;
+}
+.tt-play__sub {
+  font-size: 44px;
+  font-weight: 600;
+  color: #f0f0f0;
+  letter-spacing: -0.5px;
+  margin-bottom: 24px;
 }
 .tt-play__q-counter {
   font-family: 'Fredoka', sans-serif;

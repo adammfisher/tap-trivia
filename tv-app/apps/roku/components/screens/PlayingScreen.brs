@@ -15,6 +15,7 @@ sub init()
   m.pillBg = m.top.findNode("pillBg")
   m.qCounter = m.top.findNode("qCounter")
   m.qCounterSep = m.top.findNode("qCounterSep")
+  m.subcategoryText = m.top.findNode("subcategoryText")
   m.questionText = m.top.findNode("questionText")
 
   ' ── Footer refs (avatar + name per player, no scores during play) ──
@@ -60,12 +61,22 @@ sub init()
   m.localTimer.duration = 1
   m.localTimer.observeField("fire", "onLocalTick")
 
+  ' Stop timer when screen is hidden to prevent memory pressure over long uptimes
+  m.top.observeField("visible", "onVisibleChanged")
+
   fixAllLabelFonts(m.top)
 end sub
 
 ' ── Local interpolation tick (250ms) ──
 sub onLocalTick()
   updatePointsAndTimer()
+end sub
+
+sub onVisibleChanged()
+  if not m.top.visible
+    m.localTimer.control = "stop"
+  end if
+  ' Timer restarts on next onGameStateChanged when screen becomes active again
 end sub
 
 ' ── Timer tick: only interpolate the timer ring (seconds), not points ──
@@ -167,6 +178,19 @@ sub onGameStateChanged(event as Object)
   m.qCounter.translation = [qCounterX, 8]
   qCounterWidth = 30 + Len(Str(num).trim()) * 18
   m.qCounterSep.translation = [qCounterX + qCounterWidth, 8]
+
+  ' Subcategory — shown prominently below the category pill during gameplay
+  subCat = ""
+  if q.subcategory <> invalid and q.subcategory <> "" then subCat = q.subcategory
+  if subCat = "" and state.subcategory <> invalid then subCat = state.subcategory
+  if subCat <> ""
+    m.subcategoryText.text = subCat
+    m.subcategoryText.visible = true
+    m.questionText.translation = [0, 104]
+  else
+    m.subcategoryText.visible = false
+    m.questionText.translation = [0, 60]
+  end if
 
   ' Question text
   qText = ""

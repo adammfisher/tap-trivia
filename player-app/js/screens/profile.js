@@ -66,6 +66,12 @@ const ProfileScreen = {
           <p>📅 <strong>Games every 15 min</strong> — 5 PM ET to 12 AM PT, every night</p>
         </div>
       </div>
+
+      <div class="profile-legal">
+        <a href="/privacy.html" class="profile-legal-link">Privacy Policy</a>
+        <span class="profile-legal-sep">&middot;</span>
+        <a href="/terms.html" class="profile-legal-link">Terms of Service</a>
+      </div>
     `;
   },
 

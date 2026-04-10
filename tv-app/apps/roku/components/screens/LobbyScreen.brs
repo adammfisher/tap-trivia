@@ -29,6 +29,9 @@ sub init()
   m.countdownTimer.duration = 1
   m.countdownTimer.observeField("fire", "onCountdownTick")
 
+  ' Stop timer when screen is hidden to prevent memory pressure over long uptimes
+  m.top.observeField("visible", "onVisibleChanged")
+
   fixAllLabelFonts(m.top)
 end sub
 
@@ -176,6 +179,16 @@ end function
 
 sub onCountdownTick()
   updateCountdown()
+end sub
+
+sub onVisibleChanged()
+  if m.top.visible
+    if m.gsCache <> invalid and m.gsCache.count() > 0
+      m.countdownTimer.control = "start"
+    end if
+  else
+    m.countdownTimer.control = "stop"
+  end if
 end sub
 
 sub onSignageIndexChanged(event as Object)

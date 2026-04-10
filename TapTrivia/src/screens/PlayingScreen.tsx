@@ -110,6 +110,9 @@ export function PlayingScreen({ navigation, route }: Props) {
           {/* Category + question number */}
           <View style={styles.categoryRow}>
             <CategoryBadge emoji={question.categoryEmoji} category={question.category} />
+            {question.subcategory ? (
+              <Text style={styles.subcategoryText}>{question.subcategory}</Text>
+            ) : null}
           </View>
           <View style={styles.progressRow}>
             <View style={styles.progressContainer}>
@@ -200,6 +203,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     marginBottom: 6,
+    gap: 4,
+  },
+  subcategoryText: {
+    fontFamily: fonts.outfit.semiBold,
+    fontSize: 12,
+    color: w(0.7),
+    letterSpacing: 0.3,
+    textAlign: 'center',
   },
   progressRow: {
     flexDirection: 'row',

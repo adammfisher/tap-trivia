@@ -41,6 +41,9 @@ sub init()
   m.localTimer.duration = 1
   m.localTimer.observeField("fire", "onLocalTick")
 
+  ' Stop timer when screen is hidden to prevent memory pressure over long uptimes
+  m.top.observeField("visible", "onVisibleChanged")
+
   fixAllLabelFonts(m.top)
 end sub
 
@@ -53,6 +56,13 @@ sub onLocalTick()
   localNextIn = m.lastNextIn - dtSec
   if localNextIn < 1 then localNextIn = 1
   m.countdownLabel.text = "Next question in " + Str(Int(localNextIn)).trim() + "s..."
+end sub
+
+sub onVisibleChanged()
+  if not m.top.visible
+    m.localTimer.control = "stop"
+  end if
+  ' Timer restarts on next onGameStateChanged when screen becomes active again
 end sub
 
 sub onGameStateChanged(event as Object)

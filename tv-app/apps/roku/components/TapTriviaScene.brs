@@ -738,10 +738,19 @@ sub makeApiCall(httpMethod as String, path as String, body as Object, callId as 
   ' Guard: don't pile up concurrent requests — skip if previous is still in flight.
   ' ApiTask has a 15s timeout; at 2s poll intervals this can easily overlap.
   if m.apiInFlight
-    print ">>> makeApiCall: skipping " + callId + " (previous request still in flight)"
-    return
+    ' Watchdog: if stuck >20s, the task observer didn't fire (Roku firmware bug) — reset
+    nowMs = getEpochMs()
+    stuckMs = nowMs - m.apiInFlightStartMs
+    if stuckMs > 20000
+      print ">>> makeApiCall: watchdog reset after " + Str(Int(stuckMs / 1000)).trim() + "s stuck"
+      m.apiInFlight = false
+    else
+      print ">>> makeApiCall: skipping " + callId + " (previous request still in flight)"
+      return
+    end if
   end if
   m.apiInFlight = true
+  m.apiInFlightStartMs = getEpochMs()
   m.apiTask.setField("callId", callId)
   m.apiTask.setField("requestMethod", httpMethod)
   m.apiTask.setField("requestUrl", m.API_BASE + path)
@@ -750,6 +759,8 @@ sub makeApiCall(httpMethod as String, path as String, body as Object, callId as 
   else
     m.apiTask.setField("requestBody", "")
   end if
+  ' Stop before run — required to reliably restart a completed task on all firmware
+  m.apiTask.control = "stop"
   m.apiTask.control = "run"
 end sub
 
@@ -1024,14 +1035,13 @@ sub onKeepAliveWatchdog()
 end sub
 
 sub onBgVideoState()
-  ' Auto-recover if the background video stops (EOS or error).
-  ' On some Roku firmware, a looping local video enters "finished" or "error"
-  ' state after extended uptime — without recovery this freezes the background.
+  ' Recover only on "error" — NOT "finished".
+  ' With loop=true, Roku handles "finished"→loop automatically. Catching
+  ' "finished" and sending "prebuffer" clears the video buffer mid-loop,
+  ' causing a black frame that covers the UI.
   state = m.bgVideo.state
-  print ">>> bgVideo: state=" + state
-  if state = "finished" or state = "error"
-    print ">>> bgVideo: restarting"
-    m.bgVideo.control = "prebuffer"
+  if state = "error"
+    print ">>> bgVideo: error state, restarting"
     m.bgVideo.control = "play"
   end if
 end sub
@@ -1106,7 +1116,7 @@ sub stopSignageRotation()
 end sub
 
 sub onSignageRotation()
-  m.signageCurrentIndex = m.signageCurrentIndex + 1
+  m.signageCurrentIndex = (m.signageCurrentIndex + 1) mod 10000
   print ">>> signage: onRotation newIdx=" + Str(m.signageCurrentIndex).trim() + " screen=" + m.currentScreen
   ' Push new slide index to whichever screen is currently showing
   if m.currentScreen = "idleScreen"
@@ -1127,7 +1137,7 @@ end sub
 sub advanceSignageIndex()
   ' Advance signage index by 1 per screen render (matches web behavior)
   if m.signageSlides.count() > 0
-    m.signageCurrentIndex = m.signageCurrentIndex + 1
+    m.signageCurrentIndex = (m.signageCurrentIndex + 1) mod 10000
     print ">>> signage: advanceIndex newIdx=" + Str(m.signageCurrentIndex).trim()
   end if
 end sub

@@ -90,9 +90,9 @@ const s = StyleSheet.create({
     marginBottom: 16,
   },
   subcategory: {
-    fontFamily: fonts.outfit.medium,
-    fontSize: 32,
-    color: w(0.4),
+    fontFamily: fonts.outfit.semiBold,
+    fontSize: 52,
+    color: w(0.75),
     textAlign: 'center',
     marginBottom: 40,
   },

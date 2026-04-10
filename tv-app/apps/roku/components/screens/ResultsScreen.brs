@@ -45,6 +45,9 @@ sub init()
   m.rightPanelBg = m.top.findNode("rightPanelBg")
   m.hasSignage = false
 
+  ' Stop timer when screen is hidden to prevent memory pressure over long uptimes
+  m.top.observeField("visible", "onVisibleChanged")
+
   fixAllLabelFonts(m.top)
 end sub
 
@@ -174,6 +177,13 @@ end sub
 
 sub onCountdownTick()
   updateCountdownDisplay()
+end sub
+
+sub onVisibleChanged()
+  if not m.top.visible
+    m.countdownTimer.control = "stop"
+  end if
+  ' Timer restarts on next onGameStateChanged when screen becomes active again
 end sub
 
 sub onSignageIndexChanged(event as Object)

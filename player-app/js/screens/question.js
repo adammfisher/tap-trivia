@@ -288,6 +288,8 @@ const QuestionScreen = {
           <div class="p-q-number">${state.questionNumber}<span class="p-q-total">/15</span></div>
         </div>
 
+        ${q.subcategory ? `<div class="p-subcategory-text">${q.subcategory}</div>` : ''}
+
         <div class="p-progress-bar">
           <div class="p-progress-fill" style="width:${progressPct}%"></div>
         </div>

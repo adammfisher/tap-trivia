@@ -75,10 +75,10 @@ sub onGameStateChanged(event as Object)
     subY = 312 + 160
   else if catLen > 20
     m.categoryName.font = makeFont("Fredoka-Bold", 74)
-    subY = 312 + 110
+    subY = 312 + 120
   else
     m.categoryName.font = makeFont("Fredoka-Bold", 84)
-    subY = 312 + 110
+    subY = 312 + 120
   end if
   m.subcategoryName.translation = [0, subY]
 
@@ -95,7 +95,7 @@ sub onGameStateChanged(event as Object)
     m.difficultyRow.translation = [0, subY + 10]
   else
     m.subcategoryName.visible = true
-    m.difficultyRow.translation = [0, subY + 50]
+    m.difficultyRow.translation = [0, subY + 70]
   end if
 
   ' Difficulty (1-3)

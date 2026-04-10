@@ -1230,6 +1230,16 @@ body::-webkit-scrollbar { display: none; }
 
 .p-q-total { color: rgba(255,255,255,0.25); }
 
+.p-subcategory-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.3px;
+  text-align: center;
+  padding: 0 8px;
+  margin: 2px 0 8px;
+}
+
 .p-progress-bar {
   height: 3px;
   border-radius: 2px;
@@ -1787,6 +1797,22 @@ body::-webkit-scrollbar { display: none; }
 }
 
 .how-to-play.hidden { display: none; }
+
+.profile-legal {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+.profile-legal-link {
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+  text-decoration: none;
+}
+.profile-legal-link:hover { color: rgba(255,255,255,0.5); }
+.profile-legal-sep {
+  font-size: 12px;
+  color: rgba(255,255,255,0.2);
+  margin: 0 8px;
+}
 
 /* ═══════════════════════════════════════════════════════════════
    BOTTOM NAV

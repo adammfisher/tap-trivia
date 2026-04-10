@@ -93,6 +93,12 @@
           </Label>
         </Group>
 
+        <!-- Subcategory text (shown below category pill during gameplay) -->
+        <Label id="subcategoryText" text=""
+               translation="[0, 52]" width="960" color="#f0f0f0" visible="false">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="40" />
+        </Label>
+
         <!-- Question text -->
         <Label id="questionText" text=""
                translation="[0, 60]" width="960" color="#f0f0f0"

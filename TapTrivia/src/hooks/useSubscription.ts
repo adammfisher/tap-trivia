@@ -21,7 +21,7 @@ interface UseSubscription {
   restore: () => Promise<boolean>;
 }
 
-const FORCE_PRO = false;
+const FORCE_PRO = true;
 
 export function useSubscription(): UseSubscription {
   // Start with isPro = true and isLoading = true so nothing renders the paywall
