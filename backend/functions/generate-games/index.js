@@ -24,8 +24,8 @@ function getETOffsetHours() {
 }
 
 /**
- * Generate 44 timeslots for today's games.
- * 10:00 AM ET to 8:45 PM ET, every 15 minutes.
+ * Generate 96 timeslots for today's games.
+ * 12:00 AM ET to 11:45 PM ET, every 15 minutes.
  * Returns array of UTC epoch milliseconds.
  */
 function getTonightSlots() {
@@ -39,10 +39,10 @@ function getTonightSlots() {
   const day = etNow.getDate();
 
   const slots = [];
-  for (let i = 0; i < 44; i++) {
-    const minutesAfter10AM = i * 15;
-    const hour = 10 + Math.floor(minutesAfter10AM / 60);
-    const minute = minutesAfter10AM % 60;
+  for (let i = 0; i < 96; i++) {
+    const minutesAfterMidnight = i * 15;
+    const hour = Math.floor(minutesAfterMidnight / 60);
+    const minute = minutesAfterMidnight % 60;
 
     const utcEpoch = Date.UTC(year, month, day, hour + etOffsetHours, minute, 0, 0);
     slots.push(utcEpoch);
@@ -99,7 +99,9 @@ async function updateCategoryStats(categoryQuestionsUsed) {
 
 /**
  * EventBridge triggered Lambda — runs daily at 9 AM ET.
- * Generates 44 games for today's schedule (10:00 AM – 8:45 PM ET).
+ * Generates 96 games for today's schedule (12:00 AM – 11:45 PM ET).
+ * Slots earlier than the cron's run time will be in the past for today's
+ * partial first run after a deploy; they're harmless and naturally skipped.
  */
 exports.handler = async (event) => {
   console.log('generate-games invoked', JSON.stringify(event));

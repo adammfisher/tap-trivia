@@ -23,15 +23,15 @@ const PHASES = {
 };
 
 /**
- * Game schedule: every 15 minutes from 10:00 AM ET to 9:00 PM ET.
- * 44 slots per day. Returns the epoch of the current game if active,
+ * Game schedule: every 15 minutes, all day in ET (00:00 to 23:59).
+ * 96 slots per day. Returns the epoch of the current game if active,
  * or the next scheduled game start.
  */
 function getNextGameTime(nowEpoch) {
   const INTERVAL_MS = 15 * 60 * 1000;
-  const WINDOW_START_MIN = 10 * 60; // 10 AM ET = 600
-  const WINDOW_END_MIN = 21 * 60;   // 9 PM ET = 1260
-  const WINDOW_DURATION_MIN = 11 * 60; // 660 minutes
+  const WINDOW_START_MIN = 0;          // 12:00 AM ET
+  const WINDOW_END_MIN = 24 * 60;      // 12:00 AM ET (next day) = 1440
+  const WINDOW_DURATION_MIN = 24 * 60; // 1440 minutes
 
   const now = new Date(nowEpoch);
   const etStr = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
@@ -42,12 +42,12 @@ function getNextGameTime(nowEpoch) {
   const inWindow = totalMinutesET >= WINDOW_START_MIN && totalMinutesET < WINDOW_END_MIN;
 
   if (!inWindow) {
-    // Outside window — next game is today at 10 AM (or tomorrow if past 9 PM)
+    // 24-hour window — this branch is unreachable, but kept defensively.
     const nextStart = new Date(etStr);
     if (totalMinutesET >= WINDOW_END_MIN) {
       nextStart.setDate(nextStart.getDate() + 1);
     }
-    nextStart.setHours(10, 0, 0, 0);
+    nextStart.setHours(0, 0, 0, 0);
     return nextStart.getTime() + etOffset;
   }
 
@@ -56,7 +56,7 @@ function getNextGameTime(nowEpoch) {
   const slotMinsIntoWindow = Math.floor(minsIntoWindow / 15) * 15;
 
   const windowStartET = new Date(etStr);
-  windowStartET.setHours(10, 0, 0, 0);
+  windowStartET.setHours(0, 0, 0, 0);
 
   const slotEpoch = windowStartET.getTime() + etOffset + (slotMinsIntoWindow * 60 * 1000);
 
@@ -64,10 +64,10 @@ function getNextGameTime(nowEpoch) {
   if (nowEpoch >= slotEpoch + GAME_DURATION_MS + RESULTS_DURATION_MS) {
     const nextSlotMins = slotMinsIntoWindow + 15;
     if (nextSlotMins >= WINDOW_DURATION_MIN) {
-      // Past last slot — next window is tomorrow at 10 AM
+      // Past last slot of the day — next window starts at midnight tomorrow ET
       const nextWindowET = new Date(etStr);
       nextWindowET.setDate(nextWindowET.getDate() + 1);
-      nextWindowET.setHours(10, 0, 0, 0);
+      nextWindowET.setHours(0, 0, 0, 0);
       return nextWindowET.getTime() + etOffset;
     }
     return slotEpoch + INTERVAL_MS;
