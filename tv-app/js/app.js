@@ -58,6 +58,17 @@
   let pollInterval = null;
   let preGameWakeupTimer = null;
   const tvPlatform = new URLSearchParams(window.location.search).get('platform') || '';
+  // Canonical analytics platform value: maps the existing setup-screen
+  // platform names to the spec's enum (firetv | firetv_vega | vizio | web).
+  // tvPlatform itself stays raw so platformInstructionsHTML keeps working.
+  const _platformAnalyticsMap = {
+    firestickvega: 'firetv_vega',
+    firestickclassic: 'firetv',
+    firetv: 'firetv',
+    firetv_vega: 'firetv_vega',
+    vizio: 'vizio'
+  };
+  const tvPlatformAnalytics = _platformAnalyticsMap[tvPlatform] || (tvPlatform ? tvPlatform : 'web');
   let platformModalDismissed = false;
 
   // Keep-alive for Fire TV Vega: play a tiny silent video to prevent screensaver.
@@ -118,6 +129,11 @@
   let signageRotationSpeed = 60;
   let signageCurrentIndex = 0;
   let signageRotationTimer = null;
+
+  // Latest tv-state response — read by the impression logger so it can
+  // attach concurrent_players + game_id to each event.
+  let lastApiState = null;
+  let lastLoggedSlideKey = '';
   let barLogoUrl = null;
   let barLogoHash = null;
 
@@ -637,10 +653,12 @@
       let slides = getActiveSlides();
       if (slides.length === 0) slides = getDefaultSignageSlides();
       signageCurrentIndex = (signageCurrentIndex + 1) % slides.length;
+      lastLoggedSlideKey = ''; // index changed — let the next render log it
       if (currentScreen === 'idle') {
-        fadeScreenTransition(() => renderIdle());
+        fadeScreenTransition(() => { renderIdle(); logSignageImpressionIfNew(); });
       } else {
         updateSignagePanel();
+        logSignageImpressionIfNew();
       }
     }, speed * 1000);
   }
@@ -1233,6 +1251,8 @@
 
     currentScreen = screen;
     localQuestionNumber = qNum;
+    lastLoggedSlideKey = ''; // screen changed — re-log even if same slide index
+    queueMicrotask(logSignageImpressionIfNew);
 
     switch (screen) {
       case 'idle':
@@ -2743,7 +2763,7 @@
     const result = await apiCall('POST', '/tv/activate', {
       barCode: codeStr,
       tvId: tvDeviceId,
-      tvPlatform: tvPlatform || 'web'
+      tvPlatform: tvPlatformAnalytics
     });
     if (result.error) {
       setupCodeState = 'error';
@@ -2768,6 +2788,85 @@
       startPolling();
       renderScreen({ screen: 'lobby', playerCount: 0, players: [] });
     }, 3000);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // SIGNAGE IMPRESSIONS — fire-and-forget POST per slide display.
+  // Dedupe key = currentScreen + slide index, so re-renders of the
+  // same slide while it's onscreen don't double-log.
+  // ═══════════════════════════════════════════════════════════════
+
+  function contextForCurrentScreen() {
+    if (currentScreen === 'idle') return 'off_hours_idle';
+    if (currentScreen === 'lobby') return 'game_lobby';
+    if (currentScreen === 'between' || currentScreen === 'leaderboard') return 'between_rounds';
+    if (currentScreen === 'results') return 'results';
+    return null; // playing/reveal/category/etc — no signage shown
+  }
+
+  function logSignageImpressionIfNew() {
+    if (!barCode || !tvDeviceId) return;
+    const ctx = contextForCurrentScreen();
+    if (!ctx) return;
+
+    let active = getActiveSlides();
+    if (active.length === 0) active = getDefaultSignageSlides();
+    if (active.length === 0) return;
+
+    const idx = signageCurrentIndex % active.length;
+    const slide = active[idx];
+    if (!slide) return;
+
+    const signageId = (slide.id || slide.template || 'unknown') + '';
+    const key = ctx + ':' + idx + ':' + signageId;
+    if (key === lastLoggedSlideKey) return;
+    lastLoggedSlideKey = key;
+
+    const apiState = lastApiState || {};
+    const players = (apiState.activePlayers || 0) | 0;
+    const gameId = apiState.gameId || null;
+
+    // For off-hours, the spec requires concurrent_players=0 and game_id=null.
+    // For in-game contexts, the API drives both; if we don't have gameId yet
+    // (race on first poll), skip rather than send an invalid request.
+    let payload;
+    if (ctx === 'off_hours_idle') {
+      payload = {
+        bar_code: barCode,
+        tv_id: tvDeviceId,
+        signage_id: signageId,
+        content_type: slide.template === '_default_cta' ? 'system' : 'bar_promo',
+        displayed_at_utc: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+        duration_ms: (signageRotationSpeed || 60) * 1000,
+        context: 'off_hours_idle',
+        concurrent_players: 0,
+        game_id: null,
+        position_in_rotation: idx + 1,
+        tv_platform: tvPlatformAnalytics
+      };
+    } else {
+      if (!gameId) return;
+      payload = {
+        bar_code: barCode,
+        tv_id: tvDeviceId,
+        signage_id: signageId,
+        content_type: slide.template === '_default_cta' ? 'system' : 'bar_promo',
+        displayed_at_utc: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+        duration_ms: (signageRotationSpeed || 60) * 1000,
+        context: ctx,
+        concurrent_players: players,
+        game_id: gameId,
+        position_in_rotation: idx + 1,
+        tv_platform: tvPlatformAnalytics
+      };
+    }
+
+    fetch(CONFIG.API_BASE + '/signage-impression', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true
+    }).catch(err => console.warn('[Signage] impression failed', err && err.message));
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -2843,6 +2942,8 @@
 
     consecutiveErrors = 0;
     hideError();
+
+    lastApiState = state;
 
     // Capture signage configuration — clear when location has none (prevents cross-location bleed)
     if (state.signage && state.signage.slides && state.signage.slides.length > 0) {

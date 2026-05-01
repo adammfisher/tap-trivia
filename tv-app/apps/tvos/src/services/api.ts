@@ -64,6 +64,24 @@ export async function tvHeartbeat(tvId: string) {
   return apiCall<unknown>('POST', '/tv-heartbeat', { tvId });
 }
 
+export interface SignageImpressionBody {
+  bar_code: string;
+  tv_id: string;
+  signage_id: string;
+  content_type: string;
+  displayed_at_utc: string;
+  duration_ms: number;
+  context: 'game_lobby' | 'between_rounds' | 'results' | 'off_hours_idle';
+  concurrent_players: number;
+  game_id: string | null;
+  position_in_rotation: number;
+  tv_platform: string;
+}
+
+export async function signageImpression(body: SignageImpressionBody) {
+  return apiCall<{ impression_id: string }>('POST', '/signage-impression', body as unknown as Record<string, unknown>);
+}
+
 export async function getBetweenGameData(barCode: string, gameId: string) {
   return apiCall<BetweenGameDataResponse>(
     'GET',

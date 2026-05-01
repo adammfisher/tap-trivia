@@ -13,9 +13,11 @@ import {
   registerBar,
   activateTV,
   tvHeartbeat,
+  signageImpression,
   getServerNow,
   type TvStateResponse,
   type SignageSlide,
+  type SignageImpressionBody,
 } from '../services/api';
 import {
   POLL_INTERVAL_ACTIVE,
@@ -226,6 +228,8 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
   const rotationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const consecutiveErrorsRef = useRef(0);
+  const lastLoggedSlideKeyRef = useRef('');
+  const lastLoggedScreenRef = useRef<TVScreen | ''>('');
 
   // Rotation state
   const rotationActiveRef = useRef(false);
@@ -311,6 +315,56 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
     catch (err) { console.warn('[TV heartbeat] failed', err); }
   }
 
+  // ─── Signage impressions ────────────────────────────────────────────
+  // Fire-and-forget POST per slide display. Dedupe key = screen + index.
+
+  function contextForScreen(screen: TVScreen | ''): SignageImpressionBody['context'] | null {
+    if (screen === 'idle') return 'off_hours_idle';
+    if (screen === 'lobby') return 'game_lobby';
+    if (screen === 'between' || screen === 'leaderboard') return 'between_rounds';
+    if (screen === 'results') return 'results';
+    return null;
+  }
+
+  function logSignageImpressionIfNew(screen: TVScreen | '') {
+    const ctx = contextForScreen(screen);
+    if (!ctx) return;
+    if (!barCodeRef.current || !tvIdRef.current) return;
+
+    const slides = signageSlidesRef.current;
+    if (!slides || slides.length === 0) return;
+    const idx = signageIdxRef.current % slides.length;
+    const slide = slides[idx];
+    const signageId = (slide as { template?: string; id?: string }).template || (slide as { id?: string }).id || 'unknown';
+
+    const key = `${ctx}:${idx}:${signageId}`;
+    if (key === lastLoggedSlideKeyRef.current) return;
+    lastLoggedSlideKeyRef.current = key;
+
+    const api = latestApiRef.current;
+    const players = api?.activePlayers ?? 0;
+    const gameId = api?.gameId ?? null;
+    if (ctx !== 'off_hours_idle' && !gameId) return;
+
+    const body: SignageImpressionBody = {
+      bar_code: barCodeRef.current,
+      tv_id: tvIdRef.current,
+      signage_id: signageId,
+      content_type: signageId === '_default_cta' ? 'system' : 'bar_promo',
+      displayed_at_utc: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+      duration_ms: ((api as { signage?: { rotationSpeed?: number } } | null)?.signage?.rotationSpeed || 60) * 1000,
+      context: ctx,
+      concurrent_players: ctx === 'off_hours_idle' ? 0 : players,
+      game_id: ctx === 'off_hours_idle' ? null : gameId,
+      position_in_rotation: idx + 1,
+      tv_platform: 'appletv',
+    };
+
+    void signageImpression(body).catch(err =>
+      console.warn('[Signage] impression failed', err instanceof Error ? err.message : err)
+    );
+  }
+
   // ─── Polling ────────────────────────────────────────────────────────
 
   function stopAll() {
@@ -353,10 +407,12 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
         if (!signageTimerRef.current) {
           signageTimerRef.current = setInterval(() => {
             signageIdxRef.current = (signageIdxRef.current + 1) % signageSlidesRef.current.length;
+            lastLoggedSlideKeyRef.current = ''; // index changed — re-log
             setTvState(prev => ({
               ...prev,
               signageCurrentIndex: signageIdxRef.current,
             }));
+            logSignageImpressionIfNew(lastLoggedScreenRef.current);
           }, rotationSpeed * 1000);
         }
       } else {
@@ -369,6 +425,13 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
 
       // Determine screen
       const screen = translateApiState(api, tvState.screen, signageIdxRef.current, active);
+
+      // Fire signage impression on screen transitions into a signage screen.
+      if (screen !== lastLoggedScreenRef.current) {
+        lastLoggedSlideKeyRef.current = '';
+        lastLoggedScreenRef.current = screen;
+        logSignageImpressionIfNew(screen);
+      }
 
       // Derive correctIndex from correctAnswer if not provided
       let correctIndex = api.correctIndex;

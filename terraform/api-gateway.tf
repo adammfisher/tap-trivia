@@ -376,6 +376,22 @@ resource "aws_apigatewayv2_route" "tv_heartbeat" {
   target    = "integrations/${aws_apigatewayv2_integration.tv_heartbeat.id}"
 }
 
+# -----------------------------------------------------------------------------
+# POST /signage-impression → signage-impression
+# -----------------------------------------------------------------------------
+resource "aws_apigatewayv2_integration" "signage_impression" {
+  api_id                 = aws_apigatewayv2_api.main.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.signage_impression.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "signage_impression" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "POST /signage-impression"
+  target    = "integrations/${aws_apigatewayv2_integration.signage_impression.id}"
+}
+
 # =============================================================================
 # Feedback Route
 # =============================================================================

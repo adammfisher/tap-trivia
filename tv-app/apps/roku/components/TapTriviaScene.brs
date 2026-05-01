@@ -28,6 +28,9 @@ sub init()
   m.signageRotationSpeed = 60
   m.signageCurrentIndex = 0
   m.signageTimerRunning = false
+  m.lastLoggedSlideKey = ""
+  m.lastApiGameId = ""
+  m.lastApiActivePlayers = 0
   m.barLogoUrl = ""
   m.barLogoHash = ""
 
@@ -156,6 +159,7 @@ sub switchScreen(screenName as String)
   if screenName = m.currentScreen then return  ' Already showing — no-op
   print ">>> switchScreen: " + m.currentScreen + " -> " + screenName
   oldScreen = m.currentScreen
+  m.lastLoggedSlideKey = "" ' screen changed — re-log even if same slide index
   ' Show new screen FIRST (covers old screen — never a blank frame)
   if m.screens[screenName] <> invalid
     m.screens[screenName].visible = true
@@ -171,6 +175,7 @@ sub switchScreen(screenName as String)
     end if
   end if
   m.currentScreen = screenName
+  logSignageImpressionIfNew()
 end sub
 
 ' ══════════════════════════════════════════════════════════════
@@ -181,6 +186,10 @@ sub processGameState(apiState as Object)
   if apiState = invalid then return
   ' Don't process game state if we've disconnected (e.g. user pressed Back to setup)
   if m.barCode = "" then return
+
+  ' Cache game id + player count for the next signage impression payload.
+  if apiState.gameId <> invalid then m.lastApiGameId = apiState.gameId else m.lastApiGameId = ""
+  if apiState.activePlayers <> invalid then m.lastApiActivePlayers = apiState.activePlayers else m.lastApiActivePlayers = 0
 
   ' Capture signage configuration
   if apiState.signage <> invalid
@@ -868,6 +877,7 @@ sub onHeartbeatResponse()
       saveConfig()
     end if
   end if
+  ' callId = "heartbeat" or "signageImpression": fire-and-forget, ignore.
 end sub
 
 sub onRegisterBarResponse(response as Object)
@@ -1183,6 +1193,7 @@ sub onSignageRotation()
   ' Push new slide index to whichever screen is currently showing
   if m.currentScreen = "idleScreen"
     m.screens.idleScreen.setField("signageIndex", m.signageCurrentIndex)
+    logSignageImpressionIfNew()
     return
   end if
   if m.currentScreen = "resultsScreen"
@@ -1194,6 +1205,7 @@ sub onSignageRotation()
   else if m.currentScreen = "leaderboardScreen"
     m.screens.leaderboardScreen.setField("signageIndex", m.signageCurrentIndex)
   end if
+  logSignageImpressionIfNew()
 end sub
 
 sub advanceSignageIndex()
@@ -1203,6 +1215,87 @@ sub advanceSignageIndex()
     print ">>> signage: advanceIndex newIdx=" + Str(m.signageCurrentIndex).trim()
   end if
 end sub
+
+' ══════════════════════════════════════════════════════════════
+' SIGNAGE IMPRESSIONS — fire-and-forget POST per slide display.
+' Reuses heartbeatApiTask (also fire-and-forget); a rare collision
+' just drops one impression — signage rotates next anyway.
+' ══════════════════════════════════════════════════════════════
+
+function _signageContextForCurrentScreen() as String
+  if m.currentScreen = "idleScreen" then return "off_hours_idle"
+  if m.currentScreen = "lobbyScreen" then return "game_lobby"
+  if m.currentScreen = "betweenScreen" then return "between_rounds"
+  if m.currentScreen = "leaderboardScreen" then return "between_rounds"
+  if m.currentScreen = "resultsScreen" then return "results"
+  return ""
+end function
+
+sub logSignageImpressionIfNew()
+  if m.barCode = "" or m.tvDeviceId = "" then return
+  ctx = _signageContextForCurrentScreen()
+  if ctx = "" then return
+
+  slidesCount = 0
+  if m.signageSlides <> invalid then slidesCount = m.signageSlides.count()
+  ' Use index modulo slide count when slides exist; otherwise 0.
+  if slidesCount > 0
+    idx = m.signageCurrentIndex mod slidesCount
+    slide = m.signageSlides[idx]
+    signageId = "unknown"
+    if slide <> invalid and slide.template <> invalid then signageId = slide.template
+    contentType = "bar_promo"
+  else
+    idx = 0
+    signageId = "_default_cta"
+    contentType = "system"
+  end if
+
+  dedupeKey = ctx + ":" + Str(idx).trim() + ":" + signageId
+  if m.lastLoggedSlideKey = dedupeKey then return
+  m.lastLoggedSlideKey = dedupeKey
+
+  ' off_hours_idle requires concurrent_players=0 + game_id=null per backend.
+  ' For other contexts, skip if we don't yet have a gameId (race on first poll).
+  gameId = ""
+  players = 0
+  if ctx <> "off_hours_idle"
+    if m.lastApiGameId = invalid or m.lastApiGameId = "" then return
+    gameId = m.lastApiGameId
+    if m.lastApiActivePlayers <> invalid then players = m.lastApiActivePlayers
+  end if
+
+  body = CreateObject("roAssociativeArray")
+  body.SetModeCaseSensitive()
+  body["bar_code"] = m.barCode
+  body["tv_id"] = m.tvDeviceId
+  body["signage_id"] = signageId
+  body["content_type"] = contentType
+  body["displayed_at_utc"] = _isoNowUtc()
+  body["duration_ms"] = m.signageRotationSpeed * 1000
+  body["context"] = ctx
+  body["concurrent_players"] = players
+  if ctx = "off_hours_idle"
+    body.AddReplace("game_id", invalid)
+  else
+    body["game_id"] = gameId
+  end if
+  body["position_in_rotation"] = idx + 1
+  body["tv_platform"] = "roku"
+
+  m.heartbeatApiTask.setField("callId", "signageImpression")
+  m.heartbeatApiTask.setField("requestMethod", "POST")
+  m.heartbeatApiTask.setField("requestUrl", m.API_BASE + "/signage-impression")
+  m.heartbeatApiTask.setField("requestBody", FormatJson(body))
+  m.heartbeatApiTask.control = "stop"
+  m.heartbeatApiTask.control = "run"
+end sub
+
+function _isoNowUtc() as String
+  dt = CreateObject("roDateTime")
+  ' roDateTime.ToISOString() returns YYYY-MM-DDTHH:MM:SSZ in UTC.
+  return dt.ToISOString()
+end function
 
 
 ' ══════════════════════════════════════════════════════════════

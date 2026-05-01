@@ -931,6 +931,48 @@ resource "aws_lambda_permission" "tv_heartbeat_apigw" {
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }
 
+# -----------------------------------------------------------------------------
+# 21. signage-impression (Python — write one signage display event)
+#     POST /signage-impression writes to TapTrivia-SignageImpressions with
+#     ULID sort key and 90-day TTL.
+# -----------------------------------------------------------------------------
+data "archive_file" "signage_impression" {
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/functions/signage-impression"
+  output_path = "${path.module}/zip/signage-impression.zip"
+}
+
+resource "aws_lambda_function" "signage_impression" {
+  function_name    = "${local.name_prefix}-signage-impression"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "lambda_function.handler"
+  runtime          = "python3.12"
+  memory_size      = 128
+  timeout          = 5
+  filename         = data.archive_file.signage_impression.output_path
+  source_code_hash = data.archive_file.signage_impression.output_base64sha256
+
+  environment {
+    variables = {
+      TABLE_SIGNAGE_IMPRESSIONS = "TapTrivia-SignageImpressions"
+    }
+  }
+
+  tags = {
+    Environment = local.stage
+    Project     = "TapTrivia"
+    Function    = "signage-impression"
+  }
+}
+
+resource "aws_lambda_permission" "signage_impression_apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.signage_impression.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}
+
 # =============================================================================
 # Contact Form Lambda
 # =============================================================================
