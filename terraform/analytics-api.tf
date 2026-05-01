@@ -74,8 +74,8 @@ resource "aws_cognito_user_pool_client" "admin_web" {
   allowed_oauth_flows                  = ["implicit", "code"]
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_scopes                 = ["email", "openid", "profile"]
-  callback_urls                        = ["https://admin.taptrivia.tv", "https://admin.taptrivia.tv/"]
-  logout_urls                          = ["https://admin.taptrivia.tv", "https://admin.taptrivia.tv/"]
+  callback_urls                        = ["https://analytics.taptrivia.tv", "https://analytics.taptrivia.tv/"]
+  logout_urls                          = ["https://analytics.taptrivia.tv", "https://analytics.taptrivia.tv/"]
   supported_identity_providers         = ["COGNITO"]
 
   explicit_auth_flows = [
@@ -147,6 +147,7 @@ resource "aws_lambda_function" "analytics_api" {
       TABLE_TV_PAIRINGS         = "TapTrivia-TvPairings"
       TABLE_SIGNAGE_IMPRESSIONS = "TapTrivia-SignageImpressions"
       ANALYTICS_SYNC_FUNCTION   = aws_lambda_function.analytics_sync.function_name
+      ALLOWED_ORIGIN            = "https://analytics.taptrivia.tv"
     }
   }
 

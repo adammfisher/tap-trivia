@@ -19,7 +19,7 @@ import response as _resp
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
-ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "https://admin.taptrivia.tv")
+ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "https://analytics.taptrivia.tv")
 
 
 _ROUTES = (

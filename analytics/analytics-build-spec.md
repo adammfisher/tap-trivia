@@ -20,7 +20,7 @@ This document is the complete blueprint. Read it end-to-end before writing any c
 
 ## 1. What this subsystem does
 
-Operator-only analytics dashboard at `https://admin.taptrivia.tv` that lets Adam manage the entire TapTrivia platform as a one-person business. Pulls from five sources, presents seven dashboard tabs.
+Operator-only analytics dashboard at `https://analytics.taptrivia.tv` that lets Adam manage the entire TapTrivia platform as a one-person business. Pulls from five sources, presents seven dashboard tabs.
 
 **The five data sources:**
 1. **DynamoDB** (existing tables) — bars, players, sessions, games, questions, signage impressions
@@ -53,7 +53,7 @@ DynamoDB tables ───► Direct queries from analytics-api Lambda
 
                    ┌─────────────────────┐    ┌──────────────────┐
 React dashboard ──►│ analytics-api       │──►│ Reads cache +    │
-(admin.taptrivia.tv) │ Lambda (REST)     │    │ live DynamoDB    │
+(analytics.taptrivia.tv) │ Lambda (REST)     │    │ live DynamoDB    │
                    └─────────────────────┘    └──────────────────┘
 ```
 
@@ -708,7 +708,7 @@ A TV is `active` if heartbeat < 24h ago, `dark` otherwise. The Signage tab's "ac
 - **No external chart library** — the mockup uses inline SVG and that approach should be preserved (smaller bundle, no version drift)
 - **AWS Amplify** for Cognito auth only
 - **No state management library** — `useState` and `useMemo` are sufficient. Don't add Redux.
-- **Hosted on CloudFront** at `admin.taptrivia.tv` with a separate S3 bucket from the marketing site
+- **Hosted on CloudFront** at `analytics.taptrivia.tv` with a separate S3 bucket from the marketing site
 
 ### 7.2 File structure
 
@@ -762,14 +762,14 @@ analytics/
 cd analytics/frontend
 npm install
 npm run build          # vite build → dist/
-aws s3 sync dist/ s3://taptrivia-admin/ --profile Adam-Visudo
+aws s3 sync dist/ s3://taptrivia-analytics/ --profile Adam-Visudo
 aws cloudfront create-invalidation --distribution-id {ID} --paths '/*' --profile Adam-Visudo
 ```
 
 Add to package.json:
 ```json
 "scripts": {
-  "deploy": "vite build && aws s3 sync dist/ s3://taptrivia-admin/ --profile Adam-Visudo --delete && aws cloudfront create-invalidation --distribution-id {ID} --paths '/*' --profile Adam-Visudo"
+  "deploy": "vite build && aws s3 sync dist/ s3://taptrivia-analytics/ --profile Adam-Visudo --delete && aws cloudfront create-invalidation --distribution-id {ID} --paths '/*' --profile Adam-Visudo"
 }
 ```
 
@@ -868,7 +868,7 @@ Mandatory order. Do not skip ahead. Each phase ends with a working, deployable t
 - Decompose the mockup into the file structure above
 - Replace mock data with API calls
 - Wire up Cognito auth (login screen → main app)
-- Deploy to admin.taptrivia.tv
+- Deploy to analytics.taptrivia.tv (operator console — separate from the bar-owner dashboard at admin.taptrivia.tv)
 
 **Verify:** Each tab renders correctly with real data. Date range and compare mode work. Bar drill-in shows real player roster. No console errors.
 
