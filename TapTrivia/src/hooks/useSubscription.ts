@@ -7,7 +7,7 @@ import {
   getOffering,
   isConfigured,
 } from '../services/revenuecat';
-import { startTrial, checkTrial } from '../services/trial';
+import { checkTrial } from '../services/trial';
 
 interface UseSubscription {
   /** True if user has an active subscription OR an active trial */
@@ -78,14 +78,25 @@ export function useSubscription(): UseSubscription {
     return ok;
   }, []);
 
+  // "Start Free Trial" routes through the same RevenueCat purchase path as
+  // the regular subscribe button. The intro offer (configured in App Store
+  // Connect / Play Console as a 7-day free trial on the monthly product)
+  // is applied automatically by the store when the user is eligible — they
+  // see the native confirmation sheet ("Free for 7 days, then $2.99/month,
+  // cancel anytime"), authenticate, and a payment method is captured up
+  // front. Day 8 the store auto-charges. No second decision moment.
+  //
+  // Existing soft-trial users (started a trial under the old client-tracked
+  // flow) keep their remaining days via checkTrial() in the useEffect above
+  // — when their soft trial expires they hit the paywall and go through
+  // this same path.
   const startFreeTrial = useCallback(async () => {
-    try {
-      await startTrial();
-      setIsPro(true);
-      return true;
-    } catch {
-      return false;
-    }
+    if (!isConfigured()) return false;
+    setIsLoading(true);
+    const ok = await purchaseMonthly();
+    setIsPro(ok);
+    setIsLoading(false);
+    return ok;
   }, []);
 
   return { isPro, isLoading, offering, purchase, restore, startFreeTrial };

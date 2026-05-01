@@ -29,9 +29,13 @@ export function SubscriptionScreen({ navigation }: Props) {
   const priceString = pkg?.product.priceString ?? '$2.99';
   const periodLabel = 'per month';
 
-  // Check if the product has a free trial offer from Google Play / App Store
-  // Always show trial button — Google Play handles the actual trial terms
-  const hasStoreTrial = true;
+  // The "Start Free Trial" button routes through Purchases.purchasePackage,
+  // identical to the regular Subscribe button. The 7-day intro offer is
+  // configured server-side (App Store Connect + Play Console) on the monthly
+  // product; the store decides eligibility and shows the native confirmation
+  // sheet with the trial terms. Hide this button only if there's no offering
+  // at all (RC misconfigured) — in normal operation always show it.
+  const hasStoreTrial = !!pkg;
 
   // If already subscribed or in trial, auto-dismiss
   if (isPro && !isLoading) {
@@ -97,7 +101,8 @@ export function SubscriptionScreen({ navigation }: Props) {
           >
             <Text style={styles.trialButtonText}>Start Free Trial</Text>
             <Text style={styles.trialButtonSub}>
-              7 days free, then {priceString}/month
+              7 days free, then {priceString}/month{'\n'}
+              Auto-renewing · Cancel anytime in settings
             </Text>
           </Pressable>
         )}
