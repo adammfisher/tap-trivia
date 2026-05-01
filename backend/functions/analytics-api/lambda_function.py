@@ -3,8 +3,14 @@ analytics-api Lambda — routes API Gateway HTTP API v2 events to handlers.
 
 JWT authorization happens at API Gateway (Cognito JWT authorizer);
 Lambda only sees authenticated requests.
+
+Defense-in-depth: API Gateway CORS is API-wide ("*") because the public
+TV/player routes need it. To keep the analytics surface admin-only, we
+validate the Origin header at the Lambda level and reject anything that
+isn't exactly https://admin.taptrivia.tv.
 """
 import logging
+import os
 import re
 
 import handlers
@@ -12,6 +18,8 @@ import response as _resp
 
 log = logging.getLogger()
 log.setLevel(logging.INFO)
+
+ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "https://admin.taptrivia.tv")
 
 
 _ROUTES = (
@@ -45,6 +53,12 @@ def handler(event, context):
 
     if method == "OPTIONS":
         return _resp._http(204, {})
+
+    headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
+    origin = headers.get("origin")
+    if origin != ALLOWED_ORIGIN:
+        log.warning("forbidden origin: %r path=%s", origin, path)
+        return _resp.error(403, "forbidden_origin", "Request must originate from the admin dashboard")
 
     route, params = _route(method, path)
     if not route:
