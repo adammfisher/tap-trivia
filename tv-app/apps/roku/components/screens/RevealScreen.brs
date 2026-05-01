@@ -18,6 +18,7 @@ sub init()
   m.qNum = m.top.findNode("qNum")
   m.qSep = m.top.findNode("qSep")
   m.qCounter = m.top.findNode("qCounter")
+  m.subcategoryText = m.top.findNode("subcategoryText")
   m.questionText = m.top.findNode("questionText")
   m.progressFill = m.top.findNode("progressFill")
 
@@ -97,6 +98,18 @@ sub onGameStateChanged(event as Object)
   ' Position counter after pill with 20px gap
   qCounterX = pillW + 20
   m.qCounter.translation = [qCounterX, 0]
+
+  ' Subcategory
+  subCat = ""
+  if q.subcategory <> invalid and q.subcategory <> "" then subCat = q.subcategory
+  if subCat <> ""
+    m.subcategoryText.text = subCat
+    m.subcategoryText.visible = true
+    m.questionText.translation = [0, 110]
+  else
+    m.subcategoryText.visible = false
+    m.questionText.translation = [0, 60]
+  end if
 
   ' Question text
   qText = ""

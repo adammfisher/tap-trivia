@@ -1,0 +1,39 @@
+appId: com.visudolabs.taptrivia.app
+name: Settings — all sections render + edit nickname
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "⚙"
+    optional: true
+- runFlow:
+    when:
+      notVisible: "Settings"
+    commands:
+      - tapOn:
+          point: "96%, 8%"
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible: "Settings"
+- assertVisible: "Profile"
+- assertVisible: "Saved Games"
+- assertVisible: "App"
+# Edit nickname
+- tapOn: "Edit"
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible: "Edit Name"
+- assertVisible: "This is shown on the leaderboard"
+- eraseText: 30
+- inputText: "Maestro"
+- tapOn: "Save"
+- waitForAnimationToEnd:
+    timeout: 5000
+# Back to Welcome via close button
+- tapOn: "✕"
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    text: "Join a Game.*"

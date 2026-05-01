@@ -13,6 +13,17 @@ sub init()
   m.barNameVal = ""
   m.barCodeVal = ""
   m.slidesCache = []
+  m.lastRenderedIndex = -1
+  m.lastRenderedSlideCount = -1
+  m.fontCache = {}  ' Cache Font nodes by "name:size" — reused across renders
+
+  ' Wrapper Group: sole child of signageContent; swap by reference to reliably clear all content
+  m.contentWrapper = CreateObject("roSGNode", "Group")
+  m.signageContent.appendChild(m.contentWrapper)
+
+  ' Timer coalesces double-fire from onSlidesChanged+onIndexChanged in same frame
+  m.renderTimer = m.top.findNode("renderTimer")
+  m.renderTimer.observeField("fire", "onRenderTimer")
 
   fixAllLabelFonts(m.top)
 end sub
@@ -52,19 +63,40 @@ sub onBarCodeChanged(event as Object)
 end sub
 
 sub onSlidesChanged(event as Object)
-  m.slidesCache = event.getData()
-  if m.slidesCache = invalid then m.slidesCache = []
+  slides = event.getData()
+  if slides = invalid then slides = []
+  ' Skip re-render if count is same and we already rendered — prevents churn if called redundantly
+  if slides.count() = m.lastRenderedSlideCount and slides.count() > 0
+    m.slidesCache = slides
+    return
+  end if
+  m.slidesCache = slides
+  m.lastRenderedSlideCount = -1  ' force re-render
   print ">>> SignagePanel: onSlidesChanged count=" + Str(m.slidesCache.count()).trim()
-  if m.slidesCache.count() = 0 then return
-  ' Render at current index (not 0) to avoid resetting when polls re-set slides
-  currentIdx = m.top.getField("signageIndex")
-  renderSlide(currentIdx)
+  triggerRender()
 end sub
 
 sub onIndexChanged(event as Object)
-  idx = event.getData()
-  print ">>> SignagePanel: onIndexChanged idx=" + Str(idx).trim() + " slides=" + Str(m.slidesCache.count()).trim()
+  newIdx = event.getData()
+  ' Skip re-render if index hasn't actually changed
+  if newIdx = m.lastRenderedIndex then return
+  print ">>> SignagePanel: onIndexChanged idx=" + Str(newIdx).trim()
+  triggerRender()
+end sub
+
+' Coalesce rapid field updates — both observers reset this timer,
+' so renderSlide fires exactly once after both fields are committed.
+sub triggerRender()
+  m.renderTimer.control = "stop"
+  m.renderTimer.control = "start"
+end sub
+
+sub onRenderTimer()
+  idx = m.top.getField("signageIndex")
+  print ">>> SignagePanel: onRenderTimer idx=" + Str(idx).trim()
   renderSlide(idx)
+  m.lastRenderedIndex = idx
+  m.lastRenderedSlideCount = m.slidesCache.count()
 end sub
 
 ' ══════════════════════════════════════════════════════════════
@@ -72,6 +104,13 @@ end sub
 ' ══════════════════════════════════════════════════════════════
 
 sub renderSlide(index as Integer)
+  ' Clear children of the existing wrapper rather than creating a new Group node.
+  ' Creating+discarding a Group every 30s accumulates GC pressure over hours;
+  ' removeChildren() reuses the same node and releases child memory immediately.
+  kids = m.contentWrapper.getChildren(-1, 0)
+  if kids.count() > 0 then m.contentWrapper.removeChildren(kids)
+  m.signageContent.translation = [0, 150]
+
   slides = m.slidesCache
   if slides = invalid or slides.count() = 0
     renderDefault()
@@ -86,9 +125,6 @@ sub renderSlide(index as Integer)
   if slide.data <> invalid then data = slide.data
 
   print ">>> SignagePanel: renderSlide idx=" + Str(idx).trim() + " template=" + template
-  ' Clear dynamic content and reset position
-  m.signageContent.removeChildrenIndex(m.signageContent.getChildCount(), 0)
-  m.signageContent.translation = [0, 150]
 
   ' Show/hide header (brand has no header)
   m.panelHeader.visible = (template <> "brand")
@@ -113,18 +149,17 @@ sub renderSlide(index as Integer)
 end sub
 
 sub renderDefault()
-  m.signageContent.removeChildrenIndex(m.signageContent.getChildCount(), 0)
+  ' Note: wrapper already swapped by renderSlide before calling here
   m.templateLabel.visible = false
   m.panelHeader.visible = true
-  m.signageContent.translation = [0, 150]
 
-  headline = addLabel(m.signageContent, "Play TapTrivia!", 0, 0, 880)
+  headline = addLabel(m.contentWrapper, "Play TapTrivia!", 0, 0, 880)
   headline.font = makeFont("Fredoka-Bold", 48)
   headline.color = "#f0f0f0"
 
-  body = addLabel(m.signageContent, "Live trivia every 15 minutes - play free on your phone!", 0, 60, 880)
+  body = addLabel(m.contentWrapper, "Live trivia every 15 minutes - play free on your phone!", 0, 60, 880)
   body.font = makeFont("Outfit-Regular", 28)
-  body.color = "#ffffff80"
+  body.color = "#ffffffE6"
   body.wrap = true
   body.maxLines = 4
 end sub
@@ -154,7 +189,7 @@ sub renderSpecials(data as Object)
     lbl = addLabel(labelGroup, UCase(label), 346, 0, 534)
     lbl.font = makeFont("Outfit-Bold", 22)
     lbl.color = "#f59e0b"
-    m.signageContent.appendChild(labelGroup)
+    m.contentWrapper.appendChild(labelGroup)
   else
     m.templateLabel.visible = true
     m.templateLabel.text = UCase(label)
@@ -166,7 +201,7 @@ sub renderSpecials(data as Object)
   ' Headline — centered
   headline = safeStr(data.headline)
   if headline <> ""
-    headlineL = addLabel(m.signageContent, headline, 0, yPos, 880)
+    headlineL = addLabel(m.contentWrapper, headline, 0, yPos, 880)
     headlineL.font = makeFont("Fredoka-Bold", 48)
     headlineL.color = "#f0f0f0"
     headlineL.horizAlign = "center"
@@ -176,7 +211,7 @@ sub renderSpecials(data as Object)
   ' Subheadline — centered
   subheadline = safeStr(data.subheadline)
   if subheadline <> ""
-    subL = addLabel(m.signageContent, subheadline, 0, yPos, 880)
+    subL = addLabel(m.contentWrapper, subheadline, 0, yPos, 880)
     subL.font = makeFont("Fredoka-Bold", 32)
     subL.color = "#00d4aa"
     subL.horizAlign = "center"
@@ -208,7 +243,7 @@ sub renderSpecials(data as Object)
     priceL.color = "#00d4aa"
     priceL.horizAlign = "right"
 
-    m.signageContent.appendChild(featuredGroup)
+    m.contentWrapper.appendChild(featuredGroup)
     yPos = yPos + 116
   end if
 
@@ -247,7 +282,7 @@ sub renderSpecials(data as Object)
       priceL.color = "#00d4aa"
       priceL.horizAlign = "right"
 
-      m.signageContent.appendChild(row)
+      m.contentWrapper.appendChild(row)
       yPos = yPos + 60
     end for
   end if
@@ -276,7 +311,7 @@ sub renderHappyHour(data as Object)
     lbl = addLabel(labelGroup, "HAPPY HOUR", 376, 0, 504)
     lbl.font = makeFont("Outfit-Bold", 22)
     lbl.color = "#e879f9"
-    m.signageContent.appendChild(labelGroup)
+    m.contentWrapper.appendChild(labelGroup)
   else
     m.templateLabel.visible = true
     m.templateLabel.text = "HAPPY HOUR"
@@ -285,15 +320,15 @@ sub renderHappyHour(data as Object)
 
   yPos = 0
 
-  headline = addLabel(m.signageContent, safeStr(data.timeRange), 0, yPos, 880)
+  headline = addLabel(m.contentWrapper, safeStr(data.timeRange), 0, yPos, 880)
   headline.font = makeFont("Fredoka-Bold", 54)
   headline.color = "#f0f0f0"
   headline.horizAlign = "center"
   yPos = yPos + 66
 
-  freq = addLabel(m.signageContent, safeStr(data.frequency), 0, yPos, 880)
+  freq = addLabel(m.contentWrapper, safeStr(data.frequency), 0, yPos, 880)
   freq.font = makeFont("Outfit-Regular", 28)
-  freq.color = "#ffffff66"
+  freq.color = "#ffffffE6"
   freq.horizAlign = "center"
   yPos = yPos + 52
 
@@ -333,10 +368,10 @@ sub renderHappyHour(data as Object)
 
       itemL = addLabel(card, safeStr(deal.item), 0, 66, cardW)
       itemL.font = makeFont("Outfit-SemiBold", 24)
-      itemL.color = "#ffffff66"
+      itemL.color = "#ffffffE6"
       itemL.horizAlign = "center"
 
-      m.signageContent.appendChild(card)
+      m.contentWrapper.appendChild(card)
 
       col = col + 1
       if col >= 2 or isLastOdd
@@ -364,20 +399,20 @@ sub renderEvent(data as Object)
     ePoster.width = 100
     ePoster.height = 100
     ePoster.translation = [390, yPos]
-    m.signageContent.appendChild(ePoster)
+    m.contentWrapper.appendChild(ePoster)
     yPos = yPos + 120
   end if
 
   whenText = safeStr(data.when)
   if whenText <> ""
-    whenL = addLabel(m.signageContent, UCase(whenText), 0, yPos, 880)
+    whenL = addLabel(m.contentWrapper, UCase(whenText), 0, yPos, 880)
     whenL.font = makeFont("Outfit-Bold", 22)
     whenL.color = "#667eea"
     whenL.horizAlign = "center"
     yPos = yPos + 38
   end if
 
-  nameL = addLabel(m.signageContent, safeStr(data.eventName), 0, yPos, 880)
+  nameL = addLabel(m.contentWrapper, safeStr(data.eventName), 0, yPos, 880)
   nameL.font = makeFont("Fredoka-Bold", 48)
   nameL.color = "#f0f0f0"
   nameL.horizAlign = "center"
@@ -387,7 +422,7 @@ sub renderEvent(data as Object)
 
   details = safeStr(data.details)
   if details <> ""
-    detailsL = addLabel(m.signageContent, details, 0, yPos, 880)
+    detailsL = addLabel(m.contentWrapper, details, 0, yPos, 880)
     detailsL.font = makeFont("Outfit-Regular", 28)
     detailsL.color = "#ffffff59"
     detailsL.horizAlign = "center"
@@ -429,7 +464,7 @@ sub renderEvent(data as Object)
       prizeL.font = makeFont("Outfit-Regular", 22)
       prizeL.color = "#ffffff59"
 
-      m.signageContent.appendChild(row)
+      m.contentWrapper.appendChild(row)
       yPos = yPos + 66
     end for
   end if
@@ -451,7 +486,7 @@ sub renderBrand(data as Object)
   logoBg.width = 160
   logoBg.height = 160
   logoBg.translation = [360, yPos]
-  m.signageContent.appendChild(logoBg)
+  m.contentWrapper.appendChild(logoBg)
 
   logoUrl = m.top.getField("barLogoUrl")
   if logoUrl <> invalid and logoUrl <> ""
@@ -460,16 +495,16 @@ sub renderBrand(data as Object)
     logoPoster.width = 148
     logoPoster.height = 148
     logoPoster.translation = [366, yPos + 6]
-    m.signageContent.appendChild(logoPoster)
+    m.contentWrapper.appendChild(logoPoster)
   else
-    initialL = addLabel(m.signageContent, UCase(Left(m.barNameVal, 1)), 360, yPos + 40, 160)
+    initialL = addLabel(m.contentWrapper, UCase(Left(m.barNameVal, 1)), 360, yPos + 40, 160)
     initialL.font = makeFont("Fredoka-Bold", 52)
     initialL.color = "#ffd200"
     initialL.horizAlign = "center"
   end if
   yPos = yPos + 188
 
-  headline = addLabel(m.signageContent, m.barNameVal, 0, yPos, 880)
+  headline = addLabel(m.contentWrapper, m.barNameVal, 0, yPos, 880)
   headline.font = makeFont("Fredoka-Bold", 48)
   headline.color = "#f0f0f0"
   headline.horizAlign = "center"
@@ -479,7 +514,7 @@ sub renderBrand(data as Object)
 
   tagline = safeStr(data.tagline)
   if tagline <> ""
-    taglineL = addLabel(m.signageContent, UCase(tagline), 0, yPos, 880)
+    taglineL = addLabel(m.contentWrapper, UCase(tagline), 0, yPos, 880)
     taglineL.font = makeFont("Outfit-SemiBold", 24)
     taglineL.color = "#ffffff59"
     taglineL.horizAlign = "center"
@@ -492,7 +527,7 @@ sub renderBrand(data as Object)
   divider.width = 80
   divider.height = 4
   divider.translation = [400, yPos]
-  m.signageContent.appendChild(divider)
+  m.contentWrapper.appendChild(divider)
   yPos = yPos + 32
 
   ' Hours rows
@@ -505,14 +540,14 @@ sub renderBrand(data as Object)
 
       dayL = addLabel(row, safeStr(h.label), 180, 0, 260)
       dayL.font = makeFont("Outfit-SemiBold", 28)
-      dayL.color = "#ffffff80"
+      dayL.color = "#ffffffE6"
 
       hoursL = addLabel(row, safeStr(h.hours), 480, 0, 220)
       hoursL.font = makeFont("Outfit-SemiBold", 28)
       hoursL.color = "#ffd200"
       hoursL.horizAlign = "right"
 
-      m.signageContent.appendChild(row)
+      m.contentWrapper.appendChild(row)
       yPos = yPos + 40
     end for
   end if
@@ -535,11 +570,11 @@ sub renderAnnouncement(data as Object)
     ePoster.width = 100
     ePoster.height = 100
     ePoster.translation = [390, yPos]
-    m.signageContent.appendChild(ePoster)
+    m.contentWrapper.appendChild(ePoster)
     yPos = yPos + 120
   end if
 
-  headline = addLabel(m.signageContent, safeStr(data.headline), 0, yPos, 880)
+  headline = addLabel(m.contentWrapper, safeStr(data.headline), 0, yPos, 880)
   headline.font = makeFont("Fredoka-Bold", 48)
   headline.color = "#f0f0f0"
   headline.horizAlign = "center"
@@ -547,9 +582,9 @@ sub renderAnnouncement(data as Object)
   headline.maxLines = 2
   yPos = yPos + 68
 
-  body = addLabel(m.signageContent, safeStr(data.message), 40, yPos, 800)
+  body = addLabel(m.contentWrapper, safeStr(data.message), 40, yPos, 800)
   body.font = makeFont("Outfit-Regular", 28)
-  body.color = "#ffffff80"
+  body.color = "#ffffffE6"
   body.horizAlign = "center"
   body.wrap = true
   body.maxLines = 6
@@ -557,7 +592,7 @@ sub renderAnnouncement(data as Object)
 
   subtext = safeStr(data.subtext)
   if subtext <> ""
-    subtextL = addLabel(m.signageContent, subtext, 40, yPos, 800)
+    subtextL = addLabel(m.contentWrapper, subtext, 40, yPos, 800)
     subtextL.font = makeFont("Outfit-Regular", 24)
     subtextL.color = "#ffffff4D"
     subtextL.horizAlign = "center"
@@ -581,19 +616,19 @@ sub renderSports(data as Object)
     ePoster.width = 100
     ePoster.height = 100
     ePoster.translation = [390, yPos]
-    m.signageContent.appendChild(ePoster)
+    m.contentWrapper.appendChild(ePoster)
     yPos = yPos + 120
   end if
 
   headline = safeStr(data.headline)
   if headline = "" then headline = "Game Day"
-  headlineL = addLabel(m.signageContent, UCase(headline), 0, yPos, 880)
+  headlineL = addLabel(m.contentWrapper, UCase(headline), 0, yPos, 880)
   headlineL.font = makeFont("Outfit-Bold", 22)
   headlineL.color = "#ff4757"
   headlineL.horizAlign = "center"
   yPos = yPos + 38
 
-  matchup = addLabel(m.signageContent, safeStr(data.matchup), 0, yPos, 880)
+  matchup = addLabel(m.contentWrapper, safeStr(data.matchup), 0, yPos, 880)
   matchup.font = makeFont("Fredoka-Bold", 48)
   matchup.color = "#f0f0f0"
   matchup.horizAlign = "center"
@@ -603,7 +638,7 @@ sub renderSports(data as Object)
 
   whenText = safeStr(data.when)
   if whenText <> ""
-    whenL = addLabel(m.signageContent, whenText, 0, yPos, 880)
+    whenL = addLabel(m.contentWrapper, whenText, 0, yPos, 880)
     whenL.font = makeFont("Outfit-Regular", 26)
     whenL.color = "#ffffff59"
     whenL.horizAlign = "center"
@@ -626,13 +661,13 @@ sub renderSports(data as Object)
     promoL.color = "#ffd200"
     promoL.horizAlign = "center"
 
-    m.signageContent.appendChild(promoGroup)
+    m.contentWrapper.appendChild(promoGroup)
     yPos = yPos + 92
   end if
 
   tagline = safeStr(data.tagline)
   if tagline <> ""
-    taglineL = addLabel(m.signageContent, tagline, 40, yPos, 800)
+    taglineL = addLabel(m.contentWrapper, tagline, 40, yPos, 800)
     taglineL.font = makeFont("Outfit-Regular", 24)
     taglineL.color = "#ffffff4D"
     taglineL.horizAlign = "center"
@@ -658,11 +693,11 @@ sub renderCustom(data as Object)
     ePoster.width = 100
     ePoster.height = 100
     ePoster.translation = [390, yPos]
-    m.signageContent.appendChild(ePoster)
+    m.contentWrapper.appendChild(ePoster)
     yPos = yPos + 120
   end if
 
-  headline = addLabel(m.signageContent, safeStr(data.headline), 0, yPos, 880)
+  headline = addLabel(m.contentWrapper, safeStr(data.headline), 0, yPos, 880)
   headline.font = makeFont("Fredoka-Bold", 48)
   headline.color = "#f0f0f0"
   headline.horizAlign = "center"
@@ -672,9 +707,9 @@ sub renderCustom(data as Object)
 
   body = safeStr(data.body)
   if body <> ""
-    bodyL = addLabel(m.signageContent, body, 40, yPos, 800)
+    bodyL = addLabel(m.contentWrapper, body, 40, yPos, 800)
     bodyL.font = makeFont("Outfit-Regular", 28)
-    bodyL.color = "#ffffff80"
+    bodyL.color = "#ffffffE6"
     bodyL.horizAlign = "center"
     bodyL.wrap = true
     bodyL.maxLines = 4
@@ -707,9 +742,9 @@ sub renderCustom(data as Object)
 
       textL = addLabel(row, safeStr(item.text), 52, 8, 690)
       textL.font = makeFont("Outfit-SemiBold", 26)
-      textL.color = "#ffffff99"
+      textL.color = "#ffffffE6"
 
-      m.signageContent.appendChild(row)
+      m.contentWrapper.appendChild(row)
       yPos = yPos + 62
     end for
   end if

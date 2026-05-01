@@ -3,6 +3,8 @@
 
  NEVER EVER Modify the tv os on any system like fire tv everything must be done in the app.
 
+ NEVER send external ECP keypresses, button presses, or any external commands to keep a TV app alive (Roku, Fire TV, tvOS, or any platform). No `curl http://.../keypress/...`, no monitor scripts that send keypresses, nothing. All keepalive logic must be self-contained inside the app. Sending external pings masks whether the in-app solution actually works and produces false positives.
+
 Live trivia game platform for bars. Synchronized global gameplay every 15 minutes (5 PM–2 AM ET). Players play on mobile browsers, bars optionally display on TVs.
 
 ## Architecture

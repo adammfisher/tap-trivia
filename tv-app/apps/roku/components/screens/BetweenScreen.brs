@@ -44,7 +44,33 @@ sub init()
   ' Stop timer when screen is hidden to prevent memory pressure over long uptimes
   m.top.observeField("visible", "onVisibleChanged")
 
+  ' Wire signage panel once when slides change (not on every gameState poll)
+  m.top.observeField("signageSlides", "onSignageSlidesChanged")
+
   fixAllLabelFonts(m.top)
+end sub
+
+' Called once when slides field is set (on screen show) — never on gameState updates
+sub onSignageSlidesChanged(event as Object)
+  slides = event.getData()
+  if slides = invalid then slides = []
+  m.hasSignage = (slides.count() > 0)
+  if m.hasSignage
+    barCode = m.top.getField("barCode")
+    barName = m.top.getField("barName")
+    m.signagePanel.setField("barCode", barCode)
+    m.signagePanel.setField("barName", barName)
+    m.signagePanel.setField("barLogoUrl", m.top.getField("barLogoUrl"))
+    m.signagePanel.setField("signageSlides", slides)
+    m.signagePanel.setField("signageIndex", m.top.getField("signageIndex"))
+    m.signagePanel.visible = true
+    m.rightPanelBg.visible = true
+    m.qrBadge.visible = false
+  else
+    m.signagePanel.visible = false
+    m.rightPanelBg.visible = false
+    m.qrBadge.visible = true
+  end if
 end sub
 
 ' ── Local interpolation tick (1s) ──
@@ -203,27 +229,7 @@ sub onGameStateChanged(event as Object)
     countdownY = curY
   end if
   m.countdownLabel.translation = [0, countdownY]
-
-  ' ── Signage panel ──
-  slides = m.top.getField("signageSlides")
-  if slides = invalid then slides = []
-  hasSignage = (slides.count() > 0)
-  m.hasSignage = hasSignage
-
-  if hasSignage
-    m.signagePanel.setField("barCode", barCode)
-    m.signagePanel.setField("barName", barName)
-    m.signagePanel.setField("barLogoUrl", m.top.getField("barLogoUrl"))
-    m.signagePanel.setField("signageSlides", slides)
-    m.signagePanel.setField("signageIndex", m.top.getField("signageIndex"))
-    m.signagePanel.visible = true
-    m.rightPanelBg.visible = true
-    m.qrBadge.visible = false
-  else
-    m.signagePanel.visible = false
-    m.rightPanelBg.visible = false
-    m.qrBadge.visible = true
-  end if
+  ' Signage panel wired via onSignageSlidesChanged (fires once on screen show, not every poll)
 end sub
 
 sub onSignageIndexChanged(event as Object)

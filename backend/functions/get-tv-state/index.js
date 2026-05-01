@@ -4,6 +4,7 @@ const { TABLE, get, query, update } = require('./shared/dynamo');
 const { getGameState, getNextGameTime, gameTimeslotPK, GAME_DURATION_MS, RESULTS_DURATION_MS } = require('./shared/game-clock');
 const { calculatePoints } = require('./shared/scoring');
 const { deduplicateNames } = require('./shared/name-suffixes');
+const { getConfig } = require('./shared/config');
 
 function response(statusCode, body) {
   return {
@@ -218,6 +219,37 @@ exports.handler = async (event) => {
 
     const now = Date.now();
 
+    // --- Game mode check ---
+    const etParts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York', hour: 'numeric', minute: 'numeric', hour12: false
+    }).formatToParts(new Date(now));
+    let etH = 0, etM = 0;
+    for (const p of etParts) {
+      if (p.type === 'hour') etH = parseInt(p.value, 10);
+      if (p.type === 'minute') etM = parseInt(p.value, 10);
+    }
+    if (etH === 24) etH = 0;
+    const cfg = await getConfig(etH * 60 + etM);
+
+    if (!cfg.isActive) {
+      return response(200, {
+        state: 'idle',
+        gameMode: cfg.gameMode,
+        barCode,
+        barName,
+        activePlayers: 0,
+        nextGameStartEpoch: null,
+        secondsUntilNextGame: null,
+        showBarCode: true,
+        playerAppUrl: process.env.PLAYER_APP_URL || 'https://taptrivia.tv',
+        lastGameBarLeaderboard: [],
+        lastGameGlobalLeaderboard: [],
+        signage: bar.signage || null,
+        logoUrl: bar.logoUrl || null,
+        logoHash: bar.logoHash || null
+      });
+    }
+
     // --- Ad-hoc test game override ---
     let game = null;
     let isAdhocResultsWindow = false;
@@ -250,6 +282,7 @@ exports.handler = async (event) => {
     if (!game) {
       return response(200, {
         state: 'break',
+        gameMode: cfg.gameMode,
         barCode,
         barName,
         activePlayers: 0,

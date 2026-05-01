@@ -48,7 +48,24 @@ sub init()
   ' Stop timer when screen is hidden to prevent memory pressure over long uptimes
   m.top.observeField("visible", "onVisibleChanged")
 
+  ' Wire signage panel once when slides change (not on every gameState poll)
+  m.top.observeField("signageSlides", "onSignageSlidesChanged")
+
   fixAllLabelFonts(m.top)
+end sub
+
+' Called once when slides field is set (on screen show) — never on gameState updates
+sub onSignageSlidesChanged(event as Object)
+  slides = event.getData()
+  if slides = invalid then slides = []
+  m.hasSignage = (slides.count() > 0)
+  if m.hasSignage
+    m.signagePanel.setField("barCode", m.top.getField("barCode"))
+    m.signagePanel.setField("barName", m.top.getField("barName"))
+    m.signagePanel.setField("barLogoUrl", m.top.getField("barLogoUrl"))
+    m.signagePanel.setField("signageSlides", slides)
+    m.signagePanel.setField("signageIndex", m.top.getField("signageIndex"))
+  end if
 end sub
 
 sub onGameStateChanged(event as Object)
@@ -86,18 +103,15 @@ sub onGameStateChanged(event as Object)
     m.runner5.setField("playerRank", 5)
   end if
 
-  ' ── Signage check ──
-  slides = m.top.getField("signageSlides")
-  if slides = invalid then slides = []
-  hasSignage = (slides.count() > 0)
-  m.hasSignage = hasSignage
-
-  if hasSignage
+  ' ── Layout mode — m.hasSignage set by onSignageSlidesChanged (fires once on screen show) ──
+  if m.hasSignage
     ' ── SIGNAGE MODE: centered Game Over + winner left, signage right ──
     m.leftCol.visible = false
     m.rightCol.visible = false
     m.qrBadge.visible = false
     m.runnerRows.visible = false
+    m.signagePanel.visible = true
+    m.rightPanelBg.visible = true
 
     ' Show centered game-over with winner
     m.gameOverCenter.visible = true
@@ -126,15 +140,6 @@ sub onGameStateChanged(event as Object)
       m.winnerName.visible = false
       m.winnerScore.visible = false
     end if
-
-    ' Wire signage panel
-    m.signagePanel.setField("barCode", barCode)
-    m.signagePanel.setField("barName", barName)
-    m.signagePanel.setField("barLogoUrl", m.top.getField("barLogoUrl"))
-    m.signagePanel.setField("signageSlides", slides)
-    m.signagePanel.setField("signageIndex", m.top.getField("signageIndex"))
-    m.signagePanel.visible = true
-    m.rightPanelBg.visible = true
   else
     ' ── NO-SIGNAGE MODE: podium left, FINAL STANDINGS right ──
     m.leftCol.visible = true

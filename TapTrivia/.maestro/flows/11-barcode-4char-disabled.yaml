@@ -1,0 +1,27 @@
+appId: com.visudolabs.taptrivia.app
+name: Bar code — partial entry stays on join screen; full code proceeds
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible: "Enter Game Code"
+
+# Type only 3 chars — no submit attempted, keyboard stays open
+- inputText: "9CK"
+- waitForAnimationToEnd:
+    timeout: 2000
+- assertVisible: "Enter Game Code"
+
+# Erase partial entry (keyboard still focused on TextInput)
+- eraseText: 5
+# Type valid 5-char code
+- inputText: "9CK6T"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- assertVisible: "What should we call you?"

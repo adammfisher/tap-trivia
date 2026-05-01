@@ -1,8 +1,9 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, Linking } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, Linking, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { GradientBackground } from '../components/GradientBackground';
 import { Avatar } from '../components/Avatar';
@@ -44,6 +45,16 @@ export function SettingsScreen({ navigation }: Props) {
   const handleLeaveGame = () => {
     resetGame();
     navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+  };
+
+  const handleResetTrial = async () => {
+    await Promise.all([
+      SecureStore.deleteItemAsync('taptrivia_trial_start').catch(() => {}),
+      AsyncStorage.removeItem('@taptrivia:trialStartedAt'),
+    ]);
+    Alert.alert('Trial reset', 'Trial state cleared. Returning to Welcome.', [
+      { text: 'OK', onPress: () => navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] }) },
+    ]);
   };
 
   return (
@@ -114,6 +125,22 @@ export function SettingsScreen({ navigation }: Props) {
                 style={({ pressed }) => [styles.leaveButton, pressed && { opacity: 0.8 }]}
               >
                 <Text style={styles.leaveButtonText}>Leave Game</Text>
+              </Pressable>
+            </View>
+          )}
+
+          {/* Debug — dev builds only */}
+          {__DEV__ && (
+            <View style={styles.card}>
+              <Text style={styles.cardLabel}>Debug</Text>
+              <Text style={styles.leaveDescription}>
+                Wipe the locally stored trial timestamp so the paywall fires again on next lobby entry.
+              </Text>
+              <Pressable
+                onPress={handleResetTrial}
+                style={({ pressed }) => [styles.resetButton, pressed && { opacity: 0.8 }]}
+              >
+                <Text style={styles.resetButtonText}>Reset Trial State</Text>
               </Pressable>
             </View>
           )}
@@ -260,6 +287,19 @@ const styles = StyleSheet.create({
     fontFamily: fonts.outfit.bold,
     fontSize: 15,
     color: '#fff',
+  },
+  resetButton: {
+    backgroundColor: 'rgba(255,100,0,0.2)',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,100,0,0.4)',
+  },
+  resetButtonText: {
+    fontFamily: fonts.outfit.bold,
+    fontSize: 14,
+    color: '#ff6400',
   },
   linksList: { gap: 10 },
   linkRow: {

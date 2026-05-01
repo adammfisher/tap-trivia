@@ -1,0 +1,57 @@
+appId: com.visudolabs.taptrivia.app
+name: Late answer (~100pt zone) — server result applied before reveal navigation
+# Requires an active game (game_mode all_on or timed window).
+# Reproduces: player answers near deadline, server response arrives after reveal starts.
+# Fix: LockedInScreen waits for pendingResult before navigating, preventing +0 bug.
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+
+# Join 9CK6T — no paywall
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "9CK6T"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- assertVisible: "What should we call you?"
+- inputText: "LateBot"
+- pressKey: Enter
+
+# Wait for game to start (up to 60s for next slot)
+- waitForAnimationToEnd:
+    timeout: 60000
+
+# Category screen (0-3s) — let it pass
+- waitForAnimationToEnd:
+    timeout: 6000
+
+# Wait 26s into question to land in ~100-200pt zone (hint_2: 24-31s)
+- waitForAnimationToEnd:
+    timeout: 13000
+- waitForAnimationToEnd:
+    timeout: 13000
+
+# Tap first answer (bottom half of screen)
+- tapOn:
+    text: "A"
+
+# Wait through reveal — fix holds navigation until server result arrives
+- waitForAnimationToEnd:
+    timeout: 15000
+
+# Must reach a result screen (not stuck on LockedIn or Playing)
+- assertNotVisible: "Locked In!"
+- assertNotVisible: "Waiting for reveal"
+
+# If correct — points must NOT be +0 (that was the bug before the fix)
+- runFlow:
+    when:
+      visible: "Points Earned!"
+    commands:
+      - assertNotVisible:
+          text: "\\+0"

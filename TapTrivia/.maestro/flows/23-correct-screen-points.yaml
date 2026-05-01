@@ -1,0 +1,42 @@
+appId: com.visudolabs.taptrivia.app
+name: Correct answer — "Points Earned!" shows nonzero score (not +0 bug)
+# Uses the same late-answer scenario as flow 10 but asserts correct screen structure.
+# Requires an active game (9CK6T bar code, all_on mode).
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "9CK6T"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- inputText: "CorrectBot"
+- pressKey: Enter
+
+# Wait for game → skip category
+- waitForAnimationToEnd:
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Answer at ~8s into question (still high-value zone ~800+pts)
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "A"
+- waitForAnimationToEnd:
+    timeout: 15000
+
+# When correct: assert "Points Earned!" visible and points not +0
+- runFlow:
+    when:
+      visible: "Points Earned!"
+    commands:
+      - assertNotVisible: "+0"

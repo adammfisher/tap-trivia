@@ -41,6 +41,19 @@ sub fixAllLabelFonts(node as Object)
 end sub
 
 function makeFont(name as String, size as Integer) as Object
+  ' Use per-component font cache (m.fontCache) when available — prevents
+  ' creating/discarding Font nodes on every SignagePanel render cycle.
+  ' Components that don't initialize m.fontCache fall through to create-fresh.
+  if m.fontCache <> invalid
+    key = name + ":" + Str(size).trim()
+    cached = m.fontCache[key]
+    if cached <> invalid then return cached
+    f = CreateObject("roSGNode", "Font")
+    f.uri = "pkg:/fonts/" + name + ".ttf"
+    f.size = size
+    m.fontCache[key] = f
+    return f
+  end if
   f = CreateObject("roSGNode", "Font")
   f.uri = "pkg:/fonts/" + name + ".ttf"
   f.size = size

@@ -507,7 +507,7 @@ sub renderSpecials(data as Object)
   m.specialsFeaturedPrice.text = safeField(data, "featuredPrice")
 
   ' Build menu items dynamically
-  m.specialsMenuItems.removeChildrenIndex(m.specialsMenuItems.getChildCount(), 0)
+  m.specialsMenuItems.removeChildren(m.specialsMenuItems.getChildren(-1, 0))
   menuItems = []
   if data.menuItems <> invalid then menuItems = data.menuItems
   yPos = 0
@@ -547,7 +547,7 @@ sub renderSpecials(data as Object)
     descLabel.text = safeField(item, "desc")
     descLabel.translation = [124, 62]
     descLabel.font = makeFont("Outfit-Regular", 24)
-    descLabel.color = "#ffffff66"
+    descLabel.color = "#ffffffE6"
     descLabel.width = 470
     row.appendChild(descLabel)
 
@@ -597,7 +597,7 @@ sub renderHappyhour(data as Object)
   m.happyhourFreq.text = safeField(data, "frequency")
 
   ' Build deal cards as horizontal row
-  m.happyhourDeals.removeChildrenIndex(m.happyhourDeals.getChildCount(), 0)
+  m.happyhourDeals.removeChildren(m.happyhourDeals.getChildren(-1, 0))
   deals = []
   if data.deals <> invalid then deals = data.deals
 
@@ -634,7 +634,7 @@ sub renderHappyhour(data as Object)
     itemLabel.text = safeField(deal, "item")
     itemLabel.translation = [0, 120]
     itemLabel.font = makeFont("Outfit-SemiBold", 28)
-    itemLabel.color = "#ffffff99"
+    itemLabel.color = "#ffffffE6"
     itemLabel.horizAlign = "center"
     itemLabel.width = 320
     card.appendChild(itemLabel)
@@ -675,7 +675,7 @@ sub renderEvent(data as Object)
   m.eventDetails.text = safeField(data, "details")
 
   ' Build prize cards as horizontal row
-  m.eventPrizes.removeChildrenIndex(m.eventPrizes.getChildCount(), 0)
+  m.eventPrizes.removeChildren(m.eventPrizes.getChildren(-1, 0))
   prizes = []
   if data.prizes <> invalid then prizes = data.prizes
 
@@ -718,7 +718,7 @@ sub renderEvent(data as Object)
     nameLabel.text = safeField(p, "prize")
     nameLabel.translation = [0, 138]
     nameLabel.font = makeFont("Outfit-Regular", 24)
-    nameLabel.color = "#ffffff80"
+    nameLabel.color = "#ffffffE6"
     nameLabel.horizAlign = "center"
     nameLabel.width = 280
     card.appendChild(nameLabel)
@@ -770,7 +770,7 @@ sub renderBrand(data as Object)
   end if
 
   ' Build hours as horizontal row (wider columns to prevent truncation)
-  m.brandHours.removeChildrenIndex(m.brandHours.getChildCount(), 0)
+  m.brandHours.removeChildren(m.brandHours.getChildren(-1, 0))
   hours = []
   if data.hours <> invalid then hours = data.hours
 
@@ -786,7 +786,7 @@ sub renderBrand(data as Object)
     dayLabel = CreateObject("roSGNode", "Label")
     dayLabel.text = safeField(h, "label")
     dayLabel.font = makeFont("Outfit-Bold", 26)
-    dayLabel.color = "#ffffff80"
+    dayLabel.color = "#ffffffE6"
     dayLabel.horizAlign = "center"
     dayLabel.width = 240
     col.appendChild(dayLabel)
@@ -905,7 +905,7 @@ sub renderCustom(data as Object)
   m.customBody.text = safeField(data, "body")
 
   ' Build custom items as wrapped horizontal row
-  m.customItems.removeChildrenIndex(m.customItems.getChildCount(), 0)
+  m.customItems.removeChildren(m.customItems.getChildren(-1, 0))
   items = []
   if data.items <> invalid then items = data.items
 

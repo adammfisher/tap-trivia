@@ -1,0 +1,41 @@
+appId: com.visudolabs.taptrivia.app
+name: After reveal phase — LockedIn clears and result screen appears
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "9CK6T"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- inputText: "RevealBot"
+- pressKey: Enter
+
+# Wait for lobby → game start → skip category
+- waitForAnimationToEnd:
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 6000
+
+# Tap immediately (early in question → plenty of time before reveal)
+- tapOn:
+    text: "A"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Wait through the remainder of the question + reveal (up to 35s total)
+- waitForAnimationToEnd:
+    timeout: 13000
+- waitForAnimationToEnd:
+    timeout: 13000
+- waitForAnimationToEnd:
+    timeout: 13000
+
+# Must have navigated away — on Correct or Wrong screen
+- assertNotVisible: "Locked In!"
+- assertNotVisible: "Waiting for reveal"

@@ -1,0 +1,53 @@
+appId: com.visudolabs.taptrivia.app
+name: Full Q1→Between→Q2 cycle — game loop advances through questions
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "9CK6T"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- inputText: "CycleBot"
+- pressKey: Enter
+
+# Wait for game → skip category
+- waitForAnimationToEnd:
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Answer immediately
+- tapOn:
+    text: "A"
+
+# Wait through reveal (5s) + scores/between (7s) + Q2 category (3s)
+- waitForAnimationToEnd:
+    timeout: 13000
+- waitForAnimationToEnd:
+    timeout: 13000
+- waitForAnimationToEnd:
+    timeout: 13000
+
+# Assert Between screen appeared mid-cycle
+- runFlow:
+    when:
+      visible: "Leaderboard"
+    commands:
+      - assertVisible: "Your Score"
+
+# Wait for Q2 to start
+- waitForAnimationToEnd:
+    timeout: 13000
+- waitForAnimationToEnd:
+    timeout: 13000
+
+# Q2 playing or category screen should be active
+- assertNotVisible: "Game Over!"

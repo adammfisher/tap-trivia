@@ -7,6 +7,7 @@ import { GradientBackground } from '../components/GradientBackground';
 import { Logo } from '../components/Logo';
 import { usePlayerIdentity } from '../hooks/usePlayerIdentity';
 import { updatePlayer, isApiError } from '../services/api';
+import { getTrialStart } from '../services/trial';
 import { gradients, w, colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -39,7 +40,8 @@ export function NicknameScreen({ navigation, route }: Props) {
     Keyboard.dismiss();
 
     try {
-      const result = await updatePlayer(deviceId, trimmed, barCode);
+      const trialStart = await getTrialStart();
+      const result = await updatePlayer(deviceId, trimmed, barCode, trialStart ?? undefined);
       if (isApiError(result)) {
         setError(result.message || 'Failed to save nickname.');
         setLoading(false);

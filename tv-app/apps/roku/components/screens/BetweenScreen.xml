@@ -11,8 +11,6 @@
 
   <children>
     <!-- Background gradient -->
-    <Poster id="bgGradient" width="1920" height="1080"
-            uri="pkg:/images/bg-gradient.png" />
 
     <!-- Dark panel behind right/signage half -->
     <Rectangle id="rightPanelBg" translation="[960, 0]" width="960" height="1080" color="#000000" opacity="0.2" />

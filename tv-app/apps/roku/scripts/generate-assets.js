@@ -33,23 +33,24 @@ function save(canvas, filename) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// BACKGROUND GRADIENT (1920x1080)
+// BACKGROUND GRADIENT (1280x720 — Roku Express renders at 720p UI resolution;
+// smaller texture saves ~4.6MB GPU memory. Poster nodes still display at 1920x1080
+// via width/height attributes — gradients scale identically.)
 // ═══════════════════════════════════════════════════════════
 
 function generateBgGradient() {
   console.log('Generating background gradient...');
-  const c = createCanvas(1920, 1080);
+  const c = createCanvas(1280, 720);
   const ctx = c.getContext('2d');
   // Match web: linear-gradient(150deg, #0f0326 0%, #1e0f4a 20%, #3d1866 45%, #6b2358 70%, #a8334a 100%)
-  // 150deg ≈ top-left to bottom-right offset
-  const grad = ctx.createLinearGradient(0, 0, 960, 1080);
+  const grad = ctx.createLinearGradient(0, 0, 640, 720);
   grad.addColorStop(0, '#0f0326');
   grad.addColorStop(0.2, '#1e0f4a');
   grad.addColorStop(0.45, '#3d1866');
   grad.addColorStop(0.7, '#6b2358');
   grad.addColorStop(1, '#a8334a');
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 1920, 1080);
+  ctx.fillRect(0, 0, 1280, 720);
   save(c, 'bg-gradient.png');
 }
 
@@ -274,15 +275,16 @@ function generateSignageBackgrounds() {
     'signage-default-qr': navy,
   };
 
+  // 1280x720 — same as bg-gradient.png; saves ~4.6MB per texture (×8 = ~37MB)
   for (const [name, stops] of Object.entries(gradients)) {
-    const c = createCanvas(1920, 1080);
+    const c = createCanvas(1280, 720);
     const ctx = c.getContext('2d');
-    const grad = ctx.createLinearGradient(0, 0, 960, 1080);
+    const grad = ctx.createLinearGradient(0, 0, 640, 720);
     stops.forEach((stop, i) => {
       grad.addColorStop(i / (stops.length - 1), stop);
     });
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 1920, 1080);
+    ctx.fillRect(0, 0, 1280, 720);
     save(c, `${name}.png`);
   }
 }
@@ -312,24 +314,24 @@ function roundedRect(ctx, x, y, w, h, r) {
 function generateHeaderFooterFades() {
   console.log('Generating header/footer fades...');
 
-  // Header: top-down dark fade
-  const hc = createCanvas(1920, 120);
+  // Header: top-down dark fade (1280x80 — scales to 1920x120 in Poster node)
+  const hc = createCanvas(1280, 80);
   const hctx = hc.getContext('2d');
-  const hg = hctx.createLinearGradient(0, 0, 0, 120);
+  const hg = hctx.createLinearGradient(0, 0, 0, 80);
   hg.addColorStop(0, 'rgba(0,0,0,0.8)');
   hg.addColorStop(1, 'rgba(0,0,0,0)');
   hctx.fillStyle = hg;
-  hctx.fillRect(0, 0, 1920, 120);
+  hctx.fillRect(0, 0, 1280, 80);
   save(hc, 'header-fade.png');
 
-  // Footer: bottom-up dark fade
-  const fc = createCanvas(1920, 120);
+  // Footer: bottom-up dark fade (1280x80)
+  const fc = createCanvas(1280, 80);
   const fctx = fc.getContext('2d');
-  const fg = fctx.createLinearGradient(0, 0, 0, 120);
+  const fg = fctx.createLinearGradient(0, 0, 0, 80);
   fg.addColorStop(0, 'rgba(0,0,0,0)');
   fg.addColorStop(1, 'rgba(0,0,0,0.67)');
   fctx.fillStyle = fg;
-  fctx.fillRect(0, 0, 1920, 120);
+  fctx.fillRect(0, 0, 1280, 80);
   save(fc, 'footer-fade.png');
 }
 
@@ -799,22 +801,22 @@ function generateSignageElements() {
   // ── Full-screen elements ──
 
   // Featured item box (specials) — 760x120
-  save(glassBox(760, 120, 40, 'rgba(255,255,255,0.06)', 'rgba(255,255,255,0.06)'), 'signage-featured-box.png');
+  save(glassBox(760, 120, 40, 'rgba(0,0,0,0.05)', null), 'signage-featured-box.png');
 
   // Menu item row (specials) — 790x112 (matches web: padding 28px 36px, border-radius 28px)
-  save(glassBox(790, 112, 28, 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0.04)'), 'signage-menu-item-bg.png');
+  save(glassBox(790, 112, 28, 'rgba(0,0,0,0.05)', null), 'signage-menu-item-bg.png');
 
   // Deal card (happyhour) — 320x200
-  save(glassBox(320, 200, 36, 'rgba(255,255,255,0.06)', 'rgba(255,255,255,0.06)'), 'signage-deal-card.png');
+  save(glassBox(320, 200, 36, 'rgba(0,0,0,0.05)', null), 'signage-deal-card.png');
 
   // Prize card (event) — 280x200
-  save(glassBox(280, 200, 32, 'rgba(255,255,255,0.06)', 'rgba(255,255,255,0.06)'), 'signage-prize-card.png');
+  save(glassBox(280, 200, 32, 'rgba(0,0,0,0.05)', null), 'signage-prize-card.png');
 
   // Promo box (sports) — 700x100
-  save(glassBox(700, 100, 32, 'rgba(255,255,255,0.06)', 'rgba(255,255,255,0.06)'), 'signage-promo-box.png');
+  save(glassBox(700, 100, 32, 'rgba(0,0,0,0.05)', null), 'signage-promo-box.png');
 
   // Custom item (custom template) — 300x80
-  save(glassBox(300, 80, 28, 'rgba(255,255,255,0.06)', 'rgba(255,255,255,0.06)'), 'signage-custom-item.png');
+  save(glassBox(300, 80, 28, 'rgba(0,0,0,0.05)', null), 'signage-custom-item.png');
 
   // Gold divider (brand) — 120x6
   {
@@ -887,19 +889,19 @@ function generateSignageElements() {
   }
 
   // Panel menu item — 640x72
-  save(glassBox(640, 72, 18, 'rgba(255,255,255,0.03)', 'rgba(255,255,255,0.03)'), 'signage-panel-menu-item.png');
+  save(glassBox(640, 72, 18, 'rgba(0,0,0,0.05)', null), 'signage-panel-menu-item.png');
 
   // Panel deal card — 300x110 (for 2-column grid layout)
-  save(glassBox(300, 110, 24, 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0.04)'), 'signage-panel-deal.png');
+  save(glassBox(300, 110, 24, 'rgba(0,0,0,0.05)', null), 'signage-panel-deal.png');
 
   // Panel prize row — 560x56 (centered within 640)
-  save(glassBox(560, 56, 18, 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0.04)'), 'signage-panel-prize.png');
+  save(glassBox(560, 56, 18, 'rgba(0,0,0,0.05)', null), 'signage-panel-prize.png');
 
   // Panel promo box — 600x76
-  save(glassBox(600, 76, 24, 'rgba(255,255,255,0.06)', 'rgba(255,255,255,0.06)'), 'signage-panel-promo.png');
+  save(glassBox(600, 76, 24, 'rgba(0,0,0,0.05)', null), 'signage-panel-promo.png');
 
   // Panel custom item — 560x52 (centered within 640)
-  save(glassBox(560, 52, 16, 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0.04)'), 'signage-panel-custom-item.png');
+  save(glassBox(560, 52, 16, 'rgba(0,0,0,0.05)', null), 'signage-panel-custom-item.png');
 
   // Panel QR badge bg — 640x120
   save(glassBox(640, 120, 22, 'rgba(0,0,0,0.3)', 'rgba(255,255,255,0.05)'), 'signage-panel-qr-bg.png');

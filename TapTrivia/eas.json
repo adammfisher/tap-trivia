@@ -48,5 +48,14 @@
     "production": {
       "autoIncrement": true
     }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "adam.fisher@visudolabs.com",
+        "ascAppId": "6762301564",
+        "appleTeamId": "NCJ5B632NP"
+      }
+    }
   }
 }

@@ -94,6 +94,7 @@ export interface CurrentGameResponse {
   gameId?: string;
   startTimeEpoch?: number;
   status: 'active' | 'scheduled' | 'completed' | 'no_game';
+  gameMode?: 'timed' | 'all_on' | 'all_off';
   currentQuestionNumber?: number;
   totalQuestions?: number;
   secondsUntilStart?: number | null;

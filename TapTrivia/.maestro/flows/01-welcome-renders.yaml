@@ -1,0 +1,13 @@
+appId: com.visudolabs.taptrivia.app
+name: Welcome screen renders
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible: "Live trivia on your phone"
+- assertVisible:
+    text: "Join a Game.*"
+- assertVisible:
+    text: "Create a Group.*"
+- assertVisible: "Play Solo"

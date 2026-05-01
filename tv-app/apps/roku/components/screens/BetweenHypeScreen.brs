@@ -37,7 +37,7 @@ sub onDataChanged(event as Object)
   end if
 
   ' Clear existing pills
-  m.pillContainer.removeChildrenIndex(m.pillContainer.getChildCount(), 0)
+  m.pillContainer.removeChildren(m.pillContainer.getChildren(-1, 0))
 
   if categories.count() = 0 then return
 

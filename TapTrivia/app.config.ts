@@ -11,12 +11,13 @@ const config: ExpoConfig = {
   userInterfaceStyle: 'dark',
   splash: {
     image: './assets/splash.png',
-    resizeMode: 'contain',
-    backgroundColor: '#0D0D0F',
+    resizeMode: 'cover',
+    backgroundColor: '#0f0326',
   },
   ios: {
     supportsTablet: false,
-    bundleIdentifier: IS_DEV ? 'tv.taptrivia.mobile.dev' : 'tv.taptrivia.mobile',
+    bundleIdentifier: IS_DEV ? 'com.visudolabs.taptrivia.app.dev' : 'com.visudolabs.taptrivia.app',
+    appleTeamId: 'NCJ5B632NP',
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
@@ -27,9 +28,9 @@ const config: ExpoConfig = {
       backgroundColor: '#0D0D0F',
     },
     splash: {
-      image: './assets/adaptive-icon.png',
-      resizeMode: 'contain',
-      backgroundColor: '#0D0D0F',
+      image: './assets/splash.png',
+      resizeMode: 'cover',
+      backgroundColor: '#0f0326',
     },
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
@@ -38,7 +39,18 @@ const config: ExpoConfig = {
   web: {
     favicon: './assets/favicon.png',
   },
-  plugins: ['expo-font', 'expo-secure-store'],
+  plugins: [
+    'expo-font',
+    'expo-secure-store',
+    [
+      'expo-splash-screen',
+      {
+        backgroundColor: '#0f0326',
+        image: './assets/splash.png',
+        resizeMode: 'cover',
+      },
+    ],
+  ],
   extra: {
     eas: {
       projectId: '6050c54c-dfc9-4de4-a74f-1c6649fd80e2',

@@ -1,3 +1,15 @@
 {
-  "expo": {}
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "3ff9893a-ec72-4e74-a9a8-f064a8f59325"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.visudolabs.taptrivia.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
 }

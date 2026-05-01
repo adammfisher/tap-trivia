@@ -1,0 +1,50 @@
+appId: com.visudolabs.taptrivia.app
+name: Change answer — can re-tap different answer while on LockedIn screen
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "9CK6T"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- inputText: "ChangeBot"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 8000
+
+- extendedWaitUntil:
+    visible:
+      text: "Get ready!"
+    timeout: 120000
+- waitForAnimationToEnd:
+    timeout: 6000
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Wait for question to load
+- extendedWaitUntil:
+    visible:
+      text: "TOTAL"
+    timeout: 10000
+
+# Tap first answer (letter A)
+- tapOn:
+    text: "A"
+- extendedWaitUntil:
+    visible:
+      text: "Locked In!"
+    timeout: 10000
+
+# Tap a different answer (letter C) — re-selects, stays on LockedIn
+- tapOn:
+    text: "C"
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible: "Locked In!"
+- assertVisible: "Waiting for reveal"

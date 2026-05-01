@@ -35,8 +35,8 @@ sub onDataChanged(event as Object)
   if national.top25 <> invalid then top25 = national.top25
 
   ' Clear existing dynamic rows
-  m.col1Rows.removeChildrenIndex(m.col1Rows.getChildCount(), 0)
-  m.col2Rows.removeChildrenIndex(m.col2Rows.getChildCount(), 0)
+  m.col1Rows.removeChildren(m.col1Rows.getChildren(-1, 0))
+  m.col2Rows.removeChildren(m.col2Rows.getChildren(-1, 0))
 
   ' Column 1: ranks 1-13
   for i = 0 to 12
@@ -89,8 +89,8 @@ sub onDataChanged(event as Object)
 end sub
 
 sub addNationalRow(parent as Object, player as Object, rank as Integer, yIdx as Integer)
-  rowH = 68
-  yPos = yIdx * 74
+  rowH = 56
+  yPos = yIdx * 60
 
   row = CreateObject("roSGNode", "Group")
   row.translation = [0, yPos]
@@ -105,7 +105,7 @@ sub addNationalRow(parent as Object, player as Object, rank as Integer, yIdx as 
 
   ' Rank number
   rankLabel = CreateObject("roSGNode", "Label")
-  rankLabel.translation = [8, 20]
+  rankLabel.translation = [8, 16]
   rankLabel.width = 44
   rankLabel.horizAlign = "center"
   rankLabel.font = makeFont("Fredoka-Bold", 22)
@@ -117,9 +117,21 @@ sub addNationalRow(parent as Object, player as Object, rank as Integer, yIdx as 
   rankLabel.text = Str(rank).trim()
   row.appendChild(rankLabel)
 
-  ' Player name
+  ' Build bar/city info string (may be empty)
+  info = ""
+  if player.bar <> invalid and player.bar <> "" then info = player.bar
+  if player.city <> invalid and player.city <> ""
+    if info <> "" then info = info + " · "
+    info = info + player.city
+  end if
+
+  ' Player name — centered vertically when there's no info, top-aligned when info is shown
   nameLabel = CreateObject("roSGNode", "Label")
-  nameLabel.translation = [56, 10]
+  if info = ""
+    nameLabel.translation = [56, 17]
+  else
+    nameLabel.translation = [56, 4]
+  end if
   nameLabel.width = 240
   nameLabel.font = makeFont("Outfit-SemiBold", 20)
   nameLabel.color = "#f0f0f0"
@@ -128,24 +140,20 @@ sub addNationalRow(parent as Object, player as Object, rank as Integer, yIdx as 
   nameLabel.text = pName
   row.appendChild(nameLabel)
 
-  ' Bar/city info
-  infoLabel = CreateObject("roSGNode", "Label")
-  infoLabel.translation = [56, 36]
-  infoLabel.width = 240
-  infoLabel.font = makeFont("Outfit-Regular", 16)
-  infoLabel.color = "#ffffff60"
-  info = ""
-  if player.bar <> invalid and player.bar <> "" then info = player.bar
-  if player.city <> invalid and player.city <> ""
-    if info <> "" then info = info + " · "
-    info = info + player.city
+  ' Bar/city info — only render if non-empty
+  if info <> ""
+    infoLabel = CreateObject("roSGNode", "Label")
+    infoLabel.translation = [56, 30]
+    infoLabel.width = 240
+    infoLabel.font = makeFont("Outfit-Regular", 16)
+    infoLabel.color = "#ffffff60"
+    infoLabel.text = info
+    row.appendChild(infoLabel)
   end if
-  infoLabel.text = info
-  row.appendChild(infoLabel)
 
   ' Score
   scoreLabel = CreateObject("roSGNode", "Label")
-  scoreLabel.translation = [300, 18]
+  scoreLabel.translation = [300, 16]
   scoreLabel.width = 130
   scoreLabel.horizAlign = "right"
   scoreLabel.font = makeFont("Fredoka-Bold", 22)

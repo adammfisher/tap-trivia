@@ -1,13 +1,14 @@
 /**
  * Trial tracking — 7-day free trial before subscription required.
  *
- * Storage strategy (layered, most reliable first):
- * 1. SecureStore (Keychain on iOS) — survives app reinstall on iOS
- * 2. AsyncStorage — fast local fallback
- * 3. Backend player record — source of truth for Android reinstall protection
+ * Storage strategy:
+ * - Backend player record is the authoritative source of truth (reinstall protection
+ *   on both iOS and Android).
+ * - SecureStore + AsyncStorage are local caches for offline use.
  *
- * startTrial() writes locally immediately, then syncs to backend (fire-and-forget).
- * getTrialStart() checks local first; falls back to backend if both local stores miss.
+ * getTrialStart() prefers the backend when reachable, syncing local caches to match
+ * (including wiping them when the backend says no trial). Falls back to local caches
+ * only when the backend is unreachable.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
@@ -25,56 +26,66 @@ export interface TrialInfo {
   daysRemaining: number;
 }
 
-/** Get the trial start timestamp. Returns null if trial never started. */
-export async function getTrialStart(): Promise<number | null> {
-  // 1. SecureStore (survives iOS reinstall)
+async function readLocalCache(): Promise<number | null> {
   try {
     const secureVal = await SecureStore.getItemAsync(SECURE_KEY);
     if (secureVal) {
       const ts = parseInt(secureVal, 10);
-      if (!isNaN(ts)) {
-        await AsyncStorage.setItem(ASYNC_KEY, secureVal).catch(() => {});
-        return ts;
-      }
+      if (!isNaN(ts)) return ts;
     }
-  } catch {
-    // SecureStore not available (web, Expo Go) — fall through
-  }
+  } catch {}
 
-  // 2. AsyncStorage
   try {
     const asyncVal = await AsyncStorage.getItem(ASYNC_KEY);
     if (asyncVal) {
       const ts = parseInt(asyncVal, 10);
-      if (!isNaN(ts)) {
-        await SecureStore.setItemAsync(SECURE_KEY, asyncVal).catch(() => {});
-        return ts;
-      }
+      if (!isNaN(ts)) return ts;
     }
-  } catch {
-    // AsyncStorage failure
-  }
-
-  // 3. Backend fallback — handles Android reinstall (local storage wiped)
-  try {
-    const deviceId = await AsyncStorage.getItem(DEVICE_ID_KEY);
-    if (deviceId) {
-      const player = await getPlayer(deviceId);
-      if (!isApiError(player) && player.trialStartedAt) {
-        const ts = player.trialStartedAt;
-        // Re-cache locally so next call is instant
-        await Promise.all([
-          SecureStore.setItemAsync(SECURE_KEY, ts.toString()).catch(() => {}),
-          AsyncStorage.setItem(ASYNC_KEY, ts.toString()).catch(() => {}),
-        ]);
-        return ts;
-      }
-    }
-  } catch {
-    // Backend unreachable — treat as no trial
-  }
+  } catch {}
 
   return null;
+}
+
+async function writeLocalCache(ts: number): Promise<void> {
+  const val = ts.toString();
+  await Promise.all([
+    SecureStore.setItemAsync(SECURE_KEY, val).catch(() => {}),
+    AsyncStorage.setItem(ASYNC_KEY, val).catch(() => {}),
+  ]);
+}
+
+async function clearLocalCache(): Promise<void> {
+  await Promise.all([
+    SecureStore.deleteItemAsync(SECURE_KEY).catch(() => {}),
+    AsyncStorage.removeItem(ASYNC_KEY).catch(() => {}),
+  ]);
+}
+
+/**
+ * Get the trial start timestamp. Backend is source of truth when reachable;
+ * stale local caches are wiped to match. Returns null if trial never started.
+ */
+export async function getTrialStart(): Promise<number | null> {
+  const deviceId = await AsyncStorage.getItem(DEVICE_ID_KEY);
+
+  if (deviceId) {
+    try {
+      const player = await getPlayer(deviceId);
+      if (!isApiError(player)) {
+        if (player.trialStartedAt) {
+          await writeLocalCache(player.trialStartedAt);
+          return player.trialStartedAt;
+        }
+        // Backend says no trial — wipe any stale local cache so the paywall fires.
+        await clearLocalCache();
+        return null;
+      }
+    } catch {
+      // Backend unreachable — fall through to local cache.
+    }
+  }
+
+  return readLocalCache();
 }
 
 /** Start the trial. Returns the trial start timestamp. */

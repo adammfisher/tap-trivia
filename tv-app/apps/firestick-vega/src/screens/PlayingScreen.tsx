@@ -292,7 +292,7 @@ const s = StyleSheet.create({
   },
   subcategoryText: {
     fontFamily: fonts.outfit.semiBold,
-    fontSize: 44,
+    fontSize: 42,
     color: '#f0f0f0',
     letterSpacing: -0.5,
     marginBottom: 24,

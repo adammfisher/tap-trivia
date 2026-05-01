@@ -8,8 +8,6 @@
 
   <children>
     <!-- Background gradient -->
-    <Poster id="bgGradient" width="1920" height="1080"
-            uri="pkg:/images/bg-gradient.png" />
 
     <!-- Centered content block (vertically centered on 1080p) -->
     <Group id="content" translation="[260, 265]">

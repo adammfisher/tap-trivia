@@ -1,0 +1,30 @@
+appId: com.visudolabs.taptrivia.app
+name: No answer before deadline — Wrong screen shows "Time's Up"
+# Do not tap at all — let the question clock expire naturally.
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "9CK6T"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- inputText: "TimeBot"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 8000
+
+# Join lobby and wait — do NOT tap any answer.
+# "Time's Up" appears on WrongScreen when reveal fires with no submitted answer.
+- extendedWaitUntil:
+    visible:
+      text: "Time's Up"
+    timeout: 120000
+
+- assertVisible: "Time's Up"
+- assertVisible: "+0"

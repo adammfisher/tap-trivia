@@ -1,0 +1,17 @@
+appId: com.visudolabs.taptrivia.app
+name: Solo play — paywall fires
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn: "Play Solo"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible: "What should we call you?"
+- inputText: "SoloBot"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible:
+    text: "Start Free Trial.*"

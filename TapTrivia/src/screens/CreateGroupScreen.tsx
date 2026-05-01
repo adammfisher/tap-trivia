@@ -93,6 +93,12 @@ export function CreateGroupScreen({ navigation }: Props) {
       <GradientBackground>
         <View style={[styles.container, { paddingTop: insets.top }]}>
           <View style={styles.header}>
+            <Pressable
+              onPress={() => navigation.goBack()}
+              style={styles.backButton}
+            >
+              <Text style={styles.backText}>{'←'}</Text>
+            </Pressable>
             <Logo size="sm" />
           </View>
 

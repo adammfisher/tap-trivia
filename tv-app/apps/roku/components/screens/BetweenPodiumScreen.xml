@@ -9,8 +9,6 @@
 
   <children>
     <!-- Background gradient -->
-    <Poster id="bgGradient" width="1920" height="1080"
-            uri="pkg:/images/bg-gradient.png" />
 
     <!-- Countdown bar overlay (top center) -->
     <CountdownBar id="countdownBar" />

@@ -1,0 +1,26 @@
+appId: com.visudolabs.taptrivia.app
+name: Create group flow + back button returns to Welcome
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Create a Group.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    text: "Create a Group"
+- inputText: "MaestroGroup"
+- tapOn: "Create Group"
+- waitForAnimationToEnd:
+    timeout: 10000
+# Success state
+- assertVisible: "Group Created!"
+- assertVisible: "Share Code"
+- assertVisible: "Continue"
+# Back button should return to Welcome
+- tapOn: "←"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible: "Join a Game.*"

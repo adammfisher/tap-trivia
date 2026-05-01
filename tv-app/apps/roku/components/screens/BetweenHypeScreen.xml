@@ -9,8 +9,6 @@
 
   <children>
     <!-- Background gradient -->
-    <Poster id="bgGradient" width="1920" height="1080"
-            uri="pkg:/images/bg-gradient.png" />
 
     <!-- Countdown bar overlay -->
     <CountdownBar id="countdownBar" />
@@ -36,8 +34,8 @@
       <!-- Category pills (dynamically created) -->
       <Group id="pillContainer" translation="[0, 270]" />
 
-      <!-- Big QR code — horizontal layout -->
-      <Group id="qrArea" translation="[520, 520]">
+      <!-- Big QR code — bottom center, horizontal layout (qrArea is 680w x 240h; centerContent y-offset is 100, so abs y = 100 + 710 = 810, leaving ~30px bottom margin) -->
+      <Group id="qrArea" translation="[620, 710]">
         <Poster id="qrBig" uri="pkg:/images/qr-play-360.png"
                 width="240" height="240" translation="[0, 0]" />
         <!-- Right: SCAN TO JOIN + code + URL -->

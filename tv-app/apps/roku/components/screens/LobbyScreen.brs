@@ -32,7 +32,46 @@ sub init()
   ' Stop timer when screen is hidden to prevent memory pressure over long uptimes
   m.top.observeField("visible", "onVisibleChanged")
 
+  ' Wire signage panel once when slides change (not on every gameState poll)
+  m.top.observeField("signageSlides", "onSignageSlidesChanged")
+
   fixAllLabelFonts(m.top)
+end sub
+
+' Called once when slides field is set (on screen show) — never on gameState updates
+sub onSignageSlidesChanged(event as Object)
+  slides = event.getData()
+  if slides = invalid then slides = []
+  m.hasSignage = (slides.count() > 0)
+  barCode = m.top.getField("barCode")
+  barName = m.top.getField("barName")
+
+  if m.hasSignage
+    m.signagePanel.setField("barCode", barCode)
+    m.signagePanel.setField("barName", barName)
+    m.signagePanel.setField("barLogoUrl", m.top.getField("barLogoUrl"))
+    m.signagePanel.setField("signageSlides", slides)
+    m.signagePanel.setField("signageIndex", m.top.getField("signageIndex"))
+    m.signagePanel.visible = true
+    m.playerColumn.visible = false
+    m.countdownGroup.translation = [48, 30]
+    m.countdownLabel.horizAlign = "left"
+    m.countdownLabel.width = 300
+    m.countdownLabel.translation = [0, 0]
+    m.countdownValue.horizAlign = "left"
+    m.countdownValue.width = 300
+    m.countdownValue.translation = [0, 32]
+  else
+    m.signagePanel.visible = false
+    m.playerColumn.visible = true
+    m.countdownGroup.translation = [960, 24]
+    m.countdownLabel.horizAlign = "center"
+    m.countdownLabel.width = 400
+    m.countdownLabel.translation = [-200, 0]
+    m.countdownValue.horizAlign = "center"
+    m.countdownValue.width = 400
+    m.countdownValue.translation = [-200, 32]
+  end if
 end sub
 
 ' ══════════════════════════════════════════════════════════════
@@ -64,40 +103,6 @@ sub onGameStateChanged(event as Object)
   updatePlayerGrid(players)
   updateCountdown()
 
-  ' Wire signage panel
-  slides = m.top.getField("signageSlides")
-  if slides = invalid then slides = []
-  m.hasSignage = (slides.count() > 0)
-
-  if m.hasSignage
-    m.signagePanel.setField("barCode", barCode)
-    m.signagePanel.setField("barName", barName)
-    m.signagePanel.setField("barLogoUrl", m.top.getField("barLogoUrl"))
-    m.signagePanel.setField("signageSlides", slides)
-    m.signagePanel.setField("signageIndex", m.top.getField("signageIndex"))
-    m.signagePanel.visible = true
-    m.playerColumn.visible = false
-    ' Move countdown to top-left when signage active (matches web: top:40, left:48)
-    m.countdownGroup.translation = [48, 30]
-    m.countdownLabel.horizAlign = "left"
-    m.countdownLabel.width = 300
-    m.countdownLabel.translation = [0, 0]
-    m.countdownValue.horizAlign = "left"
-    m.countdownValue.width = 300
-    m.countdownValue.translation = [0, 32]
-  else
-    m.signagePanel.visible = false
-    m.playerColumn.visible = true
-    ' Countdown top-center when no signage
-    m.countdownGroup.translation = [960, 24]
-    m.countdownLabel.horizAlign = "center"
-    m.countdownLabel.width = 400
-    m.countdownLabel.translation = [-200, 0]
-    m.countdownValue.horizAlign = "center"
-    m.countdownValue.width = 400
-    m.countdownValue.translation = [-200, 32]
-  end if
-
   ' Start countdown timer
   m.countdownTimer.control = "start"
 end sub
@@ -123,7 +128,7 @@ sub updatePlayerGrid(players as Object)
   if players = invalid then players = []
 
   ' Clear existing player chips
-  m.playerGrid.removeChildrenIndex(m.playerGrid.getChildCount(), 0)
+  m.playerGrid.removeChildren(m.playerGrid.getChildren(-1, 0))
 
   ' Grid layout: 6 columns, each chip ~200px wide
   colWidth = 200

@@ -9,14 +9,12 @@
 
   <children>
     <!-- Background gradient -->
-    <Poster id="bgGradient" width="1920" height="1080"
-            uri="pkg:/images/bg-gradient.png" />
 
     <!-- Countdown bar overlay -->
     <CountdownBar id="countdownBar" />
 
     <!-- ═══ LEFT SIDE: Two-column top 25 ═══ -->
-    <Group id="leftArea" translation="[0, 80]">
+    <Group id="leftArea" translation="[0, 70]">
 
       <!-- Globe + heading + subtitle -->
       <Poster id="globeIcon" uri="pkg:/images/emoji-lg-1f30e.png"

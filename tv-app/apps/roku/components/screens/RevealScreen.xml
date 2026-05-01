@@ -8,8 +8,6 @@
 
   <children>
     <!-- Background gradient -->
-    <Poster id="bgGradient" width="1920" height="1080"
-            uri="pkg:/images/bg-gradient.png" />
 
     <!-- ═══ HEADER (matches PlayingScreen positioning) ═══ -->
     <Group id="header" translation="[0, 0]">
@@ -80,6 +78,12 @@
             </Label>
           </Group>
         </Group>
+
+        <!-- Subcategory text (shown below category pill during reveal) -->
+        <Label id="subcategoryText" text=""
+               translation="[0, 52]" width="960" color="#f0f0f0" visible="false">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="48" />
+        </Label>
 
         <!-- Question text -->
         <Label id="questionText" text=""

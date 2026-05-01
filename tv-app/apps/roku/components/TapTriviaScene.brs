@@ -99,26 +99,17 @@ sub init()
   m.apiInFlight = false  ' Guard: prevents concurrent ApiTask runs
 
   ' ── Start screensaver prevention ──
+  m.lastPingCount = 0
   startKeepAwake()
 
-  ' ── Watchdog: restart KeepAwakeTask if it ever dies (every 5 min) ──
+  ' ── Watchdog: restart KeepAwakeTask if it ever dies (every 60s) ──
   m.keepAliveWatchdog = CreateObject("roSGNode", "Timer")
-  m.keepAliveWatchdog.duration = 300
+  m.keepAliveWatchdog.duration = 90
   m.keepAliveWatchdog.repeat = true
   m.keepAliveWatchdog.observeField("fire", "onKeepAliveWatchdog")
   m.keepAliveWatchdog.control = "start"
 
-  ' ── Animated gradient background ──
-  m.bgVideo = m.top.findNode("bgVideo")
-  if m.bgVideo <> invalid
-    m.bgVideo.content = CreateObject("roSGNode", "ContentNode")
-    m.bgVideo.content.url = "pkg:/images/bg-gradient.mp4"
-    m.bgVideo.content.streamFormat = "mp4"
-    m.bgVideo.loop = true
-    m.bgVideo.control = "play"
-    m.bgVideo.enableUI = false
-    m.bgVideo.observeField("state", "onBgVideoState")  ' Auto-recover from EOS/error
-  end if
+  ' Background is now a static Poster (bg-gradient.png) — no video decoder needed.
 
   ' ── Load config and initialize ──
   loadConfig()
@@ -130,6 +121,9 @@ end sub
 ' ══════════════════════════════════════════════════════════════
 
 sub doInit()
+  ' NOTE: roAppManager cannot be called from the render thread.
+  ' GetLastExitInfo() and memory monitoring are handled in KeepAwakeTask (task thread).
+
   if m.tvDeviceId = ""
     di = CreateObject("roDeviceInfo")
     m.tvDeviceId = di.GetChannelClientId()
@@ -325,6 +319,7 @@ function translateApiState(apiState as Object) as Object
         text: safeStr(apiState.question),
         answers: safeArray(apiState.answers),
         category: safeStr(apiState.category),
+        subcategory: safeStr(apiState.subcategory),
         categoryIcon: getCategoryIcon(safeStr(apiState.category))
       }
       gs.correctAnswerIndex = safeInt(apiState.correctIndex, -1)
@@ -351,6 +346,7 @@ function translateApiState(apiState as Object) as Object
         text: safeStr(apiState.question),
         answers: safeArray(apiState.answers),
         category: safeStr(apiState.category),
+        subcategory: safeStr(apiState.subcategory),
         categoryIcon: getCategoryIcon(safeStr(apiState.category))
       }
       ' Compute elapsed from server-adjusted local clock for accurate sync.
@@ -1019,32 +1015,28 @@ end sub
 ' ══════════════════════════════════════════════════════════════
 
 sub startKeepAwake()
-  ' Screensaver prevention via ECP self-ping every 2 min.
+  ' Screensaver prevention via ECP self-ping every 60s.
+  ' roAppManager is MAIN/TASK-only — cannot be used here on render thread.
+  ' SetNowPlayingContentMetaData and UpdateLastKeyPressTime are called from
+  ' KeepAwakeTask (task thread) instead.
   m.keepAwakeTask = m.top.findNode("keepAwakeTask")
   m.keepAwakeTask.control = "run"
-  print ">>> keepAwake: ECP ping task started"
+  print ">>> keepAwake: task started (audio loop + UpdateLastKeyPressTime)"
 end sub
 
 sub onKeepAliveWatchdog()
-  ' If KeepAwakeTask exited for any reason, restart it.
-  taskState = m.keepAwakeTask.control
-  if taskState = "done" or taskState = "stop" or taskState = ""
-    print ">>> watchdog: KeepAwakeTask not running (state=" + taskState + "), restarting"
+  ' Heartbeat check: if pingCount hasn't changed, task is dead even if
+  ' control field still shows "run" (OS can kill thread without updating it).
+  currentCount = m.keepAwakeTask.pingCount
+  if currentCount = m.lastPingCount
+    print ">>> watchdog: KeepAwakeTask heartbeat stalled (count=" + str(currentCount) + "), restarting"
+    m.keepAwakeTask.control = "stop"
     m.keepAwakeTask.control = "run"
   end if
+  m.lastPingCount = currentCount
 end sub
 
-sub onBgVideoState()
-  ' Recover only on "error" — NOT "finished".
-  ' With loop=true, Roku handles "finished"→loop automatically. Catching
-  ' "finished" and sending "prebuffer" clears the video buffer mid-loop,
-  ' causing a black frame that covers the UI.
-  state = m.bgVideo.state
-  if state = "error"
-    print ">>> bgVideo: error state, restarting"
-    m.bgVideo.control = "play"
-  end if
-end sub
+' onBgVideoState removed — background is now a static Poster, no video recovery needed.
 
 ' ══════════════════════════════════════════════════════════════
 ' KEY HANDLING
@@ -1141,6 +1133,7 @@ sub advanceSignageIndex()
     print ">>> signage: advanceIndex newIdx=" + Str(m.signageCurrentIndex).trim()
   end if
 end sub
+
 
 ' ══════════════════════════════════════════════════════════════
 ' UTILITY FUNCTIONS

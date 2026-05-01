@@ -21,7 +21,7 @@ const FEATURES = [
 
 export function SubscriptionScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { isPro, isLoading, offering, purchase, restore } = useSubscription();
+  const { isPro, isLoading, offering, purchase, restore, startFreeTrial } = useSubscription();
 
   // Derive price string from offering (never hardcoded)
   const rcActive = isConfigured();
@@ -39,12 +39,14 @@ export function SubscriptionScreen({ navigation }: Props) {
     return null;
   }
 
-  // Both "Start Free Trial" and "Subscribe Now" go through Google Play purchase flow.
-  // If the product has a free trial offer configured in the store, Google/Apple
-  // will show the trial terms and collect payment info upfront.
   const handlePurchase = async () => {
     if (!rcActive) return;
     const ok = await purchase();
+    if (ok) navigation.goBack();
+  };
+
+  const handleStartTrial = async () => {
+    const ok = await startFreeTrial();
     if (ok) navigation.goBack();
   };
 
@@ -82,23 +84,20 @@ export function SubscriptionScreen({ navigation }: Props) {
           ))}
         </View>
 
-        {/* Start Free Trial button — goes through Google Play / App Store purchase flow.
-            The store handles the trial period and collects payment info upfront. */}
+        {/* Start Free Trial button — opt-in 7-day trial. No payment info collected. */}
         {hasStoreTrial && (
           <Pressable
-            onPress={handlePurchase}
-            disabled={isLoading || (!pkg && rcActive)}
+            onPress={handleStartTrial}
+            disabled={isLoading}
             style={({ pressed }) => [
               styles.trialButton,
-              (isLoading || (!pkg && rcActive)) && styles.buttonDisabled,
+              isLoading && styles.buttonDisabled,
               pressed && { opacity: 0.85 },
             ]}
           >
             <Text style={styles.trialButtonText}>Start Free Trial</Text>
             <Text style={styles.trialButtonSub}>
-              {pkg?.product.introPrice?.periodNumberOfUnits
-                ? `${pkg.product.introPrice.periodNumberOfUnits} ${pkg.product.introPrice.periodUnit === 'DAY' ? 'days' : 'week'} free, then ${priceString}/month`
-                : `7 days free, then ${priceString}/month`}
+              7 days free, then {priceString}/month
             </Text>
           </Pressable>
         )}

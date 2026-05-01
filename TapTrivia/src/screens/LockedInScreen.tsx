@@ -36,6 +36,11 @@ export function LockedInScreen({ navigation, route }: Props) {
     if (!isOnTop) return;
     const params = { barCode, playerId, barName };
     if (gameState.gamePhase === 'reveal') {
+      // If we have an answer in flight, wait until the server result is applied
+      // by the GameContext tick (correctAnswer is '' until pendingResult is applied).
+      // Without this guard, a slow server response causes Wrong screen to show 0pts
+      // even though the player locked in valid points before the deadline.
+      if (gameState.answerResult && gameState.answerResult.correctAnswer === '') return;
       if (gameState.answerResult?.correct) {
         navigation.replace('Correct', params);
       } else {

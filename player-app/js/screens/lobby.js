@@ -64,6 +64,13 @@ const LobbyScreen = {
   async checkGameStatus() {
     const game = await apiCall('GET', '/game/current');
 
+    // all_off mode — games disabled, show message
+    if (game && game.gameMode === 'all_off') {
+      const statusEl = document.getElementById('lobby-game-status');
+      if (statusEl) statusEl.textContent = 'Games are currently unavailable. Check back soon!';
+      return;
+    }
+
     if (game && !game.error && game.status === 'active' && game.startTimeEpoch) {
       const now = getServerNow();
       const state = getGameState(game.startTimeEpoch, now);

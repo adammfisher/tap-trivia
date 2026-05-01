@@ -1,0 +1,21 @@
+appId: com.visudolabs.taptrivia.app
+name: Invalid bar code stays on Join screen
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible: "Enter Game Code"
+- inputText: "ZZZZZ"
+- tapOn:
+    text: "Join Game.*"
+- waitForAnimationToEnd:
+    timeout: 6000
+# Should NOT navigate to nickname screen
+- assertNotVisible: "What should we call you?"
+# Should still show Join screen or error
+- assertVisible: "Enter Game Code"

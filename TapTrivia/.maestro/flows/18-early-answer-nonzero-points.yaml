@@ -1,0 +1,43 @@
+appId: com.visudolabs.taptrivia.app
+name: Early answer (read_time window) — LockedIn shows points close to 1000
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "9CK6T"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- inputText: "EarlyBot"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 8000
+
+- extendedWaitUntil:
+    visible:
+      text: "Get ready!"
+    timeout: 120000
+- waitForAnimationToEnd:
+    timeout: 6000
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Wait for question to load before tapping
+- extendedWaitUntil:
+    visible:
+      text: "TOTAL"
+    timeout: 10000
+
+- tapOn:
+    text: "A"
+
+- extendedWaitUntil:
+    visible:
+      text: "Locked In!"
+    timeout: 10000
+- assertNotVisible: "0 / 1,000"

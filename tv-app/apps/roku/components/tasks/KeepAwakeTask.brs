@@ -1,50 +1,57 @@
 ' KeepAwakeTask — prevents Roku OS inactivity auto-home timer.
 '
-' Sends an ECP keypress to localhost every 2 minutes, which resets the OS
-' inactivity timer. This is the most reliable method — it simulates real
-' user input that the OS cannot ignore.
+' Strategy (all in-app, no external commands):
+'   UpdateLastKeyPressTime every 30s — tells OS a key was pressed.
+'   This is sufficient to prevent EXIT_IDLE_AUTO_EXIT on all firmware.
 '
-' Also calls UpdateLastKeyPressTime() as a belt-and-suspenders backup.
+' Deliberately NO roAudioPlayer — audio pipeline init allocates significant
+' heap on memory-constrained devices and can trigger EXIT_SYSTEM_KILL at boot.
 
 sub init()
   m.top.functionName = "taskLoop"
 end sub
 
 sub taskLoop()
-  interval = 120  ' Every 2 minutes (in seconds)
+  appMgr = CreateObject("roAppManager")
 
-  while true
-    sleep(interval * 1000)
-
-    ' Primary: ECP self-ping — sends a benign keypress via HTTP
-    ecpPing()
-
-    ' Backup: deprecated API (still works on some firmware)
-    appMgr = CreateObject("roAppManager")
-    if appMgr <> invalid
-      appMgr.UpdateLastKeyPressTime()
+  ' Log last exit on every startup — critical for diagnosing crashes.
+  if appMgr <> invalid
+    exitInfo = appMgr.GetLastExitInfo()
+    if exitInfo <> invalid
+      exitCode = exitInfo.exit_code
+      if exitCode = invalid then exitCode = "unknown"
+      print ">>> keepAwake: LAST EXIT code=" + exitCode
+    else
+      print ">>> keepAwake: LAST EXIT: none (clean start)"
     end if
-
-    print ">>> keepAwake: ping sent"
-  end while
-end sub
-
-sub ecpPing()
-  ' Send a Lit_a keypress via ECP — resets the OS inactivity timer.
-  ' Uses a fresh port per call so stale messages from timed-out responses
-  ' can never accumulate and corrupt subsequent wait() calls.
-  port = CreateObject("roMessagePort")
-  url = CreateObject("roUrlTransfer")
-  url.SetUrl("http://127.0.0.1:8060/keypress/Lit_a")
-  url.SetPort(port)
-  url.SetCertificatesFile("common:/certs/ca-bundle.crt")
-  url.AsyncPostFromString("")
-
-  msg = wait(2000, port)
-  if msg = invalid
-    ' Timeout — cancel the pending request so it doesn't linger
-    url.AsyncCancel()
-    print ">>> keepAwake: ECP ping timeout (non-fatal)"
   end if
-  ' port and url go out of scope here — all resources released cleanly
+
+  print ">>> keepAwake: task started (UpdateLastKeyPressTime only)"
+
+  ' ── Heartbeat loop (every 30s) ───────────────────────────────
+  port = CreateObject("roMessagePort")
+  tickCount = 0
+  while true
+    wait(30000, port)
+
+    tickCount = tickCount + 1
+    m.top.pingCount = tickCount  ' Watchdog in TapTriviaScene reads this
+
+    ' UpdateLastKeyPressTime — prevents EXIT_IDLE_AUTO_EXIT on all firmware
+    if appMgr <> invalid then appMgr.UpdateLastKeyPressTime()
+
+    print ">>> keepAwake: tick " + Str(tickCount).trim()
+
+    ' Memory monitor every 10 ticks (~5 minutes)
+    if tickCount mod 10 = 0
+      memMon = CreateObject("roAppMemoryMonitor")
+      if memMon <> invalid
+        pct = memMon.GetMemoryLimitPercent()
+        print ">>> memMonitor: " + Str(pct).trim() + "% of memory limit used"
+        if pct >= 80
+          print ">>> memMonitor: WARNING — high memory, GC pressure likely"
+        end if
+      end if
+    end if
+  end while
 end sub

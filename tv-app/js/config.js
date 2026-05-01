@@ -8,6 +8,7 @@ const CONFIG = {
     return localStorage.getItem('taptrivia_api_override') || 'https://api.taptrivia.tv';
   })(),
   PLAYER_APP_URL: 'https://app.taptrivia.tv',
-  POLL_INTERVAL_ACTIVE: 2000,  // 2s during active game
-  POLL_INTERVAL_IDLE: 5000     // 5s during idle/break/game_over
+  POLL_INTERVAL_ACTIVE: 2000,   // 2s during active game
+  POLL_INTERVAL_IDLE: 30000,   // 30s during idle — frequent enough to keep Chromium WebView timers from being throttled on Fire TV
+  POLL_INTERVAL_PREGAME: 5000  // 5s when within 90s of next game start
 };

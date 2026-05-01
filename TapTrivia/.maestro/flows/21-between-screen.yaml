@@ -1,0 +1,40 @@
+appId: com.visudolabs.taptrivia.app
+name: Between screen — "Your Score" and "Leaderboard" appear after Q1 reveal
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "9CK6T"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- inputText: "BetweenBot"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 8000
+
+# Wait for fresh question start
+- extendedWaitUntil:
+    visible:
+      text: "Get ready!"
+    timeout: 120000
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Answer immediately (early in question — ~30s before reveal)
+- tapOn:
+    text: "A"
+
+# Wait for between/scores screen to appear (reveal 5s + up to 7s into scores phase)
+- extendedWaitUntil:
+    visible:
+      text: "Your Score"
+    timeout: 45000
+
+- assertVisible: "Your Score"
+- assertVisible: "Leaderboard"

@@ -1,0 +1,27 @@
+appId: com.visudolabs.taptrivia.app
+name: Empty nickname cannot proceed — stays on nickname screen
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "9CK6T"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- assertVisible: "What should we call you?"
+
+# Clear any pre-populated name, submit empty
+- tapOn:
+    text: "Your nickname"
+    optional: true
+- eraseText: 30
+- tapOn:
+    text: "Let's Go!"
+    optional: true
+# Should remain on nickname screen
+- assertVisible: "What should we call you?"

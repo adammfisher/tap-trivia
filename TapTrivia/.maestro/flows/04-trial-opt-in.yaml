@@ -1,0 +1,30 @@
+appId: com.visudolabs.taptrivia.app
+name: Tap Start Free Trial — paywall dismisses and lobby shows
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "HMJBC"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- assertVisible: "What should we call you?"
+- inputText: "TrialUser"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 8000
+# Paywall fires
+- assertVisible:
+    text: "Start Free Trial.*"
+- tapOn:
+    text: "Start Free Trial.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+# Paywall dismisses — Subscribe Now should be gone
+- assertNotVisible:
+    text: "Subscribe Now.*"

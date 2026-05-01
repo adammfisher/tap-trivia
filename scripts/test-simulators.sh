@@ -10,10 +10,10 @@
 #             screenshot verification (no touch injection required)
 #
 # PREREQUISITES:
-#   • Metro bundler running: cd TapTrivia && node_modules/.bin/expo start --port 8083
-#   • iOS Simulator: iPhone 16 Pro booted (xcrun simctl boot <UDID>)
+#   • Metro bundler running: cd TapTrivia && node_modules/.bin/expo start --port 8081
+#   • iOS Simulator: iPhone 16 booted (xcrun simctl boot <UDID>)
 #   • Android Emulator: running (adb devices shows emulator-5554)
-#   • adb reverse tcp:8083 tcp:8083 (run once per emulator boot)
+#   • adb reverse tcp:8081 tcp:8081 (run once per emulator boot)
 #
 # USAGE:
 #   bash scripts/test-simulators.sh              # all tests
@@ -25,10 +25,10 @@
 set -euo pipefail
 
 # ── Config ─────────────────────────────────────────────────
-IOS_UDID="6B2D9AA9-E19A-4CED-8771-23E0696F7A03"
+IOS_UDID="C11C94D2-0A68-4022-9F7D-542A6BE3C8CE"
 ANDROID_DEVICE="emulator-5554"
 EXPO_BUNDLE_ID="host.exp.Exponent"
-METRO_PORT=8083
+METRO_PORT=8081
 API_BASE="https://api.taptrivia.tv"
 
 # iOS simulator data paths
@@ -36,17 +36,17 @@ IOS_DATA_DIR=""   # filled by ios_data_dir()
 IOS_ASYNC_DIR=""  # filled by ios_data_dir()
 IOS_KEYCHAIN="/Users/adamfisher/Library/Developer/CoreSimulator/Devices/${IOS_UDID}/data/Library/Keychains/keychain-2-debug.db"
 
-# iOS Simulator window geometry — iPhone 16 Pro (1206×2622 physical, 402×874 logical @ 3x)
+# iOS Simulator window geometry — iPhone 16 (1179×2556 physical, 393×852 logical @ 3x)
 # Window position/size from: osascript -e 'tell app "System Events" to tell process "Simulator" ...'
 # Re-detect if sim is moved: osascript -e 'tell app "System Events" to tell process "Simulator" to return (position of window 1) & (size of window 1)'
-IOS_WIN_X=-196
-IOS_WIN_Y=-1316
-IOS_WIN_W=456
-IOS_WIN_H=972
-IOS_LOGICAL_W=402   # iPhone 16 Pro logical width
-IOS_LOGICAL_H=874   # iPhone 16 Pro logical height
-IOS_SCALE_X="1.134" # WIN_W / LOGICAL_W
-IOS_SCALE_Y="1.112" # WIN_H / LOGICAL_H
+IOS_WIN_X=759
+IOS_WIN_Y=-1232
+IOS_WIN_W=447
+IOS_WIN_H=950
+IOS_LOGICAL_W=393   # iPhone 16 logical width
+IOS_LOGICAL_H=852   # iPhone 16 logical height
+IOS_SCALE_X="1.137" # WIN_W / LOGICAL_W
+IOS_SCALE_Y="1.115" # WIN_H / LOGICAL_H
 IOS_SCALE="$IOS_SCALE_X"  # backward compat alias
 
 # Key tap coordinates (logical points, 402×874 iPhone 16 Pro)
@@ -112,11 +112,12 @@ ios_get_async() {
   cat "$IOS_ASYNC_DIR/manifest.json" 2>/dev/null || echo "{}"
 }
 
-# iOS: tap at logical coordinates (402×874 pt iPhone 16 Pro)
+# iOS: tap at logical coordinates (393×852 pt iPhone 16)
 # Converts logical iOS coordinates to macOS screen coordinates via Quartz CGEvent
+# Uses /opt/homebrew/bin/python3.11 — miniconda python3.13 has corrupted subprocess.py
 ios_tap() {
   local lx="$1" ly="$2"
-  python3 - "$lx" "$ly" "$IOS_WIN_X" "$IOS_WIN_Y" "$IOS_SCALE_X" "$IOS_SCALE_Y" << 'PYEOF'
+  /opt/homebrew/bin/python3.11 - "$lx" "$ly" "$IOS_WIN_X" "$IOS_WIN_Y" "$IOS_SCALE_X" "$IOS_SCALE_Y" << 'PYEOF'
 import sys, time
 import Quartz
 lx, ly = float(sys.argv[1]), float(sys.argv[2])
@@ -142,7 +143,7 @@ ios_type() {
   # Copy to iOS simulator clipboard
   echo -n "$text" | xcrun simctl pbcopy booted
   # Simulate Cmd+V to paste (via Quartz keyboard events)
-  python3 - << 'PYEOF'
+  /opt/homebrew/bin/python3.11 - << 'PYEOF'
 import sys, time
 import Quartz
 import subprocess

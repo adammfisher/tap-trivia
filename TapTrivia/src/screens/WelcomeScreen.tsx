@@ -9,39 +9,42 @@ import { Logo } from '../components/Logo';
 import { SavedBarCard } from '../components/SavedBarCard';
 import { useSavedBars } from '../hooks/useSavedBars';
 import { usePlayerIdentity } from '../hooks/usePlayerIdentity';
-import { joinBar, isApiError } from '../services/api';
-import { isInGameWindow, minutesUntilNextGame } from '../utils/game-clock';
+import { joinBar, getCurrentGame, isApiError } from '../services/api';
 import { colors, gradients, w } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
 
-function useOffHoursCountdown() {
-  const [countdown, setCountdown] = useState<{ hours: number; mins: number } | null>(null);
+/** Polls /game/current to get server-side game mode and active status. */
+function useGameMode() {
+  const [active, setActive] = useState<boolean | null>(null); // null = loading
 
   useEffect(() => {
-    function update() {
-      if (isInGameWindow()) {
-        setCountdown(null);
+    let cancelled = false;
+    async function check() {
+      const result = await getCurrentGame();
+      if (cancelled) return;
+      if (isApiError(result)) {
+        setActive(true); // network error — show buttons rather than block user
         return;
       }
-      const totalMins = minutesUntilNextGame();
-      setCountdown({ hours: Math.floor(totalMins / 60), mins: totalMins % 60 });
+      // all_off means signage only; anything else means games are available
+      setActive(result.gameMode !== 'all_off');
     }
-    update();
-    const id = setInterval(update, 30000); // update every 30s
-    return () => clearInterval(id);
+    check();
+    const id = setInterval(check, 60000); // re-check every minute
+    return () => { cancelled = true; clearInterval(id); };
   }, []);
 
-  return countdown;
+  return active;
 }
 
 export function WelcomeScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const { bars } = useSavedBars();
   const { nickname, deviceId, setBarCode } = usePlayerIdentity();
-  const offHours = useOffHoursCountdown();
+  const gameActive = useGameMode();
 
   const handlePlaySolo = () => {
     if (!deviceId) return;
@@ -84,17 +87,12 @@ export function WelcomeScreen({ navigation }: Props) {
           </View>
           <Text style={styles.tagline}>Live trivia on your phone</Text>
 
-          {offHours ? (
+          {gameActive === false ? (
+            /* all_off mode — signage only */
             <>
               <FadeInView duration={500} direction="none" style={styles.offHoursBanner}>
                 <Text style={styles.offHoursEmoji}>{'\u{1F319}'}</Text>
-                <Text style={styles.offHoursCountdown}>
-                  {offHours.hours > 0 && (
-                    <><Text style={styles.offHoursNumber}>{offHours.hours}</Text>h{' '}</>
-                  )}
-                  <Text style={styles.offHoursNumber}>{offHours.mins}</Text>m
-                </Text>
-                <Text style={styles.offHoursLabel}>until games begin</Text>
+                <Text style={styles.offHoursLabel}>Games are currently unavailable</Text>
                 <Text style={styles.offHoursMessage}>
                   Trivia runs nightly — the perfect way to unwind after work. Grab a drink, rally your crew, and we'll see you soon!
                 </Text>
@@ -176,7 +174,7 @@ export function WelcomeScreen({ navigation }: Props) {
 
         {/* Footer */}
         <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-          <Text style={styles.footerText}>Games run every 15 minutes, 10 AM \u2013 9 PM ET</Text>
+          <Text style={styles.footerText}>Games run every 15 minutes, 24 hours a day</Text>
         </View>
       </View>
     </GradientBackground>

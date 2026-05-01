@@ -170,3 +170,20 @@ resource "aws_iam_role_policy" "lambda_cloudfront" {
     ]
   })
 }
+
+# SSM Parameter Store — game mode toggle
+resource "aws_iam_role_policy" "lambda_ssm" {
+  name = "${local.name_prefix}-SSM"
+  role = aws_iam_role.lambda_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = ["ssm:GetParameter"]
+        Resource = "arn:aws:ssm:${var.region}:*:parameter/taptrivia/prod/*"
+      }
+    ]
+  })
+}

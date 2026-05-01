@@ -36,6 +36,8 @@ export function LobbyScreen({ navigation, route }: Props) {
   const { startGame, gameState } = useGame();
   const isOnTop = useIsOnTop(route.key);
   const { isPro, isLoading: subLoading } = useSubscription();
+  // Bar codes that bypass the subscription gate (used for store review / demo access)
+  const isPaywallBypassed = isPro || barCode === '9CK6T';
   const paywallShown = useRef(false);
 
   // Track whether an active game is waiting for the user to become pro
@@ -46,8 +48,8 @@ export function LobbyScreen({ navigation, route }: Props) {
   const kickbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (subLoading) return;
-    if (isPro) {
-      // Already subscribed — no paywall needed, cancel any pending kickback
+    if (isPaywallBypassed) {
+      // Already subscribed or bypassed — no paywall needed, cancel any pending kickback
       paywallShown.current = false;
       if (kickbackTimer.current) clearTimeout(kickbackTimer.current);
       return;
@@ -65,11 +67,11 @@ export function LobbyScreen({ navigation, route }: Props) {
         }
       }, 3000);
     }
-  }, [subLoading, isPro, isOnTop, navigation]);
+  }, [subLoading, isPaywallBypassed, isOnTop, navigation]);
 
-  // After becoming pro, if a game was waiting, join it immediately
+  // After becoming pro (or bypass), if a game was waiting, join it immediately
   useEffect(() => {
-    if (isPro && gameReadyRef.current && !startedRef.current && isOnTop) {
+    if (isPaywallBypassed && gameReadyRef.current && !startedRef.current && isOnTop) {
       // Re-trigger poll to pick up the active game
       checkGameStatusRef.current?.();
     }
@@ -120,7 +122,7 @@ export function LobbyScreen({ navigation, route }: Props) {
     if (result.status === 'active' && result.startTimeEpoch) {
       const clock = clockGetGameState(result.startTimeEpoch, getServerNow());
       if (clock.gamePhase === 'active' && !startedRef.current) {
-        if (!isProRef.current) {
+        if (!isProRef.current && barCode !== '9CK6T') {
           // Game is ready but user isn't subscribed — show paywall
           gameReadyRef.current = true;
           if (!paywallShown.current) {
@@ -185,7 +187,7 @@ export function LobbyScreen({ navigation, route }: Props) {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [checkGameStatus, identityLoaded, subLoading, isPro]);
+  }, [checkGameStatus, identityLoaded, subLoading, isPaywallBypassed]);
 
   // Refresh immediately when app returns to foreground
   useEffect(() => {
@@ -216,7 +218,7 @@ export function LobbyScreen({ navigation, route }: Props) {
 
   // If game context phase changes, navigate (skip while a modal is on top or not subscribed)
   useEffect(() => {
-    if (!isOnTop || !isPro) return;
+    if (!isOnTop || !isPaywallBypassed) return;
     if (gameState.gamePhase === 'category' && !startedRef.current) {
       startedRef.current = true;
       navigation.replace('Category', { barCode, playerId: deviceId || playerId, barName });

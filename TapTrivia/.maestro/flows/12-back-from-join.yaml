@@ -1,0 +1,21 @@
+appId: com.visudolabs.taptrivia.app
+name: Back button from join screen returns to Welcome
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible: "Enter Game Code"
+
+# Tap the ← back button
+- tapOn:
+    text: "←"
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    text: "Join a Game.*"
+- assertNotVisible: "Enter Game Code"

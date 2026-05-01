@@ -36,6 +36,7 @@ for func_dir in "$FUNCTIONS_DIR"/*/; do
   cp "$SHARED_DIR/game-clock.js" "$func_dir/shared/"
   cp "$SHARED_DIR/questions.js" "$func_dir/shared/"
   cp "$SHARED_DIR/name-suffixes.js" "$func_dir/shared/"
+  cp "$SHARED_DIR/config.js" "$func_dir/shared/"
 
   # Copy auth.js to dashboard functions that need it
   for df in $DASHBOARD_FUNCTIONS; do

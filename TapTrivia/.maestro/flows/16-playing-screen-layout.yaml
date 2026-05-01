@@ -1,0 +1,37 @@
+appId: com.visudolabs.taptrivia.app
+name: Playing screen — shows question text, 4 answer cards, and TOTAL score
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "9CK6T"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- inputText: "PlayBot"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 8000
+
+- extendedWaitUntil:
+    visible:
+      text: "Get ready!"
+    timeout: 120000
+
+- waitForAnimationToEnd:
+    timeout: 6000
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Question loaded — assert playing screen structure
+- extendedWaitUntil:
+    visible:
+      text: "TOTAL"
+    timeout: 10000
+- assertNotVisible: "Waiting for reveal"
+- assertNotVisible: "Locked In!"

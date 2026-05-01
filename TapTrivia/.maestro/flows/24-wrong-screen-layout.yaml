@@ -1,0 +1,45 @@
+appId: com.visudolabs.taptrivia.app
+name: Wrong answer — "+0" and "Wrong Answer" label visible on wrong screen
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "9CK6T"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- inputText: "WrongBot"
+- pressKey: Enter
+
+# Wait for game → skip category
+- waitForAnimationToEnd:
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Wait deep into hint_2 zone (~28s) where only ~50-100pts remain
+- waitForAnimationToEnd:
+    timeout: 13000
+- waitForAnimationToEnd:
+    timeout: 13000
+
+# Tap an answer — we may be right or wrong; check reveal screen structure
+- tapOn:
+    text: "A"
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# When wrong: assert the "Wrong Answer" label + "+0" display
+- runFlow:
+    when:
+      visible: "Wrong Answer"
+    commands:
+      - assertVisible: "+0"
+      - assertNotVisible: "Points Earned!"

@@ -7,9 +7,10 @@ import {
   getOffering,
   isConfigured,
 } from '../services/revenuecat';
+import { startTrial, checkTrial } from '../services/trial';
 
 interface UseSubscription {
-  /** True if user has an active subscription (RevenueCat only) */
+  /** True if user has an active subscription OR an active trial */
   isPro: boolean;
   /** True while checking subscription status */
   isLoading: boolean;
@@ -19,37 +20,40 @@ interface UseSubscription {
   purchase: () => Promise<boolean>;
   /** Restore previous purchases. Returns true on success. */
   restore: () => Promise<boolean>;
+  /** Start the free trial (user-initiated from paywall). Returns true on success. */
+  startFreeTrial: () => Promise<boolean>;
 }
 
-const FORCE_PRO = true;
-
 export function useSubscription(): UseSubscription {
-  // Start with isPro = true and isLoading = true so nothing renders the paywall
-  // until we've confirmed the user is NOT subscribed
-  const [isPro, setIsPro] = useState(true);
-  const [isLoading, setIsLoading] = useState(!FORCE_PRO);
+  const [isPro, setIsPro] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [offering, setOffering] = useState<PurchasesOffering | null>(null);
   const checkedRef = useRef(false);
 
   useEffect(() => {
-    if (FORCE_PRO || checkedRef.current) return;
+    if (checkedRef.current) return;
     checkedRef.current = true;
     let cancelled = false;
 
     (async () => {
+      // Check RevenueCat subscription and existing trial in parallel.
+      // Trial is NOT auto-started here — user must opt in from the paywall.
+      const [trialInfo, off] = await Promise.all([
+        checkTrial(),
+        isConfigured() ? getOffering() : Promise.resolve(null),
+      ]);
+
+      const trialActive = trialInfo.status === 'active';
+
+      let rcEntitled = false;
       if (isConfigured()) {
-        const [entitled, off] = await Promise.all([checkSubscription(), getOffering()]);
-        if (!cancelled) {
-          setIsPro(entitled);
-          setOffering(off);
-          setIsLoading(false);
-        }
-      } else {
-        // RevenueCat not configured (Expo Go, emulator)
-        if (!cancelled) {
-          setIsPro(false);
-          setIsLoading(false);
-        }
+        rcEntitled = await checkSubscription();
+      }
+
+      if (!cancelled) {
+        setIsPro(rcEntitled || trialActive);
+        setOffering(off);
+        setIsLoading(false);
       }
     })();
 
@@ -74,5 +78,15 @@ export function useSubscription(): UseSubscription {
     return ok;
   }, []);
 
-  return { isPro: FORCE_PRO || isPro, isLoading, offering, purchase, restore };
+  const startFreeTrial = useCallback(async () => {
+    try {
+      await startTrial();
+      setIsPro(true);
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  return { isPro, isLoading, offering, purchase, restore, startFreeTrial };
 }

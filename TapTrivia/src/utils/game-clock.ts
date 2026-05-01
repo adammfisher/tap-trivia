@@ -87,56 +87,38 @@ export function getGameState(gameStartEpoch: number, nowEpoch: number): ClockSta
 
 export const RESULTS_DURATION_MS = 120000;
 
-const WINDOW_START_MIN = 600;  // 10:00 AM ET in minutes
-const WINDOW_END_MIN = 1260;   // 9:00 PM ET in minutes
+// Games run 24 hours — no restricted window
+const WINDOW_START_MIN = 0;
+const WINDOW_END_MIN = 24 * 60; // 1440
 
-/** Get current ET hour and minute reliably (no fragile Date string parsing) */
-function getETTime(): { h: number; m: number } {
+/** Always true — games run every 15 min, 24 hours a day */
+export function isInGameWindow(): boolean {
+  return true;
+}
+
+/** Returns minutes until the next 15-min game slot */
+export function minutesUntilNextGame(): number {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',
     hour: 'numeric',
     minute: 'numeric',
     hour12: false,
   }).formatToParts(new Date());
-  let h = 0;
-  let m = 0;
+  let h = 0, m = 0;
   for (const p of parts) {
     if (p.type === 'hour') h = parseInt(p.value, 10);
     if (p.type === 'minute') m = parseInt(p.value, 10);
   }
-  if (h === 24) h = 0; // some browsers return 24 for midnight
-  return { h, m };
-}
-
-/** Returns true if the current time (ET) is inside the game window */
-export function isInGameWindow(): boolean {
-  const { h, m } = getETTime();
-  const nowMin = h * 60 + m;
-  return nowMin >= WINDOW_START_MIN && nowMin < WINDOW_END_MIN;
-}
-
-/** Returns minutes until the next game starts */
-export function minutesUntilNextGame(): number {
-  const { h, m } = getETTime();
-  const nowMin = h * 60 + m;
-  if (nowMin < WINDOW_START_MIN) {
-    return WINDOW_START_MIN - nowMin;
-  }
-  if (nowMin >= WINDOW_END_MIN) {
-    return (1440 - nowMin) + WINDOW_START_MIN;
-  }
-  // Inside window — next 15-min slot
-  const into = nowMin - WINDOW_START_MIN;
-  return 15 - (into % 15);
+  if (h === 24) h = 0;
+  return 15 - ((h * 60 + m) % 15);
 }
 
 /** Returns epoch (ms) of the next game start.
- *  Uses only Intl.DateTimeFormat.formatToParts (no fragile Date string parsing). */
+ *  Games run every 15 min, 24 hours a day.
+ *  Uses only Intl.DateTimeFormat.formatToParts (iOS-safe). */
 export function getNextGameTime(nowEpoch: number): number {
   const INTERVAL_MS = 15 * 60 * 1000;
-  const WINDOW_DURATION_MIN = 11 * 60;
 
-  // Get ET hours, minutes, seconds via formatToParts (iOS-safe)
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',
     hour: 'numeric',
@@ -153,31 +135,17 @@ export function getNextGameTime(nowEpoch: number): number {
   if (h === 24) h = 0;
   const totalMinutesET = h * 60 + m;
 
-  if (totalMinutesET < WINDOW_START_MIN) {
-    // Before window — next game at 10:00 AM ET today
-    const secsUntil = (WINDOW_START_MIN - totalMinutesET) * 60 - s;
-    return nowEpoch + secsUntil * 1000;
-  }
-
-  if (totalMinutesET >= WINDOW_END_MIN) {
-    // After window — next game at 10:00 AM ET tomorrow
-    const secsUntil = ((1440 - totalMinutesET) + WINDOW_START_MIN) * 60 - s;
-    return nowEpoch + secsUntil * 1000;
-  }
-
-  // Inside window — find current 15-min slot
-  const minsIntoWindow = totalMinutesET - WINDOW_START_MIN;
-  const secsIntoSlot = (minsIntoWindow % 15) * 60 + s;
+  // Find current 15-min slot
+  const secsIntoSlot = (totalMinutesET % 15) * 60 + s;
   const slotEpoch = nowEpoch - secsIntoSlot * 1000;
 
   // If past this slot's game + results window, return next slot
   if (nowEpoch >= slotEpoch + GAME_DURATION_MS + RESULTS_DURATION_MS) {
-    const slotMinsIntoWindow = Math.floor(minsIntoWindow / 15) * 15;
-    const nextSlotMins = slotMinsIntoWindow + 15;
-    if (nextSlotMins >= WINDOW_DURATION_MIN) {
-      // Past last slot — next window is tomorrow
-      const secsUntil = ((1440 - totalMinutesET) + WINDOW_START_MIN) * 60 - s;
-      return nowEpoch + secsUntil * 1000;
+    const nextSlotMins = Math.floor(totalMinutesET / 15) * 15 + 15;
+    if (nextSlotMins >= 1440) {
+      // Past last slot of the day — next slot is midnight ET
+      const secsUntilMidnight = (1440 - totalMinutesET) * 60 - s;
+      return nowEpoch + secsUntilMidnight * 1000;
     }
     return slotEpoch + INTERVAL_MS;
   }

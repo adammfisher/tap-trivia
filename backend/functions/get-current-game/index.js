@@ -2,6 +2,7 @@
 
 const { TABLE, get, query } = require('./shared/dynamo');
 const { getGameState, getNextGameTime, gameTimeslotPK, GAME_DURATION_MS, RESULTS_DURATION_MS } = require('./shared/game-clock');
+const { getConfig } = require('./shared/config');
 
 function response(statusCode, body) {
   return {
@@ -14,6 +15,29 @@ function response(statusCode, body) {
 exports.handler = async (event) => {
   try {
     const now = Date.now();
+
+    // --- Game mode check ---
+    const etParts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York', hour: 'numeric', minute: 'numeric', hour12: false
+    }).formatToParts(new Date(now));
+    let etH = 0, etM = 0;
+    for (const p of etParts) {
+      if (p.type === 'hour') etH = parseInt(p.value, 10);
+      if (p.type === 'minute') etM = parseInt(p.value, 10);
+    }
+    if (etH === 24) etH = 0;
+    const nowMinutesET = etH * 60 + etM;
+    const cfg = await getConfig(nowMinutesET);
+
+    if (!cfg.isActive) {
+      return response(200, {
+        status: 'no_game',
+        message: 'Games are currently off',
+        gameMode: cfg.gameMode,
+        nextGameStartEpoch: null,
+        secondsUntilStart: null
+      });
+    }
 
     // --- Ad-hoc test game override ---
     const adhocGame = await get(TABLE.GAMES, { PK: 'ADHOC_GAME' });
@@ -56,6 +80,7 @@ exports.handler = async (event) => {
       return response(200, {
         status: 'no_game',
         message: 'No game scheduled',
+        gameMode: cfg.gameMode,
         nextGameStartEpoch: gameStartEpoch,
         secondsUntilStart: Math.ceil((gameStartEpoch - now) / 1000)
       });
@@ -76,6 +101,7 @@ exports.handler = async (event) => {
     return response(200, {
       gameId: game.gameId,
       status,
+      gameMode: cfg.gameMode,
       startTimeEpoch: game.startTimeEpoch,
       currentQuestionNumber: state.questionNumber || null,
       totalQuestions: 15,

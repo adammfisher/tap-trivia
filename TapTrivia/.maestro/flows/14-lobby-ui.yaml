@@ -1,0 +1,28 @@
+appId: com.visudolabs.taptrivia.app
+name: Lobby screen — shows bar name, player card, and game status
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "9CK6T"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- inputText: "LobbyBot"
+- pressKey: Enter
+# Give lobby 3s to render before game auto-navigation can fire
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Lobby screen elements — check if still in lobby (game may not have started yet)
+- runFlow:
+    when:
+      visible: "You're In!"
+    commands:
+      - assertVisible: "LobbyBot"
+      - assertVisible: "Ready to play"

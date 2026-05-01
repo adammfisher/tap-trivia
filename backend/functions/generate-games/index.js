@@ -24,8 +24,11 @@ function getETOffsetHours() {
 }
 
 /**
- * Generate 96 timeslots for today's games.
- * 12:00 AM ET to 11:45 PM ET, every 15 minutes.
+ * Generate 192 timeslots covering today AND tomorrow in ET.
+ * Every 15 minutes from 12:00 AM today ET through 11:45 PM tomorrow ET.
+ * Generating two days ensures tomorrow's slots exist before midnight even
+ * if the daily cron is delayed or fails — critical for app-store reviewers
+ * who may test the app at any hour.
  * Returns array of UTC epoch milliseconds.
  */
 function getTonightSlots() {
@@ -39,13 +42,15 @@ function getTonightSlots() {
   const day = etNow.getDate();
 
   const slots = [];
-  for (let i = 0; i < 96; i++) {
-    const minutesAfterMidnight = i * 15;
-    const hour = Math.floor(minutesAfterMidnight / 60);
-    const minute = minutesAfterMidnight % 60;
+  for (let dayOffset = 0; dayOffset <= 1; dayOffset++) {
+    for (let i = 0; i < 96; i++) {
+      const minutesAfterMidnight = i * 15;
+      const hour = Math.floor(minutesAfterMidnight / 60);
+      const minute = minutesAfterMidnight % 60;
 
-    const utcEpoch = Date.UTC(year, month, day, hour + etOffsetHours, minute, 0, 0);
-    slots.push(utcEpoch);
+      const utcEpoch = Date.UTC(year, month, day + dayOffset, hour + etOffsetHours, minute, 0, 0);
+      slots.push(utcEpoch);
+    }
   }
   return slots;
 }
@@ -125,6 +130,7 @@ exports.handler = async (event) => {
 
   const games = [];
   let failedSlots = 0;
+  let skippedExisting = 0;
 
   // Question query cache shared across all games for performance
   const questionCache = new Map();
@@ -133,6 +139,16 @@ exports.handler = async (event) => {
     const slotEpoch = slots[i];
 
     try {
+      const pk = gameTimeslotPK(slotEpoch);
+
+      // Idempotent: never overwrite an existing game (preserves played-game data
+      // and allows safe re-invocation if the cron runs more than once per day).
+      const existing = await get(TABLE.GAMES, { PK: pk });
+      if (existing) {
+        skippedExisting++;
+        continue;
+      }
+
       const questions = await selectQuestionsForGame(
         allCategories,
         tonightUsedIds,
@@ -140,7 +156,6 @@ exports.handler = async (event) => {
       );
 
       const gameId = crypto.randomUUID();
-      const pk = gameTimeslotPK(slotEpoch);
 
       // Extract unique category names for between-game hype screen
       const categories = [...new Set(questions.map(q => q.category))];
@@ -200,6 +215,7 @@ exports.handler = async (event) => {
   const elapsed = Date.now() - startTime;
   console.log(`=== Generate Games Summary ===`);
   console.log(`Games created: ${games.length}/${slots.length}`);
+  console.log(`Skipped existing: ${skippedExisting}`);
   console.log(`Failed slots: ${failedSlots}`);
   console.log(`Total unique questions used: ${tonightUsedIds.size}`);
   console.log(`Categories hit: ${categoryQuestionsUsed.size}`);
@@ -208,6 +224,7 @@ exports.handler = async (event) => {
   return response(200, {
     gamesCreated: games.length,
     totalSlots: slots.length,
+    skippedExisting,
     failedSlots,
     questionsUsed: tonightUsedIds.size,
     categoriesHit: categoryQuestionsUsed.size,

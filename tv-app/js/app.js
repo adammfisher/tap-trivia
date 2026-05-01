@@ -56,6 +56,7 @@
   let setupEmail = '';
   let currentScreen = '';
   let pollInterval = null;
+  let preGameWakeupTimer = null;
   const tvPlatform = new URLSearchParams(window.location.search).get('platform') || '';
   let platformModalDismissed = false;
 
@@ -128,6 +129,10 @@
   let rotationTimer = null;
   let countdownTickTimer = null;
   const ROTATION_DURATIONS = { results: 60000, idle: 60000, lobby: 60000 };
+
+  // Idle countdown tick — updates signage header countdown every second
+  let idleCountdownTimer = null;
+  let nextGameStartEpochCached = 0;
 
   // Between-game experience state
   let betweenGameData = null;
@@ -505,18 +510,31 @@
     return 15 - (nowMin - WINDOW_START) % 15;
   }
 
+  /** Compute seconds-accurate countdown text from a future epoch (or fall back to minutesUntilNextGame) */
+  function countdownTextFromEpoch(epoch) {
+    var secsLeft;
+    if (epoch && epoch > 0) {
+      secsLeft = Math.max(0, Math.ceil((epoch - getServerNow()) / 1000));
+    } else {
+      secsLeft = minutesUntilNextGame() * 60;
+    }
+    var hours = Math.floor(secsLeft / 3600);
+    var mins = Math.floor((secsLeft % 3600) / 60);
+    var secs = secsLeft % 60;
+    if (hours > 0) {
+      return hours + '<span class="tt-signage-header__countdown-unit">h</span> ' +
+             mins + '<span class="tt-signage-header__countdown-unit">m</span>';
+    }
+    if (mins > 0) {
+      return mins + '<span class="tt-signage-header__countdown-unit">m</span> ' +
+             String(secs).padStart(2, '0') + '<span class="tt-signage-header__countdown-unit">s</span>';
+    }
+    return secs + '<span class="tt-signage-header__countdown-unit">s</span>';
+  }
+
   /** Full-screen signage header (location logo + name + countdown + TapTrivia logo) */
   function signageHeaderHTML() {
-    var totalMins = minutesUntilNextGame();
-    var hours = Math.floor(totalMins / 60);
-    var mins = totalMins % 60;
-    var countdownText;
-    if (hours > 0) {
-      countdownText = hours + '<span class="tt-signage-header__countdown-unit">h</span> ' + mins + '<span class="tt-signage-header__countdown-unit">m</span>';
-    } else {
-      countdownText = mins + '<span class="tt-signage-header__countdown-unit">m</span>';
-    }
-
+    const countdownText = countdownTextFromEpoch(nextGameStartEpochCached);
     return `
       <div class="tt-signage-header">
         <div class="tt-signage-header__bar">
@@ -528,12 +546,25 @@
         <div class="tt-signage-header__right">
           <div class="tt-signage-header__countdown">
             <div class="tt-signage-header__countdown-label">Trivia starts in</div>
-            <div class="tt-signage-header__countdown-value">${countdownText}</div>
+            <div class="tt-signage-header__countdown-value" id="signage-countdown-value">${countdownText}</div>
           </div>
           <div class="tt-signage-header__divider"></div>
           ${logoHTML('sm')}
         </div>
       </div>`;
+  }
+
+  /** 1-second tick that updates the signage header countdown in-place (no re-render) */
+  function startIdleCountdownTick() {
+    stopIdleCountdownTick();
+    idleCountdownTimer = setInterval(() => {
+      const el = document.getElementById('signage-countdown-value');
+      if (!el) return;
+      el.innerHTML = countdownTextFromEpoch(nextGameStartEpochCached);
+    }, 1000);
+  }
+  function stopIdleCountdownTick() {
+    if (idleCountdownTimer) { clearInterval(idleCountdownTimer); idleCountdownTimer = null; }
   }
 
   /** Panel header for in-game signage */
@@ -1197,8 +1228,8 @@
 
     // Stop local clock when leaving playing screen
     if (currentScreen === 'playing' && screen !== 'playing') stopLocalClock();
-    // Stop signage rotation when leaving idle (full-screen signage)
-    if (currentScreen === 'idle' && screen !== 'idle') stopSignageRotation();
+    // Stop signage rotation and idle countdown when leaving idle
+    if (currentScreen === 'idle' && screen !== 'idle') { stopSignageRotation(); stopIdleCountdownTick(); }
 
     currentScreen = screen;
     localQuestionNumber = qNum;
@@ -1237,11 +1268,13 @@
       if (html) {
         screenEl.innerHTML = html;
         if (!signageRotationTimer && active.length > 1) startSignageRotation();
+        startIdleCountdownTick();
         return;
       }
     }
     // Ultimate fallback (shouldn't reach here with defaults)
     stopSignageRotation();
+    stopIdleCountdownTick();
     screenEl.innerHTML = `
       <div class="tt-idle">
         ${resetArrowHTML()}
@@ -1740,7 +1773,7 @@
               ${categoryPillHTML(icon, category)}
               <span class="tt-play__q-counter">Q${num}<span class="tt-play__q-counter-sep">/${totalQ}</span></span>
             </div>
-            ${sub ? `<div class="tt-play__sub">${sub}</div>` : ''}
+            ${sub ? `<div class="tt-play__sub" style="font-size:42px">${sub}</div>` : ''}
             <div class="tt-play__question">${q.text || ''}</div>
             <div class="tt-play__progress">${progressHTML(num, totalQ)}</div>
           </div>
@@ -1767,6 +1800,7 @@
     const totalQ = state.totalQuestions || 15;
     const icon = q.categoryIcon || '🧠';
     const category = q.category || 'Trivia';
+    const sub = q.subcategory || state.subcategory || '';
     const answerPcts = state.answerPercentages || [];
 
     let answersHTML = '';
@@ -1813,6 +1847,7 @@
               ${categoryPillHTML(icon, category)}
               <span class="tt-play__q-counter">Q${num}<span class="tt-play__q-counter-sep">/${totalQ}</span></span>
             </div>
+            ${sub ? `<div class="tt-play__sub">${sub}</div>` : ''}
             <div class="tt-play__question">${q.text || ''}</div>
             <div class="tt-play__progress">${progressHTML(num, totalQ)}</div>
           </div>
@@ -2733,6 +2768,26 @@
     pollInterval = setInterval(pollTvState, ms);
   }
 
+  // During idle, poll every 5 min. Schedule a wakeup to ramp back to 5s
+  // when the next game is 90s away, so we catch the active→game transition.
+  function schedulePreGameWakeup(nextGameStartEpoch) {
+    if (preGameWakeupTimer) { clearTimeout(preGameWakeupTimer); preGameWakeupTimer = null; }
+    if (!nextGameStartEpoch) return;
+    const msUntilWakeup = nextGameStartEpoch - getServerNow() - 90000;
+    if (msUntilWakeup <= 0) {
+      // Already within 90s — switch to fast polling now
+      setPollRate(CONFIG.POLL_INTERVAL_PREGAME || 5000);
+      return;
+    }
+    preGameWakeupTimer = setTimeout(() => {
+      preGameWakeupTimer = null;
+      console.log('[TV poll] pre-game wakeup — switching to fast poll');
+      setPollRate(CONFIG.POLL_INTERVAL_PREGAME || 5000);
+      pollTvState();
+    }, msUntilWakeup);
+    console.log('[TV poll] idle — next wakeup in', Math.round(msUntilWakeup / 1000), 's');
+  }
+
   async function pollTvState() {
     if (!barCode) return;
 
@@ -2768,15 +2823,31 @@
       localGameStartEpoch = state.gameStartEpoch;
     }
 
+    // Cache nextGameStartEpoch for idle countdown tick
+    if (state.nextGameStartEpoch) {
+      nextGameStartEpochCached = state.nextGameStartEpoch;
+    }
+
     const gameState = translateApiState(state);
     if (state.phase) console.log('[TV poll] phase:', state.phase, '→ screen:', gameState.screen, 'q:', gameState.questionNumber);
 
     // Cache for screen rotation
     cacheForRotation(gameState, state);
 
+    // all_off mode or timed-outside-window: signage only, no countdown
+    if (state.state === 'idle') {
+      setPollRate(CONFIG.POLL_INTERVAL_IDLE);
+      exitRotationMode();
+      if (betweenGameActive) exitBetweenGameMode();
+      if (currentScreen === 'idle') return;
+      renderScreen({ ...gameState, screen: 'idle' });
+      return;
+    }
+
     // During break: slow polling, full-screen signage (custom or defaults)
     if (state.state === 'break') {
-      setPollRate(CONFIG.POLL_INTERVAL_IDLE || 5000);
+      setPollRate(CONFIG.POLL_INTERVAL_IDLE);
+      schedulePreGameWakeup(state.nextGameStartEpoch);
       exitRotationMode();
       if (betweenGameActive) exitBetweenGameMode();
       // Don't re-render if already on idle — avoids flashing on every poll tick
@@ -2787,22 +2858,27 @@
 
     // Game over — slow polling, between-game experience then rotation
     if (state.state === 'game_over') {
-      setPollRate(CONFIG.POLL_INTERVAL_IDLE || 5000);
+      stopIdleCountdownTick();
+      setPollRate(CONFIG.POLL_INTERVAL_IDLE);
       const gameId = state.gameId || '';
       // Start between-game experience if not already running and not yet done for this game
       if (!betweenGameActive && betweenGameLastGameId !== gameId && gameId) {
+        schedulePreGameWakeup(state.nextGameStartEpoch);
         startBetweenGameExperience(gameId);
         return;
       }
       // If between-game is active, let it continue (don't interfere)
       if (betweenGameActive) return;
       // Between-game done — enter normal rotation
+      schedulePreGameWakeup(state.nextGameStartEpoch);
       handleScreenRotation(gameState);
       return;
     }
 
-    // Active game — fast polling, exit rotation + between-game, render normally
-    setPollRate(CONFIG.POLL_INTERVAL_ACTIVE || 2000);
+    // Active game — fast polling, cancel pre-game wakeup, exit rotation + between-game
+    stopIdleCountdownTick();
+    if (preGameWakeupTimer) { clearTimeout(preGameWakeupTimer); preGameWakeupTimer = null; }
+    setPollRate(CONFIG.POLL_INTERVAL_ACTIVE);
     exitRotationMode();
     if (betweenGameActive) exitBetweenGameMode();
     renderScreen(gameState);
@@ -2870,6 +2946,7 @@
           text: apiState.question,
           answers: (apiState.answers || []).map((a, i) => ({ id: i, text: a })),
           category: apiState.category,
+          subcategory: apiState.subcategory || '',
           categoryIcon: getCategoryIcon(apiState.category),
         };
         gs.correctAnswerIndex = apiState.correctIndex !== undefined && apiState.correctIndex !== null
@@ -2890,6 +2967,7 @@
           text: apiState.question,
           answers: apiState.answers || [],
           category: apiState.category,
+          subcategory: apiState.subcategory || '',
           categoryIcon: getCategoryIcon(apiState.category),
         };
         // Calculate timer (answer window: 3s–31s = 28s countdown)

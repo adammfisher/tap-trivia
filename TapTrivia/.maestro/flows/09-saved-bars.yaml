@@ -1,0 +1,28 @@
+appId: com.visudolabs.taptrivia.app
+name: Saved bar appears on Welcome after first join
+---
+# First launch: join a bar
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "9CK6T"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- assertVisible: "What should we call you?"
+- inputText: "BarSaver"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 8000
+# Relaunch without clearing — returns to Welcome with state intact
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd:
+    timeout: 5000
+# Saved bar section should appear
+- assertVisible: "SAVED"

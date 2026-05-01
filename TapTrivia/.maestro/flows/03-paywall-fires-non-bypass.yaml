@@ -1,0 +1,26 @@
+appId: com.visudolabs.taptrivia.app
+name: Paywall fires for non-bypass bar code (HMJBC)
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- tapOn:
+    text: "Join a Game.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- inputText: "HMJBC"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 12000
+- assertVisible: "What should we call you?"
+- inputText: "TestBot"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 8000
+# Paywall must appear
+- assertVisible: "TapTrivia Pro"
+- assertVisible:
+    text: "Start Free Trial.*"
+- assertVisible:
+    text: "Subscribe Now.*"

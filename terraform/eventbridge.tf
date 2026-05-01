@@ -7,13 +7,15 @@
 # -----------------------------------------------------------------------------
 # Daily Game Generation
 # -----------------------------------------------------------------------------
-# Runs at 14:00 UTC (9:00 AM Eastern) every day to pre-generate the day's
-# trivia games so questions are ready before the 10 AM ET start.
+# Runs at 17:00 UTC (12:00 PM EST / 1:00 PM EDT) every day. The Lambda is
+# idempotent and pre-generates today + tomorrow, so a missed run still leaves
+# 24+ hours of slots ahead. Critical for app-store reviewers who may test at
+# any hour — if no game is scheduled they get rejected.
 # -----------------------------------------------------------------------------
 resource "aws_cloudwatch_event_rule" "generate_games" {
   name                = "${local.name_prefix}-GenerateGames"
-  description         = "Trigger daily game generation at 9 AM ET (14:00 UTC)"
-  schedule_expression = "cron(0 14 * * ? *)"
+  description         = "Trigger daily game generation at 12 PM EST (17:00 UTC)"
+  schedule_expression = "cron(0 17 * * ? *)"
   state               = local.is_dev ? "DISABLED" : "ENABLED"
 
   tags = {
