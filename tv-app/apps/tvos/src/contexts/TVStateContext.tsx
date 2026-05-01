@@ -12,6 +12,7 @@ import {
   getBetweenGameData,
   registerBar,
   activateTV,
+  tvHeartbeat,
   getServerNow,
   type TvStateResponse,
   type SignageSlide,
@@ -27,6 +28,15 @@ import { getNextGameTime, GAME_DURATION_MS, RESULTS_DURATION_MS } from '../utils
 import type { TVState, TVScreen, BetweenGameData, INITIAL_TV_STATE } from '../types/tv-state';
 
 const STORAGE_KEY = '@taptrivia_tv_config';
+const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;
+
+function makeUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 // ─── Signage helpers ──────────────────────────────────────────────────
 
@@ -209,10 +219,12 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
   // Mutable refs for poll loop
   const barCodeRef = useRef('');
   const barNameRef = useRef('');
+  const tvIdRef = useRef('');
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const signageTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const rotationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const consecutiveErrorsRef = useRef(0);
 
   // Rotation state
@@ -240,18 +252,26 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       try {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        let cfg: { barCode?: string; barName?: string; tvId?: string } = {};
         if (stored) {
-          const cfg = JSON.parse(stored);
-          if (cfg.barCode) {
-            barCodeRef.current = cfg.barCode;
-            barNameRef.current = cfg.barName || '';
-            setTvState(prev => ({
-              ...prev,
-              barCode: cfg.barCode,
-              barName: cfg.barName || '',
-            }));
-            startPolling();
-          }
+          try { cfg = JSON.parse(stored); } catch {}
+        }
+        if (!cfg.tvId) {
+          cfg.tvId = makeUUID();
+          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+        }
+        tvIdRef.current = cfg.tvId;
+
+        if (cfg.barCode) {
+          barCodeRef.current = cfg.barCode;
+          barNameRef.current = cfg.barName || '';
+          setTvState(prev => ({
+            ...prev,
+            barCode: cfg.barCode!,
+            barName: cfg.barName || '',
+          }));
+          startPolling();
+          startHeartbeat();
         }
       } catch {}
     })();
@@ -263,7 +283,32 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
   async function saveConfig(code: string, name: string) {
     barCodeRef.current = code;
     barNameRef.current = name;
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ barCode: code, barName: name }));
+    await AsyncStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ barCode: code, barName: name, tvId: tvIdRef.current }),
+    );
+  }
+
+  // ─── Heartbeat ──────────────────────────────────────────────────────
+  // Runs every 5 min while paired. Silent on success; logs on failure.
+  // Used by analytics to count active TVs.
+
+  function startHeartbeat() {
+    if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
+    if (!tvIdRef.current) return;
+    void sendHeartbeat();
+    heartbeatTimerRef.current = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
+  }
+
+  function stopHeartbeat() {
+    if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
+    heartbeatTimerRef.current = null;
+  }
+
+  async function sendHeartbeat() {
+    if (!tvIdRef.current) return;
+    try { await tvHeartbeat(tvIdRef.current); }
+    catch (err) { console.warn('[TV heartbeat] failed', err); }
   }
 
   // ─── Polling ────────────────────────────────────────────────────────
@@ -274,6 +319,7 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
     if (signageTimerRef.current) clearInterval(signageTimerRef.current);
     if (rotationTimerRef.current) clearTimeout(rotationTimerRef.current);
     if (betweenGameTimerRef.current) clearTimeout(betweenGameTimerRef.current);
+    stopHeartbeat();
     pollTimerRef.current = null;
     countdownTimerRef.current = null;
     signageTimerRef.current = null;
@@ -632,7 +678,9 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const doActivate = useCallback(async (code: string) => {
-    const result = await activateTV(code);
+    if (!tvIdRef.current) tvIdRef.current = makeUUID();
+    const result = await activateTV(code, tvIdRef.current);
+    if (result.tvId) tvIdRef.current = result.tvId;
     await saveConfig(code, result.barName || code);
     setTvState(prev => ({
       ...prev,
@@ -641,6 +689,7 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
       screen: 'idle',
     }));
     startPolling();
+    startHeartbeat();
   }, []);
 
   const doReset = useCallback(() => {

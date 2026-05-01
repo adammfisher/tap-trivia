@@ -36,3 +36,7 @@ backend/functions/*/shared/
 .terraform.lock.hcl
 terraform/tfplan
 terraform/zip/
+
+# Python bytecode
+__pycache__/
+*.pyc

@@ -323,6 +323,12 @@ sub doActivate()
   scene = m.top.getScene()
   body = caseSensitiveAA()
   body["barCode"] = code
+  ' Roku ships a stable per-channel device id; backend persists it as tv_id.
+  tvId = scene.getField("tvDeviceId")
+  if tvId <> invalid and tvId <> ""
+    body["tvId"] = tvId
+  end if
+  body["tvPlatform"] = "roku"
   scene.callFunc("makeApiCall", "POST", "/tv/activate", body, "activateTV")
 end sub
 

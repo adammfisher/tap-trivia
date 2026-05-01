@@ -51,12 +51,17 @@ export async function registerBar(barName: string, ownerEmail?: string) {
   );
 }
 
-export async function activateTV(barCode: string) {
-  return apiCall<{ barCode: string; barName: string }>(
+export async function activateTV(barCode: string, tvId: string) {
+  return apiCall<{ barCode: string; barName: string; tvId: string }>(
     'POST',
     '/tv/activate',
-    { barCode },
+    { barCode, tvId, tvPlatform: 'appletv' },
   );
+}
+
+export async function tvHeartbeat(tvId: string) {
+  // Best-effort, no body returned. Log is handled by the caller.
+  return apiCall<unknown>('POST', '/tv-heartbeat', { tvId });
 }
 
 export async function getBetweenGameData(barCode: string, gameId: string) {

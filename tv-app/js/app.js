@@ -2719,6 +2719,18 @@
     renderSetup();
   }
 
+  function makeUUID() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    // Fallback for older webviews
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
   async function activateTV() {
     const codeStr = setupCode.join('').toUpperCase();
     if (codeStr.length < 5) return;
@@ -2726,7 +2738,13 @@
     setupCodeState = 'verifying';
     renderSetup();
 
-    const result = await apiCall('POST', '/tv/activate', { barCode: codeStr });
+    if (!tvDeviceId) tvDeviceId = makeUUID();
+
+    const result = await apiCall('POST', '/tv/activate', {
+      barCode: codeStr,
+      tvId: tvDeviceId,
+      tvPlatform: tvPlatform || 'web'
+    });
     if (result.error) {
       setupCodeState = 'error';
       if (!setupCodeAutoFilled) {
@@ -2738,7 +2756,9 @@
 
     barCode = result.barCode;
     barName = result.barName;
+    if (result.tvId) tvDeviceId = result.tvId;
     saveTvConfig();
+    startHeartbeat();
 
     // Show "You're Live!" for 3 seconds
     setupCodeState = 'activated';
@@ -2748,6 +2768,28 @@
       startPolling();
       renderScreen({ screen: 'lobby', playerCount: 0, players: [] });
     }, 3000);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // HEARTBEAT — every 5 min while paired. Silent on success;
+  // logs only on failure. Used by analytics to count active TVs.
+  // ═══════════════════════════════════════════════════════════════
+  let heartbeatInterval = null;
+
+  function startHeartbeat() {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    if (!tvDeviceId) return;
+    sendHeartbeat();
+    heartbeatInterval = setInterval(sendHeartbeat, 5 * 60 * 1000);
+  }
+
+  async function sendHeartbeat() {
+    if (!tvDeviceId) return;
+    try {
+      await apiCall('POST', '/tv-heartbeat', { tvId: tvDeviceId });
+    } catch (err) {
+      console.warn('[TV heartbeat] failed:', err && err.message);
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -3401,6 +3443,7 @@
       if (bar && !bar.error && bar.status === 'active') {
         barName = bar.barName;
         saveTvConfig();
+        if (tvDeviceId) startHeartbeat();
         startPolling();
         return;
       }

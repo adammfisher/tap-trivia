@@ -69,6 +69,12 @@ sub init()
   m.betweenApiTask = m.top.findNode("betweenApiTask")
   m.betweenApiTask.observeField("response", "onBetweenApiResponse")
 
+  ' Heartbeat task — never blocked by m.apiInFlight, fires every 5 min
+  m.heartbeatApiTask = m.top.findNode("heartbeatApiTask")
+  m.heartbeatApiTask.observeField("response", "onHeartbeatResponse")
+  m.heartbeatTimer = m.top.findNode("heartbeatTimer")
+  m.heartbeatTimer.observeField("fire", "onHeartbeatTimer")
+
   ' ── Timers ──
   m.pollTimer = CreateObject("roSGNode", "Timer")
   m.pollTimer.repeat = true
@@ -128,6 +134,9 @@ sub doInit()
     di = CreateObject("roDeviceInfo")
     m.tvDeviceId = di.GetChannelClientId()
     saveConfig()
+  else
+    ' loadConfig() set m.tvDeviceId — push to scene field for SetupScreen.
+    m.top.tvDeviceId = m.tvDeviceId
   end if
 
   ' Always use hardcoded bar code for this deployment
@@ -794,6 +803,7 @@ sub onVerifyBarResponse(response as Object)
   if status = "active"
     if response.barName <> invalid then m.barName = response.barName
     saveConfig()
+    pairTvWithBackend()
     startPolling()
   else
     ' Invalid code — clear and show setup
@@ -801,6 +811,62 @@ sub onVerifyBarResponse(response as Object)
     m.barName = ""
     saveConfig()
     switchScreen("setupScreen")
+  end if
+end sub
+
+' ══════════════════════════════════════════════════════════════
+' TV PAIRING & HEARTBEAT
+' ══════════════════════════════════════════════════════════════
+
+' Best-effort pair call — populates TapTrivia-TvPairings on the backend.
+' Idempotent: safe to call on every app start (preserves paired_at_utc).
+sub pairTvWithBackend()
+  if m.barCode = "" then return
+  body = CreateObject("roAssociativeArray")
+  body.SetModeCaseSensitive()
+  body["barCode"] = m.barCode
+  if m.tvDeviceId <> "" then body["tvId"] = m.tvDeviceId
+  body["tvPlatform"] = "roku"
+  m.heartbeatApiTask.setField("callId", "tvPair")
+  m.heartbeatApiTask.setField("requestMethod", "POST")
+  m.heartbeatApiTask.setField("requestUrl", m.API_BASE + "/tv/activate")
+  m.heartbeatApiTask.setField("requestBody", FormatJson(body))
+  m.heartbeatApiTask.control = "stop"
+  m.heartbeatApiTask.control = "run"
+  startHeartbeat()
+end sub
+
+sub startHeartbeat()
+  if m.heartbeatTimer = invalid or m.tvDeviceId = "" then return
+  m.heartbeatTimer.control = "stop"
+  m.heartbeatTimer.control = "start"
+end sub
+
+sub onHeartbeatTimer()
+  if m.tvDeviceId = "" or m.barCode = "" then return
+  body = CreateObject("roAssociativeArray")
+  body.SetModeCaseSensitive()
+  body["tvId"] = m.tvDeviceId
+  m.heartbeatApiTask.setField("callId", "heartbeat")
+  m.heartbeatApiTask.setField("requestMethod", "POST")
+  m.heartbeatApiTask.setField("requestUrl", m.API_BASE + "/tv-heartbeat")
+  m.heartbeatApiTask.setField("requestBody", FormatJson(body))
+  m.heartbeatApiTask.control = "stop"
+  m.heartbeatApiTask.control = "run"
+end sub
+
+sub onHeartbeatResponse()
+  response = m.heartbeatApiTask.getField("response")
+  callId = m.heartbeatApiTask.getField("callId")
+  if response = invalid or (response.error <> invalid and response.error <> "")
+    print ">>> heartbeat/" + callId + ": failed"
+    return
+  end if
+  if callId = "tvPair"
+    if response.tvId <> invalid and response.tvId <> ""
+      m.tvDeviceId = response.tvId
+      saveConfig()
+    end if
   end if
 end sub
 
@@ -820,7 +886,9 @@ sub onActivateTVResponse(response as Object)
   if response.barCode <> invalid
     m.barCode = response.barCode
     if response.barName <> invalid then m.barName = response.barName
+    if response.tvId <> invalid and response.tvId <> "" then m.tvDeviceId = response.tvId
     saveConfig()
+    startHeartbeat()
     m.screens.setupScreen.setField("activateResult", response)
     ' After 3 seconds, switch to lobby and start polling
     activateTimer = CreateObject("roSGNode", "Timer")
@@ -1002,6 +1070,8 @@ sub saveConfig()
   sec.Write("barName", m.barName)
   sec.Write("tvDeviceId", m.tvDeviceId)
   sec.Flush()
+  ' Mirror onto the scene field so child screens (SetupScreen) can read it.
+  m.top.tvDeviceId = m.tvDeviceId
 end sub
 
 sub clearConfig()

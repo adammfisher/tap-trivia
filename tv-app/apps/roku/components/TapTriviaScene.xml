@@ -2,6 +2,7 @@
 <component name="TapTriviaScene" extends="Scene">
   <interface>
     <field id="currentScreen" type="string" value="" />
+    <field id="tvDeviceId" type="string" value="" />
     <function name="makeApiCall" />
   </interface>
 
@@ -55,6 +56,12 @@
 
     <!-- Separate API task for between-game data (avoids race with poll timer) -->
     <ApiTask id="betweenApiTask" />
+
+    <!-- Separate API task for /tv-heartbeat so it can't be starved by polling -->
+    <ApiTask id="heartbeatApiTask" />
+
+    <!-- Heartbeat timer — fires every 5 min while paired -->
+    <Timer id="heartbeatTimer" duration="300" repeat="true" />
 
     <!-- Screensaver prevention: ECP self-ping task -->
     <KeepAwakeTask id="keepAwakeTask" />

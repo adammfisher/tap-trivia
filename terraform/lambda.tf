@@ -850,22 +850,29 @@ data "archive_file" "tv_activate" {
 }
 
 # -----------------------------------------------------------------------------
-# 19. tv-activate
-#     Validates a bar code and returns bar info for TV activation.
-#     DynamoDB: Read Bars
+# 19. tv-activate (Python — pairs a TV with a bar)
+#     - Validates bar code
+#     - Resolves source IP to geo via geoip-py layer
+#     - Upserts TapTrivia-TvPairings (preserves paired_at_utc on re-pair)
+#     - Copies geo to TapTrivia-Bars on first TV; increments total_tvs after
 # -----------------------------------------------------------------------------
 resource "aws_lambda_function" "tv_activate" {
   function_name    = "${local.name_prefix}-tv-activate"
   role             = aws_iam_role.lambda_execution.arn
-  handler          = "index.handler"
-  runtime          = "nodejs20.x"
-  memory_size      = 128
-  timeout          = 10
+  handler          = "lambda_function.handler"
+  runtime          = "python3.12"
+  memory_size      = 256
+  timeout          = 15
   filename         = data.archive_file.tv_activate.output_path
   source_code_hash = data.archive_file.tv_activate.output_base64sha256
+  layers           = [aws_lambda_layer_version.geoip_py.arn]
 
   environment {
-    variables = local.common_environment_variables
+    variables = merge(local.common_environment_variables, {
+      TABLE_TV_PAIRINGS = "TapTrivia-TvPairings"
+      GEOIP_BUCKET      = "taptrivia-internal"
+      GEOIP_KEY         = "geoip/GeoLite2-City.mmdb"
+    })
   }
 
   tags = {
@@ -879,6 +886,47 @@ resource "aws_lambda_permission" "tv_activate_apigw" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.tv_activate.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}
+
+# -----------------------------------------------------------------------------
+# 20. tv-heartbeat (Python — keepalive ping for paired TVs)
+#     POST /tv-heartbeat updates last_heartbeat_utc on TvPairings.
+# -----------------------------------------------------------------------------
+data "archive_file" "tv_heartbeat" {
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/functions/tv-heartbeat"
+  output_path = "${path.module}/zip/tv-heartbeat.zip"
+}
+
+resource "aws_lambda_function" "tv_heartbeat" {
+  function_name    = "${local.name_prefix}-tv-heartbeat"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "lambda_function.handler"
+  runtime          = "python3.12"
+  memory_size      = 128
+  timeout          = 5
+  filename         = data.archive_file.tv_heartbeat.output_path
+  source_code_hash = data.archive_file.tv_heartbeat.output_base64sha256
+
+  environment {
+    variables = {
+      TABLE_TV_PAIRINGS = "TapTrivia-TvPairings"
+    }
+  }
+
+  tags = {
+    Environment = local.stage
+    Project     = "TapTrivia"
+    Function    = "tv-heartbeat"
+  }
+}
+
+resource "aws_lambda_permission" "tv_heartbeat_apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.tv_heartbeat.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }
