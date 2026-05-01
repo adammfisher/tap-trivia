@@ -199,15 +199,146 @@ def compute_overview(question_progress: dict, bar_split: dict) -> dict:
     }
 
 
+def compute_signage_overview() -> dict:
+    """
+    Aggregate TapTrivia-SignageImpressions into the shape /analytics/signage
+    needs. Pre-revenue with 0 impressions this is mostly zeros; the heatmap
+    bucketing logic still runs so the schema is consistent.
+    """
+    from collections import defaultdict
+    contexts = ("between_rounds", "game_lobby", "results", "off_hours_idle")
+    by_context = {c: {"impressions": 0, "audienceSeconds": 0} for c in contexts}
+
+    total_impressions = 0
+    total_audience_seconds = 0
+    total_concurrent = 0
+    peak_concurrent = 0
+    impressions_with_concurrent = 0
+    distinct_tvs: set[str] = set()
+
+    days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    hours = [17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4]
+    heatmap = [[0 for _ in hours] for _ in days]
+
+    # Walk all impressions. Pre-revenue this is a small/empty scan.
+    for it in _scan_all(
+        TABLE.SIGNAGE_IMPRESSIONS,
+        projection="bar_code, tv_id, #ctx, duration_ms, concurrent_players",
+        expr_names={"#ctx": "context"},
+    ):
+        ctx = it.get("context")
+        dur = float(it.get("duration_ms") or 0)
+        players = float(it.get("concurrent_players") or 0)
+        total_impressions += 1
+        seconds = (dur / 1000.0) * max(players, 1)
+        total_audience_seconds += seconds
+        if players > 0:
+            impressions_with_concurrent += 1
+            total_concurrent += players
+            if players > peak_concurrent:
+                peak_concurrent = int(players)
+        if it.get("tv_id"):
+            distinct_tvs.add(it["tv_id"])
+        if ctx in by_context:
+            by_context[ctx]["impressions"] += 1
+            by_context[ctx]["audienceSeconds"] += seconds
+
+    avg_concurrent = (
+        round(total_concurrent / impressions_with_concurrent, 2)
+        if impressions_with_concurrent else 0
+    )
+
+    # TVs with a recent heartbeat (active TVs) — live count from TvPairings.
+    active_tvs = 0
+    total_tvs = 0
+    for tv in _scan_all(TABLE.TV_PAIRINGS, projection="tv_id, last_heartbeat_utc"):
+        total_tvs += 1
+        # is_tv_active applies the 24h rule
+        from datetime import datetime, timezone
+        try:
+            ts = (tv.get("last_heartbeat_utc") or "")
+            if ts.endswith("Z"):
+                ts = ts[:-1] + "+00:00"
+            last = datetime.fromisoformat(ts).astimezone(timezone.utc).timestamp()
+            from time import time as _now
+            if _now() - last < 24 * 3600:
+                active_tvs += 1
+        except (ValueError, AttributeError):
+            pass
+
+    return {
+        "totals": {
+            "impressions":      total_impressions,
+            "audienceSeconds":  int(total_audience_seconds),
+            "activeTvs":        active_tvs,
+            "totalTvs":         total_tvs,
+            "avgConcurrent":    avg_concurrent,
+            "peakConcurrent":   peak_concurrent,
+        },
+        "byContext": [
+            {"context": c, "impressions": v["impressions"], "audienceSeconds": int(v["audienceSeconds"])}
+            for c, v in by_context.items()
+        ],
+        "heatmap": {"hours": hours, "days": days, "values": heatmap},
+        "byDayPart": [],
+        "byAudienceBucket": [],
+        "byDMA": [],
+        "dataQuality": [],
+    }
+
+
+def compute_questions_overview() -> dict:
+    """
+    bySupercategory + byDifficulty rollups of TapTrivia-Questions.
+    Cheap-ish: 100K rows, only one Scan per analytics-sync run (daily).
+    """
+    from collections import Counter
+    by_super: Counter = Counter()
+    by_diff: Counter = Counter()
+    total = 0
+
+    for q in _scan_all(
+        "TapTrivia-Questions",
+        projection="supercategory, difficulty",
+    ):
+        total += 1
+        s = q.get("supercategory") or "Unknown"
+        d = int(q.get("difficulty") or 0)
+        by_super[s] += 1
+        by_diff[d] += 1
+
+    return {
+        "total": total,
+        "bySupercategory": [
+            {"name": k, "count": v} for k, v in by_super.most_common()
+        ],
+        "byDifficulty": [
+            {"level": k, "count": v} for k, v in sorted(by_diff.items())
+        ],
+        # Pipeline stats live in CloudWatch; analytics-api will fall back
+        # to zeros until a CloudWatch reader is wired up.
+        "pipeline": {
+            "generatedThisWeek": 0,
+            "faissDedupRejects": 0,
+            "avgDifficulty": 0.0,
+            "topicGaps": 0,
+        },
+    }
+
+
 def run_all() -> dict:
     bar_split = _bar_status_split()
     qprog = compute_question_progress()
     overview = compute_overview(qprog, bar_split)
     attribution = compute_bar_attribution()
+    signage = compute_signage_overview()
+    questions = compute_questions_overview()
 
     _cache.write("computed:overview", overview, "computed")
     _cache.write("computed:question_round_progress", qprog, "computed")
     _cache.write("computed:bar_attribution", attribution, "computed")
+    _cache.write("computed:signage:overview", signage, "computed")
+    _cache.write("computed:questions:overview", questions, "computed")
     return {
         "overview": {
             "totalUsers": overview["totalUsers"],
@@ -216,4 +347,5 @@ def run_all() -> dict:
             "awsThisMonth": overview["awsThisMonth"],
         },
         "attribution_bars": len(attribution),
+        "signage_total_impressions": signage["totals"]["impressions"],
     }
