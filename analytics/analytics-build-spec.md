@@ -66,15 +66,22 @@ This separation means the dashboard is fast even when external APIs are slow or 
 
 ### 2.3 Cache TTL strategy
 
+All four external sources run on a single **daily** EventBridge schedule
+(`cron(5 6 * * ? *)`, 06:05 UTC). Pre-revenue this is more than enough
+freshness, and it keeps Cost Explorer charges in the pennies-per-month
+range (~$0.60/mo at daily vs ~$14/mo at hourly). Re-running with
+`{"force": true}` bypasses the per-source 24-h guards.
+
 | Source | Refresh frequency | Why |
 |---|---|---|
-| RevenueCat | Hourly | Subscriber state changes throughout day; webhooks would be better long-term but hourly is fine for v1 |
-| App Store Connect | Daily at 06:00 ET | Apple updates finance reports daily; rate-limited API |
-| Google Play | Daily at 06:00 ET | Same as Apple |
-| AWS Cost Explorer | Hourly | Cost Explorer charges $0.01/call; hourly is the sweet spot between cost and freshness |
-| DynamoDB live data | No cache | Direct queries on every request; existing tables, fast |
+| RevenueCat | Daily | Subscriber state changes are batched well enough at daily resolution; revisit if/when we need real-time (webhooks). |
+| App Store Connect | Daily | Apple updates finance reports daily; rate-limited API. |
+| Google Play | Daily | Same as Apple. |
+| AWS Cost Explorer | Daily | Each `GetCostAndUsage` call costs $0.01; daily keeps total spend on the analytics subsystem itself <$1/mo. |
+| DynamoDB live data | No cache | Direct queries on every request; existing tables, fast. |
 
-The hourly EventBridge job triggers all syncs in parallel inside `analytics-sync`. Daily-cadence sources skip if their `last_synced_at` is < 24h ago.
+Bumping any one source to hourly is a one-line `cron(...)` change in
+`terraform/analytics-sync.tf` plus dropping the per-source 24-h guard.
 
 ### 2.4 Authentication
 

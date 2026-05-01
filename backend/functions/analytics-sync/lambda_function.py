@@ -77,7 +77,24 @@ def handler(event, context):
             r = fn(force=force) or {}
             elapsed = round(time.time() - t0, 2)
             results[name] = {"ok": True, "elapsed_s": elapsed, **r}
-            if not r.get("skipped"):
+            if r.get("permission_pending"):
+                # Pre-revenue Apple credentials are still propagating —
+                # update last_synced so the daily guard skips for 24h,
+                # and write meta:errors:{name} (clear_error must NOT run
+                # or this would be wiped). Keeps emitting "success"
+                # to CloudWatch so the alarm doesn't fire on a
+                # known-pending state.
+                _cache.set_last_synced(name)
+                _cache.write(
+                    f"meta:errors:{name}",
+                    {
+                        "at": _cache.now_iso(),
+                        "error": r.get("error_message", "permission_pending"),
+                        "detail": r.get("error_detail", ""),
+                    },
+                    name,
+                )
+            elif not r.get("skipped"):
                 _cache.set_last_synced(name)
                 _cache.clear_error(name)
             successes.append(name)

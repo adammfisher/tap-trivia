@@ -124,7 +124,41 @@ def compute_question_progress() -> dict:
     }
 
 
+def _store_reconciled_net(mrr_gross: float) -> tuple[float, bool]:
+    """
+    Sum the most-recent month from appstore:monthly:* and googleplay:monthly:*
+    (their `netProceeds` fields) and use that to override the RevenueCat-based
+    estimate. Returns (net_mrr, reconciled?). Falls back to the 0.85 estimate
+    when neither store has non-zero monthly data yet.
+    """
+    import datetime as _dt
+    today = _dt.datetime.now(_dt.timezone.utc).date()
+    apple_net = 0.0
+    google_net = 0.0
+    # Walk back up to 3 months — Apple finalizes ~3 days into the next month.
+    cur = today.replace(day=1)
+    for _ in range(3):
+        ym = cur.strftime("%Y-%m")
+        ap = _cache.read_payload(f"appstore:monthly:{ym}", default=None)
+        gp = _cache.read_payload(f"googleplay:monthly:{ym}", default=None)
+        if ap and float(ap.get("netProceeds") or 0) > 0:
+            apple_net = max(apple_net, float(ap["netProceeds"]))
+        if gp and float(gp.get("netProceeds") or 0) > 0:
+            google_net = max(google_net, float(gp["netProceeds"]))
+        # Step back one month
+        cur = (cur - _dt.timedelta(days=1)).replace(day=1)
+
+    store_total = apple_net + google_net
+    if store_total > 0:
+        return round(store_total, 2), True
+    return round(mrr_gross * 0.85, 2), False
+
+
 def compute_overview(question_progress: dict, bar_split: dict) -> dict:
+    # Per Cleanup task 3: RevenueCat is the primary source of truth for
+    # MRR. Apple/Google direct data is supplemental — used to refine
+    # `netMrr` only when their per-month cache rows have non-zero
+    # netProceeds. Otherwise we apply the 0.85 estimate to RC's gross.
     rc = _cache.read_payload("revenuecat:overview", default={}) or {}
     rc_platform = _cache.read_payload("revenuecat:by_platform", default={}) or {}
     aws_now = _cache.read_payload("aws:costs:current_month", default={}) or {}
@@ -134,6 +168,8 @@ def compute_overview(question_progress: dict, bar_split: dict) -> dict:
     mrr_gross = float(rc.get("mrrGross") or 0)
     total_users = _player_count()
     free = max(0, total_users - paid - trial)
+
+    net_mrr, reconciled = _store_reconciled_net(mrr_gross)
 
     return {
         "totalUsers": total_users,
@@ -149,7 +185,8 @@ def compute_overview(question_progress: dict, bar_split: dict) -> dict:
         "activeBars": bar_split["active"],
         "pendingBars": bar_split["pending"],
         "mrrGross": round(mrr_gross, 2),
-        "netMrr": round(mrr_gross * 0.85, 2),
+        "netMrr": net_mrr,
+        "revenue_source": "store_reconciled" if reconciled else "revenuecat_estimated",
         "awsThisMonth": round(float(aws_now.get("total") or 0), 4),
         "questionsTotal": question_progress["total"],
         "questionsUsed": question_progress["used"],

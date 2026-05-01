@@ -19,7 +19,11 @@ export async function apiCall<T>(
 
   const requestStart = Date.now();
   const res = await fetch(`${API_BASE}${path}`, opts);
-  const data = await res.json();
+  // Tolerate empty response bodies (e.g. /tv-heartbeat returns 200
+  // with no body). JSON.parse on '' throws SyntaxError, so read text
+  // first and only parse when there's content.
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
 
   const dateHeader = res.headers.get('Date');
   if (dateHeader && res.ok) {
@@ -31,7 +35,8 @@ export async function apiCall<T>(
   }
 
   if (!res.ok) {
-    throw new Error(data.message || `HTTP ${res.status}`);
+    const msg = (data && (data as { message?: string }).message) || `HTTP ${res.status}`;
+    throw new Error(msg);
   }
   return data as T;
 }

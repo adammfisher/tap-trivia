@@ -17,7 +17,12 @@ async function apiCall(method, path, body = null) {
   try {
     const requestStart = Date.now();
     const res = await fetch(`${CONFIG.API_BASE}${path}`, opts);
-    const data = await res.json();
+    // Tolerate empty response bodies (e.g. /tv-heartbeat returns 200 with
+    // no body). JSON.parse on '' throws SyntaxError, so read raw text and
+    // only parse when there's actually content.
+    const text = await res.text();
+    let data = text ? JSON.parse(text) : null;
+    if (data === null && !res.ok) data = {};
 
     // Sync clock from server Date header
     const dateHeader = res.headers.get('Date');
@@ -29,7 +34,7 @@ async function apiCall(method, path, body = null) {
       }
     }
 
-    if (!res.ok) {
+    if (!res.ok && data) {
       data._statusCode = res.status;
     }
     return data;

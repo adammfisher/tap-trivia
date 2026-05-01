@@ -42,6 +42,11 @@ SOURCE_KEY = "appstore"
 DAILY_GUARD_HOURS = 24
 
 
+class AppStorePermissionError(RuntimeError):
+    """Raised on the first 403 — terminates the sync run early instead of
+    burning Lambda time on ~90 daily report fetches that will all 403."""
+
+
 def _credentials() -> tuple[dict, str]:
     sm = boto3.client("secretsmanager")
     creds = json.loads(sm.get_secret_value(SecretId=CREDS_SECRET)["SecretString"])
@@ -71,11 +76,13 @@ def _fetch_report(token: str, params: dict) -> bytes | None:
         with urllib.request.urlopen(req, timeout=60) as r:
             return r.read()
     except urllib.error.HTTPError as e:
-        # 403 = key lacks Sales/Finance role. 400/404 = report not generated
-        # yet (Apple lags 24-48h). All three are "no data yet" in pre-revenue
-        # — log and continue rather than failing the whole sync.
-        if e.code in (400, 403, 404):
-            body = e.read().decode("utf-8", errors="replace")[:200]
+        body = e.read().decode("utf-8", errors="replace")[:200]
+        if e.code == 403:
+            raise AppStorePermissionError(
+                f"403 from salesReports — key needs Sales/Finance role propagation: {body}"
+            ) from e
+        if e.code in (400, 404):
+            # Report just hasn't been generated yet for this date.
             log.info("ASC %s: no report for %s (%s)", e.code, params, body)
             return None
         raise
@@ -91,8 +98,12 @@ def _fetch_finance_report(token: str, params: dict) -> bytes | None:
         with urllib.request.urlopen(req, timeout=60) as r:
             return r.read()
     except urllib.error.HTTPError as e:
-        if e.code in (400, 403, 404):
-            body = e.read().decode("utf-8", errors="replace")[:200]
+        body = e.read().decode("utf-8", errors="replace")[:200]
+        if e.code == 403:
+            raise AppStorePermissionError(
+                f"403 from financeReports — key needs Sales/Finance role propagation: {body}"
+            ) from e
+        if e.code in (400, 404):
             log.info("ASC finance %s: no report for %s (%s)", e.code, params, body)
             return None
         raise
@@ -152,8 +163,21 @@ def sync(force: bool = False) -> dict:
     token = _make_jwt(creds["key_id"], creds["issuer_id"], private_key)
     vendor = creds["vendor_number"]
 
-    # Last 3 calendar months — daily SUMMARY reports get aggregated to a
-    # monthly view per spec.
+    try:
+        return _sync_inner(token, vendor)
+    except AppStorePermissionError as e:
+        # First 403 short-circuits — pass the error message back; the
+        # Lambda handler writes meta:errors:appstore *after* its own
+        # clear_error step so the message survives the run.
+        log.warning("appstore: permission error, skipping rest of run: %s", e)
+        return {
+            "permission_pending": True,
+            "error_message": "Permission denied — key needs Sales/Finance role propagation",
+            "error_detail": str(e)[:300],
+        }
+
+
+def _sync_inner(token: str, vendor: str) -> dict:
     today = datetime.now(timezone.utc).date()
     months_to_pull: list[str] = []
     cursor = today.replace(day=1)

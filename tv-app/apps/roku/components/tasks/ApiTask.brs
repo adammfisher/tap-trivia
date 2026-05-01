@@ -63,6 +63,15 @@ sub doRequest()
   end if
 
   if responseStr = invalid or responseStr = ""
+    ' Some endpoints (e.g. /tv-heartbeat) intentionally return 200 with
+    ' an empty body. For 2xx, surface that as a no-op success rather
+    ' than a faux error so callers can distinguish empty-OK from real
+    ' failures (which still come through as code >= 400).
+    if code >= 200 and code < 300
+      print ">>> ApiTask: empty body (HTTP " + Str(code).trim() + " — ok)"
+      m.top.setField("response", { _statusCode: code, _empty: true })
+      return
+    end if
     print ">>> ApiTask: empty response"
     m.top.setField("response", { error: "EMPTY_RESPONSE", message: "Empty response (HTTP " + Str(code).trim() + ")" })
     return
