@@ -7,10 +7,9 @@ import {
   getOffering,
   isConfigured,
 } from '../services/revenuecat';
-import { checkTrial } from '../services/trial';
 
 interface UseSubscription {
-  /** True if user has an active subscription OR an active trial */
+  /** True if user has an active subscription (or in-trial — RevenueCat reports both as "active"). */
   isPro: boolean;
   /** True while checking subscription status */
   isLoading: boolean;
@@ -36,22 +35,14 @@ export function useSubscription(): UseSubscription {
     let cancelled = false;
 
     (async () => {
-      // Check RevenueCat subscription and existing trial in parallel.
-      // Trial is NOT auto-started here — user must opt in from the paywall.
-      const [trialInfo, off] = await Promise.all([
-        checkTrial(),
-        isConfigured() ? getOffering() : Promise.resolve(null),
-      ]);
-
-      const trialActive = trialInfo.status === 'active';
-
-      let rcEntitled = false;
-      if (isConfigured()) {
-        rcEntitled = await checkSubscription();
-      }
+      // RevenueCat is the single source of truth for entitlement state.
+      // It reports trial periods as active entitlements alongside paid
+      // subscriptions, so a single check covers both.
+      const off = isConfigured() ? await getOffering() : null;
+      const rcEntitled = isConfigured() ? await checkSubscription() : false;
 
       if (!cancelled) {
-        setIsPro(rcEntitled || trialActive);
+        setIsPro(rcEntitled);
         setOffering(off);
         setIsLoading(false);
       }
@@ -85,11 +76,6 @@ export function useSubscription(): UseSubscription {
   // see the native confirmation sheet ("Free for 7 days, then $2.99/month,
   // cancel anytime"), authenticate, and a payment method is captured up
   // front. Day 8 the store auto-charges. No second decision moment.
-  //
-  // Existing soft-trial users (started a trial under the old client-tracked
-  // flow) keep their remaining days via checkTrial() in the useEffect above
-  // — when their soft trial expires they hit the paywall and go through
-  // this same path.
   const startFreeTrial = useCallback(async () => {
     if (!isConfigured()) return false;
     setIsLoading(true);
