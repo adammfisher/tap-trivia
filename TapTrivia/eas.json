@@ -54,7 +54,15 @@
       "ios": {
         "appleId": "adam.fisher@visudolabs.com",
         "ascAppId": "6762301564",
-        "appleTeamId": "NCJ5B632NP"
+        "appleTeamId": "NCJ5B632NP",
+        "ascApiKeyPath": "/Users/adamfisher/Desktop/secrets/AuthKey_EAS_REPLACE.p8",
+        "ascApiKeyId": "REPLACE_KEY_ID",
+        "ascApiKeyIssuerId": "REPLACE_ISSUER_UUID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "/Users/adamfisher/Desktop/secrets/play-eas-submit.json",
+        "track": "internal",
+        "releaseStatus": "draft"
       }
     }
   }
