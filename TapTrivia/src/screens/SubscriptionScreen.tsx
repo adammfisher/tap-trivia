@@ -21,33 +21,19 @@ const FEATURES = [
 
 export function SubscriptionScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { isPro, isLoading, offering, purchase, restore, startFreeTrial } = useSubscription();
+  const { isPro, isLoading, offering, restore, startFreeTrial } = useSubscription();
 
-  // Derive price string from offering (never hardcoded)
+  // Derive price string from the live RC offering (never hardcoded — handles
+  // currency / price changes set in App Store Connect / Play Console).
   const rcActive = isConfigured();
   const pkg = offering?.availablePackages[0] ?? null;
   const priceString = pkg?.product.priceString ?? '$2.99';
-  const periodLabel = 'per month';
 
-  // The "Start Free Trial" button routes through Purchases.purchasePackage,
-  // identical to the regular Subscribe button. The 7-day intro offer is
-  // configured server-side (App Store Connect + Play Console) on the monthly
-  // product; the store decides eligibility and shows the native confirmation
-  // sheet with the trial terms. Hide this button only if there's no offering
-  // at all (RC misconfigured) — in normal operation always show it.
-  const hasStoreTrial = !!pkg;
-
-  // If already subscribed or in trial, auto-dismiss
+  // If already subscribed or in trial, auto-dismiss.
   if (isPro && !isLoading) {
     navigation.goBack();
     return null;
   }
-
-  const handlePurchase = async () => {
-    if (!rcActive) return;
-    const ok = await purchase();
-    if (ok) navigation.goBack();
-  };
 
   const handleStartTrial = async () => {
     const ok = await startFreeTrial();
@@ -88,49 +74,34 @@ export function SubscriptionScreen({ navigation }: Props) {
           ))}
         </View>
 
-        {/* Start Free Trial button — opt-in 7-day trial. No payment info collected. */}
-        {hasStoreTrial && (
-          <Pressable
-            onPress={handleStartTrial}
-            disabled={isLoading}
-            style={({ pressed }) => [
-              styles.trialButton,
-              isLoading && styles.buttonDisabled,
-              pressed && { opacity: 0.85 },
-            ]}
-          >
-            <Text style={styles.trialButtonText}>Start Free Trial</Text>
-            <Text style={styles.trialButtonSub}>
-              7 days free, then {priceString}/month{'\n'}
-              Auto-renewing · Cancel anytime in settings
-            </Text>
-          </Pressable>
-        )}
-
-        {/* Price card */}
-        <View style={styles.priceCard}>
-          <Text style={styles.price}>{priceString}</Text>
-          <Text style={styles.priceLabel}>{periodLabel}</Text>
-        </View>
-
-        {/* Subscribe button */}
+        {/* Single CTA — taps Purchases.purchasePackage(). Apple/Google decide
+            intro-offer eligibility on their side: trial-eligible users see
+            "Free for 7 days, then $2.99/mo" on the native sheet; users who
+            already burned their trial see the regular $2.99/mo sheet. */}
         <Pressable
-          onPress={handlePurchase}
-          disabled={isLoading || (!pkg && rcActive)}
+          onPress={handleStartTrial}
+          disabled={isLoading || !pkg}
           style={({ pressed }) => [
-            styles.subscribeButton,
-            (isLoading || (!pkg && rcActive)) && styles.buttonDisabled,
+            styles.trialButton,
+            (isLoading || !pkg) && styles.buttonDisabled,
             pressed && !isLoading && { opacity: 0.85 },
           ]}
         >
           {isLoading ? (
             <ActivityIndicator color={BG} size="small" />
           ) : (
-            <Text style={styles.subscribeText}>Subscribe Now</Text>
+            <>
+              <Text style={styles.trialButtonText}>Start Free Trial</Text>
+              <Text style={styles.trialButtonSub}>
+                7 days free, then {priceString}/month{'\n'}
+                Auto-renewing · Cancel anytime in settings
+              </Text>
+            </>
           )}
         </Pressable>
 
-        {/* Restore */}
+        {/* Restore — Apple's review guideline 3.1.1 requires this on every
+            paywall for users who change devices or reinstall. */}
         <Pressable onPress={handleRestore} disabled={isLoading}>
           <Text style={styles.restoreText}>Restore Purchases</Text>
         </Pressable>
@@ -231,42 +202,7 @@ const styles = StyleSheet.create({
     color: 'rgba(0,0,0,0.5)',
     marginTop: 2,
   },
-  priceCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 20,
-    paddingVertical: 20,
-    paddingHorizontal: 28,
-    borderWidth: 1,
-    borderColor: ACCENT + '30',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 16,
-  },
-  price: {
-    fontFamily: fonts.fredoka.bold,
-    fontSize: 40,
-    color: '#fff',
-  },
-  priceLabel: {
-    fontFamily: fonts.outfit.regular,
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.4)',
-    marginTop: 2,
-  },
-  subscribeButton: {
-    width: '100%',
-    minWidth: 280,
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-    backgroundColor: ACCENT,
-  },
   buttonDisabled: { opacity: 0.5 },
-  subscribeText: {
-    fontFamily: fonts.outfit.bold,
-    fontSize: 17,
-    color: BG,
-  },
   restoreText: {
     fontFamily: fonts.outfit.medium,
     fontSize: 13,
