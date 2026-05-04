@@ -55,12 +55,12 @@
         "appleId": "adam.fisher@visudolabs.com",
         "ascAppId": "6762301564",
         "appleTeamId": "NCJ5B632NP",
-        "ascApiKeyPath": "/Users/adamfisher/Desktop/secrets/AuthKey_EAS_REPLACE.p8",
-        "ascApiKeyId": "REPLACE_KEY_ID",
-        "ascApiKeyIssuerId": "REPLACE_ISSUER_UUID"
+        "ascApiKeyPath": "/Users/adamfisher/Desktop/secrets/AuthKey_694Q72V822.p8",
+        "ascApiKeyId": "694Q72V822",
+        "ascApiKeyIssuerId": "65635256-683a-43c7-a0e5-eb9344e3968a"
       },
       "android": {
-        "serviceAccountKeyPath": "/Users/adamfisher/Desktop/secrets/play-eas-submit.json",
+        "serviceAccountKeyPath": "/Users/adamfisher/Desktop/secrets/taptrivia-32480d8da912.json",
         "track": "internal",
         "releaseStatus": "draft"
       }

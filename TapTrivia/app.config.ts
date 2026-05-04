@@ -5,7 +5,7 @@ const IS_DEV = process.env.APP_VARIANT === 'dev';
 const config: ExpoConfig = {
   name: IS_DEV ? 'TapTrivia Dev' : 'TapTrivia',
   slug: 'TapTrivia',
-  version: '1.0.0',
+  version: '1.0.1',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'dark',

@@ -80,10 +80,10 @@ export function SubscriptionScreen({ navigation }: Props) {
             already burned their trial see the regular $2.99/mo sheet. */}
         <Pressable
           onPress={handleStartTrial}
-          disabled={isLoading || !pkg}
+          disabled={isLoading}
           style={({ pressed }) => [
             styles.trialButton,
-            (isLoading || !pkg) && styles.buttonDisabled,
+            isLoading && styles.buttonDisabled,
             pressed && !isLoading && { opacity: 0.85 },
           ]}
         >
@@ -188,19 +188,26 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: 'center',
-    backgroundColor: '#00d4aa',
+    backgroundColor: '#4cd964',
     marginBottom: 16,
+    shadowColor: '#4cd964',
+    shadowOpacity: 0.55,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
   },
   trialButtonText: {
     fontFamily: fonts.outfit.bold,
     fontSize: 17,
     color: BG,
+    textAlign: 'center',
   },
   trialButtonSub: {
     fontFamily: fonts.outfit.regular,
     fontSize: 11,
     color: 'rgba(0,0,0,0.5)',
     marginTop: 2,
+    textAlign: 'center',
   },
   buttonDisabled: { opacity: 0.5 },
   restoreText: {
