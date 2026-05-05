@@ -10,6 +10,10 @@ sub init()
   m.qrBadge = m.top.findNode("qrBadge")
   m.countdownBar = m.top.findNode("countdownBar")
   m.trophyIcon = m.top.findNode("trophyIcon")
+  m.soloHero = m.top.findNode("soloHero")
+  m.soloAvatar = m.top.findNode("soloAvatar")
+  m.soloName = m.top.findNode("soloName")
+  m.soloScore = m.top.findNode("soloScore")
 
   ' Rank rows 4-10
   m.rankRows = []
@@ -71,6 +75,12 @@ sub onDataChanged(event as Object)
   podium = data.podium
   if podium = invalid then return
 
+  ' Remove any stale "No players" label from a prior 0-player render
+  if m.emptyLabel <> invalid
+    m.leftCol.removeChild(m.emptyLabel)
+    m.emptyLabel = invalid
+  end if
+
   ' Stats line
   qCount = 15
   if podium.questionCount <> invalid then qCount = podium.questionCount
@@ -85,20 +95,48 @@ sub onDataChanged(event as Object)
   if players.count() = 0
     m.statsLabel.text = Str(qCount).trim() + " questions"
     m.podium.visible = false
+    m.soloHero.visible = false
     layoutForPlayers(0)
-    ' Show "No players" label
-    emptyLabel = CreateObject("roSGNode", "Label")
-    emptyLabel.translation = [0, 300]
-    emptyLabel.width = 1920
-    emptyLabel.horizAlign = "center"
-    emptyLabel.color = "#ffffff80"
-    emptyLabel.text = "No players this round"
-    emptyLabel.font = makeFont("Outfit-Regular", 32)
-    m.leftCol.appendChild(emptyLabel)
+    ' Show "No players" label (tracked so it can be removed if data changes)
+    m.emptyLabel = CreateObject("roSGNode", "Label")
+    m.emptyLabel.translation = [0, 300]
+    m.emptyLabel.width = 1920
+    m.emptyLabel.horizAlign = "center"
+    m.emptyLabel.color = "#ffffff80"
+    m.emptyLabel.text = "No players this round"
+    m.emptyLabel.font = makeFont("Outfit-Regular", 32)
+    m.leftCol.appendChild(m.emptyLabel)
     return
   end if
 
+  if players.count() = 1
+    ' Solo hero layout — bypass podium widget for a clean centered design
+    m.podium.visible = false
+    p = players[0]
+    pName = "Player"
+    if p.name <> invalid and p.name <> "" then pName = p.name
+    pScore = 0
+    if p.score <> invalid then pScore = p.score
+    m.soloAvatar.setField("avatarSize", "2xl")
+    m.soloAvatar.setField("playerName", pName)
+    m.soloAvatar.setField("rank", 1)
+    m.soloName.text = pName
+    m.soloScore.text = formatScore(pScore)
+    m.soloHero.visible = true
+
+    ' Hide rank rows (no runners-up exist)
+    for i = 0 to 6
+      m.rankRows[i].visible = false
+    end for
+
+    layoutForPlayers(1)
+    return
+  end if
+
+  ' Multi-player: use podium widget + rank rows
+  m.soloHero.visible = false
   m.podium.visible = true
+  m.podium.setField("soloMode", false)
   m.podium.setField("scores", players)
 
   ' Ranks 4-10 in right column

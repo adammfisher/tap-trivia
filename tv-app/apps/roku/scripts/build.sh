@@ -50,9 +50,18 @@ zip -r "$ZIP_NAME" \
   images/ \
   fonts/ \
   -x "*.DS_Store" \
+  -x "*/.DS_Store" \
+  -x "*/.git/*" \
+  -x "*/.gitignore" \
+  -x "*/node_modules/*" \
   -x "scripts/*" \
   -x "*.md" \
-  -x "*.sh"
+  -x "*.sh" \
+  -x "*.zip" \
+  -x "*.mp4" \
+  -x "*.psd" \
+  -x "*~" \
+  -x "*.bak"
 
 SIZE=$(du -h "$ZIP_NAME" | cut -f1)
 echo "   → $ZIP_NAME ($SIZE)"

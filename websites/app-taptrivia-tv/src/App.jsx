@@ -5,10 +5,9 @@ import { useState, useEffect } from "react";
 // Detects iOS → App Store, Android → Google Play, Desktop → download page
 // ═══════════════════════════════════════════════════════════════
 
-// Placeholder URLs — replace with real store URLs when live
 const STORE = {
-  ios: "https://apps.apple.com/app/taptrivia/id000000000",
-  android: "https://play.google.com/store/apps/details?id=com.visudolabs.taptrivia",
+  ios: "https://apps.apple.com/us/app/taptrivia-live-trivia/id6762301564",
+  android: "https://play.google.com/store/apps/details?id=tv.taptrivia.mobile&utm_source=na_Med",
 };
 
 const FONTS_URL = "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fredoka:wght@400;500;600;700&display=swap";
@@ -117,7 +116,7 @@ export default function AppRedirect() {
               <div style={{
                 fontFamily: "'Outfit',sans-serif", fontSize: 16, fontWeight: 600, color: "#fff", marginBottom: 6,
               }}>
-                Taking you to the {platform === "ios" ? "App Store" : "Google Play"}...
+                Taking you to {platform === "ios" ? "the App Store" : "Google Play"}...
               </div>
               <div style={{
                 fontFamily: "'Fredoka',sans-serif", fontSize: 32, fontWeight: 700, color: T.green,

@@ -15,12 +15,21 @@ sub init()
   m.place1 = m.top.findNode("place1")
   m.place2 = m.top.findNode("place2")
   m.place3 = m.top.findNode("place3")
+  m.bar1 = m.top.findNode("bar1")
+  m.rank1Num = m.top.findNode("rank1Num")
 
   m.showScores = true
 end sub
 
 sub onShowScoreChanged(event as Object)
   m.showScores = event.getData()
+end sub
+
+' Hide the gold platform bar + faint "1" when there's a single winner — the podium concept needs ≥2 places
+sub onSoloModeChanged(event as Object)
+  isSolo = event.getData()
+  m.bar1.visible = not isSolo
+  m.rank1Num.visible = not isSolo
 end sub
 
 sub onScoresChanged(event as Object)

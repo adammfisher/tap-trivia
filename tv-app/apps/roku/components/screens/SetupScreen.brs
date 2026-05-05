@@ -2,7 +2,9 @@
 ' Matches app.js renderSetup() behavior
 
 sub init()
+  #if DEBUG
   print ">>> SetupScreen.init() START"
+  #end if
   ' ── State ──
   m.regState = "form"       ' form | sending | sent
   m.codeState = "input"     ' input | verifying | activated | error
@@ -58,19 +60,29 @@ sub init()
   end if
 
   ' ── Set fonts from BRS (XML <Font> children not rendering) ──
+  #if DEBUG
   print ">>> SetupScreen.init() about to fixAllLabelFonts"
+  #end if
   fixAllLabelFonts(m.top)
+  #if DEBUG
   print ">>> SetupScreen.init() fixAllLabelFonts done, about to applyAllFonts"
+  #end if
   applyAllFonts()
+  #if DEBUG
   print ">>> SetupScreen.init() applyAllFonts done, about to updateFocusVisuals"
+  #end if
 
   updateFocusVisuals()
+  #if DEBUG
   print ">>> SetupScreen.init() COMPLETE"
+  #end if
 end sub
 
 sub onResetToInput()
   if not m.top.resetToInput then return
+  #if DEBUG
   print ">>> SetupScreen.onResetToInput() — resetting all state"
+  #end if
   m.regState = "form"
   m.codeState = "input"
   m.codeStr = ""
@@ -340,7 +352,9 @@ end function
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
   if press
+    #if DEBUG
     print ">>> SetupScreen.onKeyEvent: key=" + key + " press=true"
+    #end if
   end if
   if not press then return false
 
@@ -426,7 +440,9 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         m.codeStr = m.codeStr + UCase(ch)
         m.errorMsg.visible = false
         updateCodeDisplay()
+        #if DEBUG
         print ">>> Code input: " + m.codeStr
+        #end if
       end if
       return true
     end if
@@ -458,11 +474,15 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
 end function
 
 sub openKeyboard()
+  #if DEBUG
   print ">>> openKeyboard() called for field: " + m.focusField
+  #end if
   scene = m.top.getScene()
-  dialog = CreateObject("roSGNode", "KeyboardDialog")
+  dialog = CreateObject("roSGNode", "StandardKeyboardDialog")
   if dialog = invalid
-    print ">>> ERROR: KeyboardDialog creation returned invalid!"
+    #if DEBUG
+    print ">>> ERROR: StandardKeyboardDialog creation returned invalid!"
+    #end if
     return
   end if
   if m.focusField = "loc"
@@ -479,7 +499,9 @@ sub openKeyboard()
   dialog.observeField("buttonSelected", "onKeyboardButton")
   m.keyboardDialog = dialog
   scene.dialog = dialog
+  #if DEBUG
   print ">>> openKeyboard() dialog set on scene"
+  #end if
 end sub
 
 sub onKeyboardButton()

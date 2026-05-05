@@ -36,6 +36,20 @@
       <Podium id="podium" translation="[80, 220]" />
     </Group>
 
+    <!-- ═══ SOLO HERO: clean centered layout when only 1 player ═══ -->
+    <Group id="soloHero" visible="false">
+      <Avatar id="soloAvatar" translation="[896, 320]" />
+      <Label id="soloName" text="" translation="[0, 480]" width="1920" horizAlign="center" color="#f0f0f0">
+        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="42" />
+      </Label>
+      <Label id="soloScore" text="" translation="[0, 548]" width="1920" horizAlign="center" color="#ffd200">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="64" />
+      </Label>
+      <Label id="soloCaption" text="FINAL SCORE" translation="[0, 640]" width="1920" horizAlign="center" color="#ffffff60">
+        <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="20" />
+      </Label>
+    </Group>
+
     <!-- ═══ RIGHT COLUMN: Ranks 4-10 ═══ -->
     <Group id="rightCol" translation="[960, 100]">
       <Label id="runnersLabel" text="ALSO IN THE TOP 10"

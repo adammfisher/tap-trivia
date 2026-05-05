@@ -72,7 +72,9 @@ sub onSlidesChanged(event as Object)
   end if
   m.slidesCache = slides
   m.lastRenderedSlideCount = -1  ' force re-render
+  #if DEBUG
   print ">>> SignagePanel: onSlidesChanged count=" + Str(m.slidesCache.count()).trim()
+  #end if
   triggerRender()
 end sub
 
@@ -80,7 +82,9 @@ sub onIndexChanged(event as Object)
   newIdx = event.getData()
   ' Skip re-render if index hasn't actually changed
   if newIdx = m.lastRenderedIndex then return
+  #if DEBUG
   print ">>> SignagePanel: onIndexChanged idx=" + Str(newIdx).trim()
+  #end if
   triggerRender()
 end sub
 
@@ -93,7 +97,9 @@ end sub
 
 sub onRenderTimer()
   idx = m.top.getField("signageIndex")
+  #if DEBUG
   print ">>> SignagePanel: onRenderTimer idx=" + Str(idx).trim()
+  #end if
   renderSlide(idx)
   m.lastRenderedIndex = idx
   m.lastRenderedSlideCount = m.slidesCache.count()
@@ -124,7 +130,9 @@ sub renderSlide(index as Integer)
   data = {}
   if slide.data <> invalid then data = slide.data
 
+  #if DEBUG
   print ">>> SignagePanel: renderSlide idx=" + Str(idx).trim() + " template=" + template
+  #end if
 
   ' Show/hide header (brand has no header)
   m.panelHeader.visible = (template <> "brand")

@@ -57,9 +57,13 @@ sub init()
   for each name in m.screenNames
     m.screens[name] = m.top.findNode(name)
     if m.screens[name] = invalid
+      #if DEBUG
       print ">>> INIT ERROR: screen '" + name + "' NOT found (findNode returned invalid)"
+      #end if
     else
+      #if DEBUG
       print ">>> INIT OK: screen '" + name + "' loaded"
+      #end if
     end if
   end for
   m.errorOverlay = m.top.findNode("errorOverlay")
@@ -142,9 +146,13 @@ sub doInit()
     m.top.tvDeviceId = m.tvDeviceId
   end if
 
-  ' Always use hardcoded bar code for this deployment
-  m.barCode = "9CK6T"
-  verifyBarCode(m.barCode)
+  if m.barCode = ""
+    ' First launch (or post-reset) — show activation flow.
+    switchScreen("setupScreen")
+  else
+    ' Saved code in registry — re-verify in case the bar got deactivated server-side.
+    verifyBarCode(m.barCode)
+  end if
 end sub
 
 sub verifyBarCode(code as String)
@@ -157,7 +165,9 @@ end sub
 
 sub switchScreen(screenName as String)
   if screenName = m.currentScreen then return  ' Already showing — no-op
+  #if DEBUG
   print ">>> switchScreen: " + m.currentScreen + " -> " + screenName
+  #end if
   oldScreen = m.currentScreen
   m.lastLoggedSlideKey = "" ' screen changed — re-log even if same slide index
   ' Show new screen FIRST (covers old screen — never a blank frame)
@@ -165,7 +175,9 @@ sub switchScreen(screenName as String)
     m.screens[screenName].visible = true
     m.screens[screenName].setFocus(true)
   else
+    #if DEBUG
     print ">>> switchScreen: target '" + screenName + "' is INVALID"
+    #end if
     return
   end if
   ' THEN hide old screen
@@ -756,10 +768,14 @@ sub makeApiCall(httpMethod as String, path as String, body as Object, callId as 
     nowMs = getEpochMs()
     stuckMs = nowMs - m.apiInFlightStartMs
     if stuckMs > 20000
+      #if DEBUG
       print ">>> makeApiCall: watchdog reset after " + Str(Int(stuckMs / 1000)).trim() + "s stuck"
+      #end if
       m.apiInFlight = false
     else
+      #if DEBUG
       print ">>> makeApiCall: skipping " + callId + " (previous request still in flight)"
+      #end if
       return
     end if
   end if
@@ -868,7 +884,9 @@ sub onHeartbeatResponse()
   response = m.heartbeatApiTask.getField("response")
   callId = m.heartbeatApiTask.getField("callId")
   if response = invalid or (response.error <> invalid and response.error <> "")
+    #if DEBUG
     print ">>> heartbeat/" + callId + ": failed"
+    #end if
     return
   end if
   if callId = "tvPair"
@@ -921,7 +939,9 @@ end sub
 ' ══════════════════════════════════════════════════════════════
 
 sub fetchBetweenGameData(gameId as String)
+  #if DEBUG
   print ">>> betweenGame: fetching data for gameId=" + gameId
+  #end if
   ' Use separate API task to avoid race condition with poll timer
   m.betweenApiTask.setField("callId", "betweenGameData")
   m.betweenApiTask.setField("requestMethod", "GET")
@@ -933,7 +953,9 @@ end sub
 sub onBetweenApiResponse()
   response = m.betweenApiTask.getField("response")
   if response = invalid or (response.error <> invalid and response.error <> "")
+    #if DEBUG
     print ">>> betweenGame: API error"
+    #end if
     return
   end if
   onBetweenGameDataResponse(response)
@@ -953,11 +975,15 @@ sub onBetweenGameDataResponse(response as Object)
   if response.hype <> invalid then phases.push("hype")
 
   if phases.count() = 0
+    #if DEBUG
     print ">>> betweenGame: no phases available, skipping"
+    #end if
     return
   end if
 
+  #if DEBUG
   print ">>> betweenGame: starting with " + Str(phases.count()).trim() + " phases"
+  #end if
   m.betweenGamePhases = phases
   m.betweenGamePhaseIdx = 0
   m.betweenGameActive = true
@@ -974,7 +1000,9 @@ sub renderBetweenGamePhase()
   if m.betweenGamePhaseIdx >= m.betweenGamePhases.count() then return
 
   phase = m.betweenGamePhases[m.betweenGamePhaseIdx]
+  #if DEBUG
   print ">>> betweenGame: rendering phase " + Str(m.betweenGamePhaseIdx + 1).trim() + "/" + Str(m.betweenGamePhases.count()).trim() + " = " + phase
+  #end if
 
   if phase = "podium"
     showBetweenPodiumScreen()
@@ -1049,7 +1077,9 @@ end sub
 
 sub exitBetweenGameMode()
   if not m.betweenGameActive then return
+  #if DEBUG
   print ">>> betweenGame: exiting"
+  #end if
   m.betweenGameActive = false
   m.betweenGamePhaseTimer.control = "stop"
   m.betweenGamePhases = []
@@ -1095,13 +1125,13 @@ end sub
 ' ══════════════════════════════════════════════════════════════
 
 sub startKeepAwake()
-  ' Screensaver prevention via ECP self-ping every 60s.
-  ' roAppManager is MAIN/TASK-only — cannot be used here on render thread.
-  ' SetNowPlayingContentMetaData and UpdateLastKeyPressTime are called from
-  ' KeepAwakeTask (task thread) instead.
+  ' KeepAwakeTask runs the memory monitor + heartbeat for our watchdog.
+  ' (No more UpdateLastKeyPressTime — that API is no longer permitted by cert.)
   m.keepAwakeTask = m.top.findNode("keepAwakeTask")
   m.keepAwakeTask.control = "run"
-  print ">>> keepAwake: task started (audio loop + UpdateLastKeyPressTime)"
+  #if DEBUG
+  print ">>> keepAwake: task started (memory monitor + heartbeat)"
+  #end if
 end sub
 
 sub onKeepAliveWatchdog()
@@ -1109,7 +1139,9 @@ sub onKeepAliveWatchdog()
   ' control field still shows "run" (OS can kill thread without updating it).
   currentCount = m.keepAwakeTask.pingCount
   if currentCount = m.lastPingCount
+    #if DEBUG
     print ">>> watchdog: KeepAwakeTask heartbeat stalled (count=" + str(currentCount) + "), restarting"
+    #end if
     m.keepAwakeTask.control = "stop"
     m.keepAwakeTask.control = "run"
   end if
@@ -1130,7 +1162,9 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
   if key = "right" or key = "left" or key = "up" or key = "down" then return true
 
   if press
+    #if DEBUG
     print ">>> Scene.onKeyEvent: key=" + key + " press=true"
+    #end if
   end if
   if not press then return false
 
@@ -1175,21 +1209,27 @@ sub ensureSignageRotation()
 end sub
 
 sub startSignageRotation()
+  #if DEBUG
   print ">>> signage: startRotation speed=" + Str(m.signageRotationSpeed).trim() + " slides=" + Str(m.signageSlides.count()).trim() + " idx=" + Str(m.signageCurrentIndex).trim()
+  #end if
   m.signageTimer.duration = m.signageRotationSpeed
   m.signageTimer.control = "start"
   m.signageTimerRunning = true
 end sub
 
 sub stopSignageRotation()
+  #if DEBUG
   print ">>> signage: stopRotation"
+  #end if
   m.signageTimer.control = "stop"
   m.signageTimerRunning = false
 end sub
 
 sub onSignageRotation()
   m.signageCurrentIndex = (m.signageCurrentIndex + 1) mod 10000
+  #if DEBUG
   print ">>> signage: onRotation newIdx=" + Str(m.signageCurrentIndex).trim() + " screen=" + m.currentScreen
+  #end if
   ' Push new slide index to whichever screen is currently showing
   if m.currentScreen = "idleScreen"
     m.screens.idleScreen.setField("signageIndex", m.signageCurrentIndex)
@@ -1212,7 +1252,9 @@ sub advanceSignageIndex()
   ' Advance signage index by 1 per screen render (matches web behavior)
   if m.signageSlides.count() > 0
     m.signageCurrentIndex = (m.signageCurrentIndex + 1) mod 10000
+    #if DEBUG
     print ">>> signage: advanceIndex newIdx=" + Str(m.signageCurrentIndex).trim()
+    #end if
   end if
 end sub
 

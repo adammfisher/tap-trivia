@@ -175,6 +175,12 @@ function generateSplashScreen() {
   ctx.fillText('Live Bar Trivia', 960, 600);
 
   save(c, 'splash-screen-fhd.png');
+
+  // HD splash (1280×720) — required by Roku cert when manifest declares
+  // splash_screen_hd; downscaled from FHD so visuals stay identical.
+  const hd = createCanvas(1280, 720);
+  hd.getContext('2d').drawImage(c, 0, 0, 1280, 720);
+  save(hd, 'splash-screen-hd.png');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -208,6 +214,12 @@ function generateChannelPoster() {
   ctx.fillText('Live Bar Trivia', 270, 240);
 
   save(c, 'channel-poster.png');
+
+  // HD channel poster (290×218) — required by Roku cert when manifest
+  // declares mm_icon_focus_hd; downscaled from FHD.
+  const hd = createCanvas(290, 218);
+  hd.getContext('2d').drawImage(c, 0, 0, 290, 218);
+  save(hd, 'channel-poster-hd.png');
 }
 
 // ═══════════════════════════════════════════════════════════

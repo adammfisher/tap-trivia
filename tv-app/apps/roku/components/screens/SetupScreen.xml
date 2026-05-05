@@ -319,30 +319,34 @@
             </Label>
           </Group>
           <Group translation="[82, 16]">
-            <Label text="Settings > Theme > Screensaver" color="#ffffffCC">
+            <Label text="Settings > Theme > Screen saver > Start time" color="#ffffffCC">
               <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
             </Label>
-            <Label text="Disabled" translation="[0, 32]" color="#00d4aa">
+            <Label text="Disable screen saver" translation="[0, 32]" color="#00d4aa">
               <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
             </Label>
           </Group>
         </Group>
 
-        <!-- Step 3: Auto Power Savings -->
+        <!-- Step 3: Auto Power Savings (not present on Express / Streaming Stick) -->
         <Group translation="[60, 365]">
-          <Rectangle color="#ffffff0D" width="880" height="90" />
+          <Rectangle color="#ffffff0D" width="880" height="110" />
           <Group translation="[20, 22]">
             <Rectangle color="#667eea" width="44" height="44" />
             <Label text="3" translation="[15, 8]" color="#ffffff">
               <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="22" />
             </Label>
           </Group>
-          <Group translation="[82, 16]">
+          <Group translation="[82, 12]">
             <Label text="Settings > System > Power > Auto Power Savings" color="#ffffffCC">
               <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
             </Label>
             <Label text="Off" translation="[0, 32]" color="#00d4aa">
               <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
+            </Label>
+            <Label text="Roku TV and Ultra only — skip if you have Express or Streaming Stick"
+                   translation="[0, 68]" color="#ffffff70">
+              <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="18" />
             </Label>
           </Group>
         </Group>
