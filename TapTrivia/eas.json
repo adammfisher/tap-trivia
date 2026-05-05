@@ -61,7 +61,7 @@
       },
       "android": {
         "serviceAccountKeyPath": "/Users/adamfisher/Desktop/secrets/taptrivia-32480d8da912.json",
-        "track": "internal",
+        "track": "production",
         "releaseStatus": "draft"
       }
     }
