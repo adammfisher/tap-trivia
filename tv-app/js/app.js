@@ -1318,7 +1318,6 @@
       firestickclassic: {
         device: 'Fire TV Stick',
         steps: [
-          'Settings → Preferences → Data Usage Monitoring → Still Watching → <strong>Off</strong>',
           'Settings → Display & Sounds → Screensaver → Start Time → <strong>Never</strong>'
         ]
       },
@@ -1344,7 +1343,7 @@
           <div class="tt-pi-modal-title">Recommended ${info.device} Settings</div>
           <div class="tt-pi-modal-desc">For uninterrupted 24/7 display, adjust these settings on your device:</div>
           <div class="tt-setup__pi-steps">${stepsHTML}</div>
-          <button class="tt-pi-got-it" id="tt-pi-got-it">Got It</button>
+          <button class="tt-pi-got-it" id="tt-pi-got-it" tabindex="0" autofocus>Got It</button>
         </div>
       </div>`;
   }
@@ -1352,10 +1351,32 @@
   function bindPlatformInstructionsEvents() {
     const overlay = document.getElementById('tt-pi-overlay');
     if (!overlay) return;
-    const close = () => { platformModalDismissed = true; overlay.remove(); };
+    const close = () => {
+      platformModalDismissed = true;
+      overlay.remove();
+      const locInput = document.getElementById('tt-setup-loc');
+      if (locInput) locInput.focus();
+    };
     document.getElementById('tt-pi-close')?.addEventListener('click', close);
-    document.getElementById('tt-pi-got-it')?.addEventListener('click', close);
+    const gotIt = document.getElementById('tt-pi-got-it');
+    gotIt?.addEventListener('click', close);
     overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    // Trap Enter/Space anywhere in the overlay so center button dismisses
+    overlay.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.keyCode === 13 || e.keyCode === 23 || e.keyCode === 66) {
+        e.preventDefault();
+        close();
+      }
+    });
+    // Autofocus Got It; double-rAF beats the input.focus() called earlier in the same tick
+    const focusGotIt = () => {
+      if (!document.body.contains(gotIt)) return;
+      try { document.activeElement?.blur?.(); } catch {}
+      gotIt?.focus({ preventScroll: true });
+    };
+    requestAnimationFrame(() => requestAnimationFrame(focusGotIt));
+    setTimeout(focusGotIt, 100);
+    setTimeout(focusGotIt, 400);
   }
 
   /** SETUP SCREEN — split-panel: Register (left) | Activate (right) */
@@ -1542,7 +1563,11 @@
       locInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && emailInput) emailInput.focus();
       });
-      locInput.focus();
+      // Don't auto-focus the location input if the platform-instructions modal is showing —
+      // it would steal focus from the Got It button on TV remotes
+      if (!document.getElementById('tt-pi-overlay')) {
+        locInput.focus();
+      }
     }
     if (emailInput) {
       emailInput.addEventListener('input', () => {

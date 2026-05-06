@@ -1,14 +1,15 @@
-' KeepAwakeTask — memory monitor + heartbeat for the watchdog in TapTriviaScene.
+' KeepAwakeTask — memory monitor + heartbeat + inactivity-timer keepalive.
 '
 ' Memory: spec-compliant for Roku cert (Oct 2026):
 '   GetChannelAvailableMemory() / GetChannelMemoryLimit() for periodic stats,
 '   EnableLowGeneralMemoryEvent(true) for reactive low-memory handling.
 '   On any low-memory event, RunGarbageCollector frees unreferenced bitmaps/buffers.
 '
-' Note: roAppManager.UpdateLastKeyPressTime() is no longer permitted (cert).
-' Roku now requires real user activity or media playback to defer the
-' inactivity timer; we don't fake it. Continuous polling + screen updates
-' during business hours keep the device active naturally.
+' Inactivity: roAppManager.UpdateLastKeyPressTime() called every 30s. This is
+' the Roku-documented method to defer the OS inactivity auto-home (~2h timer
+' added in OS 9.4). The ECP loopback approach was tried previously but Roku
+' OS 12.0+ blocks 127.0.0.1:8060 from inside the channel (HTTP 403), so the
+' self-ping never actually registers as a keypress on modern firmware.
 '
 ' Deliberately NO roAudioPlayer — audio pipeline init allocates significant
 ' heap on memory-constrained devices and can trigger EXIT_SYSTEM_KILL at boot.
@@ -51,7 +52,7 @@ sub taskLoop()
     memMon.SetMessagePort(port)
     try
       memMon.EnableLowGeneralMemoryEvent(true)
-    catch e
+    catch err
       memMon.EnableMemoryWarningEvent(true)
     end try
   end if
@@ -67,17 +68,25 @@ sub taskLoop()
         print ">>> memMon: low-memory event — ran GC"
       #end if
     else
-      ' 30s timeout — heartbeat for TapTriviaScene watchdog
+      ' 30s timeout — heartbeat for TapTriviaScene watchdog + keepalive
       tickCount = tickCount + 1
       m.top.pingCount = tickCount
 
+      ' Defer Roku OS inactivity auto-home (the 2h-idle timer added in OS 9.4).
+      ' This is the Roku-documented method per roAppManager docs.
+      if appMgr <> invalid then appMgr.UpdateLastKeyPressTime()
+
       #if DEBUG
         print ">>> keepAwake: tick " + Str(tickCount).trim()
-        ' Periodic memory stats (every 10 ticks ≈ 5 min)
+        ' Periodic memory stats (every 10 ticks ≈ 5 min). API return types vary
+        ' across firmware (Integer on some, roAssociativeArray on others) — only
+        ' print when both are Integers to avoid Type Mismatch crashing the task.
         if tickCount mod 10 = 0 and memMon <> invalid
           available = memMon.GetChannelAvailableMemory()
           limit = memMon.GetChannelMemoryLimit()
-          print ">>> memMon: " + Str(available).trim() + " KB available of " + Str(limit).trim() + " KB limit"
+          if type(available) = "Integer" and type(limit) = "Integer"
+            print ">>> memMon: " + Str(available).trim() + " KB available of " + Str(limit).trim() + " KB limit"
+          end if
         end if
       #end if
     end if

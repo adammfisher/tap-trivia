@@ -110,6 +110,7 @@ dependencies {
     // we use the io.github.react-native-tvos group for the react-android and hermes-android dependencies
 
     implementation("io.github.react-native-tvos:react-android")
+    implementation("androidx.core:core-ktx:1.12.0")
 
     if (hermesEnabled.toBoolean()) {
         implementation("io.github.react-native-tvos:hermes-android")

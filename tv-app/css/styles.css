@@ -2093,7 +2093,15 @@ body {
   transition: all .2s ease;
   letter-spacing: 0.5px;
 }
-.tt-pi-got-it:hover { transform: scale(1.03); filter: brightness(1.1); }
+.tt-pi-got-it:hover,
+.tt-pi-got-it:focus,
+.tt-pi-got-it:focus-visible {
+  transform: scale(1.08);
+  filter: brightness(1.2);
+  outline: 4px solid #ffd200 !important;
+  outline-offset: 6px;
+  box-shadow: 0 0 0 8px rgba(255,210,0,0.25), 0 8px 32px rgba(255,210,0,0.4) !important;
+}
 .tt-setup__pi-steps {
   display: flex;
   flex-direction: column;
