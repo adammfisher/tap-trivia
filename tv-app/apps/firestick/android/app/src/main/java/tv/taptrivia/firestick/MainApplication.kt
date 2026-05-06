@@ -1,6 +1,7 @@
 package tv.taptrivia.firestick
 
 import android.app.Application
+import android.webkit.WebView
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
@@ -37,5 +38,7 @@ class MainApplication : Application(), ReactApplication {
     if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
       load()
     }
+    // Enable chrome://inspect for the WebView so we can debug from desktop Chrome
+    WebView.setWebContentsDebuggingEnabled(true)
   }
 }

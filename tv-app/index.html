@@ -31,9 +31,23 @@
 
   <script>
     (function() {
+      // Detect low-end TV WebView wrappers (Fire TV Stick, Vega) — drop expensive
+      // CSS (animated orbs, backdrop blur) to avoid tile-memory exhaustion + GPU
+      // context loss. The page is already 1920×1080 on these devices, so the
+      // body-scale is also unnecessary work.
+      var params = new URLSearchParams(window.location.search);
+      var platform = params.get('platform') || '';
+      var isLowPowerTv = platform === 'firestickclassic' || platform === 'firestickvega';
+      if (isLowPowerTv) {
+        document.documentElement.classList.add('tt-low-power');
+      }
+
       function scaleToFit() {
+        // Layout is 1920×1080, visual viewport may be smaller (Fire TV is 960
+        // due to DPR=2). Scale from top-left so the page lines up with viewport.
         var sx = window.innerWidth / 1920;
         var sy = window.innerHeight / 1080;
+        document.body.style.transformOrigin = '0 0';
         document.body.style.transform = 'scale(' + sx + ',' + sy + ')';
       }
       scaleToFit();
@@ -54,6 +68,7 @@
         s.onload = function() { loadNext(i + 1); };
         document.body.appendChild(s);
       })(0);
+
     })();
   </script>
 </body>

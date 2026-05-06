@@ -48,6 +48,31 @@ body {
   overflow: hidden;
 }
 
+/* ─── Low-power TV: drop expensive effects ─────────────────────────
+   Fire TV Stick / Vega WebViews have only ~1 GB RAM and weak GPUs.
+   Animated blurred orbs + backdrop-filter cause tile-memory exhaustion
+   and GPU context loss on these devices, leading to white-spinner
+   recovery loops. .tt-low-power is set on <html> by index.html when
+   platform=firestickclassic or firestickvega. */
+
+/* TV: drop gradient text-clip on the logo (renders badly on AWV) */
+
+/* Right panel: fill its container width 100% + lifted 20px */
+.tt-low-power .tt-setup__panel--right { margin-top: -20px; }
+.tt-low-power .tt-setup__panel--right > * { width: 100%; }
+
+/* Persistent floating logo — its own layer above all UI including modals.
+   pointer-events:none so it never blocks clicks. Hidden on non-TV. */
+
+
+
+/* Hide the original in-flow header logo on TV — fixed one above replaces it */
+
+/* Pin the TapTrivia logo above all other UI permanently — same on every
+   render (modal up, modal dismissed, panel re-renders). High z-index keeps
+
+
+
 /* ─── Floating Orbs ───────────────────────────────────────────── */
 /* v4 lines 60-66, sizes 2× */
 .tt-orb {
@@ -1741,6 +1766,42 @@ body {
   width: 100%;
   max-width: 520px;
 }
+
+/* TV-only single-input code field — replaces the 5 boxes so the remote
+   only triggers the on-screen keyboard once. */
+.tt-setup__code-single {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  height: 108px;
+  margin: 0 auto 20px;
+  border-radius: 18px;
+  text-align: center;
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.1);
+  font-family: 'Fredoka', sans-serif;
+  font-size: 56px;
+  font-weight: 700;
+  color: #ffd200;
+  outline: none;
+  transition: all .2s ease;
+  letter-spacing: 14px;
+  padding: 0 0 0 14px; /* offset for letter-spacing */
+  text-transform: uppercase;
+  caret-color: #ffd200;
+}
+.tt-setup__code-single::placeholder {
+  color: rgba(255,255,255,0.18);
+  letter-spacing: 6px;
+  font-size: 36px;
+}
+.tt-setup__code-single:focus {
+  border-color: #ffd200;
+  background: rgba(255,255,255,0.08);
+  box-shadow: 0 0 0 6px rgba(255,210,0,0.25), 0 0 24px rgba(255,210,0,0.35);
+}
+.tt-setup__code-single--readonly { cursor: default; }
+
 .tt-setup__code-box {
   width: 88px; height: 108px;
   border-radius: 18px;
@@ -2017,7 +2078,7 @@ body {
 /* Platform instructions modal overlay */
 .tt-pi-overlay {
   position: fixed;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -2025,6 +2086,14 @@ body {
   background: rgba(0,0,0,0.7);
   backdrop-filter: blur(8px);
   animation: fadeIn .3s ease-out;
+}
+/* On TV the body has transform: scale(0.5), so 100vw/100vh would map to the
+   visual viewport (960×540) and the overlay would only fill the upper-left
+   quadrant. Sizing to body's layout coords (1920×1080) makes it fill the
+   full screen after the scale. */
+.tt-low-power .tt-pi-overlay {
+  width: 1920px !important;
+  height: 1080px !important;
 }
 .tt-pi-overlay--hidden {
   display: none;
@@ -2095,12 +2164,13 @@ body {
 }
 .tt-pi-got-it:hover,
 .tt-pi-got-it:focus,
-.tt-pi-got-it:focus-visible {
+.tt-pi-got-it:focus-visible,
+.tt-pi-got-it.tt-pi-got-it--armed {
   transform: scale(1.08);
   filter: brightness(1.2);
-  outline: 4px solid #ffd200 !important;
+  outline: 4px solid #00d4aa !important;
   outline-offset: 6px;
-  box-shadow: 0 0 0 8px rgba(255,210,0,0.25), 0 8px 32px rgba(255,210,0,0.4) !important;
+  box-shadow: 0 0 0 8px rgba(0,212,170,0.3), 0 8px 32px rgba(0,212,170,0.5) !important;
 }
 .tt-setup__pi-steps {
   display: flex;

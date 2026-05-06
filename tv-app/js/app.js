@@ -71,6 +71,12 @@
   const tvPlatformAnalytics = _platformAnalyticsMap[tvPlatform] || (tvPlatform ? tvPlatform : 'web');
   let platformModalDismissed = false;
 
+  // True when running inside a TV platform wrapper (Fire TV / Vega / etc.).
+  // On TV, never auto-focus text inputs — focusing an input pops up the on-screen
+  // keyboard before the user has even seen the screen. D-pad navigation handles
+  // movement to inputs explicitly.
+  const isTvPlatform = () => Boolean(tvPlatform);
+
   // Keep-alive for Fire TV Vega: play a tiny silent video to prevent screensaver.
   // The idle manager only inhibits screensaver during active media playback.
   // silence.mp4 is 16KB, cached for 1 year by CloudFront after first load.
@@ -1353,9 +1359,26 @@
     if (!overlay) return;
     const close = () => {
       platformModalDismissed = true;
+      // Move focus BEFORE removing the overlay — otherwise the focus drops
+      // to <body> on remove and the WebView's spatial-focus engine grabs
+      // the nearest focusable element (the location input → keyboard pops).
+      if (isTvPlatform()) {
+        // On TV: focus a button so no on-screen keyboard pops up.
+        // Try Register button first; fall back to the activate button or body.
+        const regBtn = document.getElementById('tt-setup-reg-btn');
+        const actBtn = document.getElementById('tt-setup-activate-btn');
+        const target = regBtn || actBtn;
+        if (target) {
+          target.focus({ preventScroll: true });
+        } else {
+          // No button available — blur active so spatial focus doesn't grab an input
+          try { document.activeElement && document.activeElement.blur && document.activeElement.blur(); } catch {}
+        }
+      } else {
+        const locInput = document.getElementById('tt-setup-loc');
+        if (locInput) locInput.focus();
+      }
       overlay.remove();
-      const locInput = document.getElementById('tt-setup-loc');
-      if (locInput) locInput.focus();
     };
     document.getElementById('tt-pi-close')?.addEventListener('click', close);
     const gotIt = document.getElementById('tt-pi-got-it');
@@ -1368,15 +1391,64 @@
         close();
       }
     });
-    // Autofocus Got It; double-rAF beats the input.focus() called earlier in the same tick
-    const focusGotIt = () => {
+    // Visual highlight that doesn't depend on :focus — the WebView's :focus
+    // styles only render after user activation, which a fresh app launch
+    // doesn't have. .tt-pi-got-it--armed paints the ring unconditionally.
+    gotIt.classList.add('tt-pi-got-it--armed');
+
+    // Try to grab keyboard focus too (so dpad-center fires native button click)
+    const grabFocus = () => {
       if (!document.body.contains(gotIt)) return;
-      try { document.activeElement?.blur?.(); } catch {}
-      gotIt?.focus({ preventScroll: true });
+      try { document.activeElement && document.activeElement.blur && document.activeElement.blur(); } catch {}
+      gotIt.focus({ preventScroll: true });
     };
-    requestAnimationFrame(() => requestAnimationFrame(focusGotIt));
-    setTimeout(focusGotIt, 100);
-    setTimeout(focusGotIt, 400);
+    grabFocus();
+    let attempts = 0;
+    const pollId = setInterval(() => {
+      attempts += 1;
+      if (!document.body.contains(gotIt) || attempts >= 50) {
+        clearInterval(pollId);
+        return;
+      }
+      if (document.activeElement !== gotIt) grabFocus();
+    }, 100);
+
+    // While the modal is up, treat ANY Enter/select/space keypress as a Got It
+    // click. Listen on multiple targets + multiple events (keydown/keyup/keypress)
+    // — different Fire TV models route the remote select button through different
+    // event paths, and we don't need focus to handle this manually.
+    const SELECT_KEYS = new Set(['Enter', ' ', 'Spacebar', 'Space', 'NumpadEnter']);
+    const SELECT_CODES = new Set([13, 23, 32, 66, 96]);
+    const tryClose = (e) => {
+      if (!document.body.contains(gotIt)) return false;
+      const isSelect =
+        SELECT_KEYS.has(e.key) ||
+        SELECT_CODES.has(e.keyCode) ||
+        SELECT_CODES.has(e.which) ||
+        e.code === 'Enter' || e.code === 'Space' || e.code === 'NumpadEnter';
+      if (!isSelect) return false;
+      try { e.preventDefault(); e.stopPropagation(); } catch {}
+      close();
+      return true;
+    };
+    const remove = () => {
+      window.removeEventListener('keydown', winKey, true);
+      window.removeEventListener('keyup', winKey, true);
+      window.removeEventListener('keypress', winKey, true);
+      document.removeEventListener('keydown', docKey, true);
+    };
+    const winKey = (e) => {
+      if (!document.body.contains(gotIt)) { remove(); return; }
+      tryClose(e);
+    };
+    const docKey = (e) => {
+      if (!document.body.contains(gotIt)) { remove(); return; }
+      tryClose(e);
+    };
+    window.addEventListener('keydown', winKey, true);
+    window.addEventListener('keyup', winKey, true);
+    window.addEventListener('keypress', winKey, true);
+    document.addEventListener('keydown', docKey, true);
   }
 
   /** SETUP SCREEN — split-panel: Register (left) | Activate (right) */
@@ -1479,12 +1551,13 @@
       const codeComplete = setupCode.every(c => c !== '');
       const isVerifying = setupCodeState === 'verifying';
 
+      // Single 5-char centered input — one input = one keyboard session,
+      // works the same on every platform (TV remote, mobile, desktop).
       let codeBoxesHTML = '';
-      for (let i = 0; i < 5; i++) {
-        const val = setupCode[i] || '';
-        const filledClass = val ? ' tt-setup__code-box--filled' : '';
-        const roClass = setupCodeAutoFilled ? ' tt-setup__code-box--readonly' : '';
-        codeBoxesHTML += `<input type="text" class="tt-setup__code-box${filledClass}${roClass}" data-code-idx="${i}" value="${val}" maxlength="2" ${setupCodeAutoFilled ? 'readonly' : ''} autocomplete="off">`;
+      {
+        const val = setupCode.join('');
+        const ro = setupCodeAutoFilled ? 'readonly' : '';
+        codeBoxesHTML = `<input type="text" id="tt-setup-code-single" class="tt-setup__code-single${setupCodeAutoFilled ? ' tt-setup__code-single--readonly' : ''}" value="${val}" maxlength="5" ${ro} autocomplete="off" placeholder="• • • • •">`;
       }
 
       let errorHTML = '';
@@ -1563,9 +1636,11 @@
       locInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && emailInput) emailInput.focus();
       });
-      // Don't auto-focus the location input if the platform-instructions modal is showing —
-      // it would steal focus from the Got It button on TV remotes
-      if (!document.getElementById('tt-pi-overlay')) {
+      // Don't auto-focus the location input on TV platforms — it pops up the
+      // on-screen keyboard before the user has seen the screen. D-pad lets
+      // them navigate to it intentionally. Also skip if the platform modal
+      // is showing (the modal owns focus).
+      if (!isTvPlatform() && !document.getElementById('tt-pi-overlay')) {
         locInput.focus();
       }
     }
@@ -1603,39 +1678,54 @@
       });
     }
 
-    // Code box inputs
-    const codeBoxes = document.querySelectorAll('.tt-setup__code-box');
-    codeBoxes.forEach((box, i) => {
-      if (box.hasAttribute('readonly')) return;
-      box.addEventListener('input', (e) => {
-        const char = e.target.value.slice(-1).toUpperCase();
-        if (char && !/^[A-Z0-9]$/.test(char)) {
-          e.target.value = setupCode[i] || '';
-          return;
-        }
-        setupCode[i] = char;
-        e.target.value = char;
-        // Update styling
-        if (char) {
-          box.classList.add('tt-setup__code-box--filled');
-          if (i < 4) codeBoxes[i + 1].focus();
-        } else {
-          box.classList.remove('tt-setup__code-box--filled');
-        }
-        updateActivateButton();
+    // Code input — TV uses single input, web uses 5 boxes
+    const singleCodeInput = document.getElementById('tt-setup-code-single');
+    if (singleCodeInput) {
+      if (!singleCodeInput.hasAttribute('readonly')) {
+        singleCodeInput.addEventListener('input', (e) => {
+          const cleaned = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
+          e.target.value = cleaned;
+          for (let i = 0; i < 5; i++) setupCode[i] = cleaned[i] || '';
+          updateActivateButton();
+        });
+        singleCodeInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') activateTV();
+        });
+      }
+      // Don't auto-focus on TV — pops the on-screen keyboard before user sees screen
+    } else {
+      const codeBoxes = document.querySelectorAll('.tt-setup__code-box');
+      codeBoxes.forEach((box, i) => {
+        if (box.hasAttribute('readonly')) return;
+        box.addEventListener('input', (e) => {
+          const char = e.target.value.slice(-1).toUpperCase();
+          if (char && !/^[A-Z0-9]$/.test(char)) {
+            e.target.value = setupCode[i] || '';
+            return;
+          }
+          setupCode[i] = char;
+          e.target.value = char;
+          if (char) {
+            box.classList.add('tt-setup__code-box--filled');
+            if (i < 4) codeBoxes[i + 1].focus();
+          } else {
+            box.classList.remove('tt-setup__code-box--filled');
+          }
+          updateActivateButton();
+        });
+        box.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && !setupCode[i] && i > 0) {
+            codeBoxes[i - 1].focus();
+          }
+          if (e.key === 'Enter') activateTV();
+        });
       });
-      box.addEventListener('keydown', (e) => {
-        if (e.key === 'Backspace' && !setupCode[i] && i > 0) {
-          codeBoxes[i - 1].focus();
+      // Auto-focus first empty code box if not auto-filled (web only)
+      if (!setupCodeAutoFilled && codeBoxes.length > 0) {
+        const firstEmpty = setupCode.findIndex(c => !c);
+        if (firstEmpty >= 0 && !document.getElementById('tt-setup-loc')) {
+          codeBoxes[firstEmpty].focus();
         }
-        if (e.key === 'Enter') activateTV();
-      });
-    });
-    // Auto-focus first empty code box if not auto-filled
-    if (!setupCodeAutoFilled && codeBoxes.length > 0) {
-      const firstEmpty = setupCode.findIndex(c => !c);
-      if (firstEmpty >= 0 && !document.getElementById('tt-setup-loc')) {
-        codeBoxes[firstEmpty].focus();
       }
     }
 
