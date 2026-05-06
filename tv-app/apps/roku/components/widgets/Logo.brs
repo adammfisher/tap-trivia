@@ -47,11 +47,15 @@ sub setLogoFontSize(fontSize as Integer)
   triviaFont.size = fontSize
   m.triviaLabel.font = triviaFont
 
-  ' Position Trivia after Tap with normal word spacing
+  ' Position Trivia after Tap with normal word spacing.
+  ' boundingRect() returns 0 right after the font is assigned (font loads
+  ' async), so the empirical-ratio fallback below is the path that usually
+  ' fires. "Tap" in Fredoka-Bold is ~1.78 × fontSize wide; +0.15 × fontSize
+  ' word spacing → 1.93 total. Old 1.4 caused Trivia to overlap Tap.
   bounds = m.tapLabel.boundingRect()
   if bounds.width > 0
-    m.triviaLabel.translation = [bounds.width + Int(fontSize * 0.2), 0]
+    m.triviaLabel.translation = [bounds.width + Int(fontSize * 0.18), 0]
   else
-    m.triviaLabel.translation = [Int(fontSize * 1.4), 0]
+    m.triviaLabel.translation = [Int(fontSize * 1.93), 0]
   end if
 end sub

@@ -157,19 +157,39 @@ sub renderSlide(index as Integer)
 end sub
 
 sub renderDefault()
-  ' Note: wrapper already swapped by renderSlide before calling here
+  ' Default TapTrivia branded slide — shown when bar has no signage configured.
+  ' Mirrors web tv-app's `_default_cta` panel: brain emoji + label + headline + subtitle.
+  ' Panel header (QR + bar code) at top is provided by SignagePanel.xml.
   m.templateLabel.visible = false
   m.panelHeader.visible = true
 
-  headline = addLabel(m.contentWrapper, "Play TapTrivia!", 0, 0, 880)
-  headline.font = makeFont("Fredoka-Bold", 48)
-  headline.color = "#f0f0f0"
+  yPos = 0
 
-  body = addLabel(m.contentWrapper, "Live trivia every 15 minutes - play free on your phone!", 0, 60, 880)
-  body.font = makeFont("Outfit-Regular", 28)
-  body.color = "#ffffffE6"
-  body.wrap = true
-  body.maxLines = 4
+  ' Brain emoji 🧠 (1f9e0) at lg size (100x100), horizontally centered in 880px panel.
+  ePoster = CreateObject("roSGNode", "Poster")
+  ePoster.uri = "pkg:/images/emoji-lg-1f9e0.png"
+  ePoster.width = 100
+  ePoster.height = 100
+  ePoster.translation = [390, yPos]
+  m.contentWrapper.appendChild(ePoster)
+  yPos = yPos + 120
+
+  labelL = addLabel(m.contentWrapper, "EVERY 15 MINUTES", 0, yPos, 880)
+  labelL.font = makeFont("Outfit-Bold", 22)
+  labelL.color = "#667eea"
+  labelL.horizAlign = "center"
+  yPos = yPos + 42
+
+  headline = addLabel(m.contentWrapper, "Play TapTrivia!", 0, yPos, 880)
+  headline.font = makeFont("Fredoka-Bold", 56)
+  headline.color = "#f0f0f0"
+  headline.horizAlign = "center"
+  yPos = yPos + 72
+
+  subL = addLabel(m.contentWrapper, "Free to play · Win prizes · Have fun", 0, yPos, 880)
+  subL.font = makeFont("Outfit-Regular", 26)
+  subL.color = "#ffffff99"
+  subL.horizAlign = "center"
 end sub
 
 ' ══════════════════════════════════════════════════════════════

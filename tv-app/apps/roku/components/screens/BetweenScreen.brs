@@ -54,23 +54,20 @@ end sub
 sub onSignageSlidesChanged(event as Object)
   slides = event.getData()
   if slides = invalid then slides = []
-  m.hasSignage = (slides.count() > 0)
-  if m.hasSignage
-    barCode = m.top.getField("barCode")
-    barName = m.top.getField("barName")
-    m.signagePanel.setField("barCode", barCode)
-    m.signagePanel.setField("barName", barName)
-    m.signagePanel.setField("barLogoUrl", m.top.getField("barLogoUrl"))
-    m.signagePanel.setField("signageSlides", slides)
-    m.signagePanel.setField("signageIndex", m.top.getField("signageIndex"))
-    m.signagePanel.visible = true
-    m.rightPanelBg.visible = true
-    m.qrBadge.visible = false
-  else
-    m.signagePanel.visible = false
-    m.rightPanelBg.visible = false
-    m.qrBadge.visible = true
-  end if
+  ' Always show the signage panel — when the bar has no signage, the panel
+  ' falls through to renderDefault() which shows TapTrivia branded content
+  ' (matches web tv-app behavior).
+  m.hasSignage = true
+  barCode = m.top.getField("barCode")
+  barName = m.top.getField("barName")
+  m.signagePanel.setField("barCode", barCode)
+  m.signagePanel.setField("barName", barName)
+  m.signagePanel.setField("barLogoUrl", m.top.getField("barLogoUrl"))
+  m.signagePanel.setField("signageSlides", slides)
+  m.signagePanel.setField("signageIndex", m.top.getField("signageIndex"))
+  m.signagePanel.visible = true
+  m.rightPanelBg.visible = true
+  m.qrBadge.visible = false
 end sub
 
 ' ── Local interpolation tick (1s) ──

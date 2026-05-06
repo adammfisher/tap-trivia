@@ -59,6 +59,10 @@ sub init()
     m.modalVisible = true
   end if
 
+  ' Take focus on this group so OK keypresses reach onKeyEvent reliably
+  ' (otherwise the parent scene may keep focus and absorb the keystroke).
+  m.top.setFocus(true)
+
   ' ── Set fonts from BRS (XML <Font> children not rendering) ──
   #if DEBUG
   print ">>> SetupScreen.init() about to fixAllLabelFonts"
@@ -264,13 +268,19 @@ sub updateCodeDisplay()
 end sub
 
 sub updateFocusVisuals()
+  ' While the recommended-settings modal is up, suppress all panel/field
+  ' focus highlights — the modal's "Got It" button is the only interactive
+  ' target, and showing focus on the bar-name field underneath makes users
+  ' think that's what's selected.
+  modalUp = m.modalVisible = true
+
   ' ── Left panel ── (swap Poster URIs for focus states)
   locFieldUri = "pkg:/images/input-field-bg.png"
   emailFieldUri = "pkg:/images/input-field-bg.png"
   regBtnUri = "pkg:/images/btn-gold.png"
   leftPanelUri = "pkg:/images/setup-panel-bg.png"
 
-  if m.focusArea = "left"
+  if m.focusArea = "left" and not modalUp
     leftPanelUri = "pkg:/images/setup-panel-bg-focused.png"
     if m.focusField = "loc"
       locFieldUri = "pkg:/images/input-field-bg-focused.png"
@@ -289,7 +299,7 @@ sub updateFocusVisuals()
   ' ── Right panel ──
   rightPanelUri = "pkg:/images/setup-panel-bg.png"
 
-  if m.focusArea = "right"
+  if m.focusArea = "right" and not modalUp
     rightPanelUri = "pkg:/images/setup-panel-bg-focused.png"
     if m.focusField = "activateBtn"
       m.activateBtn.uri = "pkg:/images/btn-green-focused.png"
@@ -303,7 +313,7 @@ sub updateFocusVisuals()
   m.rightPanel.getChild(0).uri = rightPanelUri
 
   ' ── Code field focus highlight ──
-  if m.focusArea = "right" and m.focusField = "codeInput"
+  if m.focusArea = "right" and m.focusField = "codeInput" and not modalUp
     m.codeFieldBg.uri = "pkg:/images/input-field-bg-focused.png"
   else
     m.codeFieldBg.uri = "pkg:/images/input-field-bg.png"
@@ -363,6 +373,7 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
     if key = "OK"
       m.settingsModal.visible = false
       m.modalVisible = false
+      updateFocusVisuals()
     end if
     return true
   end if
