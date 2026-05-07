@@ -7,9 +7,10 @@
   </interface>
 
   <children>
-    <!-- Static background gradient — 1280x720 native to device resolution, no bitmap.big warnings -->
-    <Poster id="bgGradient" uri="pkg:/images/bg-gradient.png"
-            width="1920" height="1080" loadDisplayMode="scaleToFit" />
+    <!-- Animated background gradient (video plane behind UI). Doubles as
+         media-activity keepalive — Roku OS counts active video playback
+         toward "channel activity" and defers the inactivity auto-home. -->
+    <Video id="bgVideo" width="1920" height="1080" visible="true" enableUI="false" />
 
     <!-- Screen container — all screens layered here, toggle visibility -->
     <Group id="screenContainer">

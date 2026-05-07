@@ -122,11 +122,39 @@ sub init()
   m.keepAliveWatchdog.observeField("fire", "onKeepAliveWatchdog")
   m.keepAliveWatchdog.control = "start"
 
-  ' Background is now a static Poster (bg-gradient.png) — no video decoder needed.
+  ' ── Animated background video (also serves as media-activity keepalive) ──
+  ' Looping bg-gradient.mp4 keeps the Roku OS inactivity timer from firing —
+  ' active video playback registers as channel activity, deferring the
+  ' ~2h auto-home indefinitely. Cert-clean: no fake input simulation.
+  m.bgVideo = m.top.findNode("bgVideo")
+  if m.bgVideo <> invalid
+    m.bgVideo.content = CreateObject("roSGNode", "ContentNode")
+    m.bgVideo.content.url = "pkg:/images/bg-gradient.mp4"
+    m.bgVideo.content.streamFormat = "mp4"
+    m.bgVideo.loop = true
+    m.bgVideo.control = "play"
+    m.bgVideo.enableUI = false
+    ' Recovery from EOS/error: some firmware drops looping playback after
+    ' extended uptime; observer prebuffers + replays so keepalive survives.
+    m.bgVideo.observeField("state", "onBgVideoState")
+  end if
 
   ' ── Load config and initialize ──
   loadConfig()
   doInit()
+end sub
+
+sub onBgVideoState()
+  if m.bgVideo = invalid then return
+  state = m.bgVideo.state
+  if state = "finished" or state = "error" or state = "stopped"
+    #if DEBUG
+    print ">>> bgVideo: state=" + state + " — restarting"
+    #end if
+    m.bgVideo.control = "stop"
+    m.bgVideo.control = "prebuffer"
+    m.bgVideo.control = "play"
+  end if
 end sub
 
 ' ══════════════════════════════════════════════════════════════

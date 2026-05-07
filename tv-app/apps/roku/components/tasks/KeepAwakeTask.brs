@@ -1,15 +1,13 @@
-' KeepAwakeTask — memory monitor + heartbeat + inactivity-timer keepalive.
+' KeepAwakeTask — memory monitor + heartbeat for the watchdog in TapTriviaScene.
 '
 ' Memory: spec-compliant for Roku cert (Oct 2026):
 '   GetChannelAvailableMemory() / GetChannelMemoryLimit() for periodic stats,
 '   EnableLowGeneralMemoryEvent(true) for reactive low-memory handling.
 '   On any low-memory event, RunGarbageCollector frees unreferenced bitmaps/buffers.
 '
-' Inactivity: roAppManager.UpdateLastKeyPressTime() called every 30s. This is
-' the Roku-documented method to defer the OS inactivity auto-home (~2h timer
-' added in OS 9.4). The ECP loopback approach was tried previously but Roku
-' OS 12.0+ blocks 127.0.0.1:8060 from inside the channel (HTTP 403), so the
-' self-ping never actually registers as a keypress on modern firmware.
+' Inactivity keepalive is handled outside this task — bg-gradient.mp4 looping
+' Video node in TapTriviaScene provides continuous media activity that defers
+' the OS auto-home timer. UpdateLastKeyPressTime was removed (cert flagged it).
 '
 ' Deliberately NO roAudioPlayer — audio pipeline init allocates significant
 ' heap on memory-constrained devices and can trigger EXIT_SYSTEM_KILL at boot.
@@ -68,13 +66,9 @@ sub taskLoop()
         print ">>> memMon: low-memory event — ran GC"
       #end if
     else
-      ' 30s timeout — heartbeat for TapTriviaScene watchdog + keepalive
+      ' 30s timeout — heartbeat for TapTriviaScene watchdog
       tickCount = tickCount + 1
       m.top.pingCount = tickCount
-
-      ' Defer Roku OS inactivity auto-home (the 2h-idle timer added in OS 9.4).
-      ' This is the Roku-documented method per roAppManager docs.
-      if appMgr <> invalid then appMgr.UpdateLastKeyPressTime()
 
       #if DEBUG
         print ">>> keepAwake: tick " + Str(tickCount).trim()
