@@ -8,7 +8,7 @@
   "scripts": {
     "clean": "rm -rf node_modules buildinfo.json dist build",
     "start": "react-native start",
-    "build:release": "react-native build-vega --build-type Release",
+    "build:release": "react-native build-vega --build-type Release --build-number 1",
     "build:debug": "react-native build-vega --build-type Debug",
     "build": "npm run build:release",
     "run:vvd": "vega run-app build/aarch64-release/*.vpkg tv.taptrivia.firestick.main -d VirtualDevice",
