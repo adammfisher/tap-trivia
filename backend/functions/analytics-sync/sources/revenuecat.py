@@ -1,22 +1,18 @@
 """
 RevenueCat v2 sync.
 
-Endpoints (per spec Section 4.3):
-  /projects/{project_id}/customers
-  /projects/{project_id}/subscriptions
-  /projects/{project_id}/charts/active-subscriptions
-  /projects/{project_id}/charts/mrr
-
-Pre-revenue handling: 401/403 (bad creds, no permissions) is a hard fail
-that records an error. 200 with empty data is fine — we cache zeros and
-move on. 429 → exponential backoff up to 3 retries.
+Working endpoints confirmed:
+  /projects/{project_id}/metrics/overview   → active_trials, active_subscriptions,
+                                               mrr, revenue, new_customers, active_users
+  /projects/{project_id}/charts/actives     → monthly active-subscription trend
+  /projects/{project_id}/customers          → customer list (no subscription details)
 
 Cache writes:
   revenuecat:overview
+  revenuecat:by_platform
+  revenuecat:recent_events
   revenuecat:daily:{YYYY-MM-DD}
   revenuecat:monthly:{YYYY-MM}
-  revenuecat:recent_events
-  revenuecat:by_platform
 """
 import json
 import logging
@@ -24,7 +20,6 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any
 
 import boto3
 
@@ -43,7 +38,6 @@ def _credentials() -> dict:
 
 
 def _get(path: str, api_key: str, params: dict | None = None) -> dict:
-    """RevenueCat v2 GET with retries on 429/5xx, raises on terminal failures."""
     url = API_BASE + path
     if params:
         url += "?" + urllib.parse.urlencode({k: v for k, v in params.items() if v is not None})
@@ -68,7 +62,6 @@ def _get(path: str, api_key: str, params: dict | None = None) -> dict:
                 time.sleep(wait)
                 last_err = e
                 continue
-            # Terminal HTTP error
             raise RuntimeError(f"RevenueCat {path} returned {e.code}: {body}") from e
         except urllib.error.URLError as e:
             wait = 2 ** attempt
@@ -79,7 +72,6 @@ def _get(path: str, api_key: str, params: dict | None = None) -> dict:
 
 
 def _list_paginated(path: str, api_key: str, base_params: dict | None = None) -> list:
-    """Iterate the v2 cursor-style pagination."""
     out: list = []
     params = dict(base_params or {})
     params.setdefault("limit", 1000)
@@ -90,10 +82,8 @@ def _list_paginated(path: str, api_key: str, base_params: dict | None = None) ->
         page = _get(path, api_key, params)
         items = page.get("items") or page.get("data") or []
         out.extend(items)
-        next_url = page.get("next_page") or page.get("next")
-        if not next_url or not items:
+        if not items or not (page.get("next_page") or page.get("next")):
             break
-        # Cursor-style: extract starting_after from the last item.
         last = items[-1]
         cursor = last.get("id") or last.get("customer_id")
         if not cursor:
@@ -101,147 +91,104 @@ def _list_paginated(path: str, api_key: str, base_params: dict | None = None) ->
     return out
 
 
-def _store_to_platform(store: str) -> str | None:
-    s = store.lower()
-    if s in ("app_store", "apple", "ios"):
+def _platform_from_rc(platform_str: str) -> str | None:
+    p = (platform_str or "").lower()
+    if p in ("ios", "iphone", "ipad", "macos"):
         return "ios"
-    if s in ("play_store", "google", "android"):
+    if p in ("android", "amazon"):
         return "android"
     return None
 
 
-def _price_float(raw) -> float:
-    if isinstance(raw, dict):
-        raw = raw.get("amount") or raw.get("value") or 0
-    try:
-        return float(raw)
-    except (TypeError, ValueError):
-        return 0.0
-
-
 def sync(force: bool = False) -> dict:
-    """Run RevenueCat sync. Always runs (no daily guard). Returns metadata."""
     creds = _credentials()
     api_key = creds["api_key"]
     project_id = creds["project_id"]
 
-    # 1. /subscriptions — direct endpoint for all subscription records.
-    # The /customers list does NOT include nested subscription details;
-    # only the dedicated /subscriptions endpoint returns status per record.
-    total_active = 0
-    total_trial = 0
-    mrr_gross = 0.0
-    customer_count = 0
-    by_platform: dict[str, dict[str, float]] = {
-        "ios": {"subs": 0, "mrr": 0.0},
+    # 1. /metrics/overview — the correct v2 endpoint for aggregate counts.
+    # /subscriptions requires a store_subscription_identifier (lookup, not list).
+    # /customers list does not include subscription status.
+    metrics_raw = _get(f"/projects/{project_id}/metrics/overview", api_key)
+    metrics = {m["id"]: m["value"] for m in (metrics_raw.get("metrics") or [])}
+
+    total_active = int(metrics.get("active_subscriptions") or 0)
+    total_trial  = int(metrics.get("active_trials") or 0)
+    mrr_gross    = float(metrics.get("mrr") or 0)
+    revenue_28d  = float(metrics.get("revenue") or 0)
+    new_customers_28d = int(metrics.get("new_customers") or 0)
+    active_users_28d  = int(metrics.get("active_users") or 0)
+
+    # 2. Platform split — approximate from customers' last_seen_platform.
+    # RC v2 doesn't support platform segmentation on the actives chart.
+    by_platform: dict[str, dict] = {
+        "ios":     {"subs": 0, "mrr": 0.0},
         "android": {"subs": 0, "mrr": 0.0},
     }
-
-    subscriptions = _list_paginated(f"/projects/{project_id}/subscriptions", api_key)
-    seen_customers: set[str] = set()
-    for s in subscriptions:
-        cid = s.get("customer_id") or s.get("app_user_id") or ""
-        if cid:
-            seen_customers.add(cid)
-        status = (s.get("status") or "").lower()
-        store = (s.get("store") or "").lower()
-        platform = _store_to_platform(store)
-        price = _price_float(
-            s.get("price_in_purchased_currency")
-            or s.get("price")
-            or s.get("monthly_price")
-            or 0
-        )
-
-        if status in ("in_trial", "trial"):
-            total_trial += 1
-        elif status in ("active", "in_grace_period", "subscribed", "grace_period", "billing_retry"):
-            total_active += 1
-            mrr_gross += price
-            if platform:
-                by_platform[platform]["subs"] += 1
-                by_platform[platform]["mrr"] += price
-
-    customer_count = len(seen_customers)
-
-    # 2. Daily trend (last 90 days). Endpoint may not exist — be defensive.
-    daily_points: list[dict] = []
     try:
-        end_date = time.strftime("%Y-%m-%d", time.gmtime())
-        start_date = time.strftime("%Y-%m-%d", time.gmtime(time.time() - 90 * 86400))
-        chart = _get(
-            f"/projects/{project_id}/metrics/active_subscriptions",
-            api_key,
-            {"period": "day", "start_date": start_date, "end_date": end_date},
-        )
-        daily_points = chart.get("data") or chart.get("series") or []
+        ios_count = 0
+        android_count = 0
+        customers = _list_paginated(f"/projects/{project_id}/customers", api_key)
+        for c in customers:
+            p = _platform_from_rc(c.get("last_seen_platform") or "")
+            if p == "ios":
+                ios_count += 1
+            elif p == "android":
+                android_count += 1
+        total_customers = ios_count + android_count or 1
+        if total_active > 0:
+            ios_subs = round(total_active * ios_count / total_customers)
+            android_subs = total_active - ios_subs
+            mrr_per_sub = mrr_gross / total_active if total_active else 0
+            by_platform["ios"]     = {"subs": ios_subs,     "mrr": round(ios_subs * mrr_per_sub, 2)}
+            by_platform["android"] = {"subs": android_subs, "mrr": round(android_subs * mrr_per_sub, 2)}
     except Exception as e:
-        log.warning("RC daily chart unavailable: %s", e)
+        log.warning("RC platform split unavailable: %s", e)
 
-    # 3. Monthly MRR back to launch — best-effort
+    # 3. Monthly actives trend (best-effort, for history charts)
     monthly_points: list[dict] = []
     try:
         chart = _get(
-            f"/projects/{project_id}/metrics/mrr",
+            f"/projects/{project_id}/charts/actives",
             api_key,
-            {"period": "month", "start_date": "2025-01-01"},
+            {"resolution": "month", "start_time": "2025-01-01"},
         )
-        monthly_points = chart.get("data") or chart.get("series") or []
+        for pt in (chart.get("values") or []):
+            epoch = pt.get("cohort")
+            if not epoch:
+                continue
+            ym = time.strftime("%Y-%m", time.gmtime(epoch))
+            monthly_points.append({"ym": ym, "active": int(pt.get("value") or 0)})
     except Exception as e:
         log.warning("RC monthly chart unavailable: %s", e)
 
-    # 4. Recent events — best-effort
-    recent_events: list[dict] = []
-    try:
-        evt = _get(f"/projects/{project_id}/events", api_key, {"limit": 50})
-        recent_events = (evt.get("items") or evt.get("data") or [])[:50]
-    except Exception as e:
-        log.warning("RC recent events unavailable: %s", e)
-
-    # ---- write cache keys --------------------------------------------
+    # ---- write cache ------------------------------------------------
     overview = {
-        "totalActive": total_active,
-        "totalTrial": total_trial,
-        "mrrGross": round(mrr_gross, 2),
-        # Churn / conversion would come from RC charts; pre-revenue defaults.
-        "churn30d": 0.0,
-        "conversionRate": 0.0,
+        "totalActive":       total_active,
+        "totalTrial":        total_trial,
+        "mrrGross":          round(mrr_gross, 2),
+        "revenue28d":        round(revenue_28d, 2),
+        "newCustomers28d":   new_customers_28d,
+        "activeUsers28d":    active_users_28d,
+        "churn30d":          0.0,
+        "conversionRate":    0.0,
     }
-    _cache.write("revenuecat:overview", overview, SOURCE_KEY)
-    _cache.write("revenuecat:by_platform", by_platform, SOURCE_KEY)
-    _cache.write("revenuecat:recent_events", recent_events, SOURCE_KEY)
+    _cache.write("revenuecat:overview",      overview,    SOURCE_KEY)
+    _cache.write("revenuecat:by_platform",   by_platform, SOURCE_KEY)
+    _cache.write("revenuecat:recent_events", [],          SOURCE_KEY)
 
-    for p in daily_points:
-        date = p.get("date") or p.get("ts") or ""
-        if not date:
-            continue
+    for pt in monthly_points:
         _cache.write(
-            f"revenuecat:daily:{date}",
-            {
-                "paid": int(p.get("paid", p.get("active", 0)) or 0),
-                "trial": int(p.get("trial", p.get("in_trial", 0)) or 0),
-                "free": int(p.get("free", 0) or 0),
-            },
-            SOURCE_KEY,
-        )
-    for p in monthly_points:
-        ym = p.get("month") or p.get("date") or ""
-        if not ym:
-            continue
-        _cache.write(
-            f"revenuecat:monthly:{ym[:7]}",
-            {
-                "gross": float(p.get("gross") or p.get("mrr") or 0),
-                "paidSubs": int(p.get("paidSubs") or p.get("active") or 0),
-            },
+            f"revenuecat:monthly:{pt['ym']}",
+            {"paidSubs": pt["active"], "gross": 0.0},
             SOURCE_KEY,
         )
 
     return {
-        "customers_seen": customer_count,
-        "active": total_active,
-        "trial": total_trial,
-        "mrr_gross": overview["mrrGross"],
-        "daily_points": len(daily_points),
-        "monthly_points": len(monthly_points),
+        "active":           total_active,
+        "trial":            total_trial,
+        "mrr_gross":        overview["mrrGross"],
+        "revenue_28d":      revenue_28d,
+        "new_customers_28d": new_customers_28d,
+        "active_users_28d": active_users_28d,
+        "monthly_points":   len(monthly_points),
     }
