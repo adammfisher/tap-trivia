@@ -40,3 +40,7 @@ terraform/zip/
 # Python bytecode
 __pycache__/
 *.pyc
+
+# Android release signing — NEVER commit
+*.keystore
+tv-app/apps/firestick/android/key.properties
