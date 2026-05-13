@@ -42,7 +42,7 @@ function Dashboard() {
     const props = { range, compare, customRange, setTab };
     switch(tab) {
       case "Overview":    return <OverviewTab key={`ov-${refreshNonce}`} setBarDrill={setDrillBar} {...props}/>;
-      case "Subscribers": return <SubscribersTab key={`subs-${refreshNonce}`}/>;
+      case "Subscribers": return <SubscribersTab key={`subs-${refreshNonce}`} {...props}/>;
       case "Bars":        return <BarsTab key={`bars-${refreshNonce}`} drillBar={drillBar} setDrillBar={setDrillBar}/>;
       case "Signage":     return <SignageTab key={`sig-${refreshNonce}`} {...props}/>;
       case "Finance":     return <FinanceTab key={`fin-${refreshNonce}`} {...props}/>;

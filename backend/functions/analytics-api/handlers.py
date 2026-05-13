@@ -82,14 +82,43 @@ def handle_overview(event):
 # ─── /analytics/subscribers ─────────────────────────────────────────
 
 def handle_subscribers(event):
+    qs = event.get("queryStringParameters") or {}
+    range_ = qs.get("range", "mtd")
+    compare = qs.get("compare", "none")
+    try:
+        cur, _comp = _ranges.resolve(range_, compare, qs.get("start"), qs.get("end"))
+    except ValueError:
+        cur, _comp = _ranges.resolve("mtd", "none")
+    start_date, end_date = cur
+
     rc = _cache.read_payload("revenuecat:overview")
     if rc is None:
         return _resp.data_not_ready("revenuecat:overview")
     by_platform = _cache.read_payload("revenuecat:by_platform", default={}) or {}
-    events = _cache.read_payload("revenuecat:recent_events", default=[]) or []
+    all_events = _cache.read_payload("revenuecat:recent_events", default=[]) or []
+
+    # Filter events to the selected date range.
+    def _event_date(e) -> str:
+        return (e.get("occurred_at") or e.get("at") or e.get("created_at") or "")[:10]
+
+    start_str = start_date.isoformat()
+    end_str = end_date.isoformat()
+    events_in_range = [
+        e for e in all_events
+        if start_str <= _event_date(e) <= end_str
+    ] if all_events else []
+
+    # Count new paid/trial subs that started within the range from daily cache.
+    new_paid_in_range = 0
+    new_trial_in_range = 0
+    cur_d = start_date
+    while cur_d <= end_date:
+        day_data = _cache.read_payload(f"revenuecat:daily:{cur_d.isoformat()}", default={}) or {}
+        new_paid_in_range += int(day_data.get("paid", 0) or 0)
+        new_trial_in_range += int(day_data.get("trial", 0) or 0)
+        cur_d += timedelta(days=1)
 
     # Funnel: total players → played 1+ games → started trial → paid.
-    # Pre-revenue these are mostly zeros.
     total_users = 0
     played_one_plus = 0
     for p in _scan_all(
@@ -108,6 +137,10 @@ def handle_subscribers(event):
         "trial": trial,
         "free": max(0, total_users - paid - trial),
         "trialConversion": float(rc.get("conversionRate") or 0),
+        "mrr": float(rc.get("mrrGross") or 0),
+        "newPaidInRange": new_paid_in_range,
+        "newTrialInRange": new_trial_in_range,
+        "rangeLabel": range_,
         "platformSplit": {
             "ios":     by_platform.get("ios",     {"subs": 0, "mrr": 0}),
             "android": by_platform.get("android", {"subs": 0, "mrr": 0}),
@@ -122,7 +155,7 @@ def handle_subscribers(event):
             {"stage": "Active Paid",      "value": paid,
              "pct": (paid / total_users) if total_users else 0},
         ],
-        "recentEvents": events[:50],
+        "recentEvents": events_in_range[:50] if events_in_range else all_events[:50],
     })
 
 

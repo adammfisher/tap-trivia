@@ -101,16 +101,33 @@ def _list_paginated(path: str, api_key: str, base_params: dict | None = None) ->
     return out
 
 
+def _store_to_platform(store: str) -> str | None:
+    s = store.lower()
+    if s in ("app_store", "apple", "ios"):
+        return "ios"
+    if s in ("play_store", "google", "android"):
+        return "android"
+    return None
+
+
+def _price_float(raw) -> float:
+    if isinstance(raw, dict):
+        raw = raw.get("amount") or raw.get("value") or 0
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def sync(force: bool = False) -> dict:
     """Run RevenueCat sync. Always runs (no daily guard). Returns metadata."""
     creds = _credentials()
     api_key = creds["api_key"]
     project_id = creds["project_id"]
 
-    # 1. /customers — primary aggregate source. v2 doesn't expose a flat
-    # "list all subscriptions" endpoint; instead each customer carries
-    # nested subscription/entitlement records. For pre-revenue this is
-    # ~0 customers and very cheap to walk.
+    # 1. /subscriptions — direct endpoint for all subscription records.
+    # The /customers list does NOT include nested subscription details;
+    # only the dedicated /subscriptions endpoint returns status per record.
     total_active = 0
     total_trial = 0
     mrr_gross = 0.0
@@ -120,38 +137,32 @@ def sync(force: bool = False) -> dict:
         "android": {"subs": 0, "mrr": 0.0},
     }
 
-    customers = _list_paginated(f"/projects/{project_id}/customers", api_key)
-    customer_count = len(customers)
-    for cust in customers:
-        # v2 customer record may include `subscriptions` and/or
-        # `active_entitlements`. Be defensive about exact shape.
-        subs = cust.get("subscriptions") or []
-        if isinstance(subs, dict):
-            subs = subs.get("items") or []
-        for s in subs:
-            status = (s.get("status") or "").lower()
-            store = (s.get("store") or "").lower()
-            platform = (
-                "ios" if store in ("app_store", "apple", "ios")
-                else "android" if store in ("play_store", "google", "android")
-                else None
-            )
-            raw_price = s.get("price") or s.get("monthly_price") or 0
-            if isinstance(raw_price, dict):
-                raw_price = raw_price.get("amount") or 0
-            try:
-                price = float(raw_price)
-            except (TypeError, ValueError):
-                price = 0.0
+    subscriptions = _list_paginated(f"/projects/{project_id}/subscriptions", api_key)
+    seen_customers: set[str] = set()
+    for s in subscriptions:
+        cid = s.get("customer_id") or s.get("app_user_id") or ""
+        if cid:
+            seen_customers.add(cid)
+        status = (s.get("status") or "").lower()
+        store = (s.get("store") or "").lower()
+        platform = _store_to_platform(store)
+        price = _price_float(
+            s.get("price_in_purchased_currency")
+            or s.get("price")
+            or s.get("monthly_price")
+            or 0
+        )
 
-            if status in ("in_trial", "trial"):
-                total_trial += 1
-            elif status in ("active", "in_grace_period", "subscribed"):
-                total_active += 1
-                mrr_gross += price
-                if platform:
-                    by_platform[platform]["subs"] += 1
-                    by_platform[platform]["mrr"] += price
+        if status in ("in_trial", "trial"):
+            total_trial += 1
+        elif status in ("active", "in_grace_period", "subscribed", "grace_period", "billing_retry"):
+            total_active += 1
+            mrr_gross += price
+            if platform:
+                by_platform[platform]["subs"] += 1
+                by_platform[platform]["mrr"] += price
+
+    customer_count = len(seen_customers)
 
     # 2. Daily trend (last 90 days). Endpoint may not exist — be defensive.
     daily_points: list[dict] = []

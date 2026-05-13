@@ -1,5 +1,6 @@
 import { C } from "../lib/theme";
 import { useFetch } from "../lib/useFetch";
+import { apiRangeParams } from "../lib/ranges";
 import Panel from "../components/Panel";
 import Stat from "../components/Stat";
 import { SectionHeader } from "../components/Pill";
@@ -13,8 +14,17 @@ const EVENT_TYPES = {
   churn: {icon:"✕",  label:"Churned",      color:C.red},
 };
 
-export default function SubscribersTab() {
-  const { data, loading, error, retry } = useFetch("/analytics/subscribers", []);
+const RANGE_LABELS = {
+  mtd: "MTD", "30d": "30d", "90d": "90d", ytd: "YTD", "12mo": "12mo", "3y": "3y", custom: "range",
+};
+
+export default function SubscribersTab({ range = "mtd", compare = "none", customRange } = {}) {
+  const { range: r, start, end } = apiRangeParams(range, customRange);
+  const qs = new URLSearchParams({ range: r, compare });
+  if (start) qs.set("start", start);
+  if (end)   qs.set("end", end);
+
+  const { data, loading, error, retry } = useFetch(`/analytics/subscribers?${qs.toString()}`, [r, compare, start, end]);
 
   if (loading) return <div style={{padding:"28px 32px"}}><PanelLoading height={140} label="Subscribers"/></div>;
   if (error)   return <div style={{padding:"28px 32px"}}><PanelError error={error} retry={retry} label="Subscribers"/></div>;
@@ -26,14 +36,18 @@ export default function SubscribersTab() {
 
   return (
     <div style={{padding:"28px 32px"}}>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:14}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:14}}>
         <Stat label="Active Paid" value={(d.active || 0).toLocaleString()} sub="@ $2.99/mo" accent={C.grad.gold} icon="💎" big delay={0}/>
         <Stat label="In Trial" value={d.trial || 0} sub="7-day free trial" accent={C.grad.cyan} icon="⏱" big delay={0.05}/>
-        <Stat label="Free Players" value={(d.free || 0).toLocaleString()} sub="never subscribed" accent={C.grad.purple} icon="👤" big delay={0.1}/>
-        <Stat label="Trial → Paid" value={`${((d.trialConversion || 0)*100).toFixed(0)}%`} sub="last 30 days" accent={C.grad.green} icon="📈" big delay={0.15}/>
+        <Stat label="MRR" value={`$${(d.mrr || 0).toFixed(2)}`} sub="monthly recurring" accent={C.grad.green} icon="💵" big delay={0.1}/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:14}}>
+        <Stat label="Free Players" value={(d.free || 0).toLocaleString()} sub="never subscribed" accent={C.grad.purple} icon="👤" big delay={0.15}/>
+        <Stat label={`New Paid (${RANGE_LABELS[range] || range})`} value={(d.newPaidInRange || 0).toLocaleString()} sub="started subscription" accent={C.grad.gold} icon="✨" big delay={0.2}/>
+        <Stat label={`New Trials (${RANGE_LABELS[range] || range})`} value={(d.newTrialInRange || 0).toLocaleString()} sub="started trial" accent={C.grad.cyan} icon="🆕" big delay={0.25}/>
       </div>
 
-      <Panel delay={0.2} style={{marginBottom:14}}>
+      <Panel delay={0.3} style={{marginBottom:14}}>
         <SectionHeader title="Subscriber Funnel" sub="Where players are in the lifecycle" live/>
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
           {funnel.map((f, i) => (
@@ -58,7 +72,7 @@ export default function SubscribersTab() {
       </Panel>
 
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
-        <Panel delay={0.25}>
+        <Panel delay={0.35}>
           <SectionHeader title="Recent Subscriptions" sub="Live from RevenueCat"/>
           {events.length === 0 && (
             <div style={{padding:"24px 12px",fontSize:12,color:C.w(0.4),textAlign:"center"}}>No subscription events yet</div>
@@ -85,7 +99,7 @@ export default function SubscribersTab() {
           })}
         </Panel>
 
-        <Panel delay={0.3}>
+        <Panel delay={0.4}>
           <SectionHeader title="Platform Split" sub="iOS vs Android"/>
           {[
             {key:"ios",     label:"App Store",  icon:"", grad:C.grad.cyan, color:C.cyan},
