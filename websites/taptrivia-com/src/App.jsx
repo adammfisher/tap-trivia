@@ -60,7 +60,6 @@ const platformDataFull = [
   { name: "Samsung Tizen", color: "#1428A0" },
   { name: "LG webOS", color: "#A50034" },
   { name: "Apple TV", color: "#A2AAAD" },
-  { name: "Vizio SmartCast", color: "#1A1A1A" },
 ];
 
 const PlatformPill = ({ name, color, delay = 0, inView = true }) => (
@@ -255,7 +254,7 @@ const Features = () => {
   const features = [
     { icon:"🧠",title:"200,000+ Questions",desc:"Spanning 60 categories from pop culture and sports to history and science. New questions added regularly, including current events." },
     { icon:"📱",title:"Companion App",desc:"Guests play along on the free TapTrivia app for iOS and Android. See the code on the TV, open the app, and join in seconds." },
-    { icon:"📺",title:"Every Major TV Platform",desc:"Roku, Fire Stick, Samsung Tizen, LG webOS, Vizio SmartCast, Apple TV. Download free from any of their app stores." },
+    { icon:"📺",title:"Every Major TV Platform",desc:"Roku, Fire Stick, Samsung Tizen, LG webOS, Apple TV. Download free from any of their app stores." },
     { icon:"🎨",title:"Your Branding on Screen",desc:"Upload your logo and it displays between rounds. AI-powered background removal ensures a clean, professional look automatically." },
     { icon:"🏆",title:"Live Leaderboards",desc:"Real-time rankings update between every question. Points drain from 1,000 to 100 — the faster you answer, the more you score." },
     { icon:"⚡",title:"No Setup Costs",desc:"No special hardware. No contracts. No monthly fees. Use your existing TV and internet connection. Download the app and go." },
@@ -472,7 +471,7 @@ const FAQ = () => {
   const [ref, inView] = useInView();
   const faqs = [
     {q:"Is this actually free? What's the catch?",a:"There is no catch and no hidden cost. TapTrivia is free for venues. No trial that expires, no credit card on file, no fees ever. We cover our costs through the companion mobile app, not through venue charges."},
-    {q:"What equipment do I need?",a:"A TV and an internet connection. If your TV is a smart TV (Samsung, LG, or Vizio), search for TapTrivia in the built-in app store and install it. Otherwise, plug in a Fire Stick, Roku, or Apple TV and install TapTrivia from their app store. Open the app, enter your venue name, and you're live."},
+    {q:"What equipment do I need?",a:"A TV and an internet connection. If your TV is a smart TV (Samsung or LG), search for TapTrivia in the built-in app store and install it. Otherwise, plug in a Fire Stick, Roku, or Apple TV and install TapTrivia from their app store. Open the app, enter your venue name, and you're live."},
     {q:"How do guests play?",a:"Guests download the free TapTrivia companion app on iOS or Android, enter the venue code displayed on your TV, and they're in. Trivia runs every evening — a new round starts every 15 minutes."},
     {q:"Does someone on my staff need to run the trivia?",a:"No. Games run automatically every evening with no staff interaction required. Between rounds, your TV switches to displaying your digital signage — your logo, promotions, and event announcements. Just leave the TV on."},
     {q:"What kind of trivia questions are available?",a:"Over 200,000 questions across 60 categories — pop culture, sports, movies, music, history, science, geography, food, and more. Difficulty ranges from accessible to challenging, and new questions are added regularly including current events."},
