@@ -37,6 +37,8 @@ export function PlayingScreen({ navigation, route }: Props) {
     if (gamePhase === 'question' && answerResult) {
       navigation.replace('LockedIn', params);
     } else if (gamePhase === 'reveal') {
+      // Wait for server result before routing — same guard as LockedInScreen
+      if (answerResult && answerResult.correctAnswer === '') return;
       if (answerResult?.correct) {
         navigation.replace('Correct', params);
       } else {

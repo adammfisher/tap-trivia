@@ -279,10 +279,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
           correctIndex: g.rawQuestionData.correctIndex,
         };
         g.answerResult = answerResult;
-      } else if (answerResult && answerResult.correctIndex === undefined && g.rawQuestionData?.correctIndex !== undefined) {
-        // Edge case: reveal phase but correctIndex not yet set (from get-question data)
-        answerResult = { ...answerResult, correctIndex: g.rawQuestionData.correctIndex };
+      } else if (answerResult && answerResult.correctAnswer === '' && (answerResult.correctIndex === undefined || answerResult.correctIndex < 0) && g.rawQuestionData?.correctIndex !== undefined) {
+        // API result not yet received (slow network) or failed — derive correctness locally.
+        // correctAnswer === '' acts as a one-shot guard so this only runs once per reveal.
+        const correctIdx = g.rawQuestionData.correctIndex;
+        const isCorrect = answerResult.selectedIndex === correctIdx;
+        answerResult = {
+          ...answerResult,
+          correct: isCorrect,
+          pointsAwarded: isCorrect ? answerResult.lockedInPoints : 0,
+          correctAnswer: g.questionData?.answers[correctIdx] || '',
+          correctIndex: correctIdx,
+        };
         g.answerResult = answerResult;
+        // If pendingResult arrives later it will override via the first branch above
       }
     }
 
