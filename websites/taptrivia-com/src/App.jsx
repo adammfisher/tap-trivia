@@ -131,13 +131,7 @@ const HeroSection = ({ onNavigate }) => {
           Guests play along on a free companion app for iOS and Android. No hardware to buy. No fees of any kind.
         </p>
 
-        {/* Schedule callout */}
-        <div style={{ display:"inline-flex",alignItems:"center",gap:10,background:T.w(0.05),border:`1px solid ${T.w(0.08)}`,borderRadius:T.radius.pill,padding:"8px 20px",marginBottom:32,...anim(0.4) }}>
-          <span style={{ fontSize:14 }}>🌙</span>
-          <span style={{ fontFamily:"'Outfit',sans-serif",fontSize:14,color:T.w(0.6) }}>Trivia runs nightly <span style={{ color:T.green,fontWeight:600 }}>5 PM – 5 AM EST</span></span>
-          <span style={{ color:T.w(0.25),fontSize:13 }}>•</span>
-          <span style={{ fontFamily:"'Outfit',sans-serif",fontSize:14,color:T.w(0.45) }}>Your signage runs in the off hours</span>
-        </div>
+        <div style={{ marginBottom:32 }} />
 
         <div style={{ marginBottom:36,...anim(0.45) }}>
           <div style={{ fontFamily:"'DM Mono',monospace",fontSize:11,color:T.w(0.35),textTransform:"uppercase",letterSpacing:2,marginBottom:14 }}>Available free on</div>
@@ -230,7 +224,7 @@ const HowItWorks = () => {
   const steps = [
     { num:"1",icon:"📺",title:"Install the Free TV App",desc:"Search for TapTrivia in the Roku, Fire Stick, Samsung, LG, or Apple TV app store. Download it — it's free.",time:"1 minute" },
     { num:"2",icon:"📝",title:"Register Your Venue",desc:"Open the app on your TV and enter your venue name and email. You'll get a permanent venue code on screen instantly. No payment info — there is nothing to pay.",time:"30 seconds" },
-    { num:"3",icon:"🎉",title:"Guests Play Along",desc:"Your venue code displays on the TV. Guests see the code, open the free TapTrivia companion app on their phone, and join. Trivia runs automatically every evening from 5 PM to 5 AM — no staff attention required.",time:"Nightly" },
+    { num:"3",icon:"🎉",title:"Guests Play Along",desc:"Your venue code displays on the TV. Guests see the code, open the free TapTrivia companion app on their phone, and join. Trivia runs automatically — no staff attention required.",time:"Nightly" },
     { num:"4",icon:"🎨",title:"Customize Your Experience",desc:"Check the email you registered with — it has a link to your venue dashboard. Upload your logo, manage your digital signage, and view guest engagement stats. All free.",time:"Anytime" },
   ];
   return (
@@ -266,7 +260,7 @@ const Features = () => {
     { icon:"🏆",title:"Live Leaderboards",desc:"Real-time rankings update between every question. Points drain from 1,000 to 100 — the faster you answer, the more you score." },
     { icon:"⚡",title:"No Setup Costs",desc:"No special hardware. No contracts. No monthly fees. Use your existing TV and internet connection. Download the app and go." },
     { icon:"📊",title:"Venue Dashboard",desc:"See how many guests are playing, which nights are busiest, and what categories your audience enjoys — all from a simple web dashboard." },
-    { icon:"🔄",title:"Fully Automatic",desc:"Trivia runs every evening from 5 PM to 5 AM with no staff attention needed. During the day, your TV displays your digital signage — your logo, promotions, and announcements on a loop." },
+    { icon:"🔄",title:"Fully Automatic",desc:"Games run automatically with no staff attention needed. While trivia is live, your TV shows the game. Between rounds, it displays your digital signage — your logo, promotions, and announcements on a loop." },
   ];
   return (
     <section id="features" style={{ padding:"100px 24px",background:T.deepPurple,position:"relative" }}>
@@ -302,20 +296,42 @@ const SignageDemo = () => {
           <div style={{ display:"inline-block",fontFamily:"'DM Mono',monospace",fontSize:12,fontWeight:500,color:T.gold,textTransform:"uppercase",letterSpacing:2,marginBottom:12,background:"rgba(255,210,0,0.06)",padding:"6px 16px",borderRadius:T.radius.pill,border:"1px solid rgba(255,210,0,0.12)" }}>Free Digital Signage — Included</div>
           <h2 style={{ fontFamily:"'Fredoka',sans-serif",fontSize:"clamp(30px,5vw,48px)",fontWeight:700,color:"#fff",lineHeight:1.15,letterSpacing:-0.5,marginBottom:16 }}>Your Promotions. Your Logo.<br /><span style={{ background:T.grad.gold,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>On the Big Screen. For Free.</span></h2>
           <p style={{ fontFamily:"'Outfit',sans-serif",fontSize:17,color:T.w(0.5),lineHeight:1.6,maxWidth:620,margin:"0 auto" }}>
-            Most digital signage services charge $50–100 per month. With TapTrivia, it's built in at no cost. Between trivia rounds, your TV displays your logo and custom messages — event announcements, promotions, membership specials, or anything you want your guests to see. Update anytime from any device.
+            Most digital signage services charge $50–100 per month. With TapTrivia, it's built in at no cost. While trivia is live, your logo and custom messages appear in a dedicated panel visible to every guest watching the screen. Update anytime from any device.
           </p>
         </div>
         <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(340px, 1fr))",gap:32,alignItems:"start",opacity:inView?1:0,transform:inView?"translateY(0)":"translateY(24px)",transition:"all 0.7s ease 0.2s" }}>
           <div>
-            <div style={{ fontFamily:"'DM Mono',monospace",fontSize:11,color:T.w(0.3),textTransform:"uppercase",letterSpacing:1.5,marginBottom:10,paddingLeft:4 }}>Live Preview</div>
+            <div style={{ fontFamily:"'DM Mono',monospace",fontSize:11,color:T.w(0.3),textTransform:"uppercase",letterSpacing:1.5,marginBottom:10,paddingLeft:4 }}>In-Game Preview</div>
             <div style={{ background:"#0a0a1a",borderRadius:14,border:`2px solid ${T.w(0.08)}`,boxShadow:T.shadow.goldGlow,overflow:"hidden",aspectRatio:"16/9" }}>
-              <div style={{ height:"100%",background:T.grad.main,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"8%" }}>
-                <div style={{ width:"clamp(60px,10vw,100px)",height:"clamp(60px,10vw,100px)",borderRadius:"50%",background:"linear-gradient(135deg, #2a5298, #1e3c72)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"clamp(24px,4vw,44px)",fontFamily:"'Fredoka',sans-serif",fontWeight:700,color:"#fff",border:`3px solid ${T.w(0.15)}`,marginBottom:"clamp(8px,2vw,20px)",boxShadow:"0 4px 24px rgba(0,0,0,0.3)" }}>{venueName.charAt(0)||"V"}</div>
-                <div style={{ fontFamily:"'Fredoka',sans-serif",fontSize:"clamp(18px,3vw,32px)",fontWeight:700,color:"#fff",marginBottom:"clamp(6px,1.5vw,16px)",textAlign:"center" }}>{venueName||"Your Venue"}</div>
-                <div style={{ background:T.w(0.06),borderRadius:12,padding:"clamp(10px,2vw,20px)",border:`1px solid ${T.w(0.08)}`,width:"100%",maxWidth:400,textAlign:"center" }}>
-                  <div style={{ fontFamily:"'Outfit',sans-serif",fontSize:"clamp(9px,1.1vw,13px)",fontWeight:600,color:T.gold,textTransform:"uppercase",letterSpacing:1.5,marginBottom:6 }}>Featured</div>
-                  <div style={{ fontFamily:"'Outfit',sans-serif",fontSize:"clamp(13px,2vw,22px)",fontWeight:600,color:"#fff",lineHeight:1.3 }}>{headline||"Your promotion here"}</div>
-                  {details && <div style={{ fontFamily:"'Outfit',sans-serif",fontSize:"clamp(9px,1.1vw,13px)",color:T.w(0.4),marginTop:6 }}>{details}</div>}
+              <div style={{ height:"100%",background:T.grad.main,display:"flex" }}>
+                {/* Left: mock leaderboard */}
+                <div style={{ flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"4% 3%" }}>
+                  <div style={{ fontFamily:"'Fredoka',sans-serif",fontSize:"clamp(12px,1.8vw,20px)",fontWeight:700,color:"#fff",marginBottom:"3%" }}>🏆 Standings</div>
+                  {["QuizMaster","TriviaQueen","BigBrainSteve"].map((n,i) => (
+                    <div key={i} style={{ display:"flex",alignItems:"center",gap:"clamp(4px,0.6vw,8px)",padding:"clamp(3px,0.5vw,7px) clamp(6px,0.8vw,12px)",background:i===0?"rgba(255,210,0,0.08)":T.w(0.03),borderRadius:8,marginBottom:4,width:"100%",border:`1px solid ${i===0?"rgba(255,210,0,0.15)":T.w(0.04)}` }}>
+                      <span style={{ fontSize:"clamp(9px,1.1vw,14px)" }}>{["🥇","🥈","🥉"][i]}</span>
+                      <span style={{ fontFamily:"'Outfit',sans-serif",fontSize:"clamp(9px,1.1vw,13px)",fontWeight:600,color:"#fff",flex:1 }}>{n}</span>
+                      <span style={{ fontFamily:"'Fredoka',sans-serif",fontSize:"clamp(9px,1.1vw,13px)",fontWeight:700,color:i===0?T.gold:T.w(0.5) }}>{[8420,7150,6890][i]}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* Divider */}
+                <div style={{ width:1,background:T.w(0.08),flexShrink:0 }} />
+                {/* Right: signage panel */}
+                <div style={{ width:"32%",flexShrink:0,display:"flex",flexDirection:"column",padding:"4% 3%",background:T.w(0.02),gap:"4%" }}>
+                  <div style={{ display:"flex",alignItems:"center",gap:"clamp(4px,0.5vw,8px)" }}>
+                    <div style={{ width:"clamp(18px,2.5vw,30px)",height:"clamp(18px,2.5vw,30px)",borderRadius:"50%",background:"linear-gradient(135deg,#2a5298,#1e3c72)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"clamp(9px,1.1vw,14px)",fontFamily:"'Fredoka',sans-serif",fontWeight:700,color:"#fff",flexShrink:0 }}>{venueName.charAt(0)||"V"}</div>
+                    <div style={{ fontFamily:"'Outfit',sans-serif",fontSize:"clamp(8px,1vw,13px)",fontWeight:700,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{venueName||"Your Venue"}</div>
+                  </div>
+                  <div style={{ flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",gap:"clamp(2px,0.4vw,6px)" }}>
+                    <div style={{ fontFamily:"'Outfit',sans-serif",fontSize:"clamp(6px,0.75vw,10px)",fontWeight:600,color:T.gold,textTransform:"uppercase",letterSpacing:1 }}>Featured</div>
+                    <div style={{ fontFamily:"'Outfit',sans-serif",fontSize:"clamp(9px,1.1vw,15px)",fontWeight:600,color:"#fff",lineHeight:1.3 }}>{headline||"Your promotion here"}</div>
+                    {details && <div style={{ fontFamily:"'Outfit',sans-serif",fontSize:"clamp(7px,0.85vw,11px)",color:T.w(0.45),lineHeight:1.4 }}>{details}</div>}
+                  </div>
+                  <div style={{ background:T.w(0.06),borderRadius:6,padding:"clamp(4px,0.5vw,8px) clamp(6px,0.7vw,10px)",textAlign:"center" }}>
+                    <div style={{ fontFamily:"'Outfit',sans-serif",fontSize:"clamp(6px,0.7vw,10px)",color:T.w(0.4) }}>Join Trivia!</div>
+                    <div style={{ fontFamily:"'DM Mono',monospace",fontSize:"clamp(7px,0.85vw,11px)",color:T.green,fontWeight:700 }}>app.taptrivia.tv</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -400,7 +416,7 @@ const WhyFree = () => {
           </div>
           <div style={{ background:"rgba(0,212,170,0.04)",borderRadius:T.radius.lg,padding:"32px 28px",border:"1px solid rgba(0,212,170,0.1)" }}>
             <div style={{ fontFamily:"'Fredoka',sans-serif",fontSize:20,fontWeight:600,color:T.green,marginBottom:20 }}>TapTrivia</div>
-            {["$0. Not $0 for a trial. $0 forever.","Trivia every evening, 5 PM to 5 AM","Your signage runs all day when trivia is off","Instant scoring on every guest's phone","Digital signage included — also $0","Venue dashboard with engagement data"].map((t,i) => <div key={i} style={{ display:"flex",gap:10,alignItems:"flex-start",marginBottom:12,fontFamily:"'Outfit',sans-serif",fontSize:14,color:T.w(0.55),lineHeight:1.5 }}><span style={{ color:T.green,fontSize:16,flexShrink:0,marginTop:1 }}>✓</span>{t}</div>)}
+            {["$0. Not $0 for a trial. $0 forever.","Trivia runs automatically, every evening","Signage displays between rounds — at no cost","Instant scoring on every guest's phone","Digital signage included — also $0","Venue dashboard with engagement data"].map((t,i) => <div key={i} style={{ display:"flex",gap:10,alignItems:"flex-start",marginBottom:12,fontFamily:"'Outfit',sans-serif",fontSize:14,color:T.w(0.55),lineHeight:1.5 }}><span style={{ color:T.green,fontSize:16,flexShrink:0,marginTop:1 }}>✓</span>{t}</div>)}
           </div>
         </div>
       </div>
@@ -457,8 +473,8 @@ const FAQ = () => {
   const faqs = [
     {q:"Is this actually free? What's the catch?",a:"There is no catch and no hidden cost. TapTrivia is free for venues. No trial that expires, no credit card on file, no fees ever. We cover our costs through the companion mobile app, not through venue charges."},
     {q:"What equipment do I need?",a:"A TV and an internet connection. If your TV is a smart TV (Samsung, LG, or Vizio), search for TapTrivia in the built-in app store and install it. Otherwise, plug in a Fire Stick, Roku, or Apple TV and install TapTrivia from their app store. Open the app, enter your venue name, and you're live."},
-    {q:"How do guests play?",a:"Guests download the free TapTrivia companion app on iOS or Android, enter the venue code displayed on your TV, and they're in. Trivia runs every evening from 5 PM to 5 AM — a new round starts every few minutes."},
-    {q:"Does someone on my staff need to run the trivia?",a:"No. Games run automatically every evening from 5 PM to 5 AM with no staff interaction required. During the day, your TV switches to displaying your digital signage — your logo, promotions, and event announcements on a loop. Just leave the TV on."},
+    {q:"How do guests play?",a:"Guests download the free TapTrivia companion app on iOS or Android, enter the venue code displayed on your TV, and they're in. Trivia runs every evening — a new round starts every 15 minutes."},
+    {q:"Does someone on my staff need to run the trivia?",a:"No. Games run automatically every evening with no staff interaction required. Between rounds, your TV switches to displaying your digital signage — your logo, promotions, and event announcements. Just leave the TV on."},
     {q:"What kind of trivia questions are available?",a:"Over 200,000 questions across 60 categories — pop culture, sports, movies, music, history, science, geography, food, and more. Difficulty ranges from accessible to challenging, and new questions are added regularly including current events."},
     {q:"Can I display my own promotions on the TV?",a:"Yes — and this is included free. Between trivia rounds, the TV displays your venue logo and custom messages. You manage everything from a web dashboard and can update from any device, anytime."},
     {q:"What if my internet connection drops?",a:"The TV app handles temporary outages gracefully — it will continue displaying your signage and reconnect automatically when the connection returns. No manual restart required."},

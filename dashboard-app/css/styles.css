@@ -1675,9 +1675,48 @@ body {
 .tvp-caption {
   font-size: 11px;
   color: rgba(255,255,255,.25);
-  text-align: center;
-  margin-top: 8px;
 }
+
+/* --- Preview Header (caption + fullscreen btn) --- */
+.tvp-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+/* --- Fullscreen Overlay --- */
+#tvp-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.tvp-fullscreen-inner {
+  width: 100%;
+  max-width: 1280px;
+  position: relative;
+}
+.tvp-fullscreen-close {
+  position: absolute;
+  top: -44px;
+  right: 0;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  padding: 7px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.tvp-fullscreen-close:hover { background: rgba(255,255,255,.18); }
 
 /* --- Brand Form --- */
 .brand-logo-row {

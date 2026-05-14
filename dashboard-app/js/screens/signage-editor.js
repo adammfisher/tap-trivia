@@ -43,7 +43,7 @@ let signageState = {
   editing: null,       // { templateId, data, editIdx } or null
   selectedDay: 'All Days',
   previewSlide: 0,
-  previewMode: 'offhours',  // 'offhours' or 'ingame'
+  previewMode: 'ingame',  // 'offhours' or 'ingame' (off-hours mode hidden from UI)
   saving: false,
   dirty: false,
   error: '',
@@ -398,6 +398,37 @@ function scaleTvFrames() {
 }
 
 // ================================================================
+// FULLSCREEN PREVIEW
+// ================================================================
+
+function openFullscreenPreview(slide, mode) {
+  const existing = document.getElementById('tvp-fullscreen-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'tvp-fullscreen-overlay';
+  overlay.innerHTML = `
+    <div class="tvp-fullscreen-inner">
+      <button class="tvp-fullscreen-close" id="btn-close-fs">✕ Close</button>
+      ${tvFrameHTML(slide, mode, 'lg')}
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    const frame = overlay.querySelector('.tvp-frame--lg');
+    const canvas = overlay.querySelector('.tvp-canvas');
+    if (frame && canvas) canvas.style.transform = `scale(${frame.offsetWidth / 960})`;
+  });
+
+  document.getElementById('btn-close-fs').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.addEventListener('keydown', function onKey(e) {
+    if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', onKey); }
+  });
+}
+
+// ================================================================
 // MAIN RENDER
 // ================================================================
 
@@ -436,7 +467,7 @@ function renderSlideList(container) {
     <div class="fade-in">
       <div class="page-header">
         <h1 class="page-title">Signage Creator</h1>
-        <p class="page-desc">Design what shows on your TV &mdash; off-hours full-screen and in-game right panel</p>
+        <p class="page-desc">Design what shows in the right panel during your trivia game</p>
       </div>
 
       ${signageState.error ? `<div class="auth-error">${signageState.error}</div>` : ''}
@@ -533,18 +564,17 @@ function renderSlideList(container) {
               </div>
             </div>
             <div class="rotation-preview">
+              <!-- Off-hours mode toggle button removed from UI (code preserved):
               <div class="tvp-mode-toggle">
-                <button class="tvp-mode-btn ${mode === 'offhours' ? 'active' : ''}" data-mode="offhours">
-                  \u{1F4FA} Off-Hours
-                </button>
-                <button class="tvp-mode-btn ${mode === 'ingame' ? 'active' : ''}" data-mode="ingame">
-                  \u{1F3AE} In-Game
-                </button>
+                <button class="tvp-mode-btn" data-mode="offhours">\ud83d\udcfa Off-Hours</button>
+                <button class="tvp-mode-btn active" data-mode="ingame">\ud83c\udfae In-Game</button>
+              </div>
+              -->
+              <div class="tvp-preview-header">
+                <span class="tvp-caption">Right panel \u2014 during trivia game</span>
+                <button class="btn-ghost btn-sm" id="btn-fullscreen-preview" title="Expand to full screen">\u26f6 Full Screen</button>
               </div>
               <div id="list-preview-frame"></div>
-              <div class="tvp-caption">
-                ${mode === 'offhours' ? 'Full-screen slide \u2014 no game running' : 'Right panel \u2014 during trivia game'}
-              </div>
               ${daySlides.length > 1 ? `
                 <div class="preview-nav">
                   <button class="btn-ghost btn-sm" id="btn-preview-prev">&larr;</button>
@@ -673,6 +703,14 @@ function renderSlideList(container) {
 
   const saveBtn = document.getElementById('btn-save-signage');
   if (saveBtn) saveBtn.addEventListener('click', saveSignage);
+
+  // Fullscreen preview
+  const fsBtn = document.getElementById('btn-fullscreen-preview');
+  if (fsBtn) fsBtn.addEventListener('click', () => {
+    const previewIdx = Math.min(signageState.previewSlide, signageState.slides.length - 1);
+    const slide = signageState.slides[previewIdx];
+    if (slide) openFullscreenPreview(slide, signageState.previewMode);
+  });
 }
 
 // ================================================================
@@ -703,18 +741,17 @@ function renderSlideEditor(container) {
       <div class="editor-body">
         <div class="dash-card editor-form" id="editor-form"></div>
         <div class="editor-preview">
+          <!-- Off-hours mode toggle button removed from UI (code preserved):
           <div class="tvp-mode-toggle">
-            <button class="tvp-mode-btn ${mode === 'offhours' ? 'active' : ''}" data-mode="offhours">
-              \u{1F4FA} Off-Hours
-            </button>
-            <button class="tvp-mode-btn ${mode === 'ingame' ? 'active' : ''}" data-mode="ingame">
-              \u{1F3AE} In-Game
-            </button>
+            <button class="tvp-mode-btn" data-mode="offhours">\ud83d\udcfa Off-Hours</button>
+            <button class="tvp-mode-btn active" data-mode="ingame">\ud83c\udfae In-Game</button>
+          </div>
+          -->
+          <div class="tvp-preview-header">
+            <span class="tvp-caption">Right panel \u2014 during trivia game</span>
+            <button class="btn-ghost btn-sm" id="btn-fullscreen-preview-editor" title="Expand to full screen">\u26f6 Full Screen</button>
           </div>
           <div id="preview-frame"></div>
-          <div class="tvp-caption">
-            ${mode === 'offhours' ? 'Full-screen slide \u2014 no game running' : 'Right panel \u2014 during trivia game'}
-          </div>
         </div>
       </div>
     </div>
@@ -735,6 +772,13 @@ function renderSlideEditor(container) {
   document.getElementById('btn-editor-back').addEventListener('click', () => { signageState.editing = null; renderSignageEditor(); });
   document.getElementById('btn-editor-cancel').addEventListener('click', () => { signageState.editing = null; renderSignageEditor(); });
   document.getElementById('btn-editor-save').addEventListener('click', saveSlide);
+
+  // Fullscreen preview
+  const fsBtn = document.getElementById('btn-fullscreen-preview-editor');
+  if (fsBtn) fsBtn.addEventListener('click', () => {
+    const slide = { template: ed.templateId, data: ed.data, icon: ed.data.emoji || '' };
+    openFullscreenPreview(slide, signageState.previewMode);
+  });
 }
 
 // ================================================================
