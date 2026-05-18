@@ -21,7 +21,7 @@ terraform/      → All infrastructure as code (11 .tf files)
 
 ## Key URLs
 
-- **Player App:** `https://play.taptrivia.tv` (also `https://taptrivia.tv`)
+- **Player App:** `https://app.taptrivia.tv` (play.taptrivia.tv redirects here)
 - **TV App:** `https://tv.taptrivia.tv`
 - **Dashboard:** `https://admin.taptrivia.tv`
 - **API:** `https://api.taptrivia.tv`

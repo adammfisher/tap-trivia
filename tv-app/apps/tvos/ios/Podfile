@@ -29,5 +29,20 @@ target 'TapTrivia-tvOS' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false,
     )
+    # Xcode 26 Clang enforces stricter consteval rules that break fmt 11.x.
+    # fmt's base.h auto-detects and unconditionally defines FMT_USE_CONSTEVAL=1,
+    # ignoring CLI flags. Patch the header to force it off before the #if block.
+    fmt_base_h = "#{installer.pods_project.path.dirname}/fmt/include/fmt/base.h"
+    if File.exist?(fmt_base_h)
+      content = File.read(fmt_base_h)
+      unless content.include?('// xcode26-consteval-fix')
+        content = content.gsub(
+          '#if FMT_USE_CONSTEVAL',
+          "// xcode26-consteval-fix: override detection; consteval is broken in Xcode 26\n#undef FMT_USE_CONSTEVAL\n#define FMT_USE_CONSTEVAL 0\n#if FMT_USE_CONSTEVAL"
+        )
+        File.write(fmt_base_h, content)
+        Pod::UI.puts '[fmt] Patched FMT_USE_CONSTEVAL=0 for Xcode 26 compatibility'
+      end
+    end
   end
 end

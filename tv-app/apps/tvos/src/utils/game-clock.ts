@@ -9,13 +9,13 @@ export const TOTAL_QUESTIONS = 15;
 export const GAME_DURATION_MS = TOTAL_QUESTIONS * QUESTION_DURATION_MS;
 
 export const PHASES = {
-  CATEGORY_SPLASH: { start: 0, end: 4000 },
-  READ_TIME: { start: 4000, end: 13000 },
-  ALL_ANSWERS: { start: 13000, end: 17000 },
-  HINT_1: { start: 17000, end: 29000 },
-  HINT_2: { start: 29000, end: 39000 },
-  REVEAL: { start: 39000, end: 45000 },
-  SCORES: { start: 45000, end: 52000 },
+  CATEGORY_SPLASH: { start: 0, end: 3000 },
+  READ_TIME: { start: 3000, end: 11000 },
+  ALL_ANSWERS: { start: 11000, end: 15000 },
+  HINT_1: { start: 15000, end: 24000 },
+  HINT_2: { start: 24000, end: 31000 },
+  REVEAL: { start: 31000, end: 37000 },
+  SCORES: { start: 37000, end: 52000 },
 } as const;
 
 export type QuestionPhase =
@@ -65,13 +65,13 @@ export function getGameState(gameStartEpoch: number, nowEpoch: number): ClockSta
     }
   }
 
-  const canAnswer = elapsedInQuestion >= 4000 && elapsedInQuestion < 45000;
+  const canAnswer = elapsedInQuestion >= 3000 && elapsedInQuestion < 37000;
 
   const hintsVisible: number[] = [];
-  if (elapsedInQuestion >= 17000) hintsVisible.push(0);
-  if (elapsedInQuestion >= 29000) hintsVisible.push(1);
+  if (elapsedInQuestion >= 15000) hintsVisible.push(0);
+  if (elapsedInQuestion >= 24000) hintsVisible.push(1);
 
-  const correctRevealed = elapsedInQuestion >= 39000;
+  const correctRevealed = elapsedInQuestion >= 31000;
 
   const pointsAvailable = canAnswer ? calculatePoints(elapsedInQuestion) : 0;
 
@@ -84,14 +84,14 @@ export function getGameState(gameStartEpoch: number, nowEpoch: number): ClockSta
     pointsAvailable,
     hintsVisible,
     correctRevealed,
-    questionSecondsRemaining: Math.max(0, Math.ceil((39000 - elapsedInQuestion) / 1000)),
+    questionSecondsRemaining: Math.max(0, Math.ceil((31000 - elapsedInQuestion) / 1000)),
   };
 }
 
 export const RESULTS_DURATION_MS = 120000;
 
-const WINDOW_START_MIN = 600;
-const WINDOW_END_MIN = 1260;
+const WINDOW_START_MIN = 0;
+const WINDOW_END_MIN = 24 * 60;
 
 function getETTime(): { h: number; m: number } {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -118,7 +118,7 @@ export function isInGameWindow(): boolean {
 
 export function getNextGameTime(nowEpoch: number): number {
   const INTERVAL_MS = 15 * 60 * 1000;
-  const WINDOW_DURATION_MIN = 11 * 60;
+  const WINDOW_DURATION_MIN = 24 * 60;
 
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',

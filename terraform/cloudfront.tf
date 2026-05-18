@@ -20,16 +20,31 @@ moved {
 }
 
 # =============================================================================
-# 1. Player App Distribution
+# 1. Player App Distribution — play.taptrivia.tv → app.taptrivia.tv redirect
 # =============================================================================
+resource "aws_cloudfront_function" "play_redirect" {
+  count   = local.is_dev ? 0 : 1
+  name    = "play-to-app-redirect"
+  runtime = "cloudfront-js-2.0"
+  code    = <<-EOF
+    function handler(event) {
+      return {
+        statusCode: 301,
+        statusDescription: 'Moved Permanently',
+        headers: { location: { value: 'https://app.taptrivia.tv' + event.request.uri } }
+      };
+    }
+  EOF
+}
+
 resource "aws_cloudfront_distribution" "player_app" {
   count               = local.is_dev ? 0 : 1
   enabled             = true
-  default_root_object = "index.html"
   price_class         = "PriceClass_100"
-  comment             = "Tap Trivia - Player App"
+  comment             = "Tap Trivia - play.taptrivia.tv → app.taptrivia.tv redirect"
   aliases             = ["play.taptrivia.tv"]
 
+  # Dummy origin — CloudFront function handles all requests before reaching origin
   origin {
     domain_name              = aws_s3_bucket.player_app[0].bucket_regional_domain_name
     origin_id                = "S3-player-app"
@@ -43,20 +58,11 @@ resource "aws_cloudfront_distribution" "player_app" {
     cached_methods         = ["GET", "HEAD"]
     compress               = true
     cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
-  }
 
-  custom_error_response {
-    error_code            = 403
-    response_code         = 200
-    response_page_path    = "/index.html"
-    error_caching_min_ttl = 0
-  }
-
-  custom_error_response {
-    error_code            = 404
-    response_code         = 200
-    response_page_path    = "/index.html"
-    error_caching_min_ttl = 0
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.play_redirect[0].arn
+    }
   }
 
   restrictions {

@@ -37,7 +37,7 @@ export function LobbyScreen({ navigation, route }: Props) {
   const isOnTop = useIsOnTop(route.key);
   const { isPro, isLoading: subLoading } = useSubscription();
   // Bar codes that bypass the subscription gate (used for store review / demo access)
-  const isPaywallBypassed = isPro || barCode === '9CK6T';
+  const isPaywallBypassed = isPro || barCode === 'DEMO1';
   const paywallShown = useRef(false);
 
   // Track whether an active game is waiting for the user to become pro
@@ -122,7 +122,7 @@ export function LobbyScreen({ navigation, route }: Props) {
     if (result.status === 'active' && result.startTimeEpoch) {
       const clock = clockGetGameState(result.startTimeEpoch, getServerNow());
       if (clock.gamePhase === 'active' && !startedRef.current) {
-        if (!isProRef.current && barCode !== '9CK6T') {
+        if (!isProRef.current && barCode !== 'DEMO1') {
           // Game is ready but user isn't subscribed — show paywall
           gameReadyRef.current = true;
           if (!paywallShown.current) {

@@ -62,7 +62,7 @@ PATH="$HOME/vega/bin:$HOME/Library/Android/sdk/platform-tools:/usr/local/bin:$PA
 
 ### 5. What to expect on first launch
 - **Setup screen** should appear — two-column layout (Register left, Activate right)
-- Enter bar code with the remote (e.g. `9CK6T` for Connestee Social Club)
+- Enter bar code with the remote (e.g. `DEMO1` for the demo bar)
 - After activation it should go to Idle/Lobby depending on time of day
 
 ### 6. What to verify

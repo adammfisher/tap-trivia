@@ -58,7 +58,6 @@ zip -r "$ZIP_NAME" \
   -x "*.md" \
   -x "*.sh" \
   -x "*.zip" \
-  -x "*.mp4" \
   -x "*.psd" \
   -x "*~" \
   -x "*.bak"

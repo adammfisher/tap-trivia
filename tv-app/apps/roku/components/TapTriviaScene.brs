@@ -132,11 +132,11 @@ sub init()
     m.bgVideo.content.url = "pkg:/images/bg-gradient.mp4"
     m.bgVideo.content.streamFormat = "mp4"
     m.bgVideo.loop = true
-    m.bgVideo.control = "play"
     m.bgVideo.enableUI = false
     ' Recovery from EOS/error: some firmware drops looping playback after
     ' extended uptime; observer prebuffers + replays so keepalive survives.
     m.bgVideo.observeField("state", "onBgVideoState")
+    m.bgVideo.control = "play"
   end if
 
   ' ── Load config and initialize ──
@@ -147,7 +147,7 @@ end sub
 sub onBgVideoState()
   if m.bgVideo = invalid then return
   state = m.bgVideo.state
-  if state = "finished" or state = "error" or state = "stopped"
+  if state = "finished" or state = "error"
     #if DEBUG
     print ">>> bgVideo: state=" + state + " — restarting"
     #end if

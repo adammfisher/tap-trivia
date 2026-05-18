@@ -124,6 +124,7 @@
   }
   let consecutiveErrors = 0;
   const MAX_ERRORS_BEFORE_OVERLAY = 3;
+  let pollInFlight = false;
 
   // Local clock state for smooth animation (mirrors player-app approach)
   let localGameStartEpoch = null;
@@ -576,10 +577,35 @@
       </div>`;
   }
 
+  /**
+   * Called every second by both countdown ticks.  When within 90 s of game
+   * start we bump to fast polling so we don't rely solely on the long-lived
+   * setTimeout wakeup (which browsers can throttle for inactive tabs).
+   * When the game start epoch passes we trigger an immediate poll so the
+   * transition happens within ≤1 s instead of up to 30 s.
+   */
+  function tickCheckGameStart() {
+    if (!nextGameStartEpochCached) return;
+    const msLeft = nextGameStartEpochCached - getServerNow();
+    if (msLeft <= 0) {
+      // Game should have started — poll immediately (only if not already in game)
+      if (currentPollRate !== CONFIG.POLL_INTERVAL_ACTIVE) {
+        setPollRate(CONFIG.POLL_INTERVAL_PREGAME);
+        pollTvState();
+      }
+    } else if (msLeft <= 90000) {
+      // Within 90 s — switch to fast pre-game polling now
+      if (currentPollRate === CONFIG.POLL_INTERVAL_IDLE) {
+        setPollRate(CONFIG.POLL_INTERVAL_PREGAME);
+      }
+    }
+  }
+
   /** 1-second tick that updates the signage header countdown in-place (no re-render) */
   function startIdleCountdownTick() {
     stopIdleCountdownTick();
     idleCountdownTimer = setInterval(() => {
+      tickCheckGameStart();
       const el = document.getElementById('signage-countdown-value');
       if (!el) return;
       el.innerHTML = countdownTextFromEpoch(nextGameStartEpochCached);
@@ -815,6 +841,7 @@
     stopCountdownTick();
     countdownTickTimer = setInterval(() => {
       if (!rotationActive) { stopCountdownTick(); return; }
+      tickCheckGameStart();
       updateCurrentRotatedScreen();
     }, 1000);
   }
@@ -3046,100 +3073,106 @@
 
   async function pollTvState() {
     if (!barCode) return;
+    if (pollInFlight) return;
+    pollInFlight = true;
 
-    const state = await apiCall('GET', `/game/tv-state?barCode=${barCode}`);
+    try {
+      const state = await apiCall('GET', `/game/tv-state?barCode=${barCode}`);
 
-    if (state.error) {
-      consecutiveErrors++;
-      if (consecutiveErrors >= MAX_ERRORS_BEFORE_OVERLAY) showError();
-      return;
-    }
-
-    consecutiveErrors = 0;
-    hideError();
-
-    lastApiState = state;
-
-    // Capture signage configuration — clear when location has none (prevents cross-location bleed)
-    if (state.signage && state.signage.slides && state.signage.slides.length > 0) {
-      signageSlides = state.signage.slides;
-      signageRotationSpeed = state.signage.rotationSpeed || 60;
-      console.log('[Signage] Loaded', signageSlides.length, 'slides from API, speed:', signageRotationSpeed);
-    } else {
-      signageSlides = [];
-      console.log('[Signage] No custom signage for this location, using defaults');
-    }
-
-    // Update logo if hash changed (avoids redundant downloads)
-    if (state.logoHash && state.logoHash !== barLogoHash) {
-      barLogoHash = state.logoHash;
-      barLogoUrl = state.logoUrl || null;
-    }
-
-    // Capture gameStartEpoch for local clock
-    if (state.gameStartEpoch) {
-      localGameStartEpoch = state.gameStartEpoch;
-    }
-
-    // Cache nextGameStartEpoch for idle countdown tick
-    if (state.nextGameStartEpoch) {
-      nextGameStartEpochCached = state.nextGameStartEpoch;
-    }
-
-    const gameState = translateApiState(state);
-    if (state.phase) console.log('[TV poll] phase:', state.phase, '→ screen:', gameState.screen, 'q:', gameState.questionNumber);
-
-    // Cache for screen rotation
-    cacheForRotation(gameState, state);
-
-    // all_off mode or timed-outside-window: signage only, no countdown
-    if (state.state === 'idle') {
-      setPollRate(CONFIG.POLL_INTERVAL_IDLE);
-      exitRotationMode();
-      if (betweenGameActive) exitBetweenGameMode();
-      if (currentScreen === 'idle') return;
-      renderScreen({ ...gameState, screen: 'idle' });
-      return;
-    }
-
-    // During break: slow polling, full-screen signage (custom or defaults)
-    if (state.state === 'break') {
-      setPollRate(CONFIG.POLL_INTERVAL_IDLE);
-      schedulePreGameWakeup(state.nextGameStartEpoch);
-      exitRotationMode();
-      if (betweenGameActive) exitBetweenGameMode();
-      // Don't re-render if already on idle — avoids flashing on every poll tick
-      if (currentScreen === 'idle') return;
-      renderScreen({ ...gameState, screen: 'idle' });
-      return;
-    }
-
-    // Game over — slow polling, between-game experience then rotation
-    if (state.state === 'game_over') {
-      stopIdleCountdownTick();
-      setPollRate(CONFIG.POLL_INTERVAL_IDLE);
-      const gameId = state.gameId || '';
-      // Start between-game experience if not already running and not yet done for this game
-      if (!betweenGameActive && betweenGameLastGameId !== gameId && gameId) {
-        schedulePreGameWakeup(state.nextGameStartEpoch);
-        startBetweenGameExperience(gameId);
+      if (state.error) {
+        consecutiveErrors++;
+        if (consecutiveErrors >= MAX_ERRORS_BEFORE_OVERLAY) showError();
         return;
       }
-      // If between-game is active, let it continue (don't interfere)
-      if (betweenGameActive) return;
-      // Between-game done — enter normal rotation
-      schedulePreGameWakeup(state.nextGameStartEpoch);
-      handleScreenRotation(gameState);
-      return;
-    }
 
-    // Active game — fast polling, cancel pre-game wakeup, exit rotation + between-game
-    stopIdleCountdownTick();
-    if (preGameWakeupTimer) { clearTimeout(preGameWakeupTimer); preGameWakeupTimer = null; }
-    setPollRate(CONFIG.POLL_INTERVAL_ACTIVE);
-    exitRotationMode();
-    if (betweenGameActive) exitBetweenGameMode();
-    renderScreen(gameState);
+      consecutiveErrors = 0;
+      hideError();
+
+      lastApiState = state;
+
+      // Capture signage configuration — clear when location has none (prevents cross-location bleed)
+      if (state.signage && state.signage.slides && state.signage.slides.length > 0) {
+        signageSlides = state.signage.slides;
+        signageRotationSpeed = state.signage.rotationSpeed || 60;
+        console.log('[Signage] Loaded', signageSlides.length, 'slides from API, speed:', signageRotationSpeed);
+      } else {
+        signageSlides = [];
+        console.log('[Signage] No custom signage for this location, using defaults');
+      }
+
+      // Update logo if hash changed (avoids redundant downloads)
+      if (state.logoHash && state.logoHash !== barLogoHash) {
+        barLogoHash = state.logoHash;
+        barLogoUrl = state.logoUrl || null;
+      }
+
+      // Capture gameStartEpoch for local clock
+      if (state.gameStartEpoch) {
+        localGameStartEpoch = state.gameStartEpoch;
+      }
+
+      // Cache nextGameStartEpoch for idle countdown tick
+      if (state.nextGameStartEpoch) {
+        nextGameStartEpochCached = state.nextGameStartEpoch;
+      }
+
+      const gameState = translateApiState(state);
+      if (state.phase) console.log('[TV poll] phase:', state.phase, '→ screen:', gameState.screen, 'q:', gameState.questionNumber);
+
+      // Cache for screen rotation
+      cacheForRotation(gameState, state);
+
+      // all_off mode or timed-outside-window: signage only, no countdown
+      if (state.state === 'idle') {
+        setPollRate(CONFIG.POLL_INTERVAL_IDLE);
+        exitRotationMode();
+        if (betweenGameActive) exitBetweenGameMode();
+        if (currentScreen === 'idle') return;
+        renderScreen({ ...gameState, screen: 'idle' });
+        return;
+      }
+
+      // During break: slow polling, full-screen signage (custom or defaults)
+      if (state.state === 'break') {
+        setPollRate(CONFIG.POLL_INTERVAL_IDLE);
+        schedulePreGameWakeup(state.nextGameStartEpoch);
+        exitRotationMode();
+        if (betweenGameActive) exitBetweenGameMode();
+        // Don't re-render if already on idle — avoids flashing on every poll tick
+        if (currentScreen === 'idle') return;
+        renderScreen({ ...gameState, screen: 'idle' });
+        return;
+      }
+
+      // Game over — slow polling, between-game experience then rotation
+      if (state.state === 'game_over') {
+        stopIdleCountdownTick();
+        setPollRate(CONFIG.POLL_INTERVAL_IDLE);
+        const gameId = state.gameId || '';
+        // Start between-game experience if not already running and not yet done for this game
+        if (!betweenGameActive && betweenGameLastGameId !== gameId && gameId) {
+          schedulePreGameWakeup(state.nextGameStartEpoch);
+          startBetweenGameExperience(gameId);
+          return;
+        }
+        // If between-game is active, let it continue (don't interfere)
+        if (betweenGameActive) return;
+        // Between-game done — enter normal rotation
+        schedulePreGameWakeup(state.nextGameStartEpoch);
+        handleScreenRotation(gameState);
+        return;
+      }
+
+      // Active game — fast polling, cancel pre-game wakeup, exit rotation + between-game
+      stopIdleCountdownTick();
+      if (preGameWakeupTimer) { clearTimeout(preGameWakeupTimer); preGameWakeupTimer = null; }
+      setPollRate(CONFIG.POLL_INTERVAL_ACTIVE);
+      exitRotationMode();
+      if (betweenGameActive) exitBetweenGameMode();
+      renderScreen(gameState);
+    } finally {
+      pollInFlight = false;
+    }
   }
 
   /**
@@ -3555,7 +3588,7 @@
     const barParam = params.get('bar');
 
     // Use bar param, or localStorage, or fallback
-    const demoBarCode = barParam || barCode || '9CK6T';
+    const demoBarCode = barParam || barCode || 'DEMO1';
 
     // Fetch real bar data from API
     const barData = await apiCall('GET', `/bar/${demoBarCode}`);

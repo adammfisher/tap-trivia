@@ -74,9 +74,9 @@ const TimerDisplay = memo(function TimerDisplay({
   questionNumber?: number;
   activePlayers: number;
 }) {
-  const [secs, setSecs] = useState(35);
+  const [secs, setSecs] = useState(28);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const lastSecRef = useRef(35);
+  const lastSecRef = useRef(28);
 
   useEffect(() => {
     if (!gameStartEpoch) return;
@@ -99,7 +99,7 @@ const TimerDisplay = memo(function TimerDisplay({
   return (
     <View style={s.headerRight}>
       <PlayersBadge count={activePlayers} />
-      <TimerRing seconds={secs} totalSeconds={35} size={96} strokeWidth={6} />
+      <TimerRing seconds={secs} totalSeconds={28} size={96} strokeWidth={6} />
     </View>
   );
 });

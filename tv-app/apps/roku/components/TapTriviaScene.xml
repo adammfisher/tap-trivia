@@ -12,6 +12,11 @@
          toward "channel activity" and defers the inactivity auto-home. -->
     <Video id="bgVideo" width="1920" height="1080" visible="true" enableUI="false" />
 
+    <!-- Dim overlay to tone down the video plane (it renders brighter than
+         the source colors on Roku Express). 50% black brings it back into
+         the "dark cocktail lounge" range. -->
+    <Rectangle id="bgDim" width="1920" height="1080" color="#000000" opacity="0.5" />
+
     <!-- Screen container — all screens layered here, toggle visibility -->
     <Group id="screenContainer">
       <SetupScreen id="setupScreen" visible="false" />

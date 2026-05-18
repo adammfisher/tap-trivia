@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { useKeepAwake } from 'expo-keep-awake';
 import { configureRevenueCat } from './src/services/revenuecat';
 import {
   Fredoka_400Regular,
@@ -30,6 +31,7 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
+  useKeepAwake();
   const [fontsLoaded] = useFonts({
     Fredoka_400Regular,
     Fredoka_500Medium,

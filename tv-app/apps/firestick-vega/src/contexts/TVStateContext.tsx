@@ -270,7 +270,7 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
       } catch {}
       // Vega OS: auto-activate with default bar code if no saved config
       // (touch/remote input on setup screen is unreliable via ADB)
-      const DEFAULT_BAR_CODE = '9CK6T';
+      const DEFAULT_BAR_CODE = 'DEMO1';
       console.log('[VEGA] No saved config, auto-activating with', DEFAULT_BAR_CODE);
       barCodeRef.current = DEFAULT_BAR_CODE;
       setTvState(prev => ({ ...prev, barCode: DEFAULT_BAR_CODE, screen: 'idle' }));

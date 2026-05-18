@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Constants from 'expo-constants';
 import type { PurchasesOffering } from 'react-native-purchases';
 import {
   checkSubscription,
@@ -7,6 +8,9 @@ import {
   getOffering,
   isConfigured,
 } from '../services/revenuecat';
+
+// Bypass paywall in Expo Go and local dev builds so testing doesn't require a live subscription
+const IS_SIMULATOR_OR_EXPO_GO = __DEV__ || Constants.appOwnership === 'expo';
 
 interface UseSubscription {
   /** True if user has an active subscription (or in-trial — RevenueCat reports both as "active"). */
@@ -30,6 +34,12 @@ export function useSubscription(): UseSubscription {
   const checkedRef = useRef(false);
 
   useEffect(() => {
+    if (IS_SIMULATOR_OR_EXPO_GO) {
+      setIsPro(true);
+      setIsLoading(false);
+      return;
+    }
+
     if (checkedRef.current) return;
     checkedRef.current = true;
     let cancelled = false;

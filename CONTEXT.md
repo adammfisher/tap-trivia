@@ -56,7 +56,7 @@ Tables in DynamoDB after `Cleanup` commit:
 
 | Table | Rows | Note |
 |---|---|---|
-| `TapTrivia-Bars` | 1 | Demo Bar `9CK6T` only. |
+| `TapTrivia-Bars` | 1 | Demo Bar `DEMO1` only. |
 | `TapTrivia-Players` | 0 | Wiped. |
 | `TapTrivia-Sessions` | unknown | Not analytics-relevant; not touched. |
 | `TapTrivia-TvPairings` | 0 | Empty since Phase 3 deploy. |

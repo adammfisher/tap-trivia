@@ -440,9 +440,9 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
         if (correctIndex === -1) correctIndex = undefined;
       }
 
-      // Timer: set from API, local tick will decrement
+      // Timer: answer window closes at 31s (REVEAL_START_MS / 1000)
       const timerSeconds = api.elapsedSeconds != null
-        ? Math.max(0, Math.round(39 - api.elapsedSeconds))
+        ? Math.max(0, Math.round(31 - api.elapsedSeconds))
         : undefined;
 
       // Build state

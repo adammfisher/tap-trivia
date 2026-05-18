@@ -120,6 +120,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     playerCount: 0,
     lastPhase: '' as string,
     pendingResult: null as { correct: boolean; pointsAwarded: number; correctAnswer: string; totalGameScore: number } | null,
+    revealApplied: false, // prevents double-counting stats/score if both local derivation and pendingResult fire
     statsSnapshot: { ...INITIAL_STATS } as PlayerStats, // cached immutable copy for React state
   });
 
@@ -151,6 +152,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       g.rawQuestionData = null;
       g.answerResult = null;
       g.pendingResult = null;
+      g.revealApplied = false;
       g.fetchingQuestion = false;
       g.submitting = false;
       g.leaderboardFetched = false;
@@ -255,18 +257,21 @@ export function GameProvider({ children }: { children: ReactNode }) {
         };
         g.answerResult = answerResult;
         // Defer totalScore update to scores phase so Correct/Wrong screens show old total
-        g.deferredTotalScore = pr.totalGameScore;
-        // Update stats now that we're revealing
-        if (pr.correct) {
-          g.playerStats.correct += 1;
-          g.playerStats.streak += 1;
-          if (g.playerStats.streak > g.playerStats.bestStreak) {
-            g.playerStats.bestStreak = g.playerStats.streak;
+        g.deferredTotalScore = pr.totalGameScore; // server value is authoritative
+        // Update stats only if local derivation didn't already do it
+        if (!g.revealApplied) {
+          if (pr.correct) {
+            g.playerStats.correct += 1;
+            g.playerStats.streak += 1;
+            if (g.playerStats.streak > g.playerStats.bestStreak) {
+              g.playerStats.bestStreak = g.playerStats.streak;
+            }
+          } else {
+            g.playerStats.wrong += 1;
+            g.playerStats.streak = 0;
           }
-        } else {
-          g.playerStats.wrong += 1;
-          g.playerStats.streak = 0;
         }
+        g.revealApplied = true;
         g.pendingResult = null; // Applied — don't repeat
       } else if (!answerResult && g.rawQuestionData?.correctIndex !== undefined) {
         // Player didn't answer — still show the correct answer at reveal
@@ -284,15 +289,31 @@ export function GameProvider({ children }: { children: ReactNode }) {
         // correctAnswer === '' acts as a one-shot guard so this only runs once per reveal.
         const correctIdx = g.rawQuestionData.correctIndex;
         const isCorrect = answerResult.selectedIndex === correctIdx;
+        const localPoints = isCorrect ? answerResult.lockedInPoints : 0;
         answerResult = {
           ...answerResult,
           correct: isCorrect,
-          pointsAwarded: isCorrect ? answerResult.lockedInPoints : 0,
+          pointsAwarded: localPoints,
           correctAnswer: g.questionData?.answers[correctIdx] || '',
           correctIndex: correctIdx,
         };
         g.answerResult = answerResult;
-        // If pendingResult arrives later it will override via the first branch above
+        // Update stats and provisional total score. revealApplied prevents
+        // double-counting if pendingResult arrives later and also updates.
+        if (!g.revealApplied) {
+          g.revealApplied = true;
+          if (isCorrect) {
+            g.playerStats.correct += 1;
+            g.playerStats.streak += 1;
+            if (g.playerStats.streak > g.playerStats.bestStreak) {
+              g.playerStats.bestStreak = g.playerStats.streak;
+            }
+          } else {
+            g.playerStats.wrong += 1;
+            g.playerStats.streak = 0;
+          }
+          g.deferredTotalScore = g.totalScore + localPoints;
+        }
       }
     }
 
@@ -381,6 +402,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     g.fetchingQuestion = false;
     g.submitting = false;
     g.leaderboardFetched = false;
+    g.revealApplied = false;
     g.leaderboard = [];
     g.playerStats = { ...INITIAL_STATS };
     g.rank = 0;
@@ -476,6 +498,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     g.rawQuestionData = null;
     g.answerResult = null;
     g.pendingResult = null;
+    g.revealApplied = false;
     g.totalScore = 0;
     g.deferredTotalScore = null;
     g.leaderboard = [];
