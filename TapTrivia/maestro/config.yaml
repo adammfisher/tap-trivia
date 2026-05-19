@@ -1,0 +1,8 @@
+appId: host.exp.Exponent
+---
+# Shared config: launches Expo Go and navigates to the TapTrivia dev server.
+# Requires `expo start --local` to be running before maestro test is invoked.
+- launchApp
+- openLink: "exp://127.0.0.1:8081"
+- waitForAnimationToEnd:
+    timeout: 10000

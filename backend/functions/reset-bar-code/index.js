@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const { TABLE, get, put, update } = require('./shared/dynamo');
 
 const CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // 30 chars — no 0/O/1/I/L
@@ -7,7 +8,7 @@ const CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // 30 chars — no 0/O/1/I/L
 function generateBarCode() {
   let code = '';
   for (let i = 0; i < 5; i++) {
-    code += CHARS.charAt(Math.floor(Math.random() * CHARS.length));
+    code += CHARS.charAt(crypto.randomInt(0, CHARS.length));
   }
   return code;
 }

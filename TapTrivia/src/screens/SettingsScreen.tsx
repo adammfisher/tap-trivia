@@ -59,11 +59,11 @@ export function SettingsScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={[styles.container, { paddingTop: insets.top }]} testID="settings:screen">
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Settings</Text>
-          <Pressable onPress={() => navigation.goBack()} style={styles.closeButton}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.closeButton} testID="settings:close-button">
             <Text style={styles.closeText}>{'\u2715'}</Text>
           </Pressable>
         </View>
@@ -78,10 +78,10 @@ export function SettingsScreen({ navigation }: Props) {
             <View style={styles.profileRow}>
               <Avatar name={playerName} size={50} isYou />
               <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>{playerName}</Text>
+                <Text style={styles.profileName} testID="settings:nickname-display">{playerName}</Text>
                 <Text style={styles.profileSince}>Playing since Feb 2026</Text>
               </View>
-              <Pressable onPress={() => navigation.navigate('EditNickname')} style={styles.editButton}>
+              <Pressable onPress={() => navigation.navigate('EditNickname')} style={styles.editButton} testID="settings:edit-nickname-button">
                 <Text style={styles.editText}>Edit</Text>
               </Pressable>
             </View>
@@ -123,6 +123,7 @@ export function SettingsScreen({ navigation }: Props) {
               <Pressable
                 onPress={handleLeaveGame}
                 style={({ pressed }) => [styles.leaveButton, pressed && { opacity: 0.8 }]}
+                testID="settings:leave-game-button"
               >
                 <Text style={styles.leaveButtonText}>Leave Game</Text>
               </Pressable>
@@ -149,15 +150,15 @@ export function SettingsScreen({ navigation }: Props) {
           <View style={styles.card}>
             <Text style={styles.cardLabel}>App</Text>
             <View style={styles.linksList}>
-              <Pressable onPress={() => Linking.openURL('https://taptrivia.tv/terms.html')} style={styles.linkRow}>
+              <Pressable onPress={() => Linking.openURL('https://taptrivia.tv/terms.html')} style={styles.linkRow} testID="settings:terms-button">
                 <Text style={styles.linkText}>Terms of Service</Text>
                 <Text style={styles.linkArrow}>{'\u2192'}</Text>
               </Pressable>
-              <Pressable onPress={() => Linking.openURL('https://taptrivia.tv/privacy.html')} style={styles.linkRow}>
+              <Pressable onPress={() => Linking.openURL('https://taptrivia.tv/privacy.html')} style={styles.linkRow} testID="settings:privacy-button">
                 <Text style={styles.linkText}>Privacy Policy</Text>
                 <Text style={styles.linkArrow}>{'\u2192'}</Text>
               </Pressable>
-              <Pressable onPress={() => navigation.navigate('Feedback')} style={styles.linkRow}>
+              <Pressable onPress={() => navigation.navigate('Feedback')} style={styles.linkRow} testID="settings:feedback-button">
                 <Text style={styles.linkText}>Send Feedback</Text>
                 <Text style={styles.linkArrow}>{'\u2192'}</Text>
               </Pressable>

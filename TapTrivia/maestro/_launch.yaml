@@ -1,0 +1,53 @@
+appId: host.exp.Exponent
+---
+# Shared launch flow: opens TapTrivia in Expo Go and waits for WelcomeScreen.
+# Usage: include via "runFlow: _launch.yaml" at the top of each test.
+#
+# Requires `npx expo start --localhost --port 8082` to be running.
+
+# Kill any running Expo Go instance so openLink always loads a fresh app state.
+- stopApp
+- openLink: "exp://127.0.0.1:8082"
+# Dismiss iOS "Open in Expo Go?" confirmation dialog if present
+- runFlow:
+    when:
+      visible:
+        text: "Open"
+    commands:
+      - tapOn: "Open"
+# Wait specifically for WelcomeScreen to appear.
+# extendedWaitUntil polls for the element rather than waiting for animations
+# to settle — this handles the case where Expo Go's splash/loading screens
+# are already settled before the React bundle has rendered WelcomeScreen.
+- extendedWaitUntil:
+    visible:
+      id: "welcome:logo"
+    timeout: 60000
+# First-pass intro check (intro sometimes visible by now)
+- runFlow: _dismiss-intro.yaml
+# Warm-up: navigate into Settings and back.  The Expo developer intro appears
+# 2–5 s after first render; waitForAnimationToEnd counts the intro's own
+# slide-in animation, so we block here until it finishes, then dismiss it.
+# The intro only surfaces once per Expo Go session, so it won't reappear
+# during the actual test steps that follow.
+- tapOn:
+    id: "welcome:settings-button"
+- waitForAnimationToEnd:
+    timeout: 10000
+- runFlow: _dismiss-intro.yaml
+# Close settings if the warm-up navigation succeeded
+- runFlow:
+    when:
+      visible:
+        id: "settings:close-button"
+    commands:
+      - tapOn:
+          id: "settings:close-button"
+      - waitForAnimationToEnd:
+          timeout: 5000
+# Final check — wait for WelcomeScreen to be visible after settings closes
+- runFlow: _dismiss-intro.yaml
+- extendedWaitUntil:
+    visible:
+      id: "welcome:logo"
+    timeout: 15000

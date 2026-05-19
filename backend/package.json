@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest shared/__tests__"
   },
   "keywords": [],
   "author": "",
@@ -12,5 +12,8 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.987.0",
     "@aws-sdk/lib-dynamodb": "^3.987.0"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2"
   }
 }

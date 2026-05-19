@@ -72,6 +72,7 @@ export function WelcomeScreen({ navigation }: Props) {
           <Pressable
             onPress={() => navigation.navigate('Settings')}
             style={styles.settingsButton}
+            testID="welcome:settings-button"
           >
             <Text style={styles.settingsIcon}>{'\u2699'}</Text>
           </Pressable>
@@ -82,15 +83,15 @@ export function WelcomeScreen({ navigation }: Props) {
           contentContainerStyle={styles.centerContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.logoContainer}>
+          <View style={styles.logoContainer} testID="welcome:logo">
             <Logo size="lg" />
           </View>
-          <Text style={styles.tagline}>Live trivia on your phone</Text>
+          <Text style={styles.tagline} testID="welcome:tagline">Live trivia on your phone</Text>
 
           {gameActive === false ? (
             /* all_off mode — signage only */
             <>
-              <FadeInView duration={500} direction="none" style={styles.offHoursBanner}>
+              <FadeInView testID="welcome:off-hours-banner" duration={500} direction="none" style={styles.offHoursBanner}>
                 <Text style={styles.offHoursEmoji}>{'\u{1F319}'}</Text>
                 <Text style={styles.offHoursLabel}>Games are currently unavailable</Text>
                 <Text style={styles.offHoursMessage}>
@@ -112,6 +113,7 @@ export function WelcomeScreen({ navigation }: Props) {
               <Pressable
                 onPress={() => navigation.navigate('Join')}
                 style={({ pressed }) => [pressed && { opacity: 0.9 }]}
+                testID="welcome:join-button"
               >
                 <LinearGradient
                   colors={[...gradients.selected]}
@@ -128,6 +130,7 @@ export function WelcomeScreen({ navigation }: Props) {
               <Pressable
                 onPress={() => navigation.navigate('CreateGroup')}
                 style={({ pressed }) => [pressed && { opacity: 0.9 }]}
+                testID="welcome:create-group-button"
               >
                 <LinearGradient
                   colors={[...gradients.selected]}
@@ -144,6 +147,7 @@ export function WelcomeScreen({ navigation }: Props) {
               <Pressable
                 onPress={handlePlaySolo}
                 style={({ pressed }) => [styles.soloButton, pressed && { opacity: 0.9 }]}
+                testID="welcome:solo-button"
               >
                 <Text style={styles.soloButtonText}>Play Solo</Text>
               </Pressable>
@@ -162,6 +166,7 @@ export function WelcomeScreen({ navigation }: Props) {
                         <SavedBarCard
                           bar={bar}
                           onPress={() => handleSavedBar(bar.code, bar.name)}
+                          testID={`welcome:saved-bar-${bar.code}`}
                         />
                       </FadeInView>
                     ))}
@@ -174,7 +179,7 @@ export function WelcomeScreen({ navigation }: Props) {
 
         {/* Footer */}
         <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-          <Text style={styles.footerText}>Games run every 15 minutes, 24 hours a day</Text>
+          <Text style={styles.footerText} testID="welcome:footer">Games run every 15 minutes, 24 hours a day</Text>
         </View>
       </View>
     </GradientBackground>

@@ -68,7 +68,7 @@ export function LockedInScreen({ navigation, route }: Props) {
 
   return (
     <GradientBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={[styles.container, { paddingTop: insets.top }]} testID="lockedin:screen">
         <View style={styles.header}>
           <Logo size="sm" />
           <View style={styles.headerRight}>
@@ -86,8 +86,8 @@ export function LockedInScreen({ navigation, route }: Props) {
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} bounces={false}>
           <FadeInView duration={400} direction="none" style={styles.pointsSection}>
-            <Text style={styles.lockedPoints}>{lockedPoints}</Text>
-            <Text style={styles.lockedLabel}>
+            <Text style={styles.lockedPoints} testID="lockedin:points">{lockedPoints}</Text>
+            <Text style={styles.lockedLabel} testID="lockedin:answer">
               Locked In! <Text style={styles.maxLabel}>/ 1,000</Text>
             </Text>
           </FadeInView>
@@ -147,7 +147,7 @@ export function LockedInScreen({ navigation, route }: Props) {
 
           <View style={styles.waitingSection}>
             <View style={styles.waitingRow}>
-              <Text style={styles.waitingText}>Waiting for reveal</Text>
+              <Text style={styles.waitingText} testID="lockedin:waiting">Waiting for reveal</Text>
               <LoadingDots />
             </View>
           </View>

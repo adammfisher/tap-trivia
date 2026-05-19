@@ -71,7 +71,7 @@ export function PlayingScreen({ navigation, route }: Props) {
 
   return (
     <GradientBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={[styles.container, { paddingTop: insets.top }]} testID="playing:screen">
         {/* Header */}
         <View style={styles.header}>
           <Logo size="sm" />
@@ -79,10 +79,10 @@ export function PlayingScreen({ navigation, route }: Props) {
             {gameState.playerCount > 0 && (
               <View style={styles.playerCount}>
                 <Text style={styles.playerCountEmoji}>{'\u{1F465}'}</Text>
-                <Text style={styles.playerCountText}>{gameState.playerCount}</Text>
+                <Text style={styles.playerCountText} testID="playing:player-count">{gameState.playerCount}</Text>
               </View>
             )}
-            <Pressable onPress={() => navigation.navigate('Settings')} style={styles.settingsButton}>
+            <Pressable onPress={() => navigation.navigate('Settings')} style={styles.settingsButton} testID="playing:settings-button">
               <Text style={styles.settingsIcon}>{'\u2699'}</Text>
             </Pressable>
           </View>
@@ -92,20 +92,23 @@ export function PlayingScreen({ navigation, route }: Props) {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           bounces={false}
+          testID="playing:screen-scroll"
         >
           {/* Points */}
-          <PointsDisplay points={gameState.pointsAvailable} />
+          <View testID="playing:points-available">
+            <PointsDisplay points={gameState.pointsAvailable} />
+          </View>
 
           {/* Total score pill */}
           <View style={styles.totalRow}>
             <View style={styles.totalPill}>
               <Text style={styles.totalLabel}>TOTAL</Text>
-              <Text style={styles.totalValue}>{gameState.totalScore.toLocaleString()}</Text>
+              <Text style={styles.totalValue} testID="playing:total-score">{gameState.totalScore.toLocaleString()}</Text>
             </View>
           </View>
 
           {/* Timer */}
-          <View style={styles.timerRow}>
+          <View style={styles.timerRow} testID="playing:timer">
             <TimerRing seconds={gameState.timeRemaining} totalSeconds={35} />
           </View>
 
@@ -120,14 +123,14 @@ export function PlayingScreen({ navigation, route }: Props) {
             <View style={styles.progressContainer}>
               <ProgressBar current={gameState.questionNumber} total={gameState.totalQuestions} />
             </View>
-            <Text style={styles.questionNum}>
+            <Text style={styles.questionNum} testID="playing:question-number">
               Q{gameState.questionNumber}
               <Text style={styles.questionTotal}>/{gameState.totalQuestions}</Text>
             </Text>
           </View>
 
           {/* Question */}
-          <Text style={styles.questionText}>{question.question}</Text>
+          <Text style={styles.questionText} testID="playing:question">{question.question}</Text>
 
           {/* Answer cards */}
           <View style={styles.answers}>
@@ -140,6 +143,7 @@ export function PlayingScreen({ navigation, route }: Props) {
                 delay={i}
                 onPress={() => handleAnswer(i)}
                 disabled={question.eliminatedIndices.includes(i)}
+                testID={`playing:answer-${i}`}
               />
             ))}
           </View>

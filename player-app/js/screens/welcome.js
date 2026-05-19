@@ -43,6 +43,17 @@ const WelcomeScreen = {
     // Register with backend (may dedup the name)
     const result = await apiCall('PUT', `/player/${Player.getId()}`, { displayName: name });
 
+    if (result && result.error === 'INAPPROPRIATE_DISPLAY_NAME') {
+      const msgEl = document.getElementById('welcome-name-message');
+      if (msgEl) {
+        msgEl.textContent = "Let's keep it clean — pick a different name!";
+        msgEl.className = 'welcome-name-message welcome-name-error';
+      }
+      btn.textContent = "LET'S PLAY";
+      btn.disabled = false;
+      return;
+    }
+
     if (result && !result.error) {
       const effectiveName = result.displayName || name;
       Player.setName(effectiveName);

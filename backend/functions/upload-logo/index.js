@@ -20,7 +20,7 @@ const VALID_CONTENT_TYPES = ['image/png', 'image/jpeg'];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const LOGO_BUCKET = 'taptrivia-logos';
 const LOGO_CDN = 'https://tv.taptrivia.tv';
-const TV_CF_DIST_ID = 'EYJ9U9RQEM3MS';
+const TV_CF_DIST_ID = process.env.CF_TV_DIST_ID || 'EYJ9U9RQEM3MS';
 
 exports.handler = async (event) => {
   try {
@@ -55,6 +55,19 @@ exports.handler = async (event) => {
         headers,
         body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Image must be less than 5MB' })
       };
+    }
+
+    // Validate magic bytes — reject files that lie about their content type
+    const isPng = imageBuffer[0] === 0x89 && imageBuffer[1] === 0x50 && imageBuffer[2] === 0x4E && imageBuffer[3] === 0x47;
+    const isJpeg = imageBuffer[0] === 0xFF && imageBuffer[1] === 0xD8 && imageBuffer[2] === 0xFF;
+    if (contentType === 'image/png' && !isPng) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'INVALID_INPUT', message: 'File does not appear to be a valid PNG' }) };
+    }
+    if (contentType === 'image/jpeg' && !isJpeg) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'INVALID_INPUT', message: 'File does not appear to be a valid JPEG' }) };
+    }
+    if (!isPng && !isJpeg) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Unsupported image format' }) };
     }
 
     // Optionally call Bedrock Titan for background removal

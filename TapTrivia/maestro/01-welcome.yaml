@@ -1,0 +1,48 @@
+appId: host.exp.Exponent
+---
+- runFlow: _launch.yaml
+
+# Welcome screen should be visible
+- assertVisible:
+    id: "welcome:logo"
+- assertVisible:
+    id: "welcome:tagline"
+- assertVisible:
+    id: "welcome:settings-button"
+- assertVisible:
+    id: "welcome:footer"
+
+# When games are active, join/solo buttons should be visible
+# (these will be skipped gracefully if in all_off mode)
+- runFlow:
+    when:
+      visible:
+        id: "welcome:join-button"
+    commands:
+      - assertVisible:
+          id: "welcome:join-button"
+      - assertVisible:
+          id: "welcome:create-group-button"
+      - assertVisible:
+          id: "welcome:solo-button"
+
+# When in all_off mode, off-hours banner should be visible
+- runFlow:
+    when:
+      visible:
+        id: "welcome:off-hours-banner"
+    commands:
+      - assertVisible:
+          id: "welcome:off-hours-banner"
+
+# Settings button navigates to Settings screen
+- tapOn:
+    id: "welcome:settings-button"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "settings:screen"
+- tapOn:
+    id: "settings:close-button"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "welcome:logo"

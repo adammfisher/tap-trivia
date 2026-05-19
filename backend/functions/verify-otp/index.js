@@ -74,8 +74,9 @@ exports.handler = async (event) => {
       };
     }
 
-    // Check OTP match
-    if (bar.pendingOtp !== otp) {
+    // Check OTP match — compare against stored HMAC hash
+    const attemptHash = crypto.createHmac('sha256', normalizedBarCode).update(otp).digest('hex');
+    if (bar.pendingOtpHash !== attemptHash) {
       // Increment attempt count
       await update(
         TABLE.BARS,
@@ -90,22 +91,24 @@ exports.handler = async (event) => {
       };
     }
 
-    // OTP is valid — clear it and mark email as verified
+    // OTP is valid — clear it, mark email verified, and activate bar
     await update(
       TABLE.BARS,
       { PK: `BAR#${normalizedBarCode}` },
-      'REMOVE pendingOtp, otpExpiresAt, otpAttempts SET emailVerified = :t',
-      { ':t': true }
+      'REMOVE pendingOtpHash, otpExpiresAt, otpAttempts SET emailVerified = :t, #status = :active',
+      { ':t': true, ':active': 'active' },
+      { '#status': 'status' }
     );
 
-    // Generate session token
+    // Generate session token — store only its SHA-256 hash in DynamoDB
     const token = crypto.randomUUID();
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const now = Math.floor(Date.now() / 1000);
     const ttl = now + SESSION_TTL_SECONDS;
 
-    // Write session
+    // Write session keyed by token hash; return raw token to client
     await put(TABLE.SESSIONS, {
-      PK: `SESSION#${token}`,
+      PK: `SESSION#${tokenHash}`,
       barCode: normalizedBarCode,
       ownerEmail: normalizedEmail,
       createdAt: new Date().toISOString(),

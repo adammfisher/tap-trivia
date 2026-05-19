@@ -64,11 +64,12 @@ export function NicknameScreen({ navigation, route }: Props) {
     <GradientBackground>
       <KeyboardAvoidingView
         style={[styles.container, { paddingTop: insets.top }]}
+        testID="nickname:screen"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.backButton} testID="nickname:back-button">
             <Text style={styles.backText}>{'\u2190'}</Text>
           </Pressable>
           <Logo size="sm" />
@@ -103,18 +104,20 @@ export function NicknameScreen({ navigation, route }: Props) {
               placeholder="Your nickname"
               placeholderTextColor={w(0.25)}
               style={styles.input}
+              testID="nickname:input"
               returnKeyType="go"
               onSubmitEditing={handleSubmit}
             />
             <Text style={styles.charCount}>{name.length}/30</Text>
           </View>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={styles.error} testID="nickname:error-text">{error}</Text> : null}
 
           <Pressable
             onPress={handleSubmit}
             disabled={!isValid || loading}
             style={({ pressed }) => [pressed && { opacity: 0.9 }]}
+            testID="nickname:submit-button"
           >
             <LinearGradient
               colors={[...gradients.selected]}

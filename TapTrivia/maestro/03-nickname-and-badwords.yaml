@@ -1,0 +1,94 @@
+appId: host.exp.Exponent
+---
+- runFlow: _launch.yaml
+
+- runFlow:
+    when:
+      visible:
+        id: "welcome:join-button"
+    commands:
+      - tapOn:
+          id: "welcome:join-button"
+      - waitForAnimationToEnd
+      - runFlow: _dismiss-intro.yaml
+      # Hidden input has autoFocus — type directly without tapping it
+      # Use pressKey:Enter — keyboard covers the submit button
+      - inputText: "MXDN8"
+      - pressKey: Enter
+      - waitForAnimationToEnd:
+          timeout: 8000
+      - assertVisible:
+          id: "nickname:screen"
+
+      # --- Bad word filter tests ---
+      # Pattern: tap input first (focus + cursor at end), erase all, type, submit with Enter.
+      # pressKey:Enter triggers onSubmitEditing → handleSubmit (avoids keyboard overlap).
+
+      # Blocked: exact profanity
+      # Error is returned by the server (updatePlayer API) — use extendedWaitUntil
+      # to poll for the error element rather than relying on animation settle timing.
+      - tapOn:
+          id: "nickname:input"
+      - eraseText: 100
+      - inputText: "ShitFace"
+      - pressKey: Enter
+      - extendedWaitUntil:
+          visible:
+            id: "nickname:error-text"
+          timeout: 15000
+
+      # Blocked: l33tspeak (sh1t → shit)
+      - tapOn:
+          id: "nickname:input"
+      - eraseText: 100
+      - inputText: "sh1thead"
+      - pressKey: Enter
+      - extendedWaitUntil:
+          visible:
+            id: "nickname:error-text"
+          timeout: 15000
+
+      # Blocked: exact word "ass" as token
+      - tapOn:
+          id: "nickname:input"
+      - eraseText: 100
+      - inputText: "Big Ass"
+      - pressKey: Enter
+      - extendedWaitUntil:
+          visible:
+            id: "nickname:error-text"
+          timeout: 15000
+
+      # Clean: "Bassoon" contains "ass" but not as a word token — should be accepted
+      - tapOn:
+          id: "nickname:input"
+      - eraseText: 100
+      - inputText: "Bassoon"
+      - pressKey: Enter
+      - waitForAnimationToEnd:
+          timeout: 8000
+      # Should NOT show profanity error; app navigates to Lobby (or stays if API rejects)
+      - assertNotVisible:
+          id: "nickname:error-text"
+
+      # If still on nickname screen (e.g. Bassoon navigated away), submit a clean name.
+      # Accept lobby OR game screen — during business hours a live game may skip lobby.
+      - runFlow:
+          when:
+            visible:
+              id: "nickname:screen"
+          commands:
+            - tapOn:
+                id: "nickname:input"
+            - eraseText: 100
+            - inputText: "TestPlayer"
+            - pressKey: Enter
+            - waitForAnimationToEnd:
+                timeout: 10000
+            - runFlow:
+                when:
+                  visible:
+                    id: "lobby:screen"
+                commands:
+                  - assertVisible:
+                      id: "lobby:screen"

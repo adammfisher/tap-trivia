@@ -59,6 +59,7 @@ for func_dir in "$FUNCTIONS_DIR"/*/; do
     cp "$SHARED_DIR/questions.js" "$func_dir/shared/"
     cp "$SHARED_DIR/name-suffixes.js" "$func_dir/shared/"
     cp "$SHARED_DIR/config.js" "$func_dir/shared/"
+    cp "$SHARED_DIR/profanity.js" "$func_dir/shared/"
 
     for df in $DASHBOARD_FUNCTIONS; do
       if [ "$func_name" = "$df" ]; then

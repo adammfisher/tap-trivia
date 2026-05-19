@@ -67,7 +67,7 @@ export function WrongScreen({ navigation, route }: Props) {
 
   return (
     <GradientBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={[styles.container, { paddingTop: insets.top }]} testID="wrong:screen">
         <View style={styles.header}>
           <Logo size="sm" />
           <View style={styles.playerCount}>
@@ -79,7 +79,7 @@ export function WrongScreen({ navigation, route }: Props) {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} bounces={false}>
           {/* +0 */}
           <ZoomInView spring style={styles.pointsSection}>
-            <Text style={styles.zeroPoints}>+0</Text>
+            <Text style={styles.zeroPoints} testID="wrong:points">+0</Text>
             <Text style={styles.wrongLabel}>{displayResult.selectedIndex === -1 ? "Time's Up" : 'Wrong Answer'}</Text>
           </ZoomInView>
 
@@ -113,7 +113,7 @@ export function WrongScreen({ navigation, route }: Props) {
           </View>
 
           {/* Question */}
-          <Text style={styles.questionText}>{question.question}</Text>
+          <Text style={styles.questionText} testID="wrong:your-answer">{question.question}</Text>
 
           {/* Answers */}
           <View style={styles.answers}>
@@ -146,7 +146,7 @@ export function WrongScreen({ navigation, route }: Props) {
 
           <View style={styles.footer}>
             {displayResult.correctAnswer ? (
-              <Text style={styles.answerWas}>
+              <Text style={styles.answerWas} testID="wrong:correct-answer">
                 The answer was{' '}
                 <Text style={styles.correctAnswer}>{displayResult.correctAnswer}</Text>
               </Text>

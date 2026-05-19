@@ -1,0 +1,43 @@
+appId: host.exp.Exponent
+---
+- runFlow: _launch.yaml
+
+- runFlow:
+    when:
+      visible:
+        id: "welcome:create-group-button"
+    commands:
+      - tapOn:
+          id: "welcome:create-group-button"
+      - waitForAnimationToEnd
+      - runFlow: _dismiss-intro.yaml
+      - assertVisible:
+          id: "create-group:screen"
+
+      # Back returns to welcome
+      - tapOn:
+          id: "create-group:back-button"
+      - waitForAnimationToEnd
+      - assertVisible:
+          id: "welcome:logo"
+
+      # Re-enter, test empty name validation
+      - tapOn:
+          id: "welcome:create-group-button"
+      - waitForAnimationToEnd
+      - tapOn:
+          id: "create-group:submit-button"
+      - assertVisible:
+          id: "create-group:error-text"
+
+      # Enter a group name and submit
+      - tapOn:
+          id: "create-group:name-input"
+      - inputText: "TestGroup"
+      - tapOn:
+          id: "create-group:submit-button"
+      - waitForAnimationToEnd:
+          timeout: 8000
+      # Should show group code after creation
+      - assertVisible:
+          id: "create-group:code-display"

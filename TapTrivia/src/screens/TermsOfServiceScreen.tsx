@@ -56,10 +56,10 @@ export function TermsOfServiceScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={[styles.container, { paddingTop: insets.top }]} testID="terms:screen">
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Terms of Service</Text>
-          <Pressable onPress={() => navigation.goBack()} style={styles.closeButton}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.closeButton} testID="terms:close-button">
             <Text style={styles.closeText}>{'\u2715'}</Text>
           </Pressable>
         </View>
@@ -67,6 +67,7 @@ export function TermsOfServiceScreen({ navigation }: Props) {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          testID="terms:content"
         >
           <Text style={styles.lastUpdated}>Last updated: February 2026</Text>
 

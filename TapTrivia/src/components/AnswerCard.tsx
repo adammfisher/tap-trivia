@@ -15,6 +15,7 @@ interface AnswerCardProps {
   disabled?: boolean;
   dimmed?: boolean;
   delay?: number;
+  testID?: string;
 }
 
 const LETTERS = ['A', 'B', 'C', 'D'];
@@ -29,6 +30,7 @@ export const AnswerCard = memo(function AnswerCard({
   disabled,
   dimmed,
   delay = 0,
+  testID,
 }: AnswerCardProps) {
   const letterDisplay = LETTERS[letter - 1];
 
@@ -130,6 +132,7 @@ export const AnswerCard = memo(function AnswerCard({
           <Pressable
             onPress={onPress}
             disabled={disabled}
+            testID={testID}
             style={({ pressed }) => [pressed && !disabled && styles.pressed]}
           >
             <LinearGradient
@@ -152,6 +155,7 @@ export const AnswerCard = memo(function AnswerCard({
         <Pressable
           onPress={onPress}
           disabled={disabled}
+          testID={testID}
           style={({ pressed }) => [
             styles.cardBase,
             styles.defaultCard,
@@ -169,7 +173,8 @@ export const AnswerCard = memo(function AnswerCard({
   prev.state === next.state &&
   prev.disabled === next.disabled &&
   prev.dimmed === next.dimmed &&
-  prev.delay === next.delay
+  prev.delay === next.delay &&
+  prev.testID === next.testID
 );
 
 const styles = StyleSheet.create({

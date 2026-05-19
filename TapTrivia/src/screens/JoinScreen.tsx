@@ -81,7 +81,7 @@ export function JoinScreen({ navigation }: Props) {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Pressable onPress={() => navigation.goBack()} style={styles.backButton} testID="join:back-button">
               <Text style={styles.backText}>{'\u2190'}</Text>
             </Pressable>
             <Logo size="sm" />
@@ -100,7 +100,7 @@ export function JoinScreen({ navigation }: Props) {
                 delay={i * 60}
                 duration={300}
               >
-                <Pressable onPress={() => handleBoxTap(i)}>
+                <Pressable onPress={() => handleBoxTap(i)} testID={`join:code-box-${i}`}>
                   <View
                     style={[
                       styles.codeBox,
@@ -116,9 +116,9 @@ export function JoinScreen({ navigation }: Props) {
           </Animated.View>
 
           {error ? (
-            <Text style={styles.error}>{error}</Text>
+            <Text style={styles.error} testID="join:error-text">{error}</Text>
           ) : (
-            <Text style={styles.hint}>Enter a location or group code</Text>
+            <Text style={styles.hint} testID="join:hint-text">Enter a location or group code</Text>
           )}
 
           {/* Hidden input */}
@@ -131,6 +131,7 @@ export function JoinScreen({ navigation }: Props) {
             autoCorrect={false}
             autoFocus
             style={styles.hiddenInput}
+            testID="join:code-input"
             keyboardType="default"
             returnKeyType="go"
             onSubmitEditing={() => handleSubmit()}
@@ -141,6 +142,7 @@ export function JoinScreen({ navigation }: Props) {
             onPress={() => handleSubmit()}
             disabled={code.length !== 5 || loading}
             style={({ pressed }) => [pressed && { opacity: 0.9 }]}
+            testID="join:submit-button"
           >
             <LinearGradient
               colors={[...gradients.selected]}

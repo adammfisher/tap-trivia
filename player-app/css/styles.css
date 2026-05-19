@@ -1667,7 +1667,8 @@ body::-webkit-scrollbar { display: none; }
   border: 1px solid rgba(255,210,0,0.25);
 }
 
-.profile-name-error {
+.profile-name-error,
+.welcome-name-error {
   color: var(--red);
   background: rgba(255,71,87,0.08);
   border: 1px solid rgba(255,71,87,0.25);

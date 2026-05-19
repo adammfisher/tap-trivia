@@ -111,7 +111,6 @@ exports.handler = async (event) => {
         barName,
         leaders: leaderboard.slice(0, 20).map(e => ({
           rank: e.rank,
-          playerId: e.playerId,
           playerName: e.playerName,
           score: e.score
         })),
@@ -186,7 +185,6 @@ exports.handler = async (event) => {
         type: 'global',
         leaders: top20.map(e => ({
           rank: e.rank,
-          playerId: e.playerId,
           playerName: e.playerName,
           score: e.score,
           barName: barNameMap[e.barCode] || ''

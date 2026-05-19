@@ -229,7 +229,7 @@ export function LobbyScreen({ navigation, route }: Props) {
 
   return (
     <GradientBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={[styles.container, { paddingTop: insets.top }]} testID="lobby:screen">
         {/* Header */}
         <View style={styles.header}>
           <Logo size="sm" />
@@ -237,10 +237,10 @@ export function LobbyScreen({ navigation, route }: Props) {
             {playerCount > 0 && (
               <View style={styles.playerCount}>
                 <Text style={styles.playerCountEmoji}>{'\u{1F465}'}</Text>
-                <Text style={styles.playerCountText}>{playerCount}</Text>
+                <Text style={styles.playerCountText} testID="lobby:player-count">{playerCount}</Text>
               </View>
             )}
-            <Pressable onPress={() => navigation.navigate('Settings')} style={styles.settingsButton}>
+            <Pressable onPress={() => navigation.navigate('Settings')} style={styles.settingsButton} testID="lobby:settings-button">
               <Text style={styles.settingsIcon}>{'\u2699'}</Text>
             </Pressable>
           </View>
@@ -257,7 +257,7 @@ export function LobbyScreen({ navigation, route }: Props) {
               <Text style={styles.barNameText}>Playing Solo</Text>
             ) : (
               <Text style={styles.heroSubtitle}>
-                <Text style={styles.barNameText}>{barName}</Text>
+                <Text style={styles.barNameText} testID="lobby:bar-name">{barName}</Text>
                 {' \u00B7 '}
                 <Text style={styles.barCodeText}>{barCode}</Text>
               </Text>
@@ -290,7 +290,8 @@ export function LobbyScreen({ navigation, route }: Props) {
           <View style={styles.waitingSection}>
             {showCountdown ? (
               <>
-                <Text style={styles.nextGameLabel}>NEXT GAME IN</Text>
+                <Text style={styles.nextGameLabel} testID="lobby:countdown-label">NEXT GAME IN</Text>
+                <View testID="lobby:countdown">
                 <TimerRing
                   seconds={countdownSecs}
                   totalSeconds={900}
@@ -299,10 +300,11 @@ export function LobbyScreen({ navigation, route }: Props) {
                   label={formatCountdown(countdownSecs)}
                 />
                 <Text style={styles.waitingSubtext}>Hang tight — the game starts automatically</Text>
+                </View>
               </>
             ) : (
               <>
-                <Text style={styles.waitingStatus}>{statusText}</Text>
+                <Text style={styles.waitingStatus} testID="lobby:status-text">{statusText}</Text>
                 <View style={styles.waitingRow}>
                   <Text style={styles.waitingText}>Waiting for game to start</Text>
                   <LoadingDots />

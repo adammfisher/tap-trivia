@@ -1,6 +1,7 @@
 'use strict';
 
 const { TABLE, get, put, update } = require('./shared/dynamo');
+const { containsProfanity } = require('./shared/profanity');
 
 function response(statusCode, body) {
   return {
@@ -75,6 +76,17 @@ exports.handler = async (event) => {
           error: 'INVALID_DISPLAY_NAME',
           message: 'displayName must be 2-20 characters, alphanumeric, spaces, and underscores only'
         });
+      }
+
+      if (displayName !== undefined) {
+        const profanity = containsProfanity(displayName);
+        if (profanity.blocked) {
+          console.warn('Blocked inappropriate display name:', { playerId, matched: profanity.matched });
+          return response(400, {
+            error: 'INAPPROPRIATE_DISPLAY_NAME',
+            message: "Let's keep it clean — pick a different name!"
+          });
+        }
       }
 
       // Validate trialStartedAt if provided

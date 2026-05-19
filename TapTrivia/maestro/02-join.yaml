@@ -1,0 +1,60 @@
+appId: host.exp.Exponent
+---
+- runFlow: _launch.yaml
+
+# Navigate to Join screen (only available when games are active)
+- runFlow:
+    when:
+      visible:
+        id: "welcome:join-button"
+    commands:
+      - tapOn:
+          id: "welcome:join-button"
+      - waitForAnimationToEnd
+      # Safety net: dismiss intro if warm-up didn't catch it
+      - runFlow: _dismiss-intro.yaml
+
+      # Join screen — 5 empty code boxes
+      - assertVisible:
+          id: "join:code-box-0"
+      - assertVisible:
+          id: "join:code-box-4"
+      - assertVisible:
+          id: "join:hint-text"
+      - assertVisible:
+          id: "join:submit-button"
+
+      # Back button returns to welcome
+      - tapOn:
+          id: "join:back-button"
+      - waitForAnimationToEnd
+      - assertVisible:
+          id: "welcome:logo"
+
+      # Re-enter join screen
+      - tapOn:
+          id: "welcome:join-button"
+      - waitForAnimationToEnd
+      - runFlow: _dismiss-intro.yaml
+
+      # Type an invalid 5-char code (input is auto-focused, no need to tap hidden input)
+      # Use pressKey:Return to submit — keyboard covers the submit button
+      - inputText: "ZZZZZ"
+      - pressKey: Enter
+      - waitForAnimationToEnd:
+          timeout: 8000
+      # Should show an error
+      - assertVisible:
+          id: "join:error-text"
+
+      # Tap code-box-0 to clear the code and refocus hidden input, then type valid code
+      - tapOn:
+          id: "join:code-box-0"
+      - inputText: "MXDN8"
+      - pressKey: Enter
+      - waitForAnimationToEnd:
+          timeout: 8000
+
+      # Should advance to Nickname screen
+      - assertVisible:
+          id: "nickname:screen"

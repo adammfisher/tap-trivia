@@ -1,0 +1,34 @@
+appId: host.exp.Exponent
+---
+- runFlow: _launch.yaml
+
+- runFlow:
+    when:
+      visible:
+        id: "welcome:solo-button"
+    commands:
+      - tapOn:
+          id: "welcome:solo-button"
+      - waitForAnimationToEnd
+      - runFlow: _dismiss-intro.yaml
+
+      # Nickname screen for solo play
+      - assertVisible:
+          id: "nickname:screen"
+      # Tap input first to focus, erase any existing text, then type
+      - tapOn:
+          id: "nickname:input"
+      - eraseText: 100
+      - inputText: "SoloTester"
+      - pressKey: Enter
+      - waitForAnimationToEnd:
+          timeout: 10000
+
+      # Solo play joins the current game — may land on lobby or directly in game
+      - runFlow:
+          when:
+            visible:
+              id: "lobby:screen"
+          commands:
+            - assertVisible:
+                id: "lobby:screen"

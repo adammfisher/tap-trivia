@@ -60,7 +60,7 @@ export function CorrectScreen({ navigation, route }: Props) {
 
   return (
     <GradientBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={[styles.container, { paddingTop: insets.top }]} testID="correct:screen">
         <View style={styles.header}>
           <Logo size="sm" />
           <View style={styles.playerCount}>
@@ -72,7 +72,7 @@ export function CorrectScreen({ navigation, route }: Props) {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} bounces={false}>
           {/* Points earned */}
           <ZoomInView spring style={styles.pointsSection}>
-            <Text style={styles.earnedPoints}>+{earned}</Text>
+            <Text style={styles.earnedPoints} testID="correct:points">+{earned}</Text>
             <Text style={styles.earnedLabel}>
               Points Earned! <Text style={styles.maxLabel}>/ 1,000</Text>
             </Text>
@@ -82,7 +82,7 @@ export function CorrectScreen({ navigation, route }: Props) {
           <View style={styles.totalRow}>
             <View style={styles.totalPill}>
               <Text style={styles.totalLabel}>TOTAL</Text>
-              <Text style={styles.totalValue}>{newTotal.toLocaleString()}</Text>
+              <Text style={styles.totalValue} testID="correct:total-score">{newTotal.toLocaleString()}</Text>
             </View>
           </View>
 
@@ -108,7 +108,7 @@ export function CorrectScreen({ navigation, route }: Props) {
           </View>
 
           {/* Question */}
-          <Text style={styles.questionText}>{question.question}</Text>
+          <Text style={styles.questionText} testID="correct:answer">{question.question}</Text>
 
           {/* Answers */}
           <View style={styles.answers}>

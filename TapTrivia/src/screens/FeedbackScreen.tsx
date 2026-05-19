@@ -81,7 +81,7 @@ export function FeedbackScreen({ navigation }: Props) {
   if (success) {
     return (
       <GradientBackground>
-        <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={[styles.container, { paddingTop: insets.top }]} testID="feedback:success">
           <View style={styles.successContainer}>
             <Text style={styles.successEmoji}>{'\u2705'}</Text>
             <Text style={styles.successTitle}>Thank You!</Text>
@@ -96,11 +96,11 @@ export function FeedbackScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={[styles.container, { paddingTop: insets.top }]} testID="feedback:screen">
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Send Feedback</Text>
-          <Pressable onPress={() => navigation.goBack()} style={styles.closeButton}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.closeButton} testID="feedback:cancel-button">
             <Text style={styles.closeText}>{'\u2715'}</Text>
           </Pressable>
         </View>
@@ -127,7 +127,7 @@ export function FeedbackScreen({ navigation }: Props) {
           <Text style={styles.label}>CATEGORY</Text>
           <View style={styles.categoryRow}>
             {CATEGORY_OPTIONS.map(({ key, label }) => (
-              <Pressable key={key} onPress={() => setCategory(key)} style={styles.categoryPillWrap}>
+              <Pressable key={key} onPress={() => setCategory(key)} style={styles.categoryPillWrap} testID={`feedback:category-${key}`}>
                 {category === key ? (
                   <LinearGradient
                     colors={[...gradients.selected]}
@@ -160,6 +160,7 @@ export function FeedbackScreen({ navigation }: Props) {
               placeholder="Tell us what's on your mind..."
               placeholderTextColor={w(0.25)}
               style={styles.messageInput}
+              testID="feedback:message-input"
               textAlignVertical="top"
             />
             <Text style={styles.charCount}>{message.length}/2000</Text>
@@ -176,12 +177,13 @@ export function FeedbackScreen({ navigation }: Props) {
             autoCapitalize="none"
             autoCorrect={false}
             style={styles.emailInput}
+            testID="feedback:email-input"
           />
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           {/* Submit button */}
-          <Pressable onPress={handleSubmit} disabled={!isValid || loading}>
+          <Pressable onPress={handleSubmit} disabled={!isValid || loading} testID="feedback:submit-button">
             <LinearGradient
               colors={[...gradients.selected]}
               start={{ x: 0, y: 0 }}

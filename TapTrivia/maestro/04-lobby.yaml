@@ -1,0 +1,56 @@
+appId: host.exp.Exponent
+---
+- runFlow: _launch.yaml
+
+- runFlow:
+    when:
+      visible:
+        id: "welcome:join-button"
+    commands:
+      # Join → Nickname → Lobby (or directly to game if one is in progress)
+      - tapOn:
+          id: "welcome:join-button"
+      - waitForAnimationToEnd
+      - runFlow: _dismiss-intro.yaml
+      # Hidden input has autoFocus — type directly without tapping it
+      # Use pressKey:Enter — keyboard covers the submit button
+      - inputText: "MXDN8"
+      - pressKey: Enter
+      - waitForAnimationToEnd:
+          timeout: 8000
+      - assertVisible:
+          id: "nickname:screen"
+      # Tap input first to focus, erase existing text, then type
+      - tapOn:
+          id: "nickname:input"
+      - eraseText: 100
+      - inputText: "TestPlayer"
+      - pressKey: Enter
+      - waitForAnimationToEnd:
+          timeout: 10000
+
+      # After nickname submission we should be on lobby OR a game screen.
+      # Both outcomes are valid depending on whether a game is currently running.
+      - runFlow:
+          when:
+            visible:
+              id: "lobby:screen"
+          commands:
+            # Briefly in lobby (between games): assert settings button accessible
+            - assertVisible:
+                id: "lobby:settings-button"
+
+      - runFlow:
+          when:
+            visible:
+              id: "lobby:settings-button"
+          commands:
+            # Settings opens from lobby
+            - tapOn:
+                id: "lobby:settings-button"
+            - waitForAnimationToEnd
+            - assertVisible:
+                id: "settings:screen"
+            - tapOn:
+                id: "settings:close-button"
+            - waitForAnimationToEnd

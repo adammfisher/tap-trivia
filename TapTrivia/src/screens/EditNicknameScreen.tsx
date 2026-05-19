@@ -51,11 +51,12 @@ export function EditNicknameScreen({ navigation }: Props) {
     <GradientBackground>
       <KeyboardAvoidingView
         style={[styles.container, { paddingTop: insets.top }]}
+        testID="edit-nickname:screen"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Edit Name</Text>
-          <Pressable onPress={() => navigation.goBack()} style={styles.closeButton}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.closeButton} testID="edit-nickname:cancel-button">
             <Text style={styles.closeText}>{'\u2715'}</Text>
           </Pressable>
         </View>
@@ -74,18 +75,20 @@ export function EditNicknameScreen({ navigation }: Props) {
               placeholder="Your nickname"
               placeholderTextColor={w(0.25)}
               style={styles.input}
+              testID="edit-nickname:input"
               returnKeyType="done"
               onSubmitEditing={handleSave}
             />
             <Text style={styles.charCount}>{name.length}/20</Text>
           </View>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={styles.error} testID="edit-nickname:error">{error}</Text> : null}
 
           <Pressable
             onPress={handleSave}
             disabled={!isValid || !hasChanged || loading}
             style={({ pressed }) => [pressed && { opacity: 0.9 }]}
+            testID="edit-nickname:save-button"
           >
             <LinearGradient
               colors={[...gradients.selected]}

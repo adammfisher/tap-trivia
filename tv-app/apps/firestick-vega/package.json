@@ -12,7 +12,8 @@
     "build:debug": "react-native build-vega --build-type Debug",
     "build": "npm run build:release",
     "run:vvd": "vega run-app build/aarch64-release/*.vpkg tv.taptrivia.firestick.main -d VirtualDevice",
-    "run:device": "vega device install-app --packagePath build/armv7-release/*.vpkg && vega device launch-app --appName tv.taptrivia.firestick.main"
+    "run:device": "vega device install-app --packagePath build/armv7-release/*.vpkg && vega device launch-app --appName tv.taptrivia.firestick.main",
+    "test": "jest"
   },
   "dependencies": {
     "@amazon-devices/react-native-kepler": "^2.0.1758683737",
@@ -26,8 +27,11 @@
     "@react-native-community/cli": "11.3.2",
     "@react-native/metro-config": "^0.72.6",
     "@tsconfig/react-native": "^3.0.2",
+    "@types/jest": "^29.5.14",
     "@types/react": "^18.0.24",
+    "jest": "^29.7.0",
     "metro-react-native-babel-preset": "^0.76.5",
+    "ts-jest": "^29.4.9",
     "typescript": "4.8.4"
   },
   "kepler": {

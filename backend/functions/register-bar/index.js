@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const { TABLE, put, query } = require('./shared/dynamo');
 const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
 
@@ -11,7 +12,7 @@ const CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // 30 chars — no 0/O/1/I/L
 function generateBarCode() {
   let code = '';
   for (let i = 0; i < 5; i++) {
-    code += CHARS.charAt(Math.floor(Math.random() * CHARS.length));
+    code += CHARS.charAt(crypto.randomInt(0, CHARS.length));
   }
   return code;
 }
@@ -46,8 +47,8 @@ function isPrivateIp(ip) {
 
 function fetchGeoLocation(ip) {
   return new Promise((resolve) => {
-    const http = require('http');
-    const req = http.get(`http://ip-api.com/json/${ip}?fields=status,city,regionName,region,countryCode,lat,lon`, { timeout: 3000 }, (res) => {
+    const https = require('https');
+    const req = https.get(`https://ip-api.com/json/${ip}?fields=status,city,regionName,region,countryCode,lat,lon`, { timeout: 3000 }, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
@@ -192,7 +193,7 @@ exports.handler = async (event) => {
         longitude: geo.longitude,
         createdAt: now,
         lastPollAt: now,
-        status: 'active'
+        status: cleanEmail ? 'pending' : 'active'
       };
 
       // Only include tvDeviceId if provided
@@ -244,8 +245,7 @@ exports.handler = async (event) => {
         barName,
         city: geo.city,
         state: geo.state,
-        isNew: true,
-        ownerEmail: cleanEmail || undefined
+        isNew: true
       })
     };
   } catch (err) {

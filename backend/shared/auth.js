@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const { get, TABLE } = require('./dynamo');
 
 /**
@@ -18,7 +19,8 @@ async function authenticate(event) {
   if (!token) return null;
 
   try {
-    const session = await get(TABLE.SESSIONS, { PK: `SESSION#${token}` });
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const session = await get(TABLE.SESSIONS, { PK: `SESSION#${tokenHash}` });
 
     if (!session) return null;
 

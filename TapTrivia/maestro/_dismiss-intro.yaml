@@ -1,0 +1,12 @@
+appId: host.exp.Exponent
+---
+# Dismiss Expo Go developer intro if present ("Continue" button).
+# Safe to call at any point — no-ops if intro is not visible.
+- runFlow:
+    when:
+      visible:
+        text: "Continue"
+    commands:
+      - tapOn: "Continue"
+      - waitForAnimationToEnd:
+          timeout: 3000

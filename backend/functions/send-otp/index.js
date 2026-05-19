@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const { TABLE, get, update } = require('./shared/dynamo');
 const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
 
@@ -15,7 +16,7 @@ const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 const OTP_COOLDOWN_MS = 60 * 1000; // 60 seconds between OTP requests
 
 function generateOtp() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(crypto.randomInt(100000, 1000000));
 }
 
 async function sendOtpEmail(email, barName, otp) {
@@ -106,13 +107,14 @@ exports.handler = async (event) => {
       }
     }
 
-    // Generate and store OTP
+    // Generate OTP, store only its HMAC hash — plaintext never written to DB
     const otp = generateOtp();
+    const otpHash = crypto.createHmac('sha256', normalizedBarCode).update(otp).digest('hex');
     await update(
       TABLE.BARS,
       { PK: `BAR#${normalizedBarCode}` },
-      'SET pendingOtp = :otp, otpExpiresAt = :exp, otpAttempts = :zero',
-      { ':otp': otp, ':exp': Date.now() + OTP_EXPIRY_MS, ':zero': 0 }
+      'SET pendingOtpHash = :otp, otpExpiresAt = :exp, otpAttempts = :zero',
+      { ':otp': otpHash, ':exp': Date.now() + OTP_EXPIRY_MS, ':zero': 0 }
     );
 
     // Send OTP email

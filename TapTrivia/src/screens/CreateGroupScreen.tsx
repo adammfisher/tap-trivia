@@ -41,7 +41,11 @@ export function CreateGroupScreen({ navigation }: Props) {
   const isValid = groupName.trim().length >= 2 && groupName.trim().length <= 30;
 
   const handleCreate = async () => {
-    if (!isValid || !deviceId) return;
+    if (!isValid) {
+      setError(groupName.trim().length === 0 ? 'Please enter a group name.' : 'Name must be 2–30 characters.');
+      return;
+    }
+    if (!deviceId) return;
 
     const trimmed = groupName.trim();
     setLoading(true);
@@ -96,6 +100,7 @@ export function CreateGroupScreen({ navigation }: Props) {
             <Pressable
               onPress={() => navigation.goBack()}
               style={styles.backButton}
+              testID="create-group:back-button"
             >
               <Text style={styles.backText}>{'←'}</Text>
             </Pressable>
@@ -107,7 +112,7 @@ export function CreateGroupScreen({ navigation }: Props) {
             <Text style={styles.title}>Group Created!</Text>
             <Text style={styles.subtitle}>Share this code with friends</Text>
 
-            <View style={styles.codeBox}>
+            <View style={styles.codeBox} testID="create-group:code-display">
               <Text style={styles.codeText}>{createdCode}</Text>
             </View>
             <Text style={styles.groupNameLabel}>{createdName}</Text>
@@ -143,10 +148,11 @@ export function CreateGroupScreen({ navigation }: Props) {
     <GradientBackground>
       <KeyboardAvoidingView
         style={[styles.container, { paddingTop: insets.top }]}
+        testID="create-group:screen"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.backButton} testID="create-group:back-button">
             <Text style={styles.backText}>{'\u2190'}</Text>
           </Pressable>
           <Logo size="sm" />
@@ -173,24 +179,26 @@ export function CreateGroupScreen({ navigation }: Props) {
               placeholder="Group name"
               placeholderTextColor={w(0.25)}
               style={styles.input}
+              testID="create-group:name-input"
               returnKeyType="go"
               onSubmitEditing={handleCreate}
             />
             <Text style={styles.charCount}>{groupName.length}/30</Text>
           </View>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={styles.error} testID="create-group:error-text">{error}</Text> : null}
 
           <Pressable
             onPress={handleCreate}
-            disabled={!isValid || loading}
+            disabled={loading}
             style={({ pressed }) => [pressed && { opacity: 0.9 }]}
+            testID="create-group:submit-button"
           >
             <LinearGradient
               colors={[...gradients.selected]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={[styles.submitButton, (!isValid || loading) && styles.submitDisabled]}
+              style={[styles.submitButton, loading && styles.submitDisabled]}
             >
               <Text style={styles.submitText}>
                 {loading ? 'Creating...' : 'Create Group'}

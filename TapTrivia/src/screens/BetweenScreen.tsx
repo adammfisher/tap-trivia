@@ -41,7 +41,7 @@ export function BetweenScreen({ navigation, route }: Props) {
 
   return (
     <GradientBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={[styles.container, { paddingTop: insets.top }]} testID="between:screen">
         <View style={styles.header}>
           <Logo size="sm" />
           <View style={styles.headerRight}>
@@ -49,7 +49,7 @@ export function BetweenScreen({ navigation, route }: Props) {
               <Text style={styles.emoji}>{'\u{1F465}'}</Text>
               <Text style={styles.countText}>{gameState.playerCount}</Text>
             </View>
-            <Pressable onPress={() => navigation.navigate('Settings')} style={styles.settingsButton}>
+            <Pressable onPress={() => navigation.navigate('Settings')} style={styles.settingsButton} testID="between:settings-button">
               <Text style={styles.settingsIcon}>{'\u2699'}</Text>
             </Pressable>
           </View>
@@ -64,18 +64,18 @@ export function BetweenScreen({ navigation, route }: Props) {
             <Text style={styles.afterLabel}>After Question {gameState.questionNumber}</Text>
             {isSolo ? (
               <View style={styles.scoreSection}>
-                <Text style={styles.scoreValue}>{gameState.totalScore.toLocaleString()}</Text>
+                <Text style={styles.scoreValue} testID="between:score">{gameState.totalScore.toLocaleString()}</Text>
                 <Text style={styles.scoreSubLabel}>Your Score</Text>
               </View>
             ) : (
               <View style={styles.scoreRankRow}>
                 <View style={styles.scoreSection}>
-                  <Text style={styles.scoreValue}>{gameState.totalScore.toLocaleString()}</Text>
+                  <Text style={styles.scoreValue} testID="between:score">{gameState.totalScore.toLocaleString()}</Text>
                   <Text style={styles.scoreSubLabel}>Your Score</Text>
                 </View>
                 <View style={styles.divider} />
                 <View style={styles.rankSection}>
-                  <Text style={styles.rankValue}>{gameState.rank > 0 ? `${gameState.rank}${getOrdinal(gameState.rank)}` : '--'}</Text>
+                  <Text style={styles.rankValue} testID="between:rank">{gameState.rank > 0 ? `${gameState.rank}${getOrdinal(gameState.rank)}` : '--'}</Text>
                   {rankChangeText ? (
                     <Text style={[styles.rankChange, { color: gameState.rankChange > 0 ? colors.green : colors.red }]}>
                       {rankChangeText}
@@ -90,19 +90,19 @@ export function BetweenScreen({ navigation, route }: Props) {
 
           {/* Stats */}
           <View style={styles.statsRow}>
-            <StatBox value={stats.correct} label="Correct" color={colors.green} />
-            <StatBox value={stats.wrong} label="Wrong" color={colors.red} />
-            <StatBox value={stats.timeout} label="Unanswered" color={w(0.4)} />
+            <View testID="between:stat-correct"><StatBox value={stats.correct} label="Correct" color={colors.green} /></View>
+            <View testID="between:stat-wrong"><StatBox value={stats.wrong} label="Wrong" color={colors.red} /></View>
+            <View testID="between:stat-streak"><StatBox value={stats.timeout} label="Unanswered" color={w(0.4)} /></View>
           </View>
 
           {/* Leaderboard (location play only) */}
           {!isSolo && gameState.leaderboard.length > 0 && (
             <>
               <Text style={styles.sectionLabel}>Leaderboard</Text>
-              <View style={styles.leaderboardContainer}>
+              <View style={styles.leaderboardContainer} testID="between:leaderboard">
                 {gameState.leaderboard.slice(0, 8).map((entry, i) => (
                   <FadeInView key={entry.name} delay={i * 40} duration={300} direction="left">
-                    <LeaderboardRow entry={entry} />
+                    <LeaderboardRow entry={entry} testID={`between:leader-${i}`} />
                   </FadeInView>
                 ))}
               </View>

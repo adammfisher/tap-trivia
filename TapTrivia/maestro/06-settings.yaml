@@ -1,0 +1,58 @@
+appId: host.exp.Exponent
+---
+- runFlow: _launch.yaml
+
+# Open settings from welcome screen
+# Note: _launch.yaml already did a warm-up settings visit; intro is dismissed.
+- tapOn:
+    id: "welcome:settings-button"
+- waitForAnimationToEnd
+- runFlow: _dismiss-intro.yaml
+- assertVisible:
+    id: "settings:screen"
+
+# Verify key settings elements
+- assertVisible:
+    id: "settings:nickname-display"
+- assertVisible:
+    id: "settings:close-button"
+
+# Open Edit Nickname
+- tapOn:
+    id: "settings:edit-nickname-button"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "edit-nickname:screen"
+- assertVisible:
+    id: "edit-nickname:input"
+
+# Cancel returns to settings
+- tapOn:
+    id: "edit-nickname:cancel-button"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "settings:screen"
+
+# Feedback button opens feedback screen
+- runFlow:
+    when:
+      visible:
+        id: "settings:feedback-button"
+    commands:
+      - tapOn:
+          id: "settings:feedback-button"
+      - waitForAnimationToEnd
+      - assertVisible:
+          id: "feedback:screen"
+      - tapOn:
+          id: "feedback:cancel-button"
+      - waitForAnimationToEnd
+      - assertVisible:
+          id: "settings:screen"
+
+# Close settings
+- tapOn:
+    id: "settings:close-button"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "welcome:logo"

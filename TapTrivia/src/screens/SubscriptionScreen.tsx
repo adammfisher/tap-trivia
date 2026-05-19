@@ -48,11 +48,11 @@ export function SubscriptionScreen({ navigation }: Props) {
 
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: BG }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: BG }]} testID="subscription:screen">
       {/* Close button */}
       <View style={styles.topBar}>
         <View style={{ flex: 1 }} />
-        <Pressable onPress={() => navigation.goBack()} style={styles.closeButton}>
+        <Pressable onPress={() => navigation.goBack()} style={styles.closeButton} testID="subscription:close-button">
           <Text style={styles.closeText}>{'\u2715'}</Text>
         </Pressable>
       </View>
@@ -81,6 +81,7 @@ export function SubscriptionScreen({ navigation }: Props) {
         <Pressable
           onPress={handleStartTrial}
           disabled={isLoading}
+          testID="subscription:subscribe-button"
           style={({ pressed }) => [
             styles.trialButton,
             isLoading && styles.buttonDisabled,
@@ -102,7 +103,7 @@ export function SubscriptionScreen({ navigation }: Props) {
 
         {/* Restore — Apple's review guideline 3.1.1 requires this on every
             paywall for users who change devices or reinstall. */}
-        <Pressable onPress={handleRestore} disabled={isLoading}>
+        <Pressable onPress={handleRestore} disabled={isLoading} testID="subscription:restore-button">
           <Text style={styles.restoreText}>Restore Purchases</Text>
         </Pressable>
 

@@ -12,6 +12,8 @@ const VALID_TEMPLATES = ['specials', 'happyhour', 'event', 'brand', 'announcemen
 const VALID_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MAX_SLIDES = 10;
 const MAX_SIGNAGE_SIZE = 50 * 1024; // 50KB
+const MAX_FIELD_LENGTH = 500;
+const HTML_TAG_RE = /<[^>]+>/;
 
 exports.handler = async (event) => {
   try {
@@ -94,6 +96,32 @@ exports.handler = async (event) => {
           headers,
           body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Each slide must have a data object' })
         };
+      }
+
+      for (const [k, v] of Object.entries(slide.data)) {
+        if (typeof v !== 'string' && typeof v !== 'number' && typeof v !== 'boolean') {
+          return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'INVALID_INPUT', message: `Invalid type for slide data field: ${k}` })
+          };
+        }
+        if (typeof v === 'string') {
+          if (v.length > MAX_FIELD_LENGTH) {
+            return {
+              statusCode: 400,
+              headers,
+              body: JSON.stringify({ error: 'INVALID_INPUT', message: `Slide data field "${k}" exceeds ${MAX_FIELD_LENGTH} characters` })
+            };
+          }
+          if (HTML_TAG_RE.test(v)) {
+            return {
+              statusCode: 400,
+              headers,
+              body: JSON.stringify({ error: 'INVALID_INPUT', message: `Slide data field "${k}" must not contain HTML` })
+            };
+          }
+        }
       }
 
       if (!slide.schedule || typeof slide.schedule !== 'object') {

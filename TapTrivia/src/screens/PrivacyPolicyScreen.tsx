@@ -56,10 +56,10 @@ export function PrivacyPolicyScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={[styles.container, { paddingTop: insets.top }]} testID="privacy:screen">
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Privacy Policy</Text>
-          <Pressable onPress={() => navigation.goBack()} style={styles.closeButton}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.closeButton} testID="privacy:close-button">
             <Text style={styles.closeText}>{'\u2715'}</Text>
           </Pressable>
         </View>
@@ -67,6 +67,7 @@ export function PrivacyPolicyScreen({ navigation }: Props) {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          testID="privacy:content"
         >
           <Text style={styles.lastUpdated}>Last updated: February 2026</Text>
 

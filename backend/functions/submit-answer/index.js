@@ -28,7 +28,7 @@ exports.handler = async (event) => {
   try {
     const gameId = event.pathParameters?.gameId;
     const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
-    const { questionNumber, selectedAnswer, playerName, clientElapsedMs, barCode: requestBarCode } = body;
+    const { questionNumber, selectedAnswer, playerName } = body;
     const playerId = event.headers?.['x-player-id'] || event.headers?.['X-Player-ID'];
 
     // --- Validation ---
@@ -107,25 +107,21 @@ exports.handler = async (event) => {
       });
     }
 
-    // --- Check correctness and calculate points ---
-    // Use client elapsed time if provided and within 2s of server time,
-    // so the points the player sees at tap time match what they receive.
-    let scoringElapsedMs = elapsedMs;
-    if (typeof clientElapsedMs === 'number' &&
-        clientElapsedMs >= 4000 && clientElapsedMs <= 45000 &&
-        Math.abs(clientElapsedMs - elapsedMs) <= 2000) {
-      scoringElapsedMs = clientElapsedMs;
+    // --- Get player record — reject forged/unknown player IDs ---
+    const player = await get(TABLE.PLAYERS, { PK: `PLAYER#${playerId}` });
+    if (!player) {
+      return response(403, {
+        error: 'UNREGISTERED_PLAYER',
+        message: 'Player not found. Please restart the app.'
+      });
     }
 
+    // --- Check correctness and calculate points (server time is authoritative) ---
     const correct = selectedAnswer === question.answer;
-    const points = correct ? calculatePoints(scoringElapsedMs) : 0;
+    const points = correct ? calculatePoints(elapsedMs) : 0;
 
-    // --- Get player's bar assignment ---
-    // Use barCode from request body (client knows if they're at a bar this session).
-    // Fall back to stored currentBarCode for older clients that don't send it.
-
-    const player = await get(TABLE.PLAYERS, { PK: `PLAYER#${playerId}` });
-    const barCode = typeof requestBarCode === 'string' ? requestBarCode : (player?.currentBarCode || '');
+    // --- Use bar assignment from player record only ---
+    const barCode = player.currentBarCode || '';
 
     // --- Write the answer (conditional to prevent duplicates) ---
 

@@ -6,12 +6,14 @@ import type { SavedBar } from '../types/game';
 interface SavedBarCardProps {
   bar: SavedBar;
   onPress: () => void;
+  testID?: string;
 }
 
-export function SavedBarCard({ bar, onPress }: SavedBarCardProps) {
+export function SavedBarCard({ bar, onPress, testID }: SavedBarCardProps) {
   return (
     <Pressable
       onPress={onPress}
+      testID={testID}
       style={({ pressed }) => [
         styles.card,
         pressed && styles.pressed,

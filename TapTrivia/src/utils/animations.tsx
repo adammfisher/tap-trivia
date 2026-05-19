@@ -8,6 +8,7 @@ interface FadeInProps {
   duration?: number;
   direction?: Direction;
   style?: StyleProp<ViewStyle>;
+  testID?: string;
   children: React.ReactNode;
 }
 
@@ -24,6 +25,7 @@ interface FadeInTextProps {
   duration?: number;
   direction?: Direction;
   style?: StyleProp<TextStyle>;
+  testID?: string;
   children: React.ReactNode;
 }
 
@@ -42,6 +44,7 @@ export function FadeInView({
   duration = 400,
   direction = 'up',
   style,
+  testID,
   children,
 }: FadeInProps) {
   const opacity = useRef(new Animated.Value(0)).current;
@@ -81,7 +84,7 @@ export function FadeInView({
         : [];
 
   return (
-    <Animated.View style={[style, { opacity, transform }]}>
+    <Animated.View style={[style, { opacity, transform }]} testID={testID}>
       {children}
     </Animated.View>
   );
@@ -92,6 +95,7 @@ export function FadeInText({
   duration = 400,
   direction = 'up',
   style,
+  testID,
   children,
 }: FadeInTextProps) {
   const opacity = useRef(new Animated.Value(0)).current;
@@ -131,7 +135,7 @@ export function FadeInText({
         : [];
 
   return (
-    <Animated.Text style={[style, { opacity, transform }]}>
+    <Animated.Text style={[style, { opacity, transform }]} testID={testID}>
       {children}
     </Animated.Text>
   );

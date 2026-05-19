@@ -35,8 +35,8 @@ export function CategoryScreen({ navigation, route }: Props) {
 
   return (
     <GradientBackground>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <Text style={styles.questionLabel}>
+      <View style={[styles.container, { paddingTop: insets.top }]} testID="category:screen">
+        <Text style={styles.questionLabel} testID="category:question-number">
           QUESTION {gameState.questionNumber} OF {gameState.totalQuestions}
         </Text>
 
@@ -46,7 +46,7 @@ export function CategoryScreen({ navigation, route }: Props) {
               {question.categoryEmoji}
             </ZoomInText>
 
-            <FadeInText delay={200} duration={500} direction="down" style={styles.category}>
+            <FadeInText delay={200} duration={500} direction="down" style={styles.category} testID="category:name">
               {question.category}
             </FadeInText>
 
@@ -56,7 +56,7 @@ export function CategoryScreen({ navigation, route }: Props) {
               </FadeInText>
             ) : null}
 
-            <FadeInView delay={400} duration={500} direction="down" style={styles.dotsContainer}>
+            <FadeInView delay={400} duration={500} direction="down" style={styles.dotsContainer} testID="category:difficulty">
               <DifficultyDots difficulty={question.difficulty} />
             </FadeInView>
           </>

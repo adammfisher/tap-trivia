@@ -4,6 +4,7 @@ import { fonts } from '../theme/typography';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
+  testID?: string;
 }
 
 const sizes = {
@@ -12,10 +13,10 @@ const sizes = {
   lg: 32,
 };
 
-export const Logo = memo(function Logo({ size = 'md' }: LogoProps) {
+export const Logo = memo(function Logo({ size = 'md', testID }: LogoProps) {
   const fontSize = sizes[size];
   return (
-    <View style={styles.row}>
+    <View style={styles.row} testID={testID}>
       <Text style={[styles.tap, { fontSize }]}>Tap</Text>
       <Text style={[styles.trivia, { fontSize, color: '#ffd200' }]}>Trivia</Text>
     </View>

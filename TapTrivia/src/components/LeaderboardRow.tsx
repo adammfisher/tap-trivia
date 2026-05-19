@@ -7,14 +7,16 @@ import type { LeaderboardEntry } from '../types/game';
 interface LeaderboardRowProps {
   entry: LeaderboardEntry;
   compact?: boolean;
+  testID?: string;
 }
 
-export function LeaderboardRow({ entry, compact }: LeaderboardRowProps) {
+export function LeaderboardRow({ entry, compact, testID }: LeaderboardRowProps) {
   const { rank, name, score, movement, isYou } = entry;
   const avatarSize = compact ? 24 : 28;
 
   return (
     <View
+      testID={testID}
       style={[
         styles.row,
         isYou && styles.youRow,

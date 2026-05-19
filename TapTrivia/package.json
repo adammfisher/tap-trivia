@@ -6,7 +6,43 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test": "jest",
+    "e2e:build": "detox build --configuration ios.sim.debug",
+    "e2e:run": "bash run-detox.sh",
+    "e2e:run:onboarding": "bash run-detox.sh e2e/01-onboarding.test.ts",
+    "e2e:run:lobby": "bash run-detox.sh e2e/02-lobby.test.ts",
+    "e2e:run:gameplay": "bash run-detox.sh e2e/03-gameplay.test.ts",
+    "e2e:run:settings": "bash run-detox.sh e2e/04-settings.test.ts",
+    "e2e:run:groups": "bash run-detox.sh e2e/05-groups.test.ts",
+    "e2e:test": "detox test --configuration ios.sim.debug",
+    "e2e:test:gameplay": "detox test --configuration ios.sim.debug e2e/03-gameplay.test.ts",
+    "ui:test": "bash maestro/run-maestro.sh",
+    "ui:test:welcome": "JAVA_HOME=/opt/homebrew/Cellar/openjdk/25.0.2/libexec/openjdk.jdk/Contents/Home ~/.maestro/bin/maestro --device A7BD8C7F-A3AF-40DA-94EB-AA7E07D36ECF test maestro/01-welcome.yaml",
+    "ui:test:join": "JAVA_HOME=/opt/homebrew/Cellar/openjdk/25.0.2/libexec/openjdk.jdk/Contents/Home ~/.maestro/bin/maestro --device A7BD8C7F-A3AF-40DA-94EB-AA7E07D36ECF test maestro/02-join.yaml",
+    "ui:test:badwords": "JAVA_HOME=/opt/homebrew/Cellar/openjdk/25.0.2/libexec/openjdk.jdk/Contents/Home ~/.maestro/bin/maestro --device A7BD8C7F-A3AF-40DA-94EB-AA7E07D36ECF test maestro/03-nickname-and-badwords.yaml",
+    "ui:test:lobby": "JAVA_HOME=/opt/homebrew/Cellar/openjdk/25.0.2/libexec/openjdk.jdk/Contents/Home ~/.maestro/bin/maestro --device A7BD8C7F-A3AF-40DA-94EB-AA7E07D36ECF test maestro/04-lobby.yaml",
+    "ui:test:settings": "JAVA_HOME=/opt/homebrew/Cellar/openjdk/25.0.2/libexec/openjdk.jdk/Contents/Home ~/.maestro/bin/maestro --device A7BD8C7F-A3AF-40DA-94EB-AA7E07D36ECF test maestro/06-settings.yaml"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "testPathIgnorePatterns": [
+      "<rootDir>/node_modules/",
+      "<rootDir>/e2e/"
+    ],
+    "setupFiles": [
+      "<rootDir>/jest.setup.js"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|react-native-purchases.*)"
+    ],
+    "moduleNameMapper": {
+      "^expo-constants$": "<rootDir>/__mocks__/expo-constants.js",
+      "^expo/src/winter/ImportMetaRegistry$": "<rootDir>/__mocks__/expo-winter-importmeta.js"
+    },
+    "globals": {
+      "__DEV__": true
+    }
   },
   "dependencies": {
     "@expo-google-fonts/dm-mono": "^0.4.2",
@@ -26,6 +62,7 @@
     "expo-secure-store": "~15.0.8",
     "expo-splash-screen": "^31.0.13",
     "expo-status-bar": "~3.0.9",
+    "jest-expo": "~54.0.17",
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-purchases": "^9.10.4",
@@ -35,7 +72,17 @@
     "react-native-svg": "15.12.1"
   },
   "devDependencies": {
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
+    "@types/react-test-renderer": "^19.1.0",
+    "detox": "^20.50.4",
+    "jest": "^29.7.0",
+    "jest-circus": "^30.4.2",
+    "react-refresh": "^0.14.2",
+    "react-test-renderer": "^19.1.0",
+    "ts-jest": "^29.4.9",
     "typescript": "~5.9.2"
   },
   "private": true

@@ -79,11 +79,11 @@ export function ResultsScreen({ navigation, route }: Props) {
   return (
     <GradientBackground>
       <Confetti />
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={[styles.container, { paddingTop: insets.top }]} testID="results:screen">
         <View style={styles.header}>
           <Logo size="sm" />
           <View style={{ flex: 1 }} />
-          <Pressable onPress={() => navigation.navigate('Settings')} style={styles.settingsButton}>
+          <Pressable onPress={() => navigation.navigate('Settings')} style={styles.settingsButton} testID="results:settings-button">
             <Text style={styles.settingsIcon}>{'\u2699'}</Text>
           </Pressable>
         </View>
@@ -111,17 +111,17 @@ export function ResultsScreen({ navigation, route }: Props) {
                 <Text style={styles.playerName}>
                   {playerName} {!isSolo && gameState.rank > 0 ? `\u2014 ${gameState.rank}${getOrdinal(gameState.rank)} Place` : ''}
                 </Text>
-                <Text style={styles.finalScore}>{gameState.totalScore.toLocaleString()}</Text>
+                <Text style={styles.finalScore} testID="results:final-score">{gameState.totalScore.toLocaleString()}</Text>
               </View>
             </View>
-            <View style={styles.statsGrid}>
+            <View style={styles.statsGrid} testID="results:stats">
               {[
-                { n: stats.correct, l: 'Correct', c: colors.green },
-                { n: stats.wrong, l: 'Wrong', c: colors.red },
-                { n: stats.timeout, l: 'Unanswered', c: w(0.4) },
-                { n: `\u{1F525} ${stats.bestStreak}`, l: 'Best Streak', c: colors.gold },
+                { n: stats.correct, l: 'Correct', c: colors.green, tid: 'results:stat-correct' },
+                { n: stats.wrong, l: 'Wrong', c: colors.red, tid: 'results:stat-wrong' },
+                { n: stats.timeout, l: 'Unanswered', c: w(0.4), tid: 'results:stat-streak' },
+                { n: `\u{1F525} ${stats.bestStreak}`, l: 'Best Streak', c: colors.gold, tid: 'results:stat-best-streak' },
               ].map((s, i) => (
-                <View key={i} style={styles.statItem}>
+                <View key={i} style={styles.statItem} testID={s.tid}>
                   <Text style={[styles.statValue, { color: s.c }]}>{s.n}</Text>
                   <Text style={styles.statLabel}>{s.l}</Text>
                 </View>
@@ -133,7 +133,7 @@ export function ResultsScreen({ navigation, route }: Props) {
           {!isSolo && gameState.leaderboard.length > 0 && (
             <>
               <Text style={styles.sectionLabel}>Final Standings</Text>
-              <View style={styles.leaderboard}>
+              <View style={styles.leaderboard} testID="results:leaderboard">
                 {gameState.leaderboard.slice(0, 10).map((entry, i) => (
                   <FadeInView key={entry.name} delay={i * 40} duration={300} direction="left">
                     <LeaderboardRow entry={entry} compact />
@@ -147,7 +147,7 @@ export function ResultsScreen({ navigation, route }: Props) {
           {nextGameSecs !== null && (
             <View style={styles.nextGameSection}>
               <Text style={styles.nextGameLabel}>NEXT GAME IN</Text>
-              <Text style={styles.nextGameTimer}>{formatCountdown(nextGameSecs)}</Text>
+              <Text style={styles.nextGameTimer} testID="results:play-again-button">{formatCountdown(nextGameSecs)}</Text>
               <Text style={styles.nextGameHint}>Auto-joining next game</Text>
             </View>
           )}
