@@ -10,6 +10,7 @@ const { TABLE, query } = require('./dynamo');
 const { DIFFICULTY_RAMP } = require('./game-clock');
 
 const MAX_PER_CATEGORY = 2;
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 /**
  * Query all questions for a category + difficulty from the GSI (paginated).
@@ -27,10 +28,25 @@ async function queryQuestions(category, difficulty) {
 
 /**
  * LRU pick: from a list of questions, exclude tonight's used IDs,
- * sort by lastUsedEpoch ascending, then pick randomly from the bottom 30%.
+ * prefer questions not used in the last 30 days, sort by lastUsedEpoch ascending,
+ * then pick randomly from the bottom 30%.
+ *
+ * The 30-day window acts as a rolling cache — a question won't repeat within a month.
+ * Falls back to the full unused-tonight pool if a category's 30-day pool runs dry.
  */
 function lruPick(questions, tonightUsedIds) {
-  const available = questions.filter(q => !tonightUsedIds.has(q.questionId));
+  const cutoff = Date.now() - THIRTY_DAYS_MS;
+
+  // Primary pool: not used tonight AND not used in the last 30 days
+  let available = questions.filter(q =>
+    !tonightUsedIds.has(q.questionId) &&
+    (q.lastUsedEpoch || 0) < cutoff
+  );
+
+  // Fallback: relax the 30-day restriction if the category pool is exhausted
+  if (available.length === 0) {
+    available = questions.filter(q => !tonightUsedIds.has(q.questionId));
+  }
   if (available.length === 0) return null;
 
   // Sort by lastUsedEpoch ascending (0 = never used = highest priority)
