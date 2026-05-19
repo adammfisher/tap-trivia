@@ -422,6 +422,24 @@ body {
   width: 10px;
   height: 10px;
 }
+.status-dot--dormant {
+  background: #ff4757;
+  animation: none;
+}
+.activity-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 4px;
+}
+.activity-meta-item {
+  font-size: 12px;
+  color: rgba(255,255,255,.35);
+}
+.activity-meta-item strong {
+  color: rgba(255,255,255,.65);
+  font-weight: 600;
+}
 .sidebar-bar-code {
   font-family: 'DM Mono', monospace;
   font-size: 11px;
@@ -1942,6 +1960,42 @@ body {
 /* ================================================================
    ANALYTICS SCREEN
    ================================================================ */
+.an-status-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+.an-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+.an-status-badge--active {
+  background: rgba(0,212,170,.12);
+  color: #00d4aa;
+}
+.an-status-badge--dormant {
+  background: rgba(255,71,87,.1);
+  color: #ff4757;
+}
+.an-meta-chip {
+  font-size: 11px;
+  color: rgba(255,255,255,.4);
+  background: rgba(255,255,255,.05);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.an-member-since {
+  font-size: 11px;
+  color: rgba(255,255,255,.3);
+}
 .an-header {
   display: flex;
   justify-content: space-between;

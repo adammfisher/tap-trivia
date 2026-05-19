@@ -31,9 +31,14 @@ function renderAnalytics() {
   const container = document.getElementById('screen-analytics');
   if (!container) return;
 
-  const { data: authData } = getAuthState();
+  const { bar, data: authData } = getAuthState();
   const a = analyticsState.data || (authData && authData.analytics) || {};
+  const activity = authData && authData.barActivity ? authData.barActivity : {};
   const period = analyticsState.period;
+
+  const memberSince = bar && bar.memberSince
+    ? new Date(bar.memberSince).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : null;
 
   const periodLabels = {
     today: 'Today',
@@ -90,7 +95,19 @@ function renderAnalytics() {
       <div class="page-header an-header">
         <div>
           <h1 class="page-title">Analytics</h1>
-          <p class="page-desc">Player engagement and performance</p>
+          <div class="an-status-row">
+            <span class="an-status-badge ${activity.isDormant ? 'an-status-badge--dormant' : 'an-status-badge--active'}">
+              <span class="status-dot${activity.isDormant ? ' status-dot--dormant' : ''}"></span>
+              ${activity.isDormant ? 'Dormant' : 'Active'}
+            </span>
+            ${activity.daysSinceLastPoll != null
+              ? `<span class="an-meta-chip">TV ${activity.daysSinceLastPoll === 0 ? 'today' : activity.daysSinceLastPoll + 'd ago'}</span>`
+              : ''}
+            ${activity.daysSinceLastAnswer != null
+              ? `<span class="an-meta-chip">Players ${activity.daysSinceLastAnswer === 0 ? 'today' : activity.daysSinceLastAnswer + 'd ago'}</span>`
+              : ''}
+            ${memberSince ? `<span class="an-member-since">Member since ${memberSince}</span>` : ''}
+          </div>
         </div>
         <div class="an-period-tabs">
           ${Object.entries(periodLabels).map(([key, label]) => `

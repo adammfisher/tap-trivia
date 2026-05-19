@@ -1,6 +1,6 @@
 'use strict';
 
-const { TABLE, query, scan } = require('./shared/dynamo');
+const { TABLE, query, scan, docClient, QueryCommand } = require('./shared/dynamo');
 const { authenticate, unauthorized } = require('./shared/auth');
 
 const headers = {
@@ -47,6 +47,25 @@ exports.handler = async (event) => {
     const period = event.queryStringParameters?.period || 'week';
     const cutoff = getPeriodCutoff(period);
     const weekCutoff = getPeriodCutoff('week');
+
+    // Most recent answer ever — used for dormancy check (bypasses the query helper to avoid full pagination)
+    const recentAnsResp = await docClient.send(new QueryCommand({
+      TableName: TABLE.ANSWERS,
+      IndexName: 'barCode-time-index',
+      KeyConditionExpression: 'barCode = :bc',
+      ExpressionAttributeValues: { ':bc': bar.barCode },
+      ScanIndexForward: false,
+      Limit: 1,
+      ProjectionExpression: 'serverTimestamp'
+    }));
+    const lastAnswerTs = recentAnsResp.Items && recentAnsResp.Items.length > 0
+      ? recentAnsResp.Items[0].serverTimestamp
+      : null;
+
+    const now = Date.now();
+    const DORMANT_MS = 14 * 24 * 60 * 60 * 1000;
+    const lastPollTs = bar.lastPollAt ? new Date(bar.lastPollAt).getTime() : 0;
+    const isDormant = (now - lastPollTs) > DORMANT_MS && (lastAnswerTs ? (now - lastAnswerTs) > DORMANT_MS : true);
 
     // Query all answers for this bar in the period
     const answers = await query(TABLE.ANSWERS, {
@@ -187,7 +206,15 @@ exports.handler = async (event) => {
           emailVerified: bar.emailVerified || false,
           logoUrl: bar.logoUrl || null,
           logoHash: bar.logoHash || null,
-          signage: bar.signage || { slides: [], rotationSpeed: 60, enabled: true }
+          signage: bar.signage || { slides: [], rotationSpeed: 60, enabled: true },
+          memberSince: bar.createdAt || null
+        },
+        barActivity: {
+          isDormant,
+          lastPollAt: bar.lastPollAt || null,
+          lastAnswerAt: lastAnswerTs ? new Date(lastAnswerTs).toISOString() : null,
+          daysSinceLastPoll: lastPollTs ? Math.floor((now - lastPollTs) / 86400000) : null,
+          daysSinceLastAnswer: lastAnswerTs ? Math.floor((now - lastAnswerTs) / 86400000) : null
         },
         analytics: {
           playersThisWeek: weekPlayerIds.size,

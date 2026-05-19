@@ -9,6 +9,10 @@ function renderDashboard() {
   const signage = bar && bar.signage ? bar.signage : { slides: [], enabled: false };
   const slideCount = signage.slides ? signage.slides.filter(s => s.enabled).length : 0;
   const analytics = data && data.analytics ? data.analytics : {};
+  const activity = data && data.barActivity ? data.barActivity : {};
+  const memberSince = bar && bar.memberSince
+    ? new Date(bar.memberSince).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    : null;
 
   // Tonight's schedule — filter slides active today
   const today = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
@@ -34,15 +38,23 @@ function renderDashboard() {
     <div class="fade-in">
       <div class="page-header">
         <h1 class="page-title">Dashboard</h1>
-        <p class="page-desc">Welcome back, ${barName}</p>
+        <p class="page-desc">Welcome back, ${barName}${memberSince ? ` &middot; Member since ${memberSince}` : ''}</p>
       </div>
 
       <div class="tv-status-card dash-card">
         <div class="tv-status-left">
-          <div class="status-dot status-dot--lg"></div>
+          <div class="status-dot status-dot--lg${activity.isDormant ? ' status-dot--dormant' : ''}"></div>
           <div>
-            <div class="tv-status-title">${slideCount > 0 ? 'Signage active' : 'No signage configured'}</div>
-            <div class="tv-status-desc">${slideCount} slide${slideCount !== 1 ? 's' : ''} in rotation</div>
+            <div class="tv-status-title">${activity.isDormant ? 'Location dormant' : 'Location active'}</div>
+            <div class="activity-meta">
+              ${activity.daysSinceLastPoll != null
+                ? `<span class="activity-meta-item">TV <strong>${activity.daysSinceLastPoll === 0 ? 'today' : activity.daysSinceLastPoll + 'd ago'}</strong></span>`
+                : ''}
+              ${activity.daysSinceLastAnswer != null
+                ? `<span class="activity-meta-item">Players <strong>${activity.daysSinceLastAnswer === 0 ? 'today' : activity.daysSinceLastAnswer + 'd ago'}</strong></span>`
+                : `<span class="activity-meta-item">Players <strong>none yet</strong></span>`}
+              <span class="activity-meta-item">${slideCount} slide${slideCount !== 1 ? 's' : ''} in rotation</span>
+            </div>
           </div>
         </div>
         <button class="btn-primary" id="btn-go-signage">Create Signage &rarr;</button>
