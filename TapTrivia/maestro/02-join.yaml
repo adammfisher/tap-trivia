@@ -52,9 +52,8 @@ appId: host.exp.Exponent
           id: "join:code-box-0"
       - inputText: "MXDN8"
       - pressKey: Enter
-      - waitForAnimationToEnd:
-          timeout: 8000
-
-      # Should advance to Nickname screen
-      - assertVisible:
-          id: "nickname:screen"
+      # joinBar API can be slow on Android — poll until nickname screen appears
+      - extendedWaitUntil:
+          visible:
+            id: "nickname:screen"
+          timeout: 15000

@@ -50,7 +50,10 @@ cleanup() {
 trap cleanup EXIT
 
 for f in "$SCRIPT_DIR"/*.yaml; do
-  sed 's/appId: host\.exp\.Exponent/appId: host.exp.exponent/g' "$f" > "$TMPDIR_FLOWS/$(basename "$f")"
+  sed \
+    -e 's/appId: host\.exp\.Exponent/appId: host.exp.exponent/g' \
+    -e 's/runFlow: _launch\.yaml/runFlow: _launch_android.yaml/g' \
+    "$f" > "$TMPDIR_FLOWS/$(basename "$f")"
 done
 
 # Run flows

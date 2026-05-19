@@ -1,0 +1,42 @@
+appId: host.exp.exponent
+---
+# Android-specific launch flow. Identical to _launch.yaml but:
+# - Uses lowercase appId (host.exp.exponent) for Android Expo Go
+# - Extends extendedWaitUntil timeout to 120s (Android JVM cold-start after stopApp is >60s)
+# - Adds a short drain wait after stopApp to let the process fully exit
+
+- stopApp
+# Let the Expo Go process fully exit before reopening
+- waitForAnimationToEnd:
+    timeout: 3000
+- openLink: "exp://127.0.0.1:8082"
+- runFlow:
+    when:
+      visible:
+        text: "Open"
+    commands:
+      - tapOn: "Open"
+- extendedWaitUntil:
+    visible:
+      id: "welcome:logo"
+    timeout: 120000
+- runFlow: _dismiss-intro.yaml
+- tapOn:
+    id: "welcome:settings-button"
+- waitForAnimationToEnd:
+    timeout: 10000
+- runFlow: _dismiss-intro.yaml
+- runFlow:
+    when:
+      visible:
+        id: "settings:close-button"
+    commands:
+      - tapOn:
+          id: "settings:close-button"
+      - waitForAnimationToEnd:
+          timeout: 5000
+- runFlow: _dismiss-intro.yaml
+- extendedWaitUntil:
+    visible:
+      id: "welcome:logo"
+    timeout: 15000

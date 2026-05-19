@@ -36,8 +36,8 @@ appId: host.exp.Exponent
       - inputText: "TestGroup"
       - tapOn:
           id: "create-group:submit-button"
-      - waitForAnimationToEnd:
-          timeout: 8000
-      # Should show group code after creation
-      - assertVisible:
-          id: "create-group:code-display"
+      # createGroup API can be slow on Android — poll until code display appears
+      - extendedWaitUntil:
+          visible:
+            id: "create-group:code-display"
+          timeout: 15000
