@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  TVFocusGuideView,
 } from 'react-native';
 
 import { Logo } from '../components/Logo';
@@ -14,572 +13,312 @@ import { useTVState } from '../contexts/TVStateContext';
 import { fonts } from '../theme/typography';
 import { colors, w } from '../theme/colors';
 
-type RegState = 'form' | 'sending' | 'sent';
-type CodeState = 'input' | 'verifying' | 'activated' | 'error';
-type EditField = 'name' | 'email' | 'code' | null;
-
 export function SetupScreen() {
   const { state, register, activate } = useTVState();
 
-  // Register panel state
-  const [regState, setRegState] = useState<RegState>('form');
-  const [locName, setLocName] = useState('');
-  const [email, setEmail] = useState('');
-  const [regError, setRegError] = useState('');
-  const [registeredCode, setRegisteredCode] = useState('');
-
-  // Activate panel state
-  const [codeState, setCodeState] = useState<CodeState>('input');
+  // ── Code entry ────────────────────────────────────────────
   const [code, setCode] = useState(state.barCode || '');
+  const [codeBusy, setCodeBusy] = useState(false);
+  const [codeDone, setCodeDone] = useState(false);
   const [codeError, setCodeError] = useState('');
 
-  // Text entry: one hidden TextInput serves all fields. No inline inputs on the main
-  // screen so tvOS focus engine never auto-advances between fields.
-  const [editingField, setEditingField] = useState<EditField>(null);
-  const [editingValue, setEditingValue] = useState('');
+  // ── Registration ──────────────────────────────────────────
+  const [locName, setLocName] = useState('');
+  const [email, setEmail]     = useState('');
+  const [regBusy, setRegBusy] = useState(false);
+  const [regDone, setRegDone] = useState(false);
+  const [regError, setRegError] = useState('');
 
-  // Callback ref so TVFocusGuideView gets the node after first render
-  const [codeRowNode, setCodeRowNode] = useState<any>(null);
-
-  const openEdit = useCallback((field: EditField, currentValue: string) => {
-    setEditingField(field);
-    setEditingValue(currentValue);
-  }, []);
-
-  const confirmEdit = useCallback(() => {
-    if (editingField === 'name') {
-      setLocName(editingValue.trim());
-    } else if (editingField === 'email') {
-      setEmail(editingValue.trim());
-    } else if (editingField === 'code') {
-      const cleaned = editingValue.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
-      console.log('[CodeInput] confirmed:', cleaned);
-      setCode(cleaned);
-      setCodeError('');
-      setCodeState('input');
+  async function doActivate(c: string) {
+    setCodeBusy(true);
+    setCodeError('');
+    try {
+      await activate(c);
+      setCodeDone(true);
+    } catch (e: any) {
+      setCodeError(e.message || 'Invalid code — check it and try again');
+      setTimeout(() => setCodeError(''), 3000);
+    } finally {
+      setCodeBusy(false);
     }
-    setEditingField(null);
-  }, [editingField, editingValue]);
+  }
 
-  // ─── Register ───────────────────────────────────────────────────────
-
-  const handleRegister = useCallback(async () => {
+  async function doRegister() {
     if (!locName.trim()) return;
-    setRegState('sending');
+    setRegBusy(true);
     setRegError('');
     try {
       const barCode = await register(locName.trim(), email.trim() || undefined);
-      setRegisteredCode(barCode);
       setCode(barCode);
-      setRegState('sent');
-      setCodeState('verifying');
-      setCodeError('');
-      try {
-        await activate(barCode);
-        setCodeState('activated');
-      } catch (err: any) {
-        setCodeError(err.message || 'Activation failed');
-        setCodeState('error');
-        setTimeout(() => setCodeState('input'), 2000);
-      }
-    } catch (err: any) {
-      setRegError(err.message || 'Registration failed');
-      setRegState('form');
+      setRegDone(true);
+      await doActivate(barCode);
+    } catch (e: any) {
+      setRegError(e.message || 'Registration failed — please try again');
+      setRegBusy(false);
     }
-  }, [locName, email, register, activate]);
-
-  // ─── Activate ───────────────────────────────────────────────────────
-
-  const handleActivate = useCallback(async () => {
-    if (code.length !== 5) return;
-    setCodeState('verifying');
-    setCodeError('');
-    try {
-      await activate(code);
-      setCodeState('activated');
-    } catch (err: any) {
-      setCodeError(err.message || 'Invalid code');
-      setCodeState('error');
-      setTimeout(() => setCodeState('input'), 2000);
-    }
-  }, [code, activate]);
-
-  const codeReady = code.length === 5;
-
-  const editKeyboardType = editingField === 'email' ? 'email-address' as const : 'default' as const;
-  const editAutoCapitalize = editingField === 'code' ? 'characters' as const
-    : editingField === 'email' ? 'none' as const
-    : 'words' as const;
+  }
 
   return (
-    <>
-      <View style={s.container}>
-        {/* Header */}
-        <View style={s.header}>
-          <Logo size="lg" />
-        </View>
+    <View style={s.root}>
 
-        {/* Two-column layout */}
-        <View style={s.columns}>
-
-          {/* ── LEFT: Register ─────────────────────────────── */}
-          <View style={s.left}>
-            <View style={s.badge}>
-              <Text style={s.badgeText}>{'📺'} NEW LOCATION</Text>
-            </View>
-
-            <Text style={s.heading}>Register Your Location</Text>
-            <Text style={s.desc}>
-              Everything is free — live trivia, signage, analytics. Just enter your location name to get started.
-            </Text>
-
-            {regState === 'form' && (
-              <>
-                {/* Location name — focusable row, opens overlay on select */}
-                <TouchableOpacity
-                  style={s.fieldRow}
-                  onPress={() => openEdit('name', locName)}
-                >
-                  <Text style={locName ? s.fieldValue : s.fieldPlaceholder}>
-                    {locName || "📍  Your location's name"}
-                  </Text>
-                </TouchableOpacity>
-
-                {/* Email — focusable row, opens overlay on select */}
-                <TouchableOpacity
-                  style={s.fieldRow}
-                  onPress={() => openEdit('email', email)}
-                >
-                  <Text style={email ? s.fieldValue : s.fieldPlaceholder}>
-                    {email || "✉️  Owner email (optional)"}
-                  </Text>
-                </TouchableOpacity>
-
-                <View style={s.promoCard}>
-                  <Text style={s.promoTitle}>{'📺'} Free Digital Signage</Text>
-                  <Text style={s.promoDesc}>
-                    Add your email to get free signage, a dashboard & analytics — all completely free
-                  </Text>
-                </View>
-
-                <View style={s.features}>
-                  <Text style={s.featureText}>{'🍹'} Free live trivia that drives traffic and keeps guests longer</Text>
-                  <Text style={s.featureText}>{'📺'} Free digital signage to promote your specials & events</Text>
-                  <Text style={s.featureText}>{'📊'} Free dashboard with player metrics and engagement analytics</Text>
-                </View>
-
-                {regError ? <Text style={s.error}>{regError}</Text> : null}
-
-                <TouchableOpacity
-                  style={[s.registerBtn, !locName.trim() && s.btnDisabled]}
-                  onPress={handleRegister}
-                  disabled={!locName.trim()}
-                >
-                  <Text style={s.registerBtnText}>{'📋'} REGISTER & GET CODE</Text>
-                </TouchableOpacity>
-
-                <Text style={s.hint}>Navigate with your remote · Select a field to type</Text>
-              </>
-            )}
-
-            {regState === 'sending' && (
-              <View style={s.centered}>
-                <ActivityIndicator size="large" color={colors.gold} />
-                <Text style={s.statusText}>Registering...</Text>
-              </View>
-            )}
-
-            {regState === 'sent' && (
-              <View style={s.centered}>
-                <Text style={s.successIcon}>{'✓'}</Text>
-                <Text style={s.successText}>Registered!</Text>
-                <Text style={s.registeredCode}>{registeredCode}</Text>
-                <Text style={s.hintText}>Activating your display...</Text>
-              </View>
-            )}
-          </View>
-
-          {/* ── Divider ───────────────────────────────────── */}
-          <View style={s.divider}>
-            <View style={s.dividerCircle}>
-              <Text style={s.dividerText}>OR</Text>
-            </View>
-          </View>
-
-          {/* ── RIGHT: Activate — TVFocusGuideView directs any swipe into this
-               column straight to the code row ────────────────────────── */}
-          <TVFocusGuideView style={s.right} destinations={codeRowNode ? [codeRowNode] : []}>
-            <View style={[s.badge, s.badgeCenter, codeReady && s.badgeReady]}>
-              <Text style={s.badgeText}>
-                {codeReady ? '✓ CODE READY' : '🔑 ENTER CODE'}
-              </Text>
-            </View>
-
-            <Text style={s.heading}>TapTrivia for Venues</Text>
-            <Text style={s.desc}>
-              Display live trivia at your bar, restaurant, or venue.
-            </Text>
-
-            <Text style={s.inputLabel}>Enter your venue's 5-character TapTrivia code</Text>
-
-            {/* Code field — focus guide destinations point here */}
-            <TouchableOpacity
-              ref={setCodeRowNode}
-              style={[s.codeRow, codeState === 'error' && s.codeRowError]}
-              onPress={() => openEdit('code', code)}
-            >
-              <Text style={code ? s.codeValue : s.codePlaceholder}>
-                {code || '_ _ _ _ _'}
-              </Text>
-            </TouchableOpacity>
-
-            <Text style={s.inputHelper}>
-              No code yet? Enter your location name and email on the left to get one.
-            </Text>
-
-            {codeError ? <Text style={s.error}>{codeError}</Text> : null}
-
-            <View style={s.infoCard}>
-              <Text style={s.infoTitle}>Use this code on all your TVs</Text>
-              <Text style={s.infoDesc}>One code activates every screen at your location</Text>
-            </View>
-
-            {codeState === 'verifying' ? (
-              <View style={s.centered}>
-                <ActivityIndicator size="large" color={colors.green} />
-                <Text style={s.statusText}>Activating...</Text>
-              </View>
-            ) : codeState === 'activated' ? (
-              <View style={s.centered}>
-                <Text style={s.successIcon}>{'✓'}</Text>
-                <Text style={s.successText}>You're Live!</Text>
-              </View>
-            ) : (
-              <TouchableOpacity
-                style={[s.activateBtn, !codeReady && s.btnDisabled]}
-                onPress={handleActivate}
-                disabled={!codeReady}
-              >
-                <Text style={s.activateBtnText}>Start Display</Text>
-              </TouchableOpacity>
-            )}
-          </TVFocusGuideView>
-        </View>
-
-        <Text style={s.footer}>taptrivia.tv · Free for venues · Powered by Visudo Labs</Text>
+      {/* ── Header ─────────────────────────────────────────── */}
+      <View style={s.header}>
+        <Logo size="lg" />
+        <Text style={s.tagline}>Venue display · Free forever</Text>
       </View>
 
-      {/* Hidden input — triggers the Apple TV system keyboard with no app UI.
-          1×1 invisible; autoFocus opens the keyboard on mount.
-          Done fires onSubmitEditing → saves value → unmounts. */}
-      {editingField !== null && (
-        <TextInput
-          style={s.hiddenInput}
-          autoFocus
-          value={editingValue}
-          onChangeText={(val) => {
-            if (editingField === 'code') {
-              setEditingValue(val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5));
-            } else {
-              setEditingValue(val);
-            }
-          }}
-          onSubmitEditing={confirmEdit}
-          returnKeyType="done"
-          autoCapitalize={editAutoCapitalize}
-          autoCorrect={false}
-          keyboardType={editKeyboardType}
-          maxLength={editingField === 'code' ? 5 : undefined}
-        />
-      )}
-    </>
+      {/* ── Two columns ────────────────────────────────────── */}
+      <View style={s.cols}>
+
+        {/* LEFT: Register ─────────────────────────────────── */}
+        <View style={s.col}>
+          <Text style={s.colLabel}>NEW VENUE</Text>
+          <Text style={s.colHead}>Register for free</Text>
+          <Text style={s.colSub}>Get live trivia, signage, and analytics — all free.</Text>
+
+          <TextInput
+            style={s.input}
+            value={locName}
+            onChangeText={setLocName}
+            placeholder="Venue name"
+            placeholderTextColor={w(0.35)}
+            autoCapitalize="words"
+            autoCorrect={false}
+            returnKeyType="done"
+          />
+
+          <TextInput
+            style={s.input}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Owner email  (optional)"
+            placeholderTextColor={w(0.35)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="done"
+          />
+
+          {regError ? <Text style={s.errText}>{regError}</Text> : null}
+
+          {regDone ? (
+            <Text style={s.doneText}>✓  Registered! Activating display…</Text>
+          ) : (
+            <TouchableOpacity
+              style={[s.btn, s.btnGold, (!locName.trim() || regBusy) && s.btnDim]}
+              onPress={doRegister}
+              disabled={!locName.trim() || regBusy}
+            >
+              {regBusy
+                ? <ActivityIndicator color="#1a0a2e" />
+                : <Text style={s.btnTextDark}>Register &amp; Get Code</Text>}
+            </TouchableOpacity>
+          )}
+
+          <Text style={s.footNote}>Use your remote or a USB keyboard to type</Text>
+        </View>
+
+        {/* Divider */}
+        <View style={s.divider}>
+          <View style={s.divLine} />
+          <Text style={s.divOr}>OR</Text>
+          <View style={s.divLine} />
+        </View>
+
+        {/* RIGHT: Enter code ───────────────────────────────── */}
+        <View style={s.col}>
+          <Text style={s.colLabel}>HAVE A CODE?</Text>
+          <Text style={s.colHead}>Activate this TV</Text>
+          <Text style={s.colSub}>Enter your 5-character venue code to start the display.</Text>
+
+          <TextInput
+            style={[s.input, s.codeInput, codeError ? s.inputErr : null]}
+            value={code}
+            onChangeText={v => {
+              setCodeError('');
+              setCode(v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5));
+            }}
+            placeholder="_ _ _ _ _"
+            placeholderTextColor={w(0.25)}
+            maxLength={5}
+            autoCapitalize="characters"
+            autoCorrect={false}
+            returnKeyType="done"
+          />
+
+          {codeError ? <Text style={s.errText}>{codeError}</Text> : null}
+
+          {codeDone ? (
+            <Text style={s.doneText}>✓  You're live!</Text>
+          ) : (
+            <TouchableOpacity
+              style={[s.btn, s.btnGreen, (code.length < 5 || codeBusy) && s.btnDim]}
+              onPress={() => doActivate(code)}
+              disabled={code.length < 5 || codeBusy}
+            >
+              {codeBusy
+                ? <ActivityIndicator color="#fff" />
+                : <Text style={s.btnTextLight}>Start Display</Text>}
+            </TouchableOpacity>
+          )}
+
+          <Text style={s.footNote}>
+            No code yet? Register your venue on the left.
+          </Text>
+        </View>
+      </View>
+
+      <Text style={s.footer}>taptrivia.tv · Powered by Visudo Labs</Text>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     paddingHorizontal: 80,
-    paddingTop: 40,
-    paddingBottom: 24,
+    paddingVertical: 32,
   },
+
+  // ── Header ─────────────────────────────────────────────────
   header: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 28,
   },
-
-  // ── Columns ──────────────────────────────────────────────
-  columns: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  left: {
-    flex: 1.2,
-    paddingRight: 20,
-  },
-  right: {
-    flex: 1,
-    paddingLeft: 24,
-  },
-  divider: {
-    width: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dividerCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dividerText: {
-    fontFamily: fonts.outfit.semiBold,
-    fontSize: 16,
-    color: w(0.35),
-  },
-
-  // ── Badge pills ──────────────────────────────────────────
-  badge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(0,212,170,0.15)',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    marginBottom: 16,
-  },
-  badgeCenter: {
-    alignSelf: 'center',
-  },
-  badgeReady: {
-    backgroundColor: 'rgba(0,212,170,0.25)',
-  },
-  badgeText: {
-    fontFamily: fonts.outfit.bold,
-    fontSize: 16,
-    color: colors.green,
-    letterSpacing: 1,
-  },
-
-  // ── Typography ───────────────────────────────────────────
-  heading: {
-    fontFamily: fonts.fredoka.bold,
-    fontSize: 48,
-    color: '#ffffff',
-    marginBottom: 12,
-  },
-  desc: {
-    fontFamily: fonts.outfit.regular,
-    fontSize: 22,
-    color: w(0.55),
-    marginBottom: 32,
-    lineHeight: 30,
-  },
-
-  // ── Left panel field rows (no inline TextInputs) ──────────
-  fieldRow: {
-    borderRadius: 8,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    marginBottom: 18,
-  },
-  fieldValue: {
-    fontFamily: fonts.outfit.medium,
-    fontSize: 24,
-    color: '#ffffff',
-  },
-  fieldPlaceholder: {
-    fontFamily: fonts.outfit.medium,
-    fontSize: 24,
-    color: w(0.35),
-  },
-
-  promoCard: {
-    backgroundColor: 'transparent',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 24,
-    paddingVertical: 18,
-    marginBottom: 22,
-  },
-  promoTitle: {
-    fontFamily: fonts.outfit.bold,
-    fontSize: 22,
-    color: colors.green,
-    marginBottom: 4,
-  },
-  promoDesc: {
-    fontFamily: fonts.outfit.regular,
-    fontSize: 18,
-    color: w(0.5),
-    lineHeight: 24,
-  },
-  features: {
-    marginBottom: 24,
-  },
-  featureText: {
+  tagline: {
     fontFamily: fonts.outfit.regular,
     fontSize: 20,
-    color: w(0.55),
-    marginBottom: 12,
-    lineHeight: 26,
+    color: w(0.4),
+    marginTop: 6,
   },
-  registerBtn: {
-    backgroundColor: colors.gold,
-    borderRadius: 8,
-    paddingVertical: 22,
+
+  // ── Columns ────────────────────────────────────────────────
+  cols: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 0,
+  },
+  col: {
+    flex: 1,
+    paddingHorizontal: 40,
+  },
+  colLabel: {
+    fontFamily: fonts.outfit.bold,
+    fontSize: 14,
+    color: colors.green,
+    letterSpacing: 2,
+    marginBottom: 10,
+  },
+  colHead: {
+    fontFamily: fonts.fredoka.bold,
+    fontSize: 42,
+    color: '#ffffff',
+    marginBottom: 8,
+  },
+  colSub: {
+    fontFamily: fonts.outfit.regular,
+    fontSize: 20,
+    color: w(0.5),
+    marginBottom: 28,
+    lineHeight: 28,
+  },
+
+  // ── Inputs ─────────────────────────────────────────────────
+  input: {
+    fontFamily: fonts.outfit.medium,
+    fontSize: 24,
+    color: '#ffffff',
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    marginBottom: 16,
+  },
+  codeInput: {
+    fontFamily: fonts.dmMono.medium,
+    fontSize: 32,
+    letterSpacing: 10,
+    textAlign: 'center',
+  },
+  inputErr: {
+    borderColor: colors.red,
+  },
+
+  // ── Buttons ────────────────────────────────────────────────
+  btn: {
+    borderRadius: 10,
+    paddingVertical: 20,
     alignItems: 'center',
-    marginBottom: 14,
+    justifyContent: 'center',
+    marginTop: 4,
+    minHeight: 64,
   },
-  registerBtnText: {
+  btnGreen: {
+    backgroundColor: colors.green,
+  },
+  btnGold: {
+    backgroundColor: colors.gold,
+  },
+  btnDim: {
+    opacity: 0.35,
+  },
+  btnTextLight: {
+    fontFamily: fonts.outfit.bold,
+    fontSize: 24,
+    color: '#ffffff',
+    letterSpacing: 0.5,
+  },
+  btnTextDark: {
     fontFamily: fonts.outfit.bold,
     fontSize: 24,
     color: '#1a0a2e',
-    letterSpacing: 1,
-  },
-  hint: {
-    fontFamily: fonts.outfit.regular,
-    fontSize: 16,
-    color: w(0.3),
-    textAlign: 'center',
+    letterSpacing: 0.5,
   },
 
-  // ── Right panel code row ──────────────────────────────────
-  inputLabel: {
-    fontFamily: fonts.outfit.semiBold,
-    fontSize: 18,
-    color: w(0.65),
-    marginBottom: 10,
-  },
-  codeRow: {
-    borderRadius: 8,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.2)',
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  codeRowError: {
-    borderColor: colors.red,
-  },
-  codeValue: {
-    fontFamily: fonts.outfit.bold,
-    fontSize: 28,
-    color: '#ffffff',
-    letterSpacing: 6,
-    textAlign: 'center',
-  },
-  codePlaceholder: {
-    fontFamily: fonts.outfit.bold,
-    fontSize: 28,
-    color: w(0.25),
-    letterSpacing: 6,
-    textAlign: 'center',
-  },
-  inputHelper: {
-    fontFamily: fonts.outfit.regular,
-    fontSize: 16,
-    color: w(0.4),
-    marginBottom: 16,
-    lineHeight: 22,
-  },
-  infoCard: {
-    backgroundColor: 'transparent',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    marginBottom: 24,
-  },
-  infoTitle: {
-    fontFamily: fonts.outfit.bold,
-    fontSize: 22,
-    color: '#ffffff',
-    marginBottom: 4,
-  },
-  infoDesc: {
-    fontFamily: fonts.outfit.regular,
-    fontSize: 18,
-    color: w(0.45),
-  },
-  activateBtn: {
-    backgroundColor: colors.green,
-    borderRadius: 8,
-    paddingVertical: 22,
-    alignItems: 'center',
-  },
-  activateBtnText: {
-    fontFamily: fonts.outfit.bold,
-    fontSize: 24,
-    color: '#ffffff',
-    letterSpacing: 1,
-  },
-  btnDisabled: {
-    opacity: 0.35,
-  },
-
-  // ── Shared states ────────────────────────────────────────
-  centered: {
+  // ── Divider ────────────────────────────────────────────────
+  divider: {
+    width: 60,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 32,
+    gap: 12,
   },
-  statusText: {
-    fontFamily: fonts.outfit.medium,
-    fontSize: 20,
-    color: w(0.6),
-    marginTop: 16,
+  divLine: {
+    flex: 1,
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
-  successIcon: {
-    fontSize: 56,
-    color: colors.green,
-    marginBottom: 12,
+  divOr: {
+    fontFamily: fonts.outfit.semiBold,
+    fontSize: 16,
+    color: w(0.3),
   },
-  successText: {
-    fontFamily: fonts.fredoka.bold,
-    fontSize: 36,
-    color: colors.green,
-    marginBottom: 8,
-  },
-  registeredCode: {
-    fontFamily: fonts.dmMono.medium,
-    fontSize: 48,
-    color: colors.gold,
-    letterSpacing: 8,
-    marginBottom: 12,
-  },
-  hintText: {
-    fontFamily: fonts.outfit.regular,
-    fontSize: 18,
-    color: w(0.5),
-    textAlign: 'center',
-  },
-  error: {
+
+  // ── Status text ────────────────────────────────────────────
+  errText: {
     fontFamily: fonts.outfit.medium,
     fontSize: 18,
     color: colors.red,
-    textAlign: 'center',
-    marginVertical: 8,
+    marginBottom: 8,
+  },
+  doneText: {
+    fontFamily: fonts.fredoka.bold,
+    fontSize: 28,
+    color: colors.green,
+    marginTop: 8,
+  },
+  footNote: {
+    fontFamily: fonts.outfit.regular,
+    fontSize: 16,
+    color: w(0.28),
+    marginTop: 16,
   },
   footer: {
     fontFamily: fonts.outfit.regular,
     fontSize: 15,
-    color: w(0.25),
+    color: w(0.2),
     textAlign: 'center',
     marginTop: 8,
-  },
-
-  // Hidden input — 1×1 invisible, triggers Apple TV system keyboard via autoFocus
-  hiddenInput: {
-    position: 'absolute',
-    width: 1,
-    height: 1,
-    opacity: 0,
   },
 });
