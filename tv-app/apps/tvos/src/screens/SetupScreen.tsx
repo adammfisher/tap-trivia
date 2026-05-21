@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,17 +6,16 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  ScrollView,
 } from 'react-native';
 
 import { Logo } from '../components/Logo';
 import { useTVState } from '../contexts/TVStateContext';
-import { fonts, tvFontSizes } from '../theme/typography';
-import { colors, w, b } from '../theme/colors';
-import { borderRadius, spacing } from '../theme/spacing';
+import { fonts } from '../theme/typography';
+import { colors, w } from '../theme/colors';
 
 type RegState = 'form' | 'sending' | 'sent';
 type CodeState = 'input' | 'verifying' | 'activated' | 'error';
+type EditField = 'name' | 'email' | 'code' | null;
 
 export function SetupScreen() {
   const { state, register, activate } = useTVState();
@@ -27,14 +26,36 @@ export function SetupScreen() {
   const [email, setEmail] = useState('');
   const [regError, setRegError] = useState('');
   const [registeredCode, setRegisteredCode] = useState('');
-  const locNameRef = useRef<TextInput>(null);
-  const emailRef = useRef<TextInput>(null);
 
-  // Activate panel state — pre-fill bar code if returning from a live session
+  // Activate panel state
   const [codeState, setCodeState] = useState<CodeState>('input');
   const [code, setCode] = useState(state.barCode || '');
   const [codeError, setCodeError] = useState('');
-  const codeInputRef = useRef<TextInput>(null);
+
+  // Text entry overlay — one overlay serves all fields; no inline TextInputs on the
+  // main screen so the tvOS focus engine never auto-advances between fields.
+  const [editingField, setEditingField] = useState<EditField>(null);
+  const [editingValue, setEditingValue] = useState('');
+
+  const openEdit = useCallback((field: EditField, currentValue: string) => {
+    setEditingField(field);
+    setEditingValue(currentValue);
+  }, []);
+
+  const confirmEdit = useCallback(() => {
+    if (editingField === 'name') {
+      setLocName(editingValue.trim());
+    } else if (editingField === 'email') {
+      setEmail(editingValue.trim());
+    } else if (editingField === 'code') {
+      const cleaned = editingValue.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
+      console.log('[CodeInput] confirmed:', cleaned);
+      setCode(cleaned);
+      setCodeError('');
+      setCodeState('input');
+    }
+    setEditingField(null);
+  }, [editingField, editingValue]);
 
   // ─── Register ───────────────────────────────────────────────────────
 
@@ -47,7 +68,6 @@ export function SetupScreen() {
       setRegisteredCode(barCode);
       setCode(barCode);
       setRegState('sent');
-      // Auto-activate with the freshly registered code
       setCodeState('verifying');
       setCodeError('');
       try {
@@ -66,13 +86,6 @@ export function SetupScreen() {
 
   // ─── Activate ───────────────────────────────────────────────────────
 
-  const handleCodeChange = useCallback((val: string) => {
-    console.log('[CodeInput] text received:', val);
-    setCode(val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5));
-    setCodeError('');
-    setCodeState('input');
-  }, []);
-
   const handleActivate = useCallback(async () => {
     if (code.length !== 5) return;
     setCodeState('verifying');
@@ -89,6 +102,15 @@ export function SetupScreen() {
 
   const codeReady = code.length === 5;
 
+  const editLabel = editingField === 'name' ? 'Location Name'
+    : editingField === 'email' ? 'Owner Email (Optional)'
+    : 'Venue Code';
+
+  const editKeyboardType = editingField === 'email' ? 'email-address' as const : 'default' as const;
+  const editAutoCapitalize = editingField === 'code' ? 'characters' as const
+    : editingField === 'email' ? 'none' as const
+    : 'words' as const;
+
   return (
     <>
       <View style={s.container}>
@@ -102,9 +124,8 @@ export function SetupScreen() {
 
           {/* ── LEFT: Register ─────────────────────────────── */}
           <View style={s.left}>
-            {/* Badge */}
             <View style={s.badge}>
-              <Text style={s.badgeText}>{'\uD83D\uDCFA'} NEW LOCATION</Text>
+              <Text style={s.badgeText}>{'📺'} NEW LOCATION</Text>
             </View>
 
             <Text style={s.heading}>Register Your Location</Text>
@@ -114,43 +135,37 @@ export function SetupScreen() {
 
             {regState === 'form' && (
               <>
-                <TextInput
-                  ref={locNameRef}
-                  style={s.input}
-                  value={locName}
-                  onChangeText={setLocName}
-                  placeholder={"\uD83D\uDCCD  Your location's name"}
-                  placeholderTextColor={w(0.35)}
-                  autoCapitalize="words"
-                  returnKeyType="done"
-                />
+                {/* Location name — focusable row, opens overlay on select */}
+                <TouchableOpacity
+                  style={s.fieldRow}
+                  onPress={() => openEdit('name', locName)}
+                >
+                  <Text style={locName ? s.fieldValue : s.fieldPlaceholder}>
+                    {locName || "📍  Your location's name"}
+                  </Text>
+                </TouchableOpacity>
 
-                <TextInput
-                  ref={emailRef}
-                  style={s.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder={"\u2709\uFE0F  Owner email (optional)"}
-                  placeholderTextColor={w(0.35)}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  returnKeyType="done"
-                  onSubmitEditing={handleRegister}
-                />
+                {/* Email — focusable row, opens overlay on select */}
+                <TouchableOpacity
+                  style={s.fieldRow}
+                  onPress={() => openEdit('email', email)}
+                >
+                  <Text style={email ? s.fieldValue : s.fieldPlaceholder}>
+                    {email || "✉️  Owner email (optional)"}
+                  </Text>
+                </TouchableOpacity>
 
-                {/* Signage promo card */}
                 <View style={s.promoCard}>
-                  <Text style={s.promoTitle}>{'\uD83D\uDCFA'} Free Digital Signage</Text>
+                  <Text style={s.promoTitle}>{'📺'} Free Digital Signage</Text>
                   <Text style={s.promoDesc}>
                     Add your email to get free signage, a dashboard & analytics — all completely free
                   </Text>
                 </View>
 
-                {/* Feature bullets */}
                 <View style={s.features}>
-                  <Text style={s.featureText}>{'\uD83C\uDF79'} Free live trivia that drives traffic and keeps guests longer</Text>
-                  <Text style={s.featureText}>{'\uD83D\uDCFA'} Free digital signage to promote your specials & events</Text>
-                  <Text style={s.featureText}>{'\uD83D\uDCCA'} Free dashboard with player metrics and engagement analytics</Text>
+                  <Text style={s.featureText}>{'🍹'} Free live trivia that drives traffic and keeps guests longer</Text>
+                  <Text style={s.featureText}>{'📺'} Free digital signage to promote your specials & events</Text>
+                  <Text style={s.featureText}>{'📊'} Free dashboard with player metrics and engagement analytics</Text>
                 </View>
 
                 {regError ? <Text style={s.error}>{regError}</Text> : null}
@@ -160,10 +175,10 @@ export function SetupScreen() {
                   onPress={handleRegister}
                   disabled={!locName.trim()}
                 >
-                  <Text style={s.registerBtnText}>{'\uD83D\uDCCB'} REGISTER & GET CODE</Text>
+                  <Text style={s.registerBtnText}>{'📋'} REGISTER & GET CODE</Text>
                 </TouchableOpacity>
 
-                <Text style={s.hint}>Use your TV remote or USB keyboard to type</Text>
+                <Text style={s.hint}>Navigate with your remote · Select a field to type</Text>
               </>
             )}
 
@@ -176,12 +191,10 @@ export function SetupScreen() {
 
             {regState === 'sent' && (
               <View style={s.centered}>
-                <Text style={s.successIcon}>{'\u2713'}</Text>
+                <Text style={s.successIcon}>{'✓'}</Text>
                 <Text style={s.successText}>Registered!</Text>
                 <Text style={s.registeredCode}>{registeredCode}</Text>
-                <Text style={s.hintText}>
-                  Activating your display...
-                </Text>
+                <Text style={s.hintText}>Activating your display...</Text>
               </View>
             )}
           </View>
@@ -195,10 +208,9 @@ export function SetupScreen() {
 
           {/* ── RIGHT: Activate ────────────────────────────── */}
           <View style={s.right}>
-            {/* Badge */}
             <View style={[s.badge, s.badgeCenter, codeReady && s.badgeReady]}>
               <Text style={s.badgeText}>
-                {codeReady ? '\u2713 CODE READY' : '\uD83D\uDD11 ENTER CODE'}
+                {codeReady ? '✓ CODE READY' : '🔑 ENTER CODE'}
               </Text>
             </View>
 
@@ -207,32 +219,24 @@ export function SetupScreen() {
               Display live trivia at your bar, restaurant, or venue.
             </Text>
 
-            {/* Code input label */}
             <Text style={s.inputLabel}>Enter your venue's 5-character TapTrivia code</Text>
 
-            <TextInput
-              ref={codeInputRef}
-              style={[s.codeInput, codeState === 'error' && s.codeInputError]}
-              value={code}
-              onChangeText={handleCodeChange}
-              onSubmitEditing={handleActivate}
-              maxLength={5}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              keyboardType="default"
-              returnKeyType="done"
-              placeholder="5-character code"
-              placeholderTextColor={w(0.3)}
-            />
+            {/* Code field — focusable row, opens overlay on select */}
+            <TouchableOpacity
+              style={[s.codeRow, codeState === 'error' && s.codeRowError]}
+              onPress={() => openEdit('code', code)}
+            >
+              <Text style={code ? s.codeValue : s.codePlaceholder}>
+                {code || '_ _ _ _ _'}
+              </Text>
+            </TouchableOpacity>
 
-            {/* Helper text */}
             <Text style={s.inputHelper}>
               Don't have a code yet? Visit taptrivia.tv to register your venue. Free, forever.
             </Text>
 
             {codeError ? <Text style={s.error}>{codeError}</Text> : null}
 
-            {/* Info card */}
             <View style={s.infoCard}>
               <Text style={s.infoTitle}>Use this code on all your TVs</Text>
               <Text style={s.infoDesc}>One code activates every screen at your location</Text>
@@ -245,7 +249,7 @@ export function SetupScreen() {
               </View>
             ) : codeState === 'activated' ? (
               <View style={s.centered}>
-                <Text style={s.successIcon}>{'\u2713'}</Text>
+                <Text style={s.successIcon}>{'✓'}</Text>
                 <Text style={s.successText}>You're Live!</Text>
               </View>
             ) : (
@@ -260,9 +264,44 @@ export function SetupScreen() {
           </View>
         </View>
 
-        {/* Footer */}
         <Text style={s.footer}>taptrivia.tv · Free for venues · Powered by Visudo Labs</Text>
       </View>
+
+      {/* ── Text entry overlay ─────────────────────────────────────────
+          Rendered above the main screen. The single TextInput here has
+          autoFocus so the Apple TV keyboard opens immediately. Pressing
+          Done (or the Done button) confirms the value and closes the
+          overlay — focus returns to the main screen with no auto-advance.
+      ──────────────────────────────────────────────────────────────── */}
+      {editingField !== null && (
+        <View style={s.editOverlay}>
+          <View style={s.editBox}>
+            <Text style={s.editLabel}>{editLabel}</Text>
+            <TextInput
+              style={s.editInput}
+              autoFocus
+              value={editingValue}
+              onChangeText={(val) => {
+                if (editingField === 'code') {
+                  setEditingValue(val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5));
+                } else {
+                  setEditingValue(val);
+                }
+              }}
+              onSubmitEditing={confirmEdit}
+              returnKeyType="done"
+              autoCapitalize={editAutoCapitalize}
+              autoCorrect={false}
+              keyboardType={editKeyboardType}
+              maxLength={editingField === 'code' ? 5 : undefined}
+              placeholderTextColor={w(0.3)}
+            />
+            <TouchableOpacity style={s.editDone} onPress={confirmEdit}>
+              <Text style={s.editDoneText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </>
   );
 }
@@ -348,16 +387,26 @@ const s = StyleSheet.create({
     lineHeight: 30,
   },
 
-  // ── Inputs ──────────────────────────────────────────────
-  input: {
-    fontFamily: fonts.outfit.medium,
-    fontSize: 24,
-    color: '#ffffff',
+  // ── Left panel field rows (no inline TextInputs) ──────────
+  fieldRow: {
     borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.15)',
     paddingHorizontal: 24,
     paddingVertical: 20,
     marginBottom: 18,
   },
+  fieldValue: {
+    fontFamily: fonts.outfit.medium,
+    fontSize: 24,
+    color: '#ffffff',
+  },
+  fieldPlaceholder: {
+    fontFamily: fonts.outfit.medium,
+    fontSize: 24,
+    color: w(0.35),
+  },
+
   promoCard: {
     backgroundColor: 'transparent',
     borderRadius: 8,
@@ -409,12 +458,38 @@ const s = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // ── Right: code input ─────────────────────────────────────
+  // ── Right panel code row ──────────────────────────────────
   inputLabel: {
     fontFamily: fonts.outfit.semiBold,
     fontSize: 18,
     color: w(0.65),
     marginBottom: 10,
+  },
+  codeRow: {
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.2)',
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  codeRowError: {
+    borderColor: colors.red,
+  },
+  codeValue: {
+    fontFamily: fonts.outfit.bold,
+    fontSize: 28,
+    color: '#ffffff',
+    letterSpacing: 6,
+    textAlign: 'center',
+  },
+  codePlaceholder: {
+    fontFamily: fonts.outfit.bold,
+    fontSize: 28,
+    color: w(0.25),
+    letterSpacing: 6,
+    textAlign: 'center',
   },
   inputHelper: {
     fontFamily: fonts.outfit.regular,
@@ -422,20 +497,6 @@ const s = StyleSheet.create({
     color: w(0.4),
     marginBottom: 16,
     lineHeight: 22,
-  },
-  codeInput: {
-    fontFamily: fonts.outfit.bold,
-    fontSize: 28,
-    color: '#ffffff',
-    textAlign: 'center',
-    letterSpacing: 6,
-    borderRadius: 8,
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-    marginBottom: 20,
-  },
-  codeInputError: {
-    borderColor: colors.red,
   },
   infoCard: {
     backgroundColor: 'transparent',
@@ -522,5 +583,53 @@ const s = StyleSheet.create({
     color: w(0.25),
     textAlign: 'center',
     marginTop: 8,
+  },
+
+  // ── Text entry overlay ───────────────────────────────────
+  editOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  editBox: {
+    width: 640,
+    backgroundColor: 'rgba(30,15,74,0.97)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    padding: 48,
+  },
+  editLabel: {
+    fontFamily: fonts.outfit.semiBold,
+    fontSize: 22,
+    color: w(0.6),
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  editInput: {
+    fontFamily: fonts.outfit.medium,
+    fontSize: 28,
+    color: '#ffffff',
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    marginBottom: 28,
+    textAlign: 'center',
+  },
+  editDone: {
+    backgroundColor: colors.green,
+    borderRadius: 8,
+    paddingVertical: 18,
+    alignItems: 'center',
+  },
+  editDoneText: {
+    fontFamily: fonts.outfit.bold,
+    fontSize: 24,
+    color: '#ffffff',
+    letterSpacing: 1,
   },
 });
