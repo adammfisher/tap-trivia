@@ -28,6 +28,8 @@ export function SetupScreen() {
   const [email, setEmail] = useState('');
   const [regError, setRegError] = useState('');
   const [registeredCode, setRegisteredCode] = useState('');
+  const locNameRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
 
   // Activate panel state — pre-fill bar code if returning from a live session
   const [codeState, setCodeState] = useState<CodeState>('input');
@@ -49,13 +51,24 @@ export function SetupScreen() {
     try {
       const barCode = await register(locName.trim(), email.trim() || undefined);
       setRegisteredCode(barCode);
-      setRegState('sent');
       setCode(barCode);
+      setRegState('sent');
+      // Auto-activate with the freshly registered code
+      setCodeState('verifying');
+      setCodeError('');
+      try {
+        await activate(barCode);
+        setCodeState('activated');
+      } catch (err: any) {
+        setCodeError(err.message || 'Activation failed');
+        setCodeState('error');
+        setTimeout(() => setCodeState('input'), 2000);
+      }
     } catch (err: any) {
       setRegError(err.message || 'Registration failed');
       setRegState('form');
     }
-  }, [locName, email, register]);
+  }, [locName, email, register, activate]);
 
   // ─── Activate ───────────────────────────────────────────────────────
 
@@ -108,15 +121,19 @@ export function SetupScreen() {
             {regState === 'form' && (
               <>
                 <TextInput
+                  ref={locNameRef}
                   style={s.input}
                   value={locName}
                   onChangeText={setLocName}
                   placeholder={"\uD83D\uDCCD  Your location's name"}
                   placeholderTextColor={w(0.35)}
                   autoCapitalize="words"
+                  returnKeyType="next"
+                  onSubmitEditing={() => emailRef.current?.focus()}
                 />
 
                 <TextInput
+                  ref={emailRef}
                   style={s.input}
                   value={email}
                   onChangeText={setEmail}
@@ -124,6 +141,8 @@ export function SetupScreen() {
                   placeholderTextColor={w(0.35)}
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  returnKeyType="done"
+                  onSubmitEditing={handleRegister}
                 />
 
                 {/* Signage promo card */}
@@ -168,7 +187,7 @@ export function SetupScreen() {
                 <Text style={s.successText}>Registered!</Text>
                 <Text style={s.registeredCode}>{registeredCode}</Text>
                 <Text style={s.hintText}>
-                  Code auto-filled on the right. Press Activate to start.
+                  Activating your display...
                 </Text>
               </View>
             )}
@@ -205,6 +224,7 @@ export function SetupScreen() {
                 style={[s.codeInput, codeState === 'error' && s.codeInputError]}
                 value={code}
                 onChangeText={handleCodeChange}
+                onSubmitEditing={handleActivate}
                 maxLength={5}
                 autoCapitalize="characters"
                 autoCorrect={false}
