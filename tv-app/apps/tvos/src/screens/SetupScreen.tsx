@@ -1,11 +1,10 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  Pressable,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
@@ -36,11 +35,6 @@ export function SetupScreen() {
   const [code, setCode] = useState(state.barCode || '');
   const [codeError, setCodeError] = useState('');
   const codeInputRef = useRef<TextInput>(null);
-
-  useEffect(() => {
-    const t = setTimeout(() => codeInputRef.current?.focus(), 300);
-    return () => clearTimeout(t);
-  }, []);
 
   // ─── Register ───────────────────────────────────────────────────────
 
@@ -128,8 +122,7 @@ export function SetupScreen() {
                   placeholder={"\uD83D\uDCCD  Your location's name"}
                   placeholderTextColor={w(0.35)}
                   autoCapitalize="words"
-                  returnKeyType="next"
-                  onSubmitEditing={() => emailRef.current?.focus()}
+                  returnKeyType="done"
                 />
 
                 <TextInput
@@ -217,24 +210,20 @@ export function SetupScreen() {
             {/* Code input label */}
             <Text style={s.inputLabel}>Enter your venue's 5-character TapTrivia code</Text>
 
-            {/* Pressable wrapper ensures focus engine routes characters to the field on tvOS */}
-            <Pressable onPress={() => codeInputRef.current?.focus()}>
-              <TextInput
-                ref={codeInputRef}
-                style={[s.codeInput, codeState === 'error' && s.codeInputError]}
-                value={code}
-                onChangeText={handleCodeChange}
-                onSubmitEditing={handleActivate}
-                maxLength={5}
-                autoCapitalize="characters"
-                autoCorrect={false}
-                autoFocus
-                keyboardType="default"
-                returnKeyType="done"
-                placeholder="5-character code"
-                placeholderTextColor={w(0.3)}
-              />
-            </Pressable>
+            <TextInput
+              ref={codeInputRef}
+              style={[s.codeInput, codeState === 'error' && s.codeInputError]}
+              value={code}
+              onChangeText={handleCodeChange}
+              onSubmitEditing={handleActivate}
+              maxLength={5}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              keyboardType="default"
+              returnKeyType="done"
+              placeholder="5-character code"
+              placeholderTextColor={w(0.3)}
+            />
 
             {/* Helper text */}
             <Text style={s.inputHelper}>
