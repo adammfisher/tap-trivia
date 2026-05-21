@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  TVFocusGuideView,
 } from 'react-native';
 
 import { Logo } from '../components/Logo';
@@ -32,10 +33,13 @@ export function SetupScreen() {
   const [code, setCode] = useState(state.barCode || '');
   const [codeError, setCodeError] = useState('');
 
-  // Text entry overlay — one overlay serves all fields; no inline TextInputs on the
-  // main screen so the tvOS focus engine never auto-advances between fields.
+  // Text entry: one hidden TextInput serves all fields. No inline inputs on the main
+  // screen so tvOS focus engine never auto-advances between fields.
   const [editingField, setEditingField] = useState<EditField>(null);
   const [editingValue, setEditingValue] = useState('');
+
+  // Callback ref so TVFocusGuideView gets the node after first render
+  const [codeRowNode, setCodeRowNode] = useState<any>(null);
 
   const openEdit = useCallback((field: EditField, currentValue: string) => {
     setEditingField(field);
@@ -101,10 +105,6 @@ export function SetupScreen() {
   }, [code, activate]);
 
   const codeReady = code.length === 5;
-
-  const editLabel = editingField === 'name' ? 'Location Name'
-    : editingField === 'email' ? 'Owner Email (Optional)'
-    : 'Venue Code';
 
   const editKeyboardType = editingField === 'email' ? 'email-address' as const : 'default' as const;
   const editAutoCapitalize = editingField === 'code' ? 'characters' as const
@@ -206,8 +206,9 @@ export function SetupScreen() {
             </View>
           </View>
 
-          {/* ── RIGHT: Activate ────────────────────────────── */}
-          <View style={s.right}>
+          {/* ── RIGHT: Activate — TVFocusGuideView directs any swipe into this
+               column straight to the code row ────────────────────────── */}
+          <TVFocusGuideView style={s.right} destinations={codeRowNode ? [codeRowNode] : []}>
             <View style={[s.badge, s.badgeCenter, codeReady && s.badgeReady]}>
               <Text style={s.badgeText}>
                 {codeReady ? '✓ CODE READY' : '🔑 ENTER CODE'}
@@ -221,8 +222,9 @@ export function SetupScreen() {
 
             <Text style={s.inputLabel}>Enter your venue's 5-character TapTrivia code</Text>
 
-            {/* Code field — focusable row, opens overlay on select */}
+            {/* Code field — focus guide destinations point here */}
             <TouchableOpacity
+              ref={setCodeRowNode}
               style={[s.codeRow, codeState === 'error' && s.codeRowError]}
               onPress={() => openEdit('code', code)}
             >
@@ -232,7 +234,7 @@ export function SetupScreen() {
             </TouchableOpacity>
 
             <Text style={s.inputHelper}>
-              Don't have a code yet? Visit taptrivia.tv to register your venue. Free, forever.
+              No code yet? Enter your location name and email on the left to get one.
             </Text>
 
             {codeError ? <Text style={s.error}>{codeError}</Text> : null}
@@ -261,46 +263,34 @@ export function SetupScreen() {
                 <Text style={s.activateBtnText}>Start Display</Text>
               </TouchableOpacity>
             )}
-          </View>
+          </TVFocusGuideView>
         </View>
 
         <Text style={s.footer}>taptrivia.tv · Free for venues · Powered by Visudo Labs</Text>
       </View>
 
-      {/* ── Text entry overlay ─────────────────────────────────────────
-          Rendered above the main screen. The single TextInput here has
-          autoFocus so the Apple TV keyboard opens immediately. Pressing
-          Done (or the Done button) confirms the value and closes the
-          overlay — focus returns to the main screen with no auto-advance.
-      ──────────────────────────────────────────────────────────────── */}
+      {/* Hidden input — triggers the Apple TV system keyboard with no app UI.
+          1×1 invisible; autoFocus opens the keyboard on mount.
+          Done fires onSubmitEditing → saves value → unmounts. */}
       {editingField !== null && (
-        <View style={s.editOverlay}>
-          <View style={s.editBox}>
-            <Text style={s.editLabel}>{editLabel}</Text>
-            <TextInput
-              style={s.editInput}
-              autoFocus
-              value={editingValue}
-              onChangeText={(val) => {
-                if (editingField === 'code') {
-                  setEditingValue(val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5));
-                } else {
-                  setEditingValue(val);
-                }
-              }}
-              onSubmitEditing={confirmEdit}
-              returnKeyType="done"
-              autoCapitalize={editAutoCapitalize}
-              autoCorrect={false}
-              keyboardType={editKeyboardType}
-              maxLength={editingField === 'code' ? 5 : undefined}
-              placeholderTextColor={w(0.3)}
-            />
-            <TouchableOpacity style={s.editDone} onPress={confirmEdit}>
-              <Text style={s.editDoneText}>Done</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <TextInput
+          style={s.hiddenInput}
+          autoFocus
+          value={editingValue}
+          onChangeText={(val) => {
+            if (editingField === 'code') {
+              setEditingValue(val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5));
+            } else {
+              setEditingValue(val);
+            }
+          }}
+          onSubmitEditing={confirmEdit}
+          returnKeyType="done"
+          autoCapitalize={editAutoCapitalize}
+          autoCorrect={false}
+          keyboardType={editKeyboardType}
+          maxLength={editingField === 'code' ? 5 : undefined}
+        />
       )}
     </>
   );
@@ -585,51 +575,11 @@ const s = StyleSheet.create({
     marginTop: 8,
   },
 
-  // ── Text entry overlay ───────────────────────────────────
-  editOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.85)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 100,
-  },
-  editBox: {
-    width: 640,
-    backgroundColor: 'rgba(30,15,74,0.97)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    padding: 48,
-  },
-  editLabel: {
-    fontFamily: fonts.outfit.semiBold,
-    fontSize: 22,
-    color: w(0.6),
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  editInput: {
-    fontFamily: fonts.outfit.medium,
-    fontSize: 28,
-    color: '#ffffff',
-    borderRadius: 8,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 24,
-    paddingVertical: 18,
-    marginBottom: 28,
-    textAlign: 'center',
-  },
-  editDone: {
-    backgroundColor: colors.green,
-    borderRadius: 8,
-    paddingVertical: 18,
-    alignItems: 'center',
-  },
-  editDoneText: {
-    fontFamily: fonts.outfit.bold,
-    fontSize: 24,
-    color: '#ffffff',
-    letterSpacing: 1,
+  // Hidden input — 1×1 invisible, triggers Apple TV system keyboard via autoFocus
+  hiddenInput: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0,
   },
 });
