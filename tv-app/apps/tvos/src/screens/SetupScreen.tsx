@@ -1,10 +1,11 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
   TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
@@ -34,6 +35,10 @@ export function SetupScreen() {
   const [codeError, setCodeError] = useState('');
   const codeInputRef = useRef<TextInput>(null);
 
+  useEffect(() => {
+    const t = setTimeout(() => codeInputRef.current?.focus(), 300);
+    return () => clearTimeout(t);
+  }, []);
 
   // ─── Register ───────────────────────────────────────────────────────
 
@@ -55,6 +60,7 @@ export function SetupScreen() {
   // ─── Activate ───────────────────────────────────────────────────────
 
   const handleCodeChange = useCallback((val: string) => {
+    console.log('[CodeInput] text received:', val);
     setCode(val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5));
     setCodeError('');
     setCodeState('input');
@@ -184,25 +190,36 @@ export function SetupScreen() {
               </Text>
             </View>
 
-            <Text style={s.heading}>Activate This TV</Text>
+            <Text style={s.heading}>TapTrivia for Venues</Text>
             <Text style={s.desc}>
-              {codeReady
-                ? 'Your code is loaded and ready. Hit activate to start!'
-                : 'Enter your 5-character bar code to connect this TV.'}
+              Display live trivia at your bar, restaurant, or venue.
             </Text>
 
-            {/* Single code input */}
-            <TextInput
-              ref={codeInputRef}
-              style={[s.codeInput, codeState === 'error' && s.codeInputError]}
-              value={code}
-              onChangeText={handleCodeChange}
-              maxLength={5}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              placeholder="5-character code"
-              placeholderTextColor={w(0.3)}
-            />
+            {/* Code input label */}
+            <Text style={s.inputLabel}>Enter your venue's 5-character TapTrivia code</Text>
+
+            {/* Pressable wrapper ensures focus engine routes characters to the field on tvOS */}
+            <Pressable onPress={() => codeInputRef.current?.focus()}>
+              <TextInput
+                ref={codeInputRef}
+                style={[s.codeInput, codeState === 'error' && s.codeInputError]}
+                value={code}
+                onChangeText={handleCodeChange}
+                maxLength={5}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                autoFocus
+                keyboardType="default"
+                returnKeyType="done"
+                placeholder="5-character code"
+                placeholderTextColor={w(0.3)}
+              />
+            </Pressable>
+
+            {/* Helper text */}
+            <Text style={s.inputHelper}>
+              Don't have a code yet? Visit taptrivia.tv to register your venue. Free, forever.
+            </Text>
 
             {codeError ? <Text style={s.error}>{codeError}</Text> : null}
 
@@ -228,7 +245,7 @@ export function SetupScreen() {
                 onPress={handleActivate}
                 disabled={!codeReady}
               >
-                <Text style={s.activateBtnText}>{'\uD83D\uDCFA'} ACTIVATE THIS TV</Text>
+                <Text style={s.activateBtnText}>Start Display</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -384,6 +401,19 @@ const s = StyleSheet.create({
   },
 
   // ── Right: code input ─────────────────────────────────────
+  inputLabel: {
+    fontFamily: fonts.outfit.semiBold,
+    fontSize: 18,
+    color: w(0.65),
+    marginBottom: 10,
+  },
+  inputHelper: {
+    fontFamily: fonts.outfit.regular,
+    fontSize: 16,
+    color: w(0.4),
+    marginBottom: 16,
+    lineHeight: 22,
+  },
   codeInput: {
     fontFamily: fonts.outfit.bold,
     fontSize: 28,

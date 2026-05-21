@@ -1,4 +1,21 @@
 {
   "name": "TapTrivia",
-  "displayName": "TapTrivia"
+  "displayName": "TapTrivia",
+  "expo": {
+    "name": "TapTrivia",
+    "slug": "taptrivia-tvos",
+    "version": "1.0.0",
+    "platforms": [
+      "ios"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.visudolabs.taptrivia.app",
+      "buildNumber": "2"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "4e0b7c35-eefc-431f-baf2-eb9d345dbad7"
+      }
+    }
+  }
 }

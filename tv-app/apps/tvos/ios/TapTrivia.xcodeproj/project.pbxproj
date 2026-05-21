@@ -333,7 +333,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = NCJ5B632NP;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = "TapTrivia-tvOS/Info.plist";
@@ -347,7 +347,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = tv.taptrivia.apple;
+				PRODUCT_BUNDLE_IDENTIFIER = com.visudolabs.taptrivia.app;
 				PRODUCT_NAME = TapTrivia;
 				SDKROOT = appletvos;
 				SUPPORTED_PLATFORMS = "appletvos appletvsimulator";
@@ -366,7 +366,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = NCJ5B632NP;
 				INFOPLIST_FILE = "TapTrivia-tvOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -379,7 +379,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = tv.taptrivia.apple;
+				PRODUCT_BUNDLE_IDENTIFIER = com.visudolabs.taptrivia.app;
 				PRODUCT_NAME = TapTrivia;
 				SDKROOT = appletvos;
 				SUPPORTED_PLATFORMS = "appletvos appletvsimulator";
