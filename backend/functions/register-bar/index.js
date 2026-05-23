@@ -186,14 +186,14 @@ exports.handler = async (event) => {
         barCode,
         barName,
         activePlayers: 0,
-        city: geo.city,
-        state: geo.state,
-        country: geo.country,
+        ...(geo.city    ? { city: geo.city }       : {}),
+        ...(geo.state   ? { state: geo.state }     : {}),
+        ...(geo.country ? { country: geo.country } : {}),
         latitude: geo.latitude,
         longitude: geo.longitude,
         createdAt: now,
         lastPollAt: now,
-        status: cleanEmail ? 'pending' : 'active'
+        status: 'active'
       };
 
       // Only include tvDeviceId if provided
