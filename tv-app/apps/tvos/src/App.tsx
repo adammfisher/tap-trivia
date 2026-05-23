@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Animated, AppState, AppStateStatus, StyleSheet, View } from 'react-native';
-import SilentAudioPlayer from './SilentAudioPlayer';
+import React, { useRef, useState, useEffect } from 'react';
+import { Animated, StyleSheet } from 'react-native';
 import { TVStateProvider, useTVState } from './contexts/TVStateContext';
 import { SetupButton } from './components/SetupButton';
 import { GradientBackground } from './components/GradientBackground';
@@ -124,28 +123,7 @@ const styles = StyleSheet.create({
 });
 
 const App: React.FC = () => {
-  // Silent audio for screensaver suppression
-  useEffect(() => {
-    SilentAudioPlayer.startSilentAudio();
-    return () => {
-      SilentAudioPlayer.stopSilentAudio();
-    };
-  }, []);
-
-  // Handle app state changes (foreground/background)
-  useEffect(() => {
-    const handleAppStateChange = (nextState: AppStateStatus) => {
-      if (nextState === 'active') {
-        SilentAudioPlayer.startSilentAudio();
-      } else if (nextState === 'background') {
-        SilentAudioPlayer.stopSilentAudio();
-      }
-    };
-
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription.remove();
-  }, []);
-
+  // isIdleTimerDisabled = true is set natively in AppDelegate to suppress the tvOS screensaver
   return (
     <GradientBackground style={styles.root}>
       <TVStateProvider>

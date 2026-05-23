@@ -73,5 +73,24 @@
    <ArchiveAction
       buildConfiguration = "Release"
       revealArchiveInOrganizer = "YES">
+      <PostActions>
+         <ExecutionAction
+            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
+            <ActionContent
+               title = "Inject Assets.car"
+               scriptText = "TODAY=$(date &quot;+%Y-%m-%d&quot;)&#xa;XCARCHIVE=$(ls -td &quot;${HOME}/Library/Developer/Xcode/Archives/${TODAY}/TapTrivia&quot;*.xcarchive 2&gt;/dev/null | head -1)&#xa;if [ -z &quot;${XCARCHIVE}&quot; ]; then echo &quot;[PostAction] No xcarchive found&quot;; exit 0; fi&#xa;APP_PATH=&quot;${XCARCHIVE}/Products/Applications/TapTrivia.app&quot;&#xa;XCASSETS=&quot;/Users/adamfisher/DEVELOP/tap-trivia/tv-app/apps/tvos/ios/TapTrivia-tvOS/Images.xcassets&quot;&#xa;echo &quot;[PostAction] Injecting Assets.car into ${APP_PATH}&quot; &gt; /tmp/post-action-debug.txt&#xa;echo &quot;XCASSETS=${XCASSETS}&quot; &gt;&gt; /tmp/post-action-debug.txt&#xa;ls &quot;${XCASSETS}&quot; &gt;&gt; /tmp/post-action-debug.txt 2&gt;&amp;1&#xa;xcrun actool --compile &quot;${APP_PATH}&quot; --platform appletvos --minimum-deployment-target 17.0 --target-device tv --app-icon AppIcon --output-partial-info-plist /tmp/post-actool.plist &quot;${XCASSETS}&quot; &gt;&gt; /tmp/post-action-debug.txt 2&gt;&amp;1&#xa;echo &quot;actool exit: $?&quot; &gt;&gt; /tmp/post-action-debug.txt&#xa;ls -la &quot;${APP_PATH}/Assets.car&quot; &gt;&gt; /tmp/post-action-debug.txt 2&gt;&amp;1&#xa;"
+               useShellEnvironment = "YES">
+               <EnvironmentBuildable>
+                  <BuildableReference
+                     BuildableIdentifier = "primary"
+                     BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
+                     BuildableName = "TapTrivia.app"
+                     BlueprintName = "TapTrivia-tvOS"
+                     ReferencedContainer = "container:TapTrivia.xcodeproj">
+                  </BuildableReference>
+               </EnvironmentBuildable>
+            </ActionContent>
+         </ExecutionAction>
+      </PostActions>
    </ArchiveAction>
 </Scheme>

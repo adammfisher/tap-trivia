@@ -1,0 +1,29 @@
+{
+  "cli": {
+    "version": ">= 15.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "production": {
+      "autoIncrement": true,
+      "ios": {
+        "simulator": false,
+        "scheme": "TapTrivia-tvOS",
+        "buildConfiguration": "Release",
+        "image": "latest"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "adam.fisher@visudolabs.com",
+        "ascAppId": "6762301564",
+        "appleTeamId": "NCJ5B632NP",
+        "ascApiKeyPath": "/Users/adamfisher/Desktop/misc/secrets/AuthKey_694Q72V822.p8",
+        "ascApiKeyId": "694Q72V822",
+        "ascApiKeyIssuerId": "65635256-683a-43c7-a0e5-eb9344e3968a"
+      }
+    }
+  }
+}

@@ -10,6 +10,7 @@ class AppDelegate: RCTAppDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     self.moduleName = "TapTrivia"
+    application.isIdleTimerDisabled = true
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
