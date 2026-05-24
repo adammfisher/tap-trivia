@@ -151,8 +151,7 @@ sub onBgVideoState()
     #if DEBUG
     print ">>> bgVideo: state=" + state + " — restarting"
     #end if
-    m.bgVideo.control = "stop"
-    m.bgVideo.control = "prebuffer"
+    m.bgVideo.seek = 0
     m.bgVideo.control = "play"
   end if
 end sub
@@ -178,7 +177,9 @@ sub doInit()
     ' First launch (or post-reset) — show activation flow.
     switchScreen("setupScreen")
   else
-    ' Saved code in registry — re-verify in case the bar got deactivated server-side.
+    ' Show idle screen immediately so there's no blank screen while verifying.
+    switchScreen("idleScreen")
+    ' Re-verify in case the bar got deactivated server-side.
     verifyBarCode(m.barCode)
   end if
 end sub
