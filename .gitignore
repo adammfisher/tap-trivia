@@ -44,3 +44,10 @@ __pycache__/
 # Android release signing — NEVER commit
 *.keystore
 tv-app/apps/firestick/android/key.properties
+
+# Roku distributable packages (built locally, not source)
+tv-app/apps/roku/*.zip
+tv-app/apps/roku/dist/
+
+# Dev logs
+logs/
