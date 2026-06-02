@@ -43,7 +43,8 @@ exports.handler = async (event) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const normalizedBarCode = barCode.trim().toUpperCase();
+    // Strip ALL whitespace (incl. internal) so the code matches what send-otp stored
+    const normalizedBarCode = barCode.replace(/\s+/g, '').toUpperCase();
 
     // Look up bar record
     const bar = await get(TABLE.BARS, { PK: `BAR#${normalizedBarCode}` });

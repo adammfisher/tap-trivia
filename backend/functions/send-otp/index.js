@@ -67,7 +67,7 @@ exports.handler = async (event) => {
       };
     }
 
-    if (!barCode || typeof barCode !== 'string' || barCode.trim().length < 3 || barCode.trim().length > 6) {
+    if (!barCode || typeof barCode !== 'string' || barCode.replace(/\s+/g, '').length < 3 || barCode.replace(/\s+/g, '').length > 6) {
       return {
         statusCode: 400,
         headers,
@@ -76,7 +76,8 @@ exports.handler = async (event) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const normalizedBarCode = barCode.trim().toUpperCase();
+    // Strip ALL whitespace (incl. internal, e.g. "8R JUK") so spaces from autofill/typing don't break lookup
+    const normalizedBarCode = barCode.replace(/\s+/g, '').toUpperCase();
 
     // Always return the same response to prevent enumeration
     const successResponse = {

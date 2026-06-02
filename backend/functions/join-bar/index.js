@@ -29,8 +29,11 @@ exports.handler = async (event) => {
       };
     }
 
+    // Normalize: strip ALL whitespace (incl. internal, e.g. "8R JUK") and uppercase so codes match storage
+    const normalizedBarCode = barCode.replace(/\s+/g, '').toUpperCase();
+
     // Validate bar exists and is active
-    const bar = await get(TABLE.BARS, { PK: `BAR#${barCode}` });
+    const bar = await get(TABLE.BARS, { PK: `BAR#${normalizedBarCode}` });
 
     if (!bar || bar.status !== 'active') {
       return {
@@ -46,7 +49,7 @@ exports.handler = async (event) => {
     // Check if the player already has a bar assignment
     const player = await get(TABLE.PLAYERS, { PK: `PLAYER#${playerId}` });
 
-    if (player && player.currentBarCode && player.currentBarCode !== barCode) {
+    if (player && player.currentBarCode && player.currentBarCode !== normalizedBarCode) {
       // Decrement activePlayers on the old bar (don't go below 0)
       try {
         await docClient.send(new UpdateCommand({
@@ -73,17 +76,17 @@ exports.handler = async (event) => {
       { PK: `PLAYER#${playerId}` },
       'SET currentBarCode = :barCode, updatedAt = :now',
       {
-        ':barCode': barCode,
+        ':barCode': normalizedBarCode,
         ':now': new Date().toISOString()
       }
     );
 
     // Increment activePlayers on the new bar (skip if already at this bar)
     let updatedBar;
-    if (!player || player.currentBarCode !== barCode) {
+    if (!player || player.currentBarCode !== normalizedBarCode) {
       updatedBar = await update(
         TABLE.BARS,
-        { PK: `BAR#${barCode}` },
+        { PK: `BAR#${normalizedBarCode}` },
         'SET activePlayers = activePlayers + :one',
         { ':one': 1 }
       );
@@ -104,7 +107,7 @@ exports.handler = async (event) => {
       const barPlayers = await scan(TABLE.PLAYERS, {
         FilterExpression: 'currentBarCode = :bc AND PK <> :pk AND updatedAt > :cutoff',
         ExpressionAttributeValues: {
-          ':bc': barCode,
+          ':bc': normalizedBarCode,
           ':pk': `PLAYER#${playerId}`,
           ':cutoff': recentCutoff
         },
