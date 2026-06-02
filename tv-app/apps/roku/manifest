@@ -1,7 +1,7 @@
 title=TapTrivia
 major_version=1
 minor_version=0
-build_version=9
+build_version=10
 mm_icon_focus_fhd=pkg:/images/channel-poster.png
 mm_icon_focus_hd=pkg:/images/channel-poster-hd.png
 splash_screen_fhd=pkg:/images/splash-screen-fhd.png

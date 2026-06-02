@@ -10,10 +10,20 @@
     <!-- Fallback base color — always visible, prevents black flash if video gaps -->
     <Rectangle id="bgBase" width="1920" height="1080" color="#0f0326" />
 
-    <!-- Keepalive-only video — plays bg-gradient.mp4 silently for Roku OS
-         media-activity detection (defers auto-home). Visually covered by
-         bgStatic so any loop gap never reaches the screen. -->
-    <Video id="bgVideo" width="1920" height="1080" visible="true" enableUI="false" />
+    <!-- Ghost keepalive video — 2x2 silent black MP4, bundled locally (pkg://).
+         Loops off-screen at near-zero opacity. Roku OS sees active video
+         playback and blocks the screensaver. disableScreenSaver=true is the
+         explicit documented API for this purpose.
+         IMPORTANT: this does NOT prevent Roku Bandwidth Saver (4-hr no-remote
+         kill). Disable that in device settings: Settings→Network→Bandwidth
+         Saver→Off and Settings→System→Power→Auto Power Savings→Off. -->
+    <Video id="bgVideo"
+           width="2" height="2"
+           translation="[-10, -10]"
+           opacity="0.01"
+           visible="true"
+           enableUI="false"
+           disableScreenSaver="true" />
 
     <!-- Static gradient covers the video plane — no flash on loop restart -->
     <Poster id="bgStatic" width="1920" height="1080" uri="pkg:/images/bg-gradient.png" />

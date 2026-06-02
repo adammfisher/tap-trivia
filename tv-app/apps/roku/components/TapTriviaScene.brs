@@ -117,24 +117,22 @@ sub init()
 
   ' ── Watchdog: restart KeepAwakeTask if it ever dies (every 60s) ──
   m.keepAliveWatchdog = CreateObject("roSGNode", "Timer")
-  m.keepAliveWatchdog.duration = 90
+  m.keepAliveWatchdog.duration = 60
   m.keepAliveWatchdog.repeat = true
   m.keepAliveWatchdog.observeField("fire", "onKeepAliveWatchdog")
   m.keepAliveWatchdog.control = "start"
 
-  ' ── Animated background video (also serves as media-activity keepalive) ──
-  ' Looping bg-gradient.mp4 keeps the Roku OS inactivity timer from firing —
-  ' active video playback registers as channel activity, deferring the
-  ' ~2h auto-home indefinitely. Cert-clean: no fake input simulation.
+  ' ── Ghost keepalive video ──
+  ' A tiny 2x2 silent black MP4 bundled locally. Roku OS sees active video
+  ' playback and does not launch the screensaver. disableScreenSaver=true
+  ' is set on the Video node in XML (official Roku API).
+  ' Using pkg:// keeps this alive during network outages.
   m.bgVideo = m.top.findNode("bgVideo")
   if m.bgVideo <> invalid
     m.bgVideo.content = CreateObject("roSGNode", "ContentNode")
-    m.bgVideo.content.url = "pkg:/images/bg-gradient.mp4"
+    m.bgVideo.content.url = "pkg:/images/keepalive.mp4"
     m.bgVideo.content.streamFormat = "mp4"
     m.bgVideo.loop = true
-    m.bgVideo.enableUI = false
-    ' Recovery from EOS/error: some firmware drops looping playback after
-    ' extended uptime; observer prebuffers + replays so keepalive survives.
     m.bgVideo.observeField("state", "onBgVideoState")
     m.bgVideo.control = "play"
   end if
@@ -147,10 +145,8 @@ end sub
 sub onBgVideoState()
   if m.bgVideo = invalid then return
   state = m.bgVideo.state
-  if state = "finished" or state = "error"
-    #if DEBUG
-    print ">>> bgVideo: state=" + state + " — restarting"
-    #end if
+  ' Restart on any stopped state — "paused"/"stopped" are what some firmware sets at EOS
+  if state = "finished" or state = "error" or state = "paused" or state = "stopped"
     m.bgVideo.seek = 0
     m.bgVideo.control = "play"
   end if
@@ -1175,9 +1171,20 @@ sub onKeepAliveWatchdog()
     m.keepAwakeTask.control = "run"
   end if
   m.lastPingCount = currentCount
-end sub
 
-' onBgVideoState removed — background is now a static Poster, no video recovery needed.
+  ' bgVideo state watchdog: if the video is not playing/buffering, force-restart it.
+  ' Catches cases where firmware stops video without firing a state-change event.
+  if m.bgVideo <> invalid
+    vs = m.bgVideo.state
+    if vs <> "playing" and vs <> "buffering" and vs <> "none"
+      #if DEBUG
+      print ">>> watchdog: bgVideo not playing (state=" + vs + ") restarting"
+      #end if
+      m.bgVideo.seek = 0
+      m.bgVideo.control = "play"
+    end if
+  end if
+end sub
 
 ' ══════════════════════════════════════════════════════════════
 ' KEY HANDLING
@@ -1198,13 +1205,11 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
   if not press then return false
 
   ' Back button behavior:
-  ' - Setup screen: let Roku handle exit (go to home)
+  ' - Setup screen: do nothing (swallow Back — bar TVs must never exit)
   ' - Idle screen: clear code and go to setup (intentional "change location")
   ' - Any other screen (gameplay): go to idle, keep code saved
   if key = "back"
     if m.currentScreen = "setupScreen"
-      ' Exit the app explicitly since backExitsScene=false
-      m.top.close = true
       return true
     else if m.currentScreen = "idleScreen"
       ' User intentionally wants to change location
