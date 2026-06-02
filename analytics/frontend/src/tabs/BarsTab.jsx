@@ -19,6 +19,19 @@ export default function BarsTab({drillBar, setDrillBar}) {
 
   const totals = data?.totals || {};
   const bars = data?.bars || [];
+  const activeTvs = data?.activeTvs || [];
+
+  const fmtAgo = (m) => m == null ? "—" : m < 60 ? `${m}m ago` : m < 1440 ? `${Math.round(m/60)}h ago` : `${Math.round(m/1440)}d ago`;
+
+  // Group active screens by venue (don't list the same bar twice).
+  const tvVenues = Object.values(activeTvs.reduce((acc, tv) => {
+    const k = tv.barCode || tv.barName;
+    if (!acc[k]) acc[k] = { barName: tv.barName, city: tv.city, state: tv.state, count: 0, platforms: new Set(), minAgo: Infinity };
+    acc[k].count += 1;
+    if (tv.platform) acc[k].platforms.add(tv.platform);
+    acc[k].minAgo = Math.min(acc[k].minAgo, tv.minutesAgo ?? Infinity);
+    return acc;
+  }, {})).sort((a, b) => a.minAgo - b.minAgo);
 
   const filtered = bars.filter(b => {
     const matchesSearch = !search ||
@@ -32,11 +45,37 @@ export default function BarsTab({drillBar, setDrillBar}) {
   return (
     <div style={{padding:"28px 32px"}}>
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:14}}>
-        <Stat label="Total Bars" value={(totals.active + totals.pending) || 0} sub={`${totals.pending || 0} pending`} accent={C.grad.green} icon="🍻" delay={0}/>
-        <Stat label="Total Players (mo)" value={(totals.totalPlayers || 0).toLocaleString()} sub="across all venues" accent={C.grad.purple} icon="👥" delay={0.05}/>
-        <Stat label="Games Played (mo)" value={totals.totalGamesMonth || 0} sub={totals.active ? `avg ${((totals.totalGamesMonth || 0) / totals.active).toFixed(1)} per active bar` : "—"} accent={C.grad.cyan} icon="🎮" delay={0.1}/>
+        <Stat label="Active Bars" value={totals.active || 0} sub={`${(totals.active + totals.pending) || 0} total · ${totals.pending || 0} dormant`} accent={C.grad.green} icon="🍻" delay={0}/>
+        <Stat label="Total Players" value={(totals.totalPlayers || 0).toLocaleString()} sub="joined across all bars" accent={C.grad.purple} icon="👥" delay={0.05}/>
+        <Stat label="Active This Week" value={(totals.activePlayers7d || 0).toLocaleString()} sub="players who played in last 7 days" accent={C.grad.cyan} icon="🔥" delay={0.1}/>
         <Stat label="Bar-Attributed MRR" value={`$${Number(totals.totalAttrMrr || 0).toFixed(0)}`} sub="patrons subscribed at venue" accent={C.grad.gold} icon="💰" delay={0.15}/>
       </div>
+
+      <Panel delay={0.18} style={{marginBottom:14}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+          <div style={{fontFamily:"'Fredoka',sans-serif",fontSize:22,fontWeight:600,color:"#fff",letterSpacing:-.3}}>Active TVs</div>
+          <span style={{fontSize:12,fontWeight:700,color:C.green,background:"rgba(0,212,170,.12)",padding:"3px 9px",borderRadius:20}}>{activeTvs.length} screens · {tvVenues.length} venues</span>
+          <div style={{fontSize:12,color:C.w(0.4),marginLeft:"auto"}}>heartbeat in the last 24h</div>
+        </div>
+        {tvVenues.length === 0 && (
+          <div style={{padding:"20px 12px",fontSize:12,color:C.w(0.4),textAlign:"center"}}>No TVs are currently live</div>
+        )}
+        {tvVenues.map((v,i) => (
+          <div key={i} style={{
+            display:"flex",alignItems:"center",gap:12,padding:"11px 8px",
+            borderBottom:`1px solid ${C.w(0.04)}`,
+          }}>
+            <span style={{width:8,height:8,borderRadius:"50%",background:C.green,boxShadow:`0 0 8px ${C.green}`,flexShrink:0}}/>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:13,fontWeight:600,color:"#fff"}}>{v.barName}</div>
+              <div style={{fontSize:11,color:C.w(0.45)}}>{[v.city,v.state].filter(Boolean).join(", ") || "—"}</div>
+            </div>
+            <div style={{fontFamily:"'Fredoka',sans-serif",fontSize:13,fontWeight:700,color:C.green,minWidth:90}}>📺 {v.count} {v.count === 1 ? "screen" : "screens"}</div>
+            <div style={{fontSize:11,fontWeight:600,color:C.w(0.6),textTransform:"capitalize",minWidth:60}}>{[...v.platforms].join(", ")}</div>
+            <div style={{fontSize:11,color:C.w(0.4),fontFamily:"'DM Mono',monospace",minWidth:70,textAlign:"right"}}>{fmtAgo(v.minAgo)}</div>
+          </div>
+        ))}
+      </Panel>
 
       <Panel delay={0.2}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,gap:14,flexWrap:"wrap"}}>
@@ -73,7 +112,7 @@ export default function BarsTab({drillBar, setDrillBar}) {
           </div>
         </div>
         <Table>
-          <THead cols={["Bar","Code","City","Players","Games (mo)","MRR","Last","Status"]}/>
+          <THead cols={["Bar","Code","City","Players","Active 7d","Screens","MRR","Last","Status"]}/>
           {filtered.length === 0 && (
             <div style={{padding:"24px 12px",fontSize:12,color:C.w(0.4),textAlign:"center"}}>No bars match your filters</div>
           )}

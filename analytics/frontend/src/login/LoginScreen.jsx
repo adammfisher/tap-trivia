@@ -1,25 +1,45 @@
 import { useState } from "react";
 import { C, Styles } from "../lib/theme";
-import { signIn } from "../lib/auth";
+import { requestOtp, confirmOtp } from "../lib/auth";
 
 export default function LoginScreen({onSignedIn}) {
+  const [step, setStep] = useState("email"); // "email" | "code"
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [notice, setNotice] = useState("");
 
-  const submit = async (e) => {
+  const sendCode = async (e) => {
     e.preventDefault();
-    setErr("");
-    setBusy(true);
+    setErr(""); setNotice(""); setBusy(true);
     try {
-      await signIn(email, password);
-      onSignedIn && onSignedIn();
+      await requestOtp(email.trim());
+      setStep("code");
+      setNotice("We sent a 6-digit code to your email. Enter it below.");
     } catch (e) {
-      setErr(e?.message || "Sign-in failed");
+      // Keep it generic — never reveal whether the address is authorized.
+      setErr("Couldn't send a code. Check the email and try again.");
     } finally {
       setBusy(false);
     }
+  };
+
+  const verify = async (e) => {
+    e.preventDefault();
+    setErr(""); setBusy(true);
+    try {
+      await confirmOtp(code);
+      onSignedIn && onSignedIn();
+    } catch (e) {
+      setErr("Invalid or expired code. Try again, or resend.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const resetToEmail = () => {
+    setStep("email"); setCode(""); setErr(""); setNotice("");
   };
 
   return (
@@ -35,7 +55,7 @@ export default function LoginScreen({onSignedIn}) {
       padding: 20,
     }}>
       <Styles/>
-      <form onSubmit={submit} style={{
+      <form onSubmit={step === "email" ? sendCode : verify} style={{
         width: 420,
         maxWidth: "100%",
         padding: 36,
@@ -67,30 +87,51 @@ export default function LoginScreen({onSignedIn}) {
             <div style={{fontSize:11,color:C.w(0.4),letterSpacing:1.6,textTransform:"uppercase",fontWeight:600,marginTop:4}}>Operator Console</div>
           </div>
         </div>
-        <div style={{fontSize:13, color:C.w(0.5), margin:"18px 0 24px"}}>
-          Sign in with your admin email to view the dashboard.
-        </div>
 
-        <label style={{display:"block",fontSize:11,color:C.w(0.5),fontWeight:600,letterSpacing:.6,textTransform:"uppercase",marginBottom:6}}>Email</label>
-        <input
-          type="email"
-          autoFocus
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          placeholder="adam@visudolabs.com"
-          required
-          style={inputStyle}
-        />
+        {step === "email" ? (
+          <>
+            <div style={{fontSize:13, color:C.w(0.5), margin:"18px 0 24px"}}>
+              Enter your email to receive a one-time sign-in code.
+            </div>
+            <label style={{display:"block",fontSize:11,color:C.w(0.5),fontWeight:600,letterSpacing:.6,textTransform:"uppercase",marginBottom:6}}>Email</label>
+            <input
+              type="email"
+              autoFocus
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              autoComplete="email"
+              required
+              style={inputStyle}
+            />
+          </>
+        ) : (
+          <>
+            <div style={{fontSize:13, color:C.w(0.5), margin:"18px 0 24px"}}>
+              Enter the 6-digit code we emailed you.
+            </div>
+            <label style={{display:"block",fontSize:11,color:C.w(0.5),fontWeight:600,letterSpacing:.6,textTransform:"uppercase",marginBottom:6}}>Sign-in code</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              autoFocus
+              value={code}
+              onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="••••••"
+              autoComplete="one-time-code"
+              required
+              style={{...inputStyle, letterSpacing: 8, textAlign: "center", fontSize: 22, fontFamily:"'DM Mono',monospace"}}
+            />
+          </>
+        )}
 
-        <label style={{display:"block",fontSize:11,color:C.w(0.5),fontWeight:600,letterSpacing:.6,textTransform:"uppercase",marginBottom:6,marginTop:14}}>Password</label>
-        <input
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-          style={inputStyle}
-        />
-
+        {notice && (
+          <div style={{
+            marginTop: 16, padding:"10px 12px", borderRadius:8,
+            background:"rgba(0,212,170,0.12)", border:`1px solid ${C.green}33`,
+            color: C.green, fontSize:12, fontWeight:500,
+          }}>{notice}</div>
+        )}
         {err && (
           <div style={{
             marginTop: 16, padding:"10px 12px", borderRadius:8,
@@ -107,7 +148,17 @@ export default function LoginScreen({onSignedIn}) {
           cursor: busy ? "wait" : "pointer",
           opacity: busy ? 0.7 : 1,
           boxShadow:"0 6px 16px rgba(255,210,0,0.25)",
-        }}>{busy ? "Signing in…" : "Sign in"}</button>
+        }}>{busy ? (step === "email" ? "Sending…" : "Verifying…") : (step === "email" ? "Send code" : "Sign in")}</button>
+
+        {step === "code" && (
+          <button type="button" onClick={resetToEmail} disabled={busy} style={{
+            width:"100%", marginTop: 12, padding:"10px",
+            borderRadius: 10, border:`1px solid ${C.w(0.1)}`,
+            background:"transparent", color:C.w(0.6),
+            fontFamily:"'Outfit',sans-serif", fontWeight:600, fontSize:13,
+            cursor: busy ? "wait" : "pointer",
+          }}>Use a different email / resend code</button>
+        )}
 
         <div style={{marginTop: 22, fontSize: 11, color: C.w(0.35), textAlign:"center", fontFamily:"'DM Mono',monospace"}}>
           Visudo Labs · Operator-only access

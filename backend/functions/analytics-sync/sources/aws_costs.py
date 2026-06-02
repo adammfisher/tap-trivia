@@ -1,16 +1,20 @@
 """
-AWS Cost Explorer sync (Section 4.6).
+AWS cost sync via CloudWatch billing metrics (FREE — no Cost Explorer charges).
 
-  ce.get_cost_and_usage   — daily breakdown of current month, grouped by SERVICE
-  ce.get_cost_forecast    — end-of-month projection
-  ce.get_cost_and_usage   — monthly totals over trailing 36 months on first run
+Reads the AWS/Billing `EstimatedCharges` metric (us-east-1 only):
+  - total estimated month-to-date charge (Currency=USD)
+  - per-service month-to-date charge (ServiceName dimension)
+  - a daily series (diff of the daily cumulative maximum)
+End-of-month is a simple linear projection (MTD / days_elapsed * days_in_month);
+CloudWatch has no forecast, but this is free and good enough.
 
-Each call costs $0.01. Daily cadence (one run per day at 06:05 UTC) keeps
-this in pennies/month.
+Requires the account to have "Receive CloudWatch billing alerts" enabled
+(Billing console → Preferences). Until then the metric is empty and everything
+reports 0 / "—".
 
 Cache writes:
   aws:costs:current_month
-  aws:costs:monthly:{YYYY-MM}    (trailing 36 months on first run, then incremental)
+  aws:costs:monthly:{YYYY-MM}   (current month only; no backfill)
 """
 import calendar
 import logging
@@ -23,147 +27,162 @@ import cache as _cache
 log = logging.getLogger("analytics-sync.aws")
 SOURCE_KEY = "aws"
 
+# Billing metrics are published only in us-east-1.
+_CW_REGION = "us-east-1"
 
-def _ce():
-    # Cost Explorer is a us-east-1 service.
-    return boto3.client("ce", region_name="us-east-1")
+
+def _cw():
+    return boto3.client("cloudwatch", region_name=_CW_REGION)
 
 
 def _today_utc() -> date:
     return datetime.now(timezone.utc).date()
 
 
-def _first_of_next_month(d: date) -> date:
-    if d.month == 12:
-        return date(d.year + 1, 1, 1)
-    return date(d.year, d.month + 1, 1)
+def _month_start(d: date) -> datetime:
+    return datetime(d.year, d.month, 1, tzinfo=timezone.utc)
 
 
-def _month_start(d: date) -> date:
-    return date(d.year, d.month, 1)
+def _latest_max(cw, dimensions, start, end) -> float | None:
+    """Latest value of the cumulative EstimatedCharges metric, or None."""
+    r = cw.get_metric_statistics(
+        Namespace="AWS/Billing",
+        MetricName="EstimatedCharges",
+        Dimensions=dimensions,
+        StartTime=start,
+        EndTime=end,
+        Period=21600,  # 6h
+        Statistics=["Maximum"],
+    )
+    pts = r.get("Datapoints") or []
+    if not pts:
+        return None
+    pts.sort(key=lambda p: p["Timestamp"])
+    return float(pts[-1]["Maximum"])
+
+
+def _daily_series(cw, start, end) -> list[dict]:
+    """Per-day spend = diff of the daily cumulative maximum."""
+    r = cw.get_metric_statistics(
+        Namespace="AWS/Billing",
+        MetricName="EstimatedCharges",
+        Dimensions=[{"Name": "Currency", "Value": "USD"}],
+        StartTime=start,
+        EndTime=end,
+        Period=86400,
+        Statistics=["Maximum"],
+    )
+    pts = sorted(r.get("Datapoints") or [], key=lambda p: p["Timestamp"])
+    out: list[dict] = []
+    prev = 0.0
+    for p in pts:
+        cum = float(p["Maximum"])
+        day_total = max(0.0, cum - prev)
+        prev = cum
+        out.append({"date": p["Timestamp"].strftime("%Y-%m-%d"), "total": round(day_total, 4)})
+    return out
+
+
+def _service_breakdown(cw, start, end) -> list[dict]:
+    """Per-service month-to-date charges from the ServiceName dimension."""
+    metrics = cw.list_metrics(Namespace="AWS/Billing", MetricName="EstimatedCharges")
+    services = set()
+    for m in metrics.get("Metrics", []):
+        for d in m.get("Dimensions", []):
+            if d["Name"] == "ServiceName":
+                services.add(d["Value"])
+
+    rows: list[dict] = []
+    for svc in services:
+        val = _latest_max(
+            cw,
+            [{"Name": "ServiceName", "Value": svc}, {"Name": "Currency", "Value": "USD"}],
+            start, end,
+        )
+        if val and val > 0:
+            rows.append({"service": svc, "amount": round(val, 4)})
+    rows.sort(key=lambda r: -r["amount"])
+    return rows
 
 
 def sync(force: bool = False) -> dict:
-    ce = _ce()
+    cw = _cw()
     today = _today_utc()
     month_start = _month_start(today)
-    month_end_exclusive = _first_of_next_month(today)
+    now = datetime.now(timezone.utc)
+    # Look back a couple days before the month for a baseline; CW samples slowly.
+    lookback = month_start - timedelta(days=2)
 
-    # 1. Current month — daily breakdown by service.
-    current = ce.get_cost_and_usage(
-        TimePeriod={
-            "Start": month_start.strftime("%Y-%m-%d"),
-            # End is exclusive in CE — pass tomorrow so today is included.
-            "End": (today + timedelta(days=1)).strftime("%Y-%m-%d"),
-        },
-        Granularity="DAILY",
-        Metrics=["UnblendedCost"],
-        GroupBy=[{"Type": "DIMENSION", "Key": "SERVICE"}],
-    )
+    total = _latest_max(cw, [{"Name": "Currency", "Value": "USD"}], lookback, now)
+    enabled = total is not None
+    total = float(total or 0.0)
 
-    by_service_total: dict[str, float] = {}
-    by_day: list[dict] = []
-    total = 0.0
-    for day in current.get("ResultsByTime", []):
-        day_total = 0.0
-        for g in day.get("Groups", []):
-            svc = g["Keys"][0] if g.get("Keys") else "Other"
-            amount = float(g["Metrics"]["UnblendedCost"]["Amount"])
-            by_service_total[svc] = by_service_total.get(svc, 0) + amount
-            day_total += amount
-        by_day.append({"date": day["TimePeriod"]["Start"], "total": round(day_total, 4)})
-        total += day_total
+    by_service = _service_breakdown(cw, lookback, now) if enabled else []
+    by_day = _daily_series(cw, month_start, now) if enabled else []
 
-    by_service = [
-        {"service": k, "amount": round(v, 4)}
-        for k, v in sorted(by_service_total.items(), key=lambda x: -x[1])
-    ]
+    # End-of-month forecast. A naive MTD/day*days projection explodes early in
+    # the month because upfront monthly charges (e.g. Route53 hosted zones) get
+    # multiplied across the whole month. Instead:
+    #   - early in the month, use LAST month's actual total (best estimate);
+    #   - later, MTD + (recent daily run-rate × remaining days), where the
+    #     run-rate excludes the first-of-month lump.
+    days_in_month = calendar.monthrange(today.year, today.month)[1]
+    day_of_month = today.day
+    remaining_days = days_in_month - day_of_month
 
-    # 2. Forecast for the rest of the month.
-    forecast = 0.0
-    if today < month_end_exclusive - timedelta(days=1):
-        try:
-            f = ce.get_cost_forecast(
-                TimePeriod={
-                    "Start": (today + timedelta(days=1)).strftime("%Y-%m-%d"),
-                    "End": month_end_exclusive.strftime("%Y-%m-%d"),
-                },
-                Granularity="MONTHLY",
-                Metric="UNBLENDED_COST",
-            )
-            forecast = float(f["Total"]["Amount"])
-        except Exception as e:
-            log.warning("CE forecast failed: %s", e)
+    # Last month's actual total — CloudWatch retains the cumulative metric.
+    prev_month_end = month_start
+    pm = (today.replace(day=1) - timedelta(days=1))
+    prev_month_start = datetime(pm.year, pm.month, 1, tzinfo=timezone.utc)
+    prev_total = _latest_max(cw, [{"Name": "Currency", "Value": "USD"}],
+                             prev_month_start, prev_month_end) if enabled else None
+    # CloudWatch only has history from when billing alerts were enabled, so fall
+    # back to last month's cached total (e.g. from the prior Cost Explorer sync).
+    if not prev_total:
+        cached_prev = _cache.read_payload(f"aws:costs:monthly:{pm.strftime('%Y-%m')}", default={}) or {}
+        prev_total = cached_prev.get("total")
 
+    # Recent daily run-rate, excluding the first day of the month (the lump).
+    month_first = month_start.strftime("%Y-%m-%d")
+    recent = [d["total"] for d in by_day if d["date"] >= month_first and d["date"] != month_first]
+    daily_rate = (sum(recent) / len(recent)) if recent else 0.0
+
+    if not enabled:
+        forecast = 0.0
+    elif day_of_month <= 4 or daily_rate <= 0:
+        # Too early to trust a run-rate — last month is the better guess.
+        forecast = float(prev_total) if prev_total else total
+    else:
+        forecast = total + daily_rate * remaining_days
+    forecast = round(forecast, 4)
+
+    ym = today.strftime("%Y-%m")
+    payload = {
+        "month": ym,
+        "total": round(total, 4),
+        "byService": by_service,
+        "byDay": by_day,
+        "forecast": forecast,
+        "forecastBasis": ("last_month" if (enabled and (day_of_month <= 4 or daily_rate <= 0)) else "run_rate"),
+        "prevMonthTotal": round(float(prev_total), 4) if prev_total else None,
+        "asOf": _cache.now_iso(),
+        "source": "cloudwatch_billing",
+        "billingMetricsEnabled": enabled,
+    }
+    _cache.write("aws:costs:current_month", payload, SOURCE_KEY)
     _cache.write(
-        "aws:costs:current_month",
-        {
-            "month": month_start.strftime("%Y-%m"),
-            "total": round(total, 4),
-            "byService": by_service,
-            "byDay": by_day,
-            "forecast": round(total + forecast, 4),
-        },
+        f"aws:costs:monthly:{ym}",
+        {"total": round(total, 4), "byService": by_service},
         SOURCE_KEY,
     )
 
-    # 3. Trailing months — only fetch any month we don't already have cached.
-    months_pulled = []
-    cur = _month_start(today - timedelta(days=1))  # start with last completed month if today is the 1st
-    if cur == month_start:
-        # If today is the 1st of the month, the "last month" is one further back.
-        cur = _month_start((cur - timedelta(days=1)))
-    fetched_back = 0
-    while fetched_back < 36:
-        ym = cur.strftime("%Y-%m")
-        existing = _cache.read(f"aws:costs:monthly:{ym}")
-        # On a re-run, only refetch the last month (it could have late charges).
-        if existing and fetched_back > 1 and not force:
-            break
-        next_month_start = _first_of_next_month(cur)
-        try:
-            r = ce.get_cost_and_usage(
-                TimePeriod={
-                    "Start": cur.strftime("%Y-%m-%d"),
-                    "End": next_month_start.strftime("%Y-%m-%d"),
-                },
-                Granularity="MONTHLY",
-                Metrics=["UnblendedCost"],
-                GroupBy=[{"Type": "DIMENSION", "Key": "SERVICE"}],
-            )
-        except Exception as e:
-            log.warning("CE monthly %s failed: %s", ym, e)
-            break
-
-        m_by_service: dict[str, float] = {}
-        m_total = 0.0
-        for row in r.get("ResultsByTime", []):
-            for g in row.get("Groups", []):
-                svc = g["Keys"][0] if g.get("Keys") else "Other"
-                amt = float(g["Metrics"]["UnblendedCost"]["Amount"])
-                m_by_service[svc] = m_by_service.get(svc, 0) + amt
-                m_total += amt
-
-        _cache.write(
-            f"aws:costs:monthly:{ym}",
-            {
-                "month": ym,
-                "total": round(m_total, 4),
-                "byService": [
-                    {"service": k, "amount": round(v, 4)}
-                    for k, v in sorted(m_by_service.items(), key=lambda x: -x[1])
-                ],
-            },
-            SOURCE_KEY,
-        )
-        months_pulled.append(ym)
-        # Step back a month
-        cur = _month_start(cur - timedelta(days=1))
-        fetched_back += 1
+    if not enabled:
+        log.warning("AWS/Billing EstimatedCharges metric is empty — enable "
+                    "'Receive CloudWatch billing alerts' in the Billing console.")
 
     return {
-        "current_month_total": round(total, 4),
-        "current_month_forecast": round(total + forecast, 4),
-        "months_pulled_this_run": months_pulled,
-        "by_service_count": len(by_service),
+        "billing_metrics_enabled": enabled,
+        "total": round(total, 4),
+        "forecast": forecast,
+        "services": len(by_service),
     }

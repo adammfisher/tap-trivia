@@ -100,6 +100,87 @@ def _platform_from_rc(platform_str: str) -> str | None:
     return None
 
 
+_STORE_LABELS = {
+    "app_store": "App Store",
+    "mac_app_store": "Mac App Store",
+    "play_store": "Play Store",
+    "amazon": "Amazon",
+    "stripe": "Stripe",
+    "rc_billing": "Web",
+    "promotional": "Promo",
+}
+
+
+def _pretty_store(store: str) -> str:
+    return _STORE_LABELS.get((store or "").lower(), store or "—")
+
+
+def _sub_type(status: str, auto_renew: str) -> str:
+    """Map a RevenueCat subscription to a display type the operator cares about."""
+    s = (status or "").lower()
+    ar = (auto_renew or "").lower()
+    if s == "trialing":
+        return "trial"
+    if s in ("expired", "unknown"):
+        return "expired"
+    if s in ("in_grace_period", "in_billing_retry_period"):
+        return "billing_issue"
+    if s == "active":
+        return "cancelled" if ar == "will_not_renew" else "active"
+    return s or "unknown"
+
+
+def _epoch_ms_to_iso(ms) -> str | None:
+    if not ms:
+        return None
+    try:
+        return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(int(ms) / 1000))
+    except (ValueError, TypeError, OSError):
+        return None
+
+
+def _mask_customer(cid: str) -> str:
+    c = cid or ""
+    if c.startswith("$RCAnonymousID:"):
+        tail = c.split(":", 1)[1]
+        return "anon…" + tail[-6:] if len(tail) >= 6 else "anon…" + tail
+    return (c[:4] + "…" + c[-4:]) if len(c) > 10 else c
+
+
+def _fetch_transactions(project_id: str, api_key: str, customers: list, limit: int = 60) -> list:
+    """Per-customer subscription detail → a recent-transactions feed.
+
+    RC v2 has no bulk transactions endpoint, so we fetch each customer's
+    subscriptions (capped) and flatten. Bounded by the 300s sync timeout.
+    """
+    rows: list[dict] = []
+    for c in customers:
+        cid = c.get("id") or c.get("customer_id")
+        if not cid:
+            continue
+        try:
+            page = _get(f"/projects/{project_id}/customers/{urllib.parse.quote(cid, safe='')}/subscriptions", api_key)
+        except Exception as e:  # noqa: BLE001 — one bad customer shouldn't kill the feed
+            log.warning("RC subscriptions for %s failed: %s", cid, e)
+            continue
+        for s in (page.get("items") or page.get("data") or []):
+            starts = s.get("starts_at") or s.get("current_period_starts_at")
+            rows.append({
+                "customerId":  _mask_customer(cid),
+                "store":       _pretty_store(s.get("store")),
+                "product":     s.get("product_id") or "",
+                "purchasedAt": _epoch_ms_to_iso(starts),
+                "expiresAt":   _epoch_ms_to_iso(s.get("current_period_ends_at")),
+                "type":        _sub_type(s.get("status"), s.get("auto_renewal_status")),
+                "status":      (s.get("status") or "").lower(),
+                "_sort":       int(starts or 0),
+            })
+    rows.sort(key=lambda r: r["_sort"], reverse=True)
+    for r in rows:
+        r.pop("_sort", None)
+    return rows[:limit]
+
+
 def sync(force: bool = False) -> dict:
     creds = _credentials()
     api_key = creds["api_key"]
@@ -124,10 +205,14 @@ def sync(force: bool = False) -> dict:
         "ios":     {"subs": 0, "mrr": 0.0},
         "android": {"subs": 0, "mrr": 0.0},
     }
+    customers: list = []
+    try:
+        customers = _list_paginated(f"/projects/{project_id}/customers", api_key)
+    except Exception as e:
+        log.warning("RC customer list unavailable: %s", e)
     try:
         ios_count = 0
         android_count = 0
-        customers = _list_paginated(f"/projects/{project_id}/customers", api_key)
         for c in customers:
             p = _platform_from_rc(c.get("last_seen_platform") or "")
             if p == "ios":
@@ -172,9 +257,16 @@ def sync(force: bool = False) -> dict:
         "churn30d":          0.0,
         "conversionRate":    0.0,
     }
-    _cache.write("revenuecat:overview",      overview,    SOURCE_KEY)
-    _cache.write("revenuecat:by_platform",   by_platform, SOURCE_KEY)
-    _cache.write("revenuecat:recent_events", [],          SOURCE_KEY)
+    # Recent transactions feed — per-customer subscription detail.
+    try:
+        transactions = _fetch_transactions(project_id, api_key, customers)
+    except Exception as e:
+        log.warning("RC transactions feed unavailable: %s", e)
+        transactions = []
+
+    _cache.write("revenuecat:overview",      overview,     SOURCE_KEY)
+    _cache.write("revenuecat:by_platform",   by_platform,  SOURCE_KEY)
+    _cache.write("revenuecat:recent_events", transactions, SOURCE_KEY)
 
     for pt in monthly_points:
         _cache.write(

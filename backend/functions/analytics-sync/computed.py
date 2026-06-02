@@ -10,6 +10,9 @@ Outputs:
   computed:question_round_progress
 """
 import logging
+import os
+import time
+from datetime import datetime, timezone
 from boto3.dynamodb.conditions import Attr
 
 import cache as _cache
@@ -22,6 +25,27 @@ log = logging.getLogger("analytics-sync.computed")
 # Once subs exist, intersect attributed_bar_code (Players) with paid customer ids
 # from RevenueCat. Documented here so future-me remembers the rule.
 PER_SUB_MRR = 2.99
+
+# Bar activity windows (a bar is "active" if it had gameplay OR a live TV poll
+# within ACTIVE_WINDOW_DAYS; "slow" within SLOW_WINDOW_DAYS; else "dormant").
+ANSWERS_TABLE = os.environ.get("TABLE_ANSWERS", "TapTrivia-Answers")
+ACTIVE_WINDOW_DAYS = 7
+SLOW_WINDOW_DAYS = 21
+_DAY_MS = 86_400_000
+
+
+def _now_ms() -> int:
+    return int(time.time() * 1000)
+
+
+def _iso_to_epoch_ms(s) -> int:
+    if not s:
+        return 0
+    try:
+        t = s[:-1] + "+00:00" if isinstance(s, str) and s.endswith("Z") else s
+        return int(datetime.fromisoformat(t).astimezone(timezone.utc).timestamp() * 1000)
+    except (ValueError, AttributeError, TypeError):
+        return 0
 
 
 def _scan_count(table_name: str, filter_expr=None) -> int:
@@ -61,26 +85,159 @@ def _scan_all(table_name: str, projection: str | None = None, expr_names: dict |
             break
 
 
-def _bar_status_split() -> dict:
+def compute_bar_activity() -> dict:
+    """Per-bar gameplay activity from the Answers table over the last 21 days.
+
+    Returns {barCode: {players7d, players21d, games7d, lastPlayEpoch}}.
+    This is the ground truth for whether a venue is actually being played at —
+    the Bars-table `status` field is just registration state, not activity.
+    """
+    now = _now_ms()
+    cutoff21 = now - SLOW_WINDOW_DAYS * _DAY_MS
+    cutoff7 = now - ACTIVE_WINDOW_DAYS * _DAY_MS
+
+    p7: dict[str, set] = {}
+    p21: dict[str, set] = {}
+    g7: dict[str, set] = {}
+    last: dict[str, int] = {}
+
+    table = dynamo._ddb().Table(ANSWERS_TABLE)
+    kwargs = {
+        "ProjectionExpression": "barCode, playerId, serverTimestamp, gameId",
+        "FilterExpression": Attr("serverTimestamp").gte(cutoff21),
+    }
+    last_key = None
+    while True:
+        if last_key:
+            kwargs["ExclusiveStartKey"] = last_key
+        res = table.scan(**kwargs)
+        for a in res.get("Items", []):
+            bc = a.get("barCode")
+            if not bc:
+                continue
+            ts = int(a.get("serverTimestamp") or 0)
+            pid = a.get("playerId")
+            if ts > last.get(bc, 0):
+                last[bc] = ts
+            p21.setdefault(bc, set()).add(pid)
+            if ts >= cutoff7:
+                p7.setdefault(bc, set()).add(pid)
+                g7.setdefault(bc, set()).add(a.get("gameId"))
+        last_key = res.get("LastEvaluatedKey")
+        if not last_key:
+            break
+
+    out: dict[str, dict] = {}
+    for bc in set(p21) | set(last):
+        out[bc] = {
+            "players7d": len(p7.get(bc, ())),
+            "players21d": len(p21.get(bc, ())),
+            "games7d": len(g7.get(bc, ())),
+            "lastPlayEpoch": last.get(bc, 0),
+        }
+    return out
+
+
+def write_ad_eligibility(real_bar_codes: set) -> int:
+    """Flag each bar ad-eligible on its record. A bar is eligible if it's a real
+    bar (active / has players — in real_bar_codes) OR email-verified. get-tv-state
+    withholds signage/ad inventory from ineligible (test/empty/group) bars.
+    Only writes when the flag changes, to keep writes minimal.
+    """
+    table = dynamo._ddb().Table(TABLE.BARS)
+    updated = 0
+    for b in _scan_all(
+        TABLE.BARS,
+        projection="barCode, #ty, emailVerified, adEligible",
+        expr_names={"#ty": "type"},
+    ):
+        code = b.get("barCode")
+        if not code:
+            continue
+        is_group = (b.get("type") or "").lower() == "group"
+        verified = b.get("emailVerified") in (True, "true")
+        eligible = (not is_group) and (code in real_bar_codes or verified)
+        # Compare against stored value (None when unset) so ineligible bars get
+        # an explicit False — the get-tv-state gate only blocks on False.
+        if b.get("adEligible") != eligible:
+            try:
+                table.update_item(
+                    Key={"PK": f"BAR#{code}"},
+                    UpdateExpression="SET adEligible = :e",
+                    ExpressionAttributeValues={":e": eligible},
+                )
+                updated += 1
+            except Exception as ex:  # noqa: BLE001
+                log.warning("adEligible update failed for %s: %s", code, ex)
+    return updated
+
+
+def _player_counts_by_bar() -> dict:
+    """Real players per bar (excluding pre-launch test users), by currentBarCode."""
+    counts: dict[str, int] = {}
+    for p in _scan_all(TABLE.PLAYERS, projection="currentBarCode, createdAt, updatedAt"):
+        c = p.get("currentBarCode")
+        seen = (p.get("createdAt") or p.get("updatedAt") or "")[:10]
+        if c and seen >= PLAYER_TEST_CUTOFF:
+            counts[c] = counts.get(c, 0) + 1
+    return counts
+
+
+def _bar_status_split(activity: dict, player_counts: dict) -> dict:
+    """Count bars by real activity, excluding social groups and pure-empty
+    test bars (0 players AND no recent gameplay).
+
+    Active  = a player played there in the last 7 days.
+    Slow    = a player played there in the last 21 days.
+    Dormant = has players but no play in 21 days.
+    (TV polling alone no longer marks a bar active — empty test bars with a
+    dev TV were showing up as active.)
+    """
     active = 0
-    pending = 0
+    slow = 0
+    dormant = 0
     bars: list[dict] = []
     for b in _scan_all(
         TABLE.BARS,
-        projection="barCode, barName, #s, total_tvs, last_session_at_utc, city, #st",
-        expr_names={"#s": "status", "#st": "state"},
+        projection="barCode, barName, #ty, total_tvs, lastPollAt, city, #st",
+        expr_names={"#st": "state", "#ty": "type"},
     ):
-        status = (b.get("status") or "").lower()
-        if status == "active":
+        if (b.get("type") or "").lower() == "group":
+            continue  # social groups are not bars
+
+        code = b.get("barCode")
+        act = activity.get(code, {})
+        players = player_counts.get(code, 0)
+        last_play = int(act.get("lastPlayEpoch") or 0)
+
+        # Cull pure-empty test bars: no players AND no recent gameplay.
+        if players == 0 and not last_play:
+            continue
+
+        if act.get("players7d", 0) > 0 or act.get("games7d", 0) > 0:
             active += 1
+        elif act.get("players21d", 0) > 0 or act.get("games21d", 0) > 0:
+            slow += 1
         else:
-            pending += 1
+            dormant += 1
         bars.append(b)
-    return {"active": active, "pending": pending, "bars": bars}
+
+    # "pending" historically meant "not active"; keep it for back-compat.
+    return {"active": active, "slow": slow, "dormant": dormant,
+            "pending": slow + dormant, "bars": bars}
+
+
+# Players last active before this date are pre-launch test users — excluded.
+PLAYER_TEST_CUTOFF = os.environ.get("PLAYER_TEST_CUTOFF", "2026-05-28")
 
 
 def _player_count() -> int:
-    return _scan_count(TABLE.PLAYERS)
+    n = 0
+    for p in _scan_all(TABLE.PLAYERS, projection="createdAt, updatedAt"):
+        seen = (p.get("createdAt") or p.get("updatedAt") or "")[:10]
+        if seen >= PLAYER_TEST_CUTOFF:
+            n += 1
+    return n
 
 
 def compute_bar_attribution() -> dict[str, float]:
@@ -199,11 +356,12 @@ def compute_overview(question_progress: dict, bar_split: dict) -> dict:
     }
 
 
-def compute_signage_overview() -> dict:
+def compute_signage_overview(real_bar_codes: set | None = None) -> dict:
     """
     Aggregate TapTrivia-SignageImpressions into the shape /analytics/signage
-    needs. Pre-revenue with 0 impressions this is mostly zeros; the heatmap
-    bucketing logic still runs so the schema is consistent.
+    needs. Only counts impressions for real bars (active, non-group, non-test)
+    when `real_bar_codes` is provided — otherwise every test bar / dev TV
+    inflates the numbers.
     """
     from collections import defaultdict
     contexts = ("between_rounds", "game_lobby", "results", "off_hours_idle")
@@ -226,6 +384,8 @@ def compute_signage_overview() -> dict:
         projection="bar_code, tv_id, #ctx, duration_ms, concurrent_players",
         expr_names={"#ctx": "context"},
     ):
+        if real_bar_codes is not None and it.get("bar_code") not in real_bar_codes:
+            continue  # skip test/empty/group bars
         ctx = it.get("context")
         dur = float(it.get("duration_ms") or 0)
         players = float(it.get("concurrent_players") or 0)
@@ -327,14 +487,19 @@ def compute_questions_overview() -> dict:
 
 
 def run_all() -> dict:
-    bar_split = _bar_status_split()
+    bar_activity = compute_bar_activity()
+    player_counts = _player_counts_by_bar()
+    bar_split = _bar_status_split(bar_activity, player_counts)
+    real_bar_codes = {b.get("barCode") for b in bar_split["bars"] if b.get("barCode")}
+    write_ad_eligibility(real_bar_codes)
     qprog = compute_question_progress()
     overview = compute_overview(qprog, bar_split)
     attribution = compute_bar_attribution()
-    signage = compute_signage_overview()
+    signage = compute_signage_overview(real_bar_codes)
     questions = compute_questions_overview()
 
     _cache.write("computed:overview", overview, "computed")
+    _cache.write("computed:bar_activity", bar_activity, "computed")
     _cache.write("computed:question_round_progress", qprog, "computed")
     _cache.write("computed:bar_attribution", attribution, "computed")
     _cache.write("computed:signage:overview", signage, "computed")

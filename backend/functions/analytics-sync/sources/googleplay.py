@@ -17,6 +17,7 @@ Cache writes:
   googleplay:upcoming_payout
 """
 import json
+import os
 import logging
 import time
 import urllib.error
@@ -76,10 +77,16 @@ def sync(force: bool = False) -> dict:
     project_id = info.get("project_id", "")
     discovered: list[dict] = []
     candidate_buckets = []
+    # Preferred: the exact reports bucket from config (Play Console → Download
+    # reports → Financial → "Copy Cloud Storage URI" → gs://pubsite_prod_NNNN/).
+    # Set GP_REPORTS_BUCKET, or add "reports_bucket" to the SA-key secret.
+    configured = (os.environ.get("GP_REPORTS_BUCKET")
+                  or info.get("reports_bucket") or "").replace("gs://", "").strip().strip("/")
+    if configured:
+        candidate_buckets.append(configured)
+    # Fallback guesses (rarely correct — the real bucket is account-number based).
     if project_id:
         candidate_buckets.append(f"pubsite_prod_{project_id}")
-    # In many setups the bucket is named after the publisher account number,
-    # which we don't have — leave further discovery to a future enhancement.
 
     months_seen: dict[str, list[str]] = {}
     for bucket in candidate_buckets:

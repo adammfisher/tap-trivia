@@ -41,6 +41,13 @@ resource "aws_cognito_user_pool" "admin" {
     allow_admin_create_user_only = true
   }
 
+  # Passwordless email-OTP sign-in via custom auth challenge triggers.
+  lambda_config {
+    define_auth_challenge          = aws_lambda_function.analytics_auth_define.arn
+    create_auth_challenge          = aws_lambda_function.analytics_auth_create.arn
+    verify_auth_challenge_response = aws_lambda_function.analytics_auth_verify.arn
+  }
+
   account_recovery_setting {
     recovery_mechanism {
       name     = "verified_email"
@@ -79,8 +86,7 @@ resource "aws_cognito_user_pool_client" "admin_web" {
   supported_identity_providers         = ["COGNITO"]
 
   explicit_auth_flows = [
-    "ALLOW_USER_PASSWORD_AUTH",  # admin sign-in via SDK
-    "ALLOW_USER_SRP_AUTH",
+    "ALLOW_CUSTOM_AUTH",         # passwordless email-OTP sign-in
     "ALLOW_REFRESH_TOKEN_AUTH",
   ]
 
@@ -144,6 +150,7 @@ resource "aws_lambda_function" "analytics_api" {
       TABLE_ANALYTICS_CACHE     = "TapTrivia-AnalyticsCache"
       TABLE_BARS                = "TapTrivia-Bars"
       TABLE_PLAYERS             = "TapTrivia-Players"
+      TABLE_ANSWERS             = "TapTrivia-Answers"
       TABLE_TV_PAIRINGS         = "TapTrivia-TvPairings"
       TABLE_SIGNAGE_IMPRESSIONS = "TapTrivia-SignageImpressions"
       ANALYTICS_SYNC_FUNCTION   = aws_lambda_function.analytics_sync.function_name
@@ -239,4 +246,82 @@ output "cognito_issuer" {
 
 output "analytics_api_function" {
   value = aws_lambda_function.analytics_api.function_name
+}
+
+# -----------------------------------------------------------------------------
+# Cognito custom-auth triggers — passwordless email-OTP sign-in
+# Three Node Lambdas wired to the admin pool's lambda_config. They reuse the
+# shared lambda_execution role (already has CloudWatch Logs + ses:SendEmail).
+# -----------------------------------------------------------------------------
+locals {
+  analytics_auth_triggers = {
+    define = "analytics-auth-define"
+    create = "analytics-auth-create"
+    verify = "analytics-auth-verify"
+  }
+}
+
+data "archive_file" "analytics_auth" {
+  for_each    = local.analytics_auth_triggers
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/functions/${each.value}"
+  output_path = "${path.module}/zip/${each.value}.zip"
+}
+
+resource "aws_lambda_function" "analytics_auth_define" {
+  function_name    = "${local.name_prefix}-analytics-auth-define"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  memory_size      = 128
+  timeout          = 5
+  filename         = data.archive_file.analytics_auth["define"].output_path
+  source_code_hash = data.archive_file.analytics_auth["define"].output_base64sha256
+}
+
+resource "aws_lambda_function" "analytics_auth_create" {
+  function_name    = "${local.name_prefix}-analytics-auth-create"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  memory_size      = 128
+  timeout          = 10
+  filename         = data.archive_file.analytics_auth["create"].output_path
+  source_code_hash = data.archive_file.analytics_auth["create"].output_base64sha256
+}
+
+resource "aws_lambda_function" "analytics_auth_verify" {
+  function_name    = "${local.name_prefix}-analytics-auth-verify"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  memory_size      = 128
+  timeout          = 5
+  filename         = data.archive_file.analytics_auth["verify"].output_path
+  source_code_hash = data.archive_file.analytics_auth["verify"].output_base64sha256
+}
+
+# Allow Cognito to invoke each trigger.
+resource "aws_lambda_permission" "analytics_auth_define" {
+  statement_id  = "AllowCognitoInvokeDefine"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.analytics_auth_define.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.admin.arn
+}
+
+resource "aws_lambda_permission" "analytics_auth_create" {
+  statement_id  = "AllowCognitoInvokeCreate"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.analytics_auth_create.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.admin.arn
+}
+
+resource "aws_lambda_permission" "analytics_auth_verify" {
+  statement_id  = "AllowCognitoInvokeVerify"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.analytics_auth_verify.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.admin.arn
 }

@@ -3,7 +3,7 @@
 // styling stays inside our design system.
 import { Amplify } from "aws-amplify";
 import { Hub } from "aws-amplify/utils";
-import { signIn as ampSignIn, signOut as ampSignOut, fetchAuthSession, getCurrentUser as ampGetUser } from "aws-amplify/auth";
+import { signIn as ampSignIn, confirmSignIn as ampConfirmSignIn, signOut as ampSignOut, fetchAuthSession, getCurrentUser as ampGetUser } from "aws-amplify/auth";
 
 export function configureAmplify() {
   Amplify.configure({
@@ -17,12 +17,28 @@ export function configureAmplify() {
   });
 }
 
-export async function signIn(email, password) {
-  // USER_PASSWORD_AUTH is enabled on the App Client; Amplify v6 selects
-  // it automatically when given a password.
-  const r = await ampSignIn({ username: email, password });
+// Passwordless email-OTP sign-in (Cognito custom auth challenge).
+// Step 1: request a code. Step 2: confirm it.
+export async function requestOtp(email) {
+  // Clear any half-finished session so re-requests start clean.
+  try { await ampSignOut(); } catch { /* ignore */ }
+
+  const r = await ampSignIn({
+    username: email,
+    options: { authFlowType: "CUSTOM_WITHOUT_SRP" },
+  });
+
+  const step = r?.nextStep?.signInStep;
+  if (step !== "CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE") {
+    throw new Error("Could not start sign-in (" + (step || "unknown") + ")");
+  }
+  return r;
+}
+
+export async function confirmOtp(code) {
+  const r = await ampConfirmSignIn({ challengeResponse: String(code).trim() });
   if (!r.isSignedIn) {
-    throw new Error("Sign-in not complete: " + (r.nextStep?.signInStep || "unknown"));
+    throw new Error("Invalid or expired code");
   }
   return r;
 }

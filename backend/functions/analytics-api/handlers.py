@@ -28,6 +28,15 @@ log = logging.getLogger("analytics-api")
 ANALYTICS_SYNC_FN = os.environ.get(
     "ANALYTICS_SYNC_FUNCTION", "TapTrivia-analytics-sync"
 )
+ANSWERS_TABLE = os.environ.get("TABLE_ANSWERS", "TapTrivia-Answers")
+# Players last active before this date are pre-launch test users — excluded from
+# "total players" counts. Override via env without a redeploy.
+PLAYER_TEST_CUTOFF = os.environ.get("PLAYER_TEST_CUTOFF", "2026-05-28")
+
+
+def _is_real_player(p) -> bool:
+    seen = (p.get("createdAt") or p.get("updatedAt") or "")[:10]
+    return seen >= PLAYER_TEST_CUTOFF
 
 
 def _ddec(v: Any) -> Any:
@@ -40,18 +49,38 @@ def _ddec(v: Any) -> Any:
     return v
 
 
-def _bar_status(last_session_at_utc: str | None) -> str:
-    if not last_session_at_utc:
-        return "dormant"
+ACTIVE_WINDOW_DAYS = 7
+SLOW_WINDOW_DAYS = 21
+
+
+def _days_since_iso(s: str | None, now: datetime) -> int | None:
+    if not s:
+        return None
     try:
-        s = last_session_at_utc[:-1] + "+00:00" if last_session_at_utc.endswith("Z") else last_session_at_utc
-        last = datetime.fromisoformat(s).astimezone(timezone.utc)
-        days = (datetime.now(timezone.utc) - last).days
-        if days < 7: return "active"
-        if days < 21: return "slow"
-        return "dormant"
+        t = s[:-1] + "+00:00" if s.endswith("Z") else s
+        return (now - datetime.fromisoformat(t).astimezone(timezone.utc)).days
     except (ValueError, AttributeError):
-        return "dormant"
+        return None
+
+
+def _epoch_to_iso(ms) -> str | None:
+    if not ms:
+        return None
+    try:
+        return datetime.fromtimestamp(int(ms) / 1000, timezone.utc).isoformat()
+    except (ValueError, OverflowError, OSError):
+        return None
+
+
+def _activity_status(act: dict) -> str:
+    """Active = real gameplay this week; slow = within 21d; else dormant.
+    (TV polling alone no longer counts — empty test bars with a dev TV were
+    showing as active.)"""
+    if int(act.get("players7d") or 0) > 0 or int(act.get("games7d") or 0) > 0:
+        return "active"
+    if int(act.get("players21d") or 0) > 0 or int(act.get("games21d") or 0) > 0:
+        return "slow"
+    return "dormant"
 
 
 def _scan_all(table_name: str, **kwargs):
@@ -73,8 +102,12 @@ def handle_overview(event):
     if overview is None:
         return _resp.data_not_ready("computed:overview")
 
-    # Top bars (live, small, fast — currently 1 bar in fleet).
-    top_bars = list(_bars_with_status())[:6]
+    # Top bars by recent gameplay (skip empty/test bars with no plays).
+    top_bars = sorted(
+        (b for b in _bars_with_status() if b["hasGameplay"]),
+        key=lambda b: (b["activePlayers7d"], b["gamesWeek"]),
+        reverse=True,
+    )[:6]
     overview["topBars"] = top_bars
     return _resp.ok(overview)
 
@@ -99,7 +132,7 @@ def handle_subscribers(event):
 
     # Filter events to the selected date range.
     def _event_date(e) -> str:
-        return (e.get("occurred_at") or e.get("at") or e.get("created_at") or "")[:10]
+        return (e.get("purchasedAt") or e.get("occurred_at") or e.get("at") or e.get("created_at") or "")[:10]
 
     start_str = start_date.isoformat()
     end_str = end_date.isoformat()
@@ -119,15 +152,19 @@ def handle_subscribers(event):
         cur_d += timedelta(days=1)
 
     # Funnel: total players → played 1+ games → started trial → paid.
-    total_users = 0
-    played_one_plus = 0
-    for p in _scan_all(
-        TABLE.PLAYERS,
-        ProjectionExpression="games_played",
-    ):
-        total_users += 1
-        if int(p.get("games_played") or 0) >= 1:
-            played_one_plus += 1
+    # Exclude pre-launch test users (last active before the cutoff). "Played 1+"
+    # comes from distinct players who have answers (games_played isn't maintained).
+    real_ids = set()
+    for p in _scan_all(TABLE.PLAYERS, ProjectionExpression="PK, createdAt, updatedAt"):
+        if _is_real_player(p):
+            real_ids.add((p.get("PK") or "").replace("PLAYER#", ""))
+    total_users = len(real_ids)
+    played_ids = set()
+    for a in _scan_all(ANSWERS_TABLE, ProjectionExpression="playerId"):
+        pid = a.get("playerId")
+        if pid and pid in real_ids:
+            played_ids.add(pid)
+    played_one_plus = len(played_ids)
 
     trial = int(rc.get("totalTrial") or 0)
     paid = int(rc.get("totalActive") or 0)
@@ -166,24 +203,33 @@ def handle_subscribers(event):
 
 def _bars_with_status() -> list[dict]:
     attribution = _cache.read_payload("computed:bar_attribution", default={}) or {}
+    activity = _cache.read_payload("computed:bar_activity", default={}) or {}
+    now = datetime.now(timezone.utc)
     out: list[dict] = []
-    for b in _scan_all(TABLE.BARS, ProjectionExpression="barCode, barName, city, #st, #zp, dma_code, dma_name, total_tvs, last_session_at_utc",
-                       ExpressionAttributeNames={"#st": "state", "#zp": "zip"}):
+    for b in _scan_all(TABLE.BARS, ProjectionExpression="barCode, barName, city, #st, #zp, dma_code, dma_name, total_tvs, lastPollAt, #ty",
+                       ExpressionAttributeNames={"#st": "state", "#zp": "zip", "#ty": "type"}):
+        if (b.get("type") or "").lower() == "group":
+            continue  # social groups are not bars
         code = b.get("barCode")
         if not code: continue
+        act = activity.get(code, {})
         bar = {
-            "code":       code,
-            "name":       b.get("barName") or "",
-            "city":       b.get("city") or "",
-            "state":      b.get("state") or "",
-            "zip":        b.get("zip") or "",
-            "dma":        b.get("dma_name") or "",
-            "tvs":        int(b.get("total_tvs") or 0),
-            "players":    0,    # populated below from live count
-            "gamesMonth": 0,
-            "attrMrr":    float(attribution.get(code, 0)),
-            "lastGame":   b.get("last_session_at_utc"),
-            "status":     _bar_status(b.get("last_session_at_utc")),
+            "code":            code,
+            "name":            b.get("barName") or "",
+            "city":            b.get("city") or "",
+            "state":           b.get("state") or "",
+            "zip":             b.get("zip") or "",
+            "dma":             b.get("dma_name") or "",
+            "tvs":             int(b.get("total_tvs") or 0),
+            "players":         0,    # total players, populated below from live count
+            "activePlayers7d": int(act.get("players7d") or 0),
+            "gamesWeek":       int(act.get("games7d") or 0),
+            "gamesMonth":      0,
+            "attrMrr":         float(attribution.get(code, 0)),
+            "lastGame":        _epoch_to_iso(act.get("lastPlayEpoch")),
+            "lastPollAt":      b.get("lastPollAt"),
+            "hasGameplay":     bool(act.get("lastPlayEpoch")),
+            "status":          _activity_status(act),
         }
         out.append(bar)
     return out
@@ -191,31 +237,85 @@ def _bars_with_status() -> list[dict]:
 
 def handle_bars(event):
     bars = _bars_with_status()
-    active = sum(1 for b in bars if b["status"] == "active")
-    pending = len(bars) - active
-    total_attr_mrr = sum(b["attrMrr"] for b in bars)
+    bar_info = {b["code"]: b for b in bars}  # code → {name, city, state, ...} (pre-cull)
 
-    # players-per-bar from a single Players scan (pre-revenue: 0 rows).
+    # players-per-bar from a single Players scan (excluding pre-launch test users).
     bar_players: dict[str, int] = {}
-    for p in _scan_all(TABLE.PLAYERS, ProjectionExpression="currentBarCode"):
+    for p in _scan_all(TABLE.PLAYERS, ProjectionExpression="currentBarCode, createdAt, updatedAt"):
         c = p.get("currentBarCode")
-        if c:
+        if c and _is_real_player(p):
             bar_players[c] = bar_players.get(c, 0) + 1
     for b in bars:
         b["players"] = bar_players.get(b["code"], 0)
 
+    active_tvs = _active_tvs(bar_info)
+
+    # Active-screen count per bar.
+    tv_counts: dict[str, int] = {}
+    for t in active_tvs:
+        tv_counts[t["barCode"]] = tv_counts.get(t["barCode"], 0) + 1
+    for b in bars:
+        b["activeTvs"] = tv_counts.get(b["code"], 0)
+
+    # Cull pure-empty test bars: no players AND no recent gameplay.
+    bars = [b for b in bars if b["players"] > 0 or b["hasGameplay"]]
+
+    active = sum(1 for b in bars if b["status"] == "active")
+    pending = len(bars) - active
+    total_attr_mrr = sum(b["attrMrr"] for b in bars)
+
     total_players = sum(b["players"] for b in bars)
+    total_active_players_7d = sum(b["activePlayers7d"] for b in bars)
+    total_games_week = sum(b["gamesWeek"] for b in bars)
 
     return _resp.ok({
         "totals": {
             "active": active,
             "pending": pending,
             "totalPlayers": total_players,
+            "activePlayers7d": total_active_players_7d,
+            "totalGamesWeek": total_games_week,
             "totalGamesMonth": 0,
             "totalAttrMrr": round(total_attr_mrr, 2),
+            "activeTvs": len(active_tvs),
         },
         "bars": bars,
+        "activeTvs": active_tvs,
     })
+
+
+def _active_tvs(bar_info: dict) -> list[dict]:
+    """Live TVs (heartbeat in the last 24h) with their bar + location."""
+    now = datetime.now(timezone.utc)
+    tvs: list[dict] = []
+    for tv in _scan_all(
+        TABLE.TV_PAIRINGS,
+        ProjectionExpression="tv_id, gsi1pk, bar_code, tv_platform, last_heartbeat_utc",
+    ):
+        code = tv.get("gsi1pk") or tv.get("bar_code")
+        hb = tv.get("last_heartbeat_utc")
+        mins = None
+        if hb:
+            try:
+                s = hb[:-1] + "+00:00" if hb.endswith("Z") else hb
+                mins = (now - datetime.fromisoformat(s).astimezone(timezone.utc)).total_seconds() / 60
+            except (ValueError, AttributeError):
+                mins = None
+        if mins is None or mins >= 24 * 60:
+            continue
+        info = bar_info.get(code, {})
+        tvs.append({
+            "tvId":          tv.get("tv_id"),
+            "barCode":       code,
+            "barName":       info.get("name") or code or "—",
+            "city":          info.get("city") or "",
+            "state":         info.get("state") or "",
+            "platform":      tv.get("tv_platform") or "unknown",
+            "lastHeartbeat": hb,
+            "minutesAgo":    int(mins),
+        })
+    tvs.sort(key=lambda t: t["minutesAgo"])
+    return tvs
 
 
 # ─── /analytics/bars/{barCode} ──────────────────────────────────────
@@ -251,22 +351,47 @@ def handle_bar_drill(event, bar_code: str):
             "status":        "active" if active else "dark",
         })
 
-    # Players whose currentBarCode == this bar.
+    # Gameplay per player at this bar, from the Answers table (the player's own
+    # games_played/last_played_at fields aren't maintained — Answers is truth).
+    games_by_player: dict[str, set] = {}
+    last_by_player: dict[str, int] = {}
+    first_by_player: dict[str, int] = {}
+    for a in _scan_all(
+        ANSWERS_TABLE,
+        FilterExpression=Attr("barCode").eq(code),
+        ProjectionExpression="playerId, gameId, serverTimestamp",
+    ):
+        a = _ddec(a)
+        pid = a.get("playerId")
+        if not pid:
+            continue
+        games_by_player.setdefault(pid, set()).add(a.get("gameId"))
+        ts = int(a.get("serverTimestamp") or 0)
+        if ts > last_by_player.get(pid, 0):
+            last_by_player[pid] = ts
+        if ts and (pid not in first_by_player or ts < first_by_player[pid]):
+            first_by_player[pid] = ts
+
+    # Players whose currentBarCode == this bar (displayName is the real name field).
     players: list[dict] = []
     for p in _scan_all(
         TABLE.PLAYERS,
         FilterExpression=Attr("currentBarCode").eq(code),
-        ProjectionExpression="PK, #n, currentBarCode, games_played, last_played_at, subscription_status",
-        ExpressionAttributeNames={"#n": "name"},
+        ProjectionExpression="PK, displayName, currentBarCode, createdAt, updatedAt, subscription_status",
     ):
         p = _ddec(p)
+        pid = (p.get("PK") or "").replace("PLAYER#", "")
+        # "First joined" = first game played here, else when the record was last
+        # touched (these player records carry no createdAt).
+        joined = _epoch_to_iso(first_by_player.get(pid)) or p.get("createdAt") or p.get("updatedAt")
         players.append({
-            "name":        p.get("name") or "",
+            "name":        p.get("displayName") or "Anonymous",
             "subscription": p.get("subscription_status") or "free",
-            "joined":      p.get("created_at"),
-            "games":       int(p.get("games_played") or 0),
-            "lastGame":    p.get("last_played_at"),
+            "joined":      joined,
+            "games":       len(games_by_player.get(pid, ())),
+            "lastGame":    _epoch_to_iso(last_by_player.get(pid)),
         })
+    players.sort(key=lambda x: x["games"], reverse=True)
 
     paid = sum(1 for x in players if x["subscription"] == "paid")
     trial = sum(1 for x in players if x["subscription"] == "trial")

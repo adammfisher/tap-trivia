@@ -31,7 +31,7 @@ export default function AwsTab() {
     <div style={{padding:"28px 32px"}}>
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:14}}>
         <Stat label="MTD Spend" value={`$${total.toFixed(2)}`} sub={cur.month || ""} accent={C.grad.cyan} icon="☁️" big delay={0}/>
-        <Stat label="EOM Forecast" value={`$${forecast.toFixed(2)}`} sub="projected from CE" accent={C.grad.purple} icon="📈" big delay={0.05}/>
+        <Stat label="EOM Forecast" value={`$${forecast.toFixed(2)}`} sub="projected month-end" accent={C.grad.purple} icon="📈" big delay={0.05}/>
         <Stat label="$ / Active Bar" value={`$${Number(data?.perActiveBar || 0).toFixed(2)}`} sub="this month" accent={C.grad.gold} icon="🍻" big delay={0.1}/>
         <Stat label="Top Service" value={services[0]?.service || "—"} sub={`$${(services[0]?.cost || 0).toFixed(2)} (${((services[0]?.pct || 0)*100).toFixed(0)}%)`} accent={C.grad.green} icon="🏆" big delay={0.15}/>
       </div>

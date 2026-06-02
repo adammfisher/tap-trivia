@@ -15,37 +15,28 @@
 # -----------------------------------------------------------------------------
 # IAM additions on the shared lambda_execution role
 # -----------------------------------------------------------------------------
-resource "aws_iam_role_policy" "lambda_cost_explorer" {
-  name = "${local.name_prefix}-CostExplorer"
-  role = aws_iam_role.lambda_execution.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = [
-        "ce:GetCostAndUsage",
-        "ce:GetCostForecast"
-      ]
-      Resource = "*"
-    }]
-  })
-}
-
 resource "aws_iam_role_policy" "lambda_cloudwatch_metrics" {
   name = "${local.name_prefix}-CloudWatchMetrics"
   role = aws_iam_role.lambda_execution.id
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = ["cloudwatch:PutMetricData"]
-      Resource = "*"
-      Condition = {
-        StringEquals = { "cloudwatch:namespace" = "TapTrivia/AnalyticsSync" }
+    Statement = [
+      {
+        # Read AWS/Billing EstimatedCharges (free) for cost reporting.
+        Effect   = "Allow"
+        Action   = ["cloudwatch:GetMetricStatistics", "cloudwatch:ListMetrics"]
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["cloudwatch:PutMetricData"]
+        Resource = "*"
+        Condition = {
+          StringEquals = { "cloudwatch:namespace" = "TapTrivia/AnalyticsSync" }
+        }
       }
-    }]
+    ]
   })
 }
 
@@ -85,6 +76,7 @@ resource "aws_lambda_function" "analytics_sync" {
       TABLE_ANALYTICS_CACHE          = "TapTrivia-AnalyticsCache"
       TABLE_BARS                     = "TapTrivia-Bars"
       TABLE_PLAYERS                  = "TapTrivia-Players"
+      TABLE_ANSWERS                  = "TapTrivia-Answers"
       TABLE_QUESTION_USAGE_BY_QUESTION = "TapTrivia-QuestionUsageByQuestion"
     }
   }
@@ -107,12 +99,13 @@ resource "aws_cloudwatch_log_group" "analytics_sync" {
 }
 
 # -----------------------------------------------------------------------------
-# EventBridge — daily 06:05 UTC (~02:05 EDT, low-traffic window)
+# EventBridge — hourly at :05 (near-live RevenueCat numbers; AWS Cost Explorer
+# is self-throttled to ~daily inside the source to avoid per-request charges).
 # -----------------------------------------------------------------------------
 resource "aws_cloudwatch_event_rule" "analytics_sync_daily" {
   name                = "${local.name_prefix}-AnalyticsSyncDaily"
-  description         = "Daily trigger for analytics-sync at 06:05 UTC"
-  schedule_expression = "cron(5 6 * * ? *)"
+  description         = "Hourly trigger for analytics-sync at :05"
+  schedule_expression = "cron(5 * * * ? *)"
   state               = local.is_dev ? "DISABLED" : "ENABLED"
 
   tags = {

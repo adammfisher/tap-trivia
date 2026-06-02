@@ -143,7 +143,16 @@ resource "aws_iam_role_policy" "lambda_bedrock" {
         Action = [
           "bedrock:InvokeModel"
         ]
-        Resource = "arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-image-generator-v2:0"
+        # Logo background removal uses the Stability "Stable Image Remove Background"
+        # model. It is only invokable via the cross-region inference profile, which
+        # also requires permission on the underlying foundation-model in each region
+        # the profile can route to (us-east-1/us-east-2/us-west-2).
+        Resource = [
+          "arn:aws:bedrock:us-east-1:683032473658:inference-profile/us.stability.stable-image-remove-background-v1:0",
+          "arn:aws:bedrock:us-east-1::foundation-model/stability.stable-image-remove-background-v1:0",
+          "arn:aws:bedrock:us-east-2::foundation-model/stability.stable-image-remove-background-v1:0",
+          "arn:aws:bedrock:us-west-2::foundation-model/stability.stable-image-remove-background-v1:0"
+        ]
       }
     ]
   })

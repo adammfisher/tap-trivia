@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { C } from "../lib/theme";
 import { useFetch } from "../lib/useFetch";
 import { apiRangeParams } from "../lib/ranges";
@@ -7,11 +8,30 @@ import { SectionHeader } from "../components/Pill";
 import { PanelLoading, PanelError } from "../components/PanelState";
 
 const EVENT_TYPES = {
-  new:   { icon: "💎", label: "New paid",      color: C.green },
-  trial: { icon: "⏱",  label: "Started trial", color: C.cyan  },
-  renew: { icon: "↻",  label: "Renewed",       color: C.gold  },
-  churn: { icon: "✕",  label: "Churned",       color: C.red   },
+  active:        { icon: "💎", label: "Converted",     color: C.green },
+  trial:         { icon: "⏱",  label: "Trial",         color: C.cyan  },
+  cancelled:     { icon: "⊘",  label: "Cancelled",     color: C.gold  },
+  expired:       { icon: "✕",  label: "Expired",       color: C.red   },
+  billing_issue: { icon: "⚠",  label: "Billing issue", color: C.red   },
+  // legacy fallbacks
+  new:   { icon: "💎", label: "New paid", color: C.green },
+  renew: { icon: "↻",  label: "Renewed",  color: C.gold  },
+  churn: { icon: "✕",  label: "Churned",  color: C.red   },
 };
+
+// Group raw subscription types into the three buckets the operator cares about.
+const FILTERS = [
+  { key: "all",       label: "All",       match: () => true },
+  { key: "trial",     label: "Trial",     match: (t) => t === "trial" },
+  { key: "converted", label: "Converted", match: (t) => t === "active" },
+  { key: "cancelled", label: "Cancelled", match: (t) => t === "cancelled" || t === "expired" },
+];
+
+function _fmtDate(iso) {
+  if (!iso) return "—";
+  try { return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
+  catch { return "—"; }
+}
 
 export default function SubscribersTab({ range = "mtd", compare = "none", customRange } = {}) {
   const { range: r, start, end } = apiRangeParams(range, customRange);
@@ -20,6 +40,7 @@ export default function SubscribersTab({ range = "mtd", compare = "none", custom
   if (end)   qs.set("end", end);
 
   const { data, loading, error, retry } = useFetch(`/analytics/subscribers?${qs.toString()}`, [r, compare, start, end]);
+  const [subFilter, setSubFilter] = useState("all");
 
   if (loading) return <div style={{padding:"28px 32px"}}><PanelLoading height={140} label="Subscribers"/></div>;
   if (error)   return <div style={{padding:"28px 32px"}}><PanelError error={error} retry={retry} label="Subscribers"/></div>;
@@ -27,7 +48,13 @@ export default function SubscribersTab({ range = "mtd", compare = "none", custom
   const d = data || {};
   const platform = d.platformSplit || { ios: {subs:0,mrr:0}, android: {subs:0,mrr:0} };
   const funnel = d.funnel || [];
-  const events = d.recentEvents || [];
+  const allEvents = d.recentEvents || [];
+  const counts = FILTERS.reduce((acc, f) => {
+    acc[f.key] = allEvents.filter(e => f.match(e.type)).length;
+    return acc;
+  }, {});
+  const activeFilter = FILTERS.find(f => f.key === subFilter) || FILTERS[0];
+  const events = allEvents.filter(e => activeFilter.match(e.type));
 
   return (
     <div style={{padding:"28px 32px"}}>
@@ -76,11 +103,25 @@ export default function SubscribersTab({ range = "mtd", compare = "none", custom
         {/* Recent Subscriptions */}
         <Panel delay={0.35}>
           <SectionHeader title="Recent Subscriptions" sub="Live from RevenueCat"/>
+          <div style={{display:"flex", gap:6, marginBottom:14, flexWrap:"wrap"}}>
+            {FILTERS.map(f => (
+              <button
+                key={f.key}
+                onClick={() => setSubFilter(f.key)}
+                style={{
+                  padding:"6px 12px", borderRadius:8, border:"none", cursor:"pointer",
+                  fontSize:12, fontWeight:600, fontFamily:"'Outfit',sans-serif",
+                  background: subFilter===f.key ? C.w(0.12) : C.w(0.04),
+                  color: subFilter===f.key ? "#fff" : C.w(0.55),
+                }}
+              >{f.label} <span style={{opacity:.6, fontFamily:"'DM Mono',monospace"}}>{counts[f.key] || 0}</span></button>
+            ))}
+          </div>
           {events.length === 0 && (
-            <div style={{padding:"24px 12px", fontSize:12, color:C.w(0.4), textAlign:"center"}}>No subscription events yet</div>
+            <div style={{padding:"24px 12px", fontSize:12, color:C.w(0.4), textAlign:"center"}}>No {subFilter==="all" ? "subscription events" : activeFilter.label.toLowerCase()+" subscribers"} yet</div>
           )}
-          {events.slice(0, 8).map((e, i) => {
-            const t = EVENT_TYPES[e.type] || EVENT_TYPES.new;
+          {events.slice(0, 12).map((e, i) => {
+            const t = EVENT_TYPES[e.type] || EVENT_TYPES.active;
             return (
               <div key={i} className="row" style={{
                 display:"flex", alignItems:"center", gap:12, padding:"12px 8px",
@@ -88,13 +129,13 @@ export default function SubscribersTab({ range = "mtd", compare = "none", custom
                 animation:`fadeUp .3s ease-out ${i*0.04}s both`,
               }}>
                 <div style={{width:32, height:32, borderRadius:8, background:C.w(0.06), display:"flex", alignItems:"center", justifyContent:"center", fontSize:14}}>{t.icon}</div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:13, fontWeight:600, color:"#fff"}}>{e.name || "Anonymous"}</div>
-                  <div style={{fontSize:11, color:C.w(0.45)}}>{e.barCode || "—"} · {e.store || "?"}</div>
+                <div style={{flex:1, minWidth:0}}>
+                  <div style={{fontSize:13, fontWeight:600, color:"#fff", fontFamily:"'DM Mono',monospace", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{e.customerId || e.name || "Anonymous"}</div>
+                  <div style={{fontSize:11, color:C.w(0.45)}}>{e.store || "?"}{e.product ? ` · ${e.product}` : ""}</div>
                 </div>
                 <div style={{textAlign:"right"}}>
                   <div style={{fontSize:11, fontWeight:700, color:t.color}}>{t.label}</div>
-                  <div style={{fontSize:10, color:C.w(0.4), fontFamily:"'DM Mono',monospace"}}>{e.at || ""}</div>
+                  <div style={{fontSize:10, color:C.w(0.4), fontFamily:"'DM Mono',monospace"}}>{_fmtDate(e.purchasedAt)} → {_fmtDate(e.expiresAt)}</div>
                 </div>
               </div>
             );
