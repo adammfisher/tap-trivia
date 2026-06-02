@@ -3,7 +3,7 @@
 let logoState = {
   preview: null,
   uploading: false,
-  removeBackground: true,
+  logoMode: 'remove', // 'remove' | 'white' | 'none'
   error: '',
   success: ''
 };
@@ -50,11 +50,23 @@ function renderLogoUpload() {
             <input type="file" id="logo-file-input" accept="image/png,image/jpeg" class="hidden-input">
           </div>
 
-          <label class="logo-option" id="label-remove-bg">
-            <input type="checkbox" id="chk-remove-bg" ${logoState.removeBackground ? 'checked' : ''}>
-            <span class="logo-option-text">Remove background</span>
-            <span class="logo-option-hint">AI removes the background so your logo floats on the TV gradient</span>
-          </label>
+          <div class="logo-mode-options">
+            <label class="logo-option">
+              <input type="radio" name="logo-mode" value="remove" ${logoState.logoMode === 'remove' ? 'checked' : ''}>
+              <span class="logo-option-text">Remove background</span>
+              <span class="logo-option-hint">Keeps your logo's colors, makes a solid background transparent</span>
+            </label>
+            <label class="logo-option">
+              <input type="radio" name="logo-mode" value="white" ${logoState.logoMode === 'white' ? 'checked' : ''}>
+              <span class="logo-option-text">Make it white</span>
+              <span class="logo-option-hint">Turns your logo into a clean white version for the dark TV gradient</span>
+            </label>
+            <label class="logo-option">
+              <input type="radio" name="logo-mode" value="none" ${logoState.logoMode === 'none' ? 'checked' : ''}>
+              <span class="logo-option-text">Keep original</span>
+              <span class="logo-option-hint">Uploads your image as-is, no processing</span>
+            </label>
+          </div>
 
           ${logoState.error ? `<div class="auth-error">${logoState.error}</div>` : ''}
           ${logoState.success ? `<div class="auth-success">${logoState.success}</div>` : ''}
@@ -112,8 +124,9 @@ function renderLogoUpload() {
     if (e.target.files.length) handleLogoFile(e.target.files[0]);
   });
 
-  const chkRemoveBg = document.getElementById('chk-remove-bg');
-  chkRemoveBg.addEventListener('change', () => { logoState.removeBackground = chkRemoveBg.checked; });
+  document.querySelectorAll('input[name="logo-mode"]').forEach(radio => {
+    radio.addEventListener('change', () => { if (radio.checked) logoState.logoMode = radio.value; });
+  });
 
   document.getElementById('btn-upload-logo').addEventListener('click', handleLogoUpload);
 }
@@ -186,7 +199,7 @@ async function handleLogoUpload() {
     const result = await apiCall('POST', '/dashboard/logo', {
       image: base64Data,
       contentType: 'image/png',
-      removeBackground: logoState.removeBackground
+      logoMode: logoState.logoMode
     });
 
     // Update local auth state with new logo (add cache-bust)

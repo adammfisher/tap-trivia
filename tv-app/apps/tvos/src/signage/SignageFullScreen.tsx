@@ -156,17 +156,6 @@ function EventFS({ slide, barName, logoUrl, secondsUntilNextGame }: any) {
         <Text style={[fs.label, { color: colors.blue }]}>{slide.when || ''}</Text>
         <Text style={fs.headline}>{slide.headline || slide.title || ''}</Text>
         <Text style={fs.subtitle}>{slide.message || ''}</Text>
-        {(slide.prize || slide.items || []).length > 0 && (
-          <View style={fs.prizesRow}>
-            {(slide.prize || slide.items || []).map((p: any, i: number) => (
-              <View key={i} style={fs.prize}>
-                <Text style={fs.prizeEmoji}>{p.emoji || ''}</Text>
-                <Text style={fs.prizePlace}>{p.place || ''}</Text>
-                {p.label ? <Text style={fs.prizeLabel}>{p.label}</Text> : null}
-              </View>
-            ))}
-          </View>
-        )}
       </View>
     </LinearGradient>
   );

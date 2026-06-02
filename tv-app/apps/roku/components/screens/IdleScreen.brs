@@ -674,58 +674,8 @@ sub renderEvent(data as Object)
   m.eventName.text = safeField(data, "eventName")
   m.eventDetails.text = safeField(data, "details")
 
-  ' Build prize cards as horizontal row
+  ' Prizes removed from the event template — clear any stale cards.
   m.eventPrizes.removeChildren(m.eventPrizes.getChildren(-1, 0))
-  prizes = []
-  if data.prizes <> invalid then prizes = data.prizes
-
-  totalWidth = prizes.count() * 280 + (prizes.count() - 1) * 32
-  startX = Int((800 - totalWidth) / 2)
-  xPos = startX
-
-  for i = 0 to prizes.count() - 1
-    p = prizes[i]
-    card = CreateObject("roSGNode", "Group")
-    card.translation = [xPos, 0]
-
-    cardBg = CreateObject("roSGNode", "Poster")
-    cardBg.uri = "pkg:/images/signage-prize-card.png"
-    cardBg.width = 280
-    cardBg.height = 200
-    card.appendChild(cardBg)
-
-    ' Prize emoji
-    pEmojiUri = getEmojiUri(safeField(p, "emoji"), "sm")
-    if pEmojiUri <> ""
-      pEmoji = CreateObject("roSGNode", "Poster")
-      pEmoji.uri = pEmojiUri
-      pEmoji.width = 56
-      pEmoji.height = 56
-      pEmoji.translation = [112, 32]
-      card.appendChild(pEmoji)
-    end if
-
-    placeLabel = CreateObject("roSGNode", "Label")
-    placeLabel.text = safeField(p, "place")
-    placeLabel.translation = [0, 96]
-    placeLabel.font = makeFont("Fredoka-Bold", 32)
-    placeLabel.color = "#ffd200"
-    placeLabel.horizAlign = "center"
-    placeLabel.width = 280
-    card.appendChild(placeLabel)
-
-    nameLabel = CreateObject("roSGNode", "Label")
-    nameLabel.text = safeField(p, "prize")
-    nameLabel.translation = [0, 138]
-    nameLabel.font = makeFont("Outfit-Regular", 24)
-    nameLabel.color = "#ffffffE6"
-    nameLabel.horizAlign = "center"
-    nameLabel.width = 280
-    card.appendChild(nameLabel)
-
-    m.eventPrizes.appendChild(card)
-    xPos = xPos + 312
-  end for
 
   ' Dynamic vertical centering (CSS: emoji mb40, label mb24, headline mb16, subtitle mb48)
   elements = []
@@ -737,9 +687,6 @@ sub renderEvent(data as Object)
   detailsText = safeField(data, "details")
   if detailsText <> ""
     elements.push({node: m.eventDetails, xOff: -600, h: -1, gap: 48})
-  end if
-  if prizes.count() > 0
-    elements.push({node: m.eventPrizes, xOff: -400, h: 200, gap: 0})
   end if
   centerElementsVertically(elements)
 end sub

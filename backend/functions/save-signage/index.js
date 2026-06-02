@@ -14,6 +14,43 @@ const MAX_SLIDES = 10;
 const MAX_SIGNAGE_SIZE = 50 * 1024; // 50KB
 const MAX_FIELD_LENGTH = 500;
 const HTML_TAG_RE = /<[^>]+>/;
+const MAX_NESTING_DEPTH = 4;
+
+// Recursively validate a slide data value. Slide data fields may be primitives
+// or nested arrays/objects (e.g. specials.menuItems, event.prizes, custom.items),
+// so we walk the structure and enforce the string rules on every leaf.
+function validateDataValue(value, path, depth) {
+  if (depth > MAX_NESTING_DEPTH) {
+    return `Slide data field "${path}" is nested too deeply`;
+  }
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      const err = validateDataValue(value[i], `${path}[${i}]`, depth + 1);
+      if (err) return err;
+    }
+    return null;
+  }
+  if (value !== null && typeof value === 'object') {
+    for (const [k, v] of Object.entries(value)) {
+      const err = validateDataValue(v, `${path}.${k}`, depth + 1);
+      if (err) return err;
+    }
+    return null;
+  }
+  if (typeof value === 'string') {
+    if (value.length > MAX_FIELD_LENGTH) {
+      return `Slide data field "${path}" exceeds ${MAX_FIELD_LENGTH} characters`;
+    }
+    if (HTML_TAG_RE.test(value)) {
+      return `Slide data field "${path}" must not contain HTML`;
+    }
+    return null;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean' || value === null) {
+    return null;
+  }
+  return `Invalid type for slide data field: ${path}`;
+}
 
 exports.handler = async (event) => {
   try {
@@ -98,30 +135,13 @@ exports.handler = async (event) => {
         };
       }
 
-      for (const [k, v] of Object.entries(slide.data)) {
-        if (typeof v !== 'string' && typeof v !== 'number' && typeof v !== 'boolean') {
-          return {
-            statusCode: 400,
-            headers,
-            body: JSON.stringify({ error: 'INVALID_INPUT', message: `Invalid type for slide data field: ${k}` })
-          };
-        }
-        if (typeof v === 'string') {
-          if (v.length > MAX_FIELD_LENGTH) {
-            return {
-              statusCode: 400,
-              headers,
-              body: JSON.stringify({ error: 'INVALID_INPUT', message: `Slide data field "${k}" exceeds ${MAX_FIELD_LENGTH} characters` })
-            };
-          }
-          if (HTML_TAG_RE.test(v)) {
-            return {
-              statusCode: 400,
-              headers,
-              body: JSON.stringify({ error: 'INVALID_INPUT', message: `Slide data field "${k}" must not contain HTML` })
-            };
-          }
-        }
+      const dataErr = validateDataValue(slide.data, 'data', 0);
+      if (dataErr) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'INVALID_INPUT', message: dataErr })
+        };
       }
 
       if (!slide.schedule || typeof slide.schedule !== 'object') {

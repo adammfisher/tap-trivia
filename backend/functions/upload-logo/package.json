@@ -1,0 +1,12 @@
+{
+  "name": "upload-logo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-cloudfront": "^3.987.0",
+    "@aws-sdk/client-dynamodb": "^3.987.0",
+    "@aws-sdk/client-s3": "^3.987.0",
+    "@aws-sdk/lib-dynamodb": "^3.987.0",
+    "jimp": "^0.22.12"
+  }
+}

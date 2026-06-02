@@ -642,16 +642,11 @@
       </div>`;
   }
 
-  /** Get active signage slides filtered by day-of-week */
+  /** Get active signage slides. Day-of-week + enabled filtering is done
+   *  authoritatively by the backend (get-tv-state), so we just render what
+   *  it sends — but keep a defensive enabled check in case of stale data. */
   function getActiveSlides() {
-    const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-    const today = days[new Date().getDay()];
-    return signageSlides.filter(s => {
-      if (!s.enabled) return false;
-      const sDays = s.schedule && s.schedule.days;
-      if (sDays && sDays.length > 0 && !sDays.includes(today)) return false;
-      return true;
-    });
+    return signageSlides.filter(s => s.enabled !== false);
   }
 
   /** Crossfade via overlay: fade cover in → swap content → fade cover out */
@@ -937,12 +932,6 @@
     },
 
     event(d) {
-      const prizes = (d.prizes || []).map(p => `
-        <div class="tt-signage-prize">
-          <div class="tt-signage-prize__emoji">${p.emoji || ''}</div>
-          <div class="tt-signage-prize__place">${p.place || ''}</div>
-          <div class="tt-signage-prize__name">${p.prize || ''}</div>
-        </div>`).join('');
       return `
         <div class="tt-signage-fs tt-signage-fade-in" style="background:linear-gradient(150deg,#06060f,#0e0824 30%,#1e1050 50%,#0e0824)">
           ${signageHeaderHTML()}
@@ -951,17 +940,11 @@
             <div class="tt-signage-label" style="color:#667eea">${d.when || ''}</div>
             <div class="tt-signage-headline">${d.eventName || ''}</div>
             <div class="tt-signage-subtitle">${d.details || ''}</div>
-            <div class="tt-signage-prizes">${prizes}</div>
           </div>
         </div>`;
     },
 
     brand(d) {
-      const hours = (d.hours || []).map(h => `
-        <div style="text-align:center">
-          <div class="tt-signage-hours__label">${h.label || ''}</div>
-          <div class="tt-signage-hours__value">${h.hours || ''}</div>
-        </div>`).join('');
       const logoInner = barLogoUrl
         ? `<img src="${barLogoUrl}" alt="${barName}">`
         : `<span class="tt-signage-brand-logo__initial">${barName ? barName.charAt(0).toUpperCase() : 'B'}</span>`;
@@ -971,8 +954,6 @@
             <div class="tt-signage-brand-logo">${logoInner}</div>
             <div class="tt-signage-headline">${barName}</div>
             <div class="tt-signage-subtitle" style="letter-spacing:4px;text-transform:uppercase;font-size:32px">${d.tagline || ''}</div>
-            <div class="tt-signage-divider"></div>
-            <div class="tt-signage-hours">${hours}</div>
           </div>
           <div class="tt-signage-powered">
             <div class="tt-signage-powered__inner">
@@ -1125,14 +1106,6 @@
     },
 
     event(d) {
-      const prizes = (d.prizes || []).map(p => `
-        <div class="tt-signage-panel__prize">
-          <span class="tt-signage-panel__prize-emoji">${p.emoji || ''}</span>
-          <div style="flex:1;text-align:left">
-            <div class="tt-signage-panel__prize-place">${p.place || ''}</div>
-            <div class="tt-signage-panel__prize-name">${p.prize || ''}</div>
-          </div>
-        </div>`).join('');
       return `
         <div class="tt-signage-panel__inner">
           ${signagePanelHeaderHTML()}
@@ -1142,18 +1115,12 @@
             <div class="tt-signage-panel__label" style="color:#667eea">${d.when || ''}</div>
             <div class="tt-signage-panel__headline">${d.eventName || ''}</div>
             <div class="tt-signage-panel__subtitle">${d.details || ''}</div>
-            <div style="display:flex;flex-direction:column;gap:12px;width:100%;padding:0 12px">${prizes}</div>
           </div>
           ${signagePanelQRHTML()}
         </div>`;
     },
 
     brand(d) {
-      const hours = (d.hours || []).map(h => `
-        <div class="tt-signage-panel__hours-row">
-          <span class="tt-signage-panel__hours-label">${h.label || ''}</span>
-          <span class="tt-signage-panel__hours-value">${h.hours || ''}</span>
-        </div>`).join('');
       const logoInner = barLogoUrl
         ? `<img src="${barLogoUrl}" alt="${barName}" style="width:100%;height:100%;object-fit:cover">`
         : `<span style="font-family:'Fredoka',sans-serif;font-size:48px;font-weight:800;color:#ffd200">${barName ? barName.charAt(0).toUpperCase() : 'B'}</span>`;
@@ -1162,8 +1129,6 @@
           <div class="tt-signage-brand-logo" style="width:160px;height:160px;border-radius:32px;margin-bottom:28px">${logoInner}</div>
           <div class="tt-signage-panel__headline">${barName}</div>
           <div class="tt-signage-panel__subtitle" style="letter-spacing:2px;text-transform:uppercase;font-size:20px">${d.tagline || ''}</div>
-          <div class="tt-signage-divider" style="width:80px;height:4px;margin:24px auto"></div>
-          <div style="width:100%">${hours}</div>
           <div style="margin-top:auto">${signagePanelQRHTML()}</div>
         </div>`;
     },
@@ -3405,11 +3370,6 @@
         eventName: 'TapTrivia Night',
         when: 'Every Thursday · 8 PM',
         details: 'Free to play · Win prizes · Teams welcome',
-        prizes: [
-          { place: '1st Place', prize: '$50 Tab', emoji: '🥇' },
-          { place: '2nd Place', prize: '$25 Tab', emoji: '🥈' },
-          { place: '3rd Place', prize: 'Free Appetizer', emoji: '🥉' },
-        ],
       },
     },
     {
@@ -3418,11 +3378,6 @@
       schedule: { days: [] },
       data: {
         tagline: 'Cold Drinks · Good Times · Live Trivia',
-        hours: [
-          { label: 'Mon – Thu', hours: '4 PM – 12 AM' },
-          { label: 'Fri – Sat', hours: '4 PM – 2 AM' },
-          { label: 'Sunday', hours: '12 PM – 10 PM' },
-        ],
       },
     },
     {

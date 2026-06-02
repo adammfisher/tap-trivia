@@ -14,6 +14,39 @@ function response(statusCode, body) {
   };
 }
 
+// Fields that have been retired from a template. We strip them here so they show
+// nothing on every TV client (including Roku/tvOS that still have the old render
+// code) without needing a device redeploy — the data simply isn't there.
+const RETIRED_SLIDE_FIELDS = {
+  event: ['prizes'],
+  brand: ['hours'],
+};
+
+function stripRetiredFields(slide) {
+  const retired = RETIRED_SLIDE_FIELDS[slide && slide.template];
+  if (!retired || !slide.data) return slide;
+  const data = { ...slide.data };
+  for (const f of retired) delete data[f];
+  return { ...slide, data };
+}
+
+// Filter signage to slides that are enabled and scheduled for today. This is the
+// single source of truth for day-of-week scheduling — TV clients (Roku, tvOS, web)
+// just render whatever slides this returns. `today` is the ET short weekday
+// ("Mon".."Sun"), matching the capitalized day names the dashboard stores.
+function filterSignageForDay(signage, today) {
+  if (!signage || !Array.isArray(signage.slides)) return signage || null;
+  const slides = signage.slides
+    .filter((s) => {
+      if (s.enabled === false) return false;
+      const days = s.schedule && s.schedule.days;
+      if (Array.isArray(days) && days.length > 0 && !days.includes(today)) return false;
+      return true;
+    })
+    .map(stripRetiredFields);
+  return { ...signage, slides };
+}
+
 // --- Deterministic shuffle utilities (same as get-question) ---
 
 function seededRandom(seed) {
@@ -231,6 +264,23 @@ exports.handler = async (event) => {
     if (etH === 24) etH = 0;
     const cfg = await getConfig(etH * 60 + etM);
 
+    // Filter signage by day-of-week once, here, so every TV client renders the
+    // same set. Uses ET weekday to stay consistent with the ET-based game clock.
+    const etWeekday = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York', weekday: 'short'
+    }).format(new Date(now)); // "Mon".."Sun"
+    // Withhold signage/ad inventory from bars the hourly analytics sync has
+    // marked ineligible (test/empty/unverified). Fail-open: only `false` blocks,
+    // so bars not yet evaluated keep serving.
+    const tvSignage = bar.adEligible === false ? null : filterSignageForDay(bar.signage, etWeekday);
+
+    // Append the logo hash as a cache-buster. The logo is stored at a fixed URL
+    // (logos/{barCode}.png), so without this TV clients — notably Roku, which
+    // caches images by URI — keep showing the previous logo after a re-upload.
+    const tvLogoUrl = bar.logoUrl
+      ? (bar.logoHash ? `${bar.logoUrl}?v=${bar.logoHash}` : bar.logoUrl)
+      : null;
+
     if (!cfg.isActive) {
       return response(200, {
         state: 'idle',
@@ -244,8 +294,8 @@ exports.handler = async (event) => {
         playerAppUrl: process.env.PLAYER_APP_URL || 'https://taptrivia.tv',
         lastGameBarLeaderboard: [],
         lastGameGlobalLeaderboard: [],
-        signage: bar.signage || null,
-        logoUrl: bar.logoUrl || null,
+        signage: tvSignage,
+        logoUrl: tvLogoUrl,
         logoHash: bar.logoHash || null
       });
     }
@@ -292,8 +342,8 @@ exports.handler = async (event) => {
         playerAppUrl: process.env.PLAYER_APP_URL || 'https://localhost:3000',
         lastGameBarLeaderboard: [],
         lastGameGlobalLeaderboard: [],
-        signage: bar.signage || null,
-        logoUrl: bar.logoUrl || null,
+        signage: tvSignage,
+        logoUrl: tvLogoUrl,
         logoHash: bar.logoHash || null
       });
     }
@@ -332,8 +382,8 @@ exports.handler = async (event) => {
             secondsUntilNextGame: gameState.secondsUntilStart,
             showBarCode: true,
             playerAppUrl: process.env.PLAYER_APP_URL || 'https://localhost:3000',
-            signage: bar.signage || null,
-            logoUrl: bar.logoUrl || null,
+            signage: tvSignage,
+            logoUrl: tvLogoUrl,
             logoHash: bar.logoHash || null
           });
         }
@@ -350,8 +400,8 @@ exports.handler = async (event) => {
         playerAppUrl: process.env.PLAYER_APP_URL || 'https://localhost:3000',
         lastGameBarLeaderboard: [],
         lastGameGlobalLeaderboard: [],
-        signage: bar.signage || null,
-        logoUrl: bar.logoUrl || null,
+        signage: tvSignage,
+        logoUrl: tvLogoUrl,
         logoHash: bar.logoHash || null
       });
     }
@@ -379,8 +429,8 @@ exports.handler = async (event) => {
         secondsUntilNextGame: secondsUntilNextGame > 0 ? secondsUntilNextGame : null,
         showBarCode: true,
         playerAppUrl: process.env.PLAYER_APP_URL || 'https://localhost:3000',
-        signage: bar.signage || null,
-        logoUrl: bar.logoUrl || null,
+        signage: tvSignage,
+        logoUrl: tvLogoUrl,
         logoHash: bar.logoHash || null
       });
     }
@@ -515,8 +565,8 @@ exports.handler = async (event) => {
       currentPointsAvailable,
       elapsedSeconds: Math.floor(gameState.elapsedInQuestion / 1000),
       barLeaderboard,
-      signage: bar.signage || null,
-      logoUrl: bar.logoUrl || null,
+      signage: tvSignage,
+      logoUrl: tvLogoUrl,
       logoHash: bar.logoHash || null
     });
   } catch (err) {

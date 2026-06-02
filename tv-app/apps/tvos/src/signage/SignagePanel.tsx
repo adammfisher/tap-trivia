@@ -114,17 +114,6 @@ function EventPanel({ slide }: { slide: SignageSlide }) {
         <Text style={[pn.label, { color: colors.blue }]}>{slide.when || ''}</Text>
         <Text style={pn.headline}>{slide.headline || slide.title || ''}</Text>
         <Text style={pn.subtitle}>{slide.message || ''}</Text>
-        <View style={pn.prizeList}>
-          {(slide.prize || slide.items || []).map((p, i) => (
-            <View key={i} style={pn.prizeRow}>
-              <Text style={pn.prizeEmoji}>{p.emoji || ''}</Text>
-              <View style={pn.prizeInfo}>
-                <Text style={pn.prizePlace}>{p.place || ''}</Text>
-                {p.label ? <Text style={pn.prizeName}>{p.label}</Text> : null}
-              </View>
-            </View>
-          ))}
-        </View>
       </View>
     </View>
   );

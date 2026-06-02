@@ -10,9 +10,9 @@ const TEMPLATES = [
   {id:'happyhour',name:'Happy Hour',icon:'\u{1F379}',desc:'Time-based drink & food deals',color:'#e879f9',
     defaults:{emoji:'\u{1F379}',timeRange:'4 PM \u2013 7 PM',frequency:'Every weekday',deals:[{deal:'50% OFF',item:'All Drafts',color:'#f59e0b'},{deal:'$5',item:'House Wine',color:'#e879f9'},{deal:'$6',item:'Appetizers',color:'#00d4aa'}]}},
   {id:'event',name:'Event Promo',icon:'\u{1F3A7}',desc:'Promote upcoming events',color:'#667eea',
-    defaults:{emoji:'\u{1F3A7}',eventName:'Trivia Night',when:'This Thursday',details:'8 PM \u2022 Free to play \u2022 Prizes for top 3',prizes:[{place:'1st',prize:'$50 Tab',emoji:'\u{1F947}'},{place:'2nd',prize:'$25 Tab',emoji:'\u{1F948}'},{place:'3rd',prize:'Free Appetizer',emoji:'\u{1F949}'}]}},
-  {id:'brand',name:'Location Branding',icon:'\u{1F3DB}',desc:'Logo, tagline & hours',color:'#764ba2',
-    defaults:{tagline:'Cold Drinks \u2022 Good Times \u2022 Live Trivia',hours:[{label:'Mon\u2013Thu',hours:'4 PM \u2013 12 AM'},{label:'Fri\u2013Sat',hours:'4 PM \u2013 2 AM'},{label:'Sunday',hours:'12 PM \u2013 10 PM'}]}},
+    defaults:{emoji:'\u{1F3A7}',eventName:'Trivia Night',when:'This Thursday',details:'8 PM \u2022 Free to play \u2022 Prizes for top 3'}},
+  {id:'brand',name:'Location Branding',icon:'\u{1F3DB}',desc:'Logo & tagline',color:'#764ba2',
+    defaults:{tagline:'Cold Drinks \u2022 Good Times \u2022 Live Trivia'}},
   {id:'announcement',name:'Announcement',icon:'\u{1F4E2}',desc:'Custom message or alert',color:'#00d4aa',
     defaults:{emoji:'\u{1F4E2}',headline:'Big News!',message:"We're expanding our patio \u2014 more seating, more fun starting next month!",subtext:'Stay tuned for the grand reveal'}},
   {id:'sports',name:'Game Day',icon:'\u{1F3C8}',desc:'Promote sports events',color:'#ff4757',
@@ -179,15 +179,6 @@ function tvFsEvent(d) {
       <div class="tvp-label" style="color:#667eea">${d.when || ''}</div>
       <div class="tvp-headline-lg">${d.eventName || ''}</div>
       <div class="tvp-subtitle">${d.details || ''}</div>
-      <div class="tvp-prizes">
-        ${(d.prizes || []).map(p => `
-          <div class="tvp-prize">
-            <div class="tvp-prize__emoji">${p.emoji}</div>
-            <div class="tvp-prize__place">${p.place}</div>
-            <div class="tvp-prize__name">${p.prize}</div>
-          </div>
-        `).join('')}
-      </div>
     </div>
   `;
 }
@@ -199,12 +190,6 @@ function tvFsBrand(d) {
       <div class="tvp-brand-logo">${b.logoUrl ? `<img src="${b.logoUrl}" alt="">` : `<span>${b.initial}</span>`}</div>
       <div class="tvp-headline-lg">${esc(b.name)}</div>
       <div class="tvp-subtitle" style="letter-spacing:2px;text-transform:uppercase;font-size:16px">${d.tagline || ''}</div>
-      <div class="tvp-divider"></div>
-      <div class="tvp-hours">
-        ${(d.hours || []).map(h => `
-          <div class="tvp-hours-row"><span class="tvp-hours__label">${h.label}</span><span class="tvp-hours__value">${h.hours}</span></div>
-        `).join('')}
-      </div>
     </div>
   `;
 }
@@ -891,19 +876,8 @@ function buildEventForm(el, d) {
     ${fieldHTML('eventName', 'Event Name', d.eventName || '', 'Trivia Night')}
     ${fieldHTML('when', 'When', d.when || '', 'This Thursday')}
     ${fieldHTML('details', 'Details', d.details || '', '8 PM \u2022 Free to play \u2022 Prizes for top 3')}
-    <div class="field-label form-section-label">PRIZES</div>
-    <div id="prizes-list">
-      ${(d.prizes || []).map((p, i) => `
-        <div class="menu-row" data-idx="${i}">
-          ${inlineEmojiPickerHTML('prizeEmoji-' + i, p.emoji || '\u{1F3C6}')}
-          <input class="field-input field-sm field-price" value="${esc(p.place)}" placeholder="1st" data-field="place" data-idx="${i}">
-          <input class="field-input field-sm" value="${esc(p.prize)}" placeholder="$50 Tab" data-field="prize" data-idx="${i}" style="flex:2">
-        </div>
-      `).join('')}
-    </div>
   `;
   attachFormListeners(el, d);
-  attachPrizeListeners(el, d);
 }
 
 function buildBrandForm(el, d) {
@@ -926,18 +900,8 @@ function buildBrandForm(el, d) {
       <button class="btn-ghost btn-sm" id="btn-brand-upload-logo">Upload Logo</button>
     </div>
     ${fieldHTML('tagline', 'Tagline', d.tagline || '', 'Cold Drinks \u2022 Good Times')}
-    <div class="field-label form-section-label">HOURS</div>
-    <div id="hours-list">
-      ${(d.hours || []).map((h, i) => `
-        <div class="menu-row" data-idx="${i}">
-          <input class="field-input field-sm" value="${esc(h.label)}" placeholder="Mon\u2013Thu" data-field="label" data-idx="${i}" style="flex:1">
-          <input class="field-input field-sm" value="${esc(h.hours)}" placeholder="4 PM \u2013 12 AM" data-field="hours" data-idx="${i}" style="flex:2">
-        </div>
-      `).join('')}
-    </div>
   `;
   attachFormListeners(el, d);
-  attachHoursListeners(el, d);
 
   const uploadBtn = document.getElementById('btn-brand-upload-logo');
   if (uploadBtn) uploadBtn.addEventListener('click', () => {
@@ -1111,9 +1075,6 @@ function attachFormListeners(el, data) {
       } else if (targetName.startsWith('menuIcon-')) {
         const idx = parseInt(targetName.split('-')[1]);
         if (data.menuItems && data.menuItems[idx]) data.menuItems[idx].icon = emoji;
-      } else if (targetName.startsWith('prizeEmoji-')) {
-        const idx = parseInt(targetName.split('-')[1]);
-        if (data.prizes && data.prizes[idx]) data.prizes[idx].emoji = emoji;
       } else if (targetName.startsWith('customIcon-')) {
         const idx = parseInt(targetName.split('-')[1]);
         if (data.items && data.items[idx]) data.items[idx].emoji = emoji;
@@ -1186,32 +1147,6 @@ function attachDealListeners(el, d) {
       d.deals.splice(idx, 1);
       renderEditorForm('happyhour', d);
       renderPreview('happyhour', d);
-    });
-  });
-}
-
-function attachPrizeListeners(el, d) {
-  el.querySelectorAll('#prizes-list input[data-field]').forEach(inp => {
-    inp.addEventListener('input', () => {
-      const idx = parseInt(inp.dataset.idx);
-      const field = inp.dataset.field;
-      if (d.prizes && d.prizes[idx]) {
-        d.prizes[idx][field] = inp.value;
-        renderPreview('event', d);
-      }
-    });
-  });
-}
-
-function attachHoursListeners(el, d) {
-  el.querySelectorAll('#hours-list input[data-field]').forEach(inp => {
-    inp.addEventListener('input', () => {
-      const idx = parseInt(inp.dataset.idx);
-      const field = inp.dataset.field;
-      if (d.hours && d.hours[idx]) {
-        d.hours[idx][field] = inp.value;
-        renderPreview('brand', d);
-      }
     });
   });
 }

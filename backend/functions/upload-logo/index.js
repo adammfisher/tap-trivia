@@ -1,15 +1,97 @@
 'use strict';
 
 const crypto = require('crypto');
+const Jimp = require('jimp');
 const { TABLE, update } = require('./shared/dynamo');
 const { authenticate, unauthorized } = require('./shared/auth');
-const { BedrockRuntimeClient, InvokeModelCommand } = require('@aws-sdk/client-bedrock-runtime');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { CloudFrontClient, CreateInvalidationCommand } = require('@aws-sdk/client-cloudfront');
 
-const bedrock = new BedrockRuntimeClient({ region: 'us-east-1' });
 const s3 = new S3Client({ region: 'us-east-1' });
 const cloudfront = new CloudFrontClient({ region: 'us-east-1' });
+
+// Background removal for logos. Bar logos are graphics on a solid (or near-solid)
+// background, so AI subject-detection models erase them — we key out the
+// background color instead. Samples the corners to find the background color,
+// then makes matching pixels transparent with a feathered edge.
+const MAX_LOGO_DIMENSION = 512; // downscale large uploads before processing
+const KEY_LOWER = 42;           // color distance ≤ this → fully transparent
+const KEY_UPPER = 96;           // color distance ≥ this → fully opaque (feather between)
+const SOLID_BG_MAX_VARIANCE = 38; // if corners disagree more than this, bg isn't solid
+
+function colorDist(r1, g1, b1, r2, g2, b2) {
+  const dr = r1 - r2, dg = g1 - g2, db = b1 - b2;
+  return Math.sqrt(dr * dr + dg * dg + db * db);
+}
+
+// Key out a solid/near-solid background in place (mutates image.bitmap alpha).
+// Returns whether keying was actually applied.
+function keyOutBackground(image) {
+  const { width, height, data } = image.bitmap;
+
+  // Sample background color + alpha from the four corners.
+  const corner = (x, y) => {
+    const i = (y * width + x) * 4;
+    return [data[i], data[i + 1], data[i + 2], data[i + 3]];
+  };
+  const corners = [corner(0, 0), corner(width - 1, 0), corner(0, height - 1), corner(width - 1, height - 1)];
+
+  // If the corners are already transparent, the logo arrived with its background
+  // removed — keying against transparent pixels' (garbage) RGB would wreck it.
+  const meanCornerAlpha = corners.reduce((a, c) => a + c[3], 0) / corners.length;
+  if (meanCornerAlpha < 32) return false;
+
+  const bg = corners.reduce((a, c) => [a[0] + c[0], a[1] + c[1], a[2] + c[2]], [0, 0, 0]).map((v) => v / corners.length);
+
+  // If the corners disagree a lot, the background isn't a solid color — keying
+  // would damage the image, so leave it unchanged.
+  const cornerVariance = Math.max(...corners.map((c) => colorDist(c[0], c[1], c[2], bg[0], bg[1], bg[2])));
+  if (cornerVariance > SOLID_BG_MAX_VARIANCE) return false;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const dist = colorDist(data[i], data[i + 1], data[i + 2], bg[0], bg[1], bg[2]);
+    let alpha;
+    if (dist <= KEY_LOWER) alpha = 0;
+    else if (dist >= KEY_UPPER) alpha = 255;
+    else alpha = Math.round(((dist - KEY_LOWER) / (KEY_UPPER - KEY_LOWER)) * 255);
+    data[i + 3] = Math.round((data[i + 3] * alpha) / 255);
+  }
+  return true;
+}
+
+// Recolor every visible pixel to white, preserving alpha — produces a clean
+// white silhouette of the logo for placing on the colored TV gradient.
+function recolorWhite(image) {
+  const { data } = image.bitmap;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] > 0) {
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+    }
+  }
+}
+
+// Process an uploaded logo per mode: 'remove' (transparent bg), 'white' (white
+// silhouette on transparent bg), or 'none' (just normalize to PNG).
+async function processLogo(buffer, mode) {
+  const image = await Jimp.read(buffer);
+
+  // Downscale oversized uploads — the stored logo is only shown small on TVs.
+  const maxDim = Math.max(image.bitmap.width, image.bitmap.height);
+  if (maxDim > MAX_LOGO_DIMENSION) {
+    image.scale(MAX_LOGO_DIMENSION / maxDim);
+  }
+
+  if (mode === 'remove' || mode === 'white') {
+    keyOutBackground(image);
+  }
+  if (mode === 'white') {
+    recolorWhite(image);
+  }
+
+  return await image.getBufferAsync(Jimp.MIME_PNG);
+}
 
 const headers = {
   'Content-Type': 'application/json',
@@ -28,8 +110,17 @@ exports.handler = async (event) => {
     if (!bar) return unauthorized();
 
     const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
-    const { image, removeBackground } = body || {};
+    const { image, removeBackground, logoMode } = body || {};
     const contentType = body.contentType || body.mimeType;
+
+    // Resolve processing mode. Prefer explicit logoMode ('remove'|'white'|'none');
+    // fall back to the legacy removeBackground boolean for older clients.
+    let mode;
+    if (logoMode === 'remove' || logoMode === 'white' || logoMode === 'none') {
+      mode = logoMode;
+    } else {
+      mode = removeBackground === false ? 'none' : 'remove';
+    }
 
     // Validate input
     if (!image || typeof image !== 'string') {
@@ -70,45 +161,20 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'INVALID_INPUT', message: 'Unsupported image format' }) };
     }
 
-    // Optionally call Bedrock Titan for background removal
-    let processedImageBase64 = image;
-    if (removeBackground !== false) {
-      try {
-        const command = new InvokeModelCommand({
-          modelId: 'amazon.titan-image-generator-v2:0',
-          contentType: 'application/json',
-          accept: 'application/json',
-          body: JSON.stringify({
-            taskType: 'BACKGROUND_REMOVAL',
-            backgroundRemovalParams: {
-              image: image
-            }
-          })
-        });
-
-        const response = await bedrock.send(command);
-        const result = JSON.parse(new TextDecoder().decode(response.body));
-        processedImageBase64 = result.images[0];
-      } catch (bedrockErr) {
-        console.error('Bedrock background removal failed:', bedrockErr);
-        const msg = bedrockErr.message || '';
-        if (msg.includes('too short') || msg.includes('Min image length')) {
-          return {
-            statusCode: 400,
-            headers,
-            body: JSON.stringify({ error: 'IMAGE_TOO_SMALL', message: 'Image is too small. Please use an image at least 256x256 pixels.' })
-          };
-        }
-        return {
-          statusCode: 500,
-          headers,
-          body: JSON.stringify({ error: 'PROCESSING_FAILED', message: 'Background removal failed. Try a larger or different image.' })
-        };
-      }
+    // Process the logo per the chosen mode (remove background / make white / none).
+    let processedBuffer;
+    try {
+      processedBuffer = await processLogo(imageBuffer, mode);
+    } catch (imgErr) {
+      console.error('Logo processing failed for bar', bar.barCode, 'mode', mode, imgErr);
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'PROCESSING_FAILED', message: 'Could not process this image. Try a different PNG or JPEG.' })
+      };
     }
 
     // Upload to S3 (overwrites existing logo for this bar)
-    const processedBuffer = Buffer.from(processedImageBase64, 'base64');
     const logoHash = crypto.createHash('md5').update(processedBuffer).digest('hex');
     const key = `logos/${bar.barCode}.png`;
 

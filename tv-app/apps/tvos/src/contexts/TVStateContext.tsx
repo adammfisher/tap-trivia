@@ -42,12 +42,6 @@ function makeUUID(): string {
 
 // ─── Signage helpers ──────────────────────────────────────────────────
 
-function getDayName(): string {
-  return ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][
-    new Date().getDay()
-  ];
-}
-
 /**
  * Flatten a raw API signage slide (which has nested `data` + `schedule`)
  * into the flat SignageSlide shape that renderers expect.
@@ -102,9 +96,6 @@ function flattenSlide(raw: any): SignageSlide {
       slide.headline = data.eventName || data.headline;
       slide.message = data.details || data.message;
       slide.when = data.when;
-      slide.prize = (data.prizes || []).map((p: any) => ({
-        emoji: p.emoji, place: p.place, label: p.prize || p.label,
-      }));
       break;
     case 'brand':
       slide.hours = (data.hours || []).map((h: any) => ({
@@ -127,13 +118,11 @@ function flattenSlide(raw: any): SignageSlide {
   return slide as SignageSlide;
 }
 
+// Day-of-week + enabled filtering is done authoritatively by the backend
+// (get-tv-state), so we just render what it sends. The defensive enabled check
+// guards against stale data only.
 function getActiveSlides(slides: SignageSlide[]): SignageSlide[] {
-  const today = getDayName();
-  return slides.filter(s => {
-    if (!s.enabled) return false;
-    if (s.days && s.days.length > 0 && !s.days.includes(today)) return false;
-    return true;
-  });
+  return slides.filter(s => s.enabled !== false);
 }
 
 // ─── State translation ────────────────────────────────────────────────

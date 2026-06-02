@@ -459,43 +459,7 @@ sub renderEvent(data as Object)
     yPos = yPos + 68
   end if
 
-  ' Prize rows
-  prizes = data.prizes
-  if prizes <> invalid and type(prizes) = "roArray"
-    yPos = yPos + 8
-    for i = 0 to prizes.count() - 1
-      p = prizes[i]
-      row = CreateObject("roSGNode", "Group")
-      row.translation = [60, yPos]
-
-      rowBg = CreateObject("roSGNode", "Poster")
-      rowBg.uri = "pkg:/images/signage-panel-prize.png"
-      rowBg.width = 760
-      rowBg.height = 56
-      row.appendChild(rowBg)
-
-      pEmojiUri = getEmojiUri(safeStr(p.emoji), "xs")
-      if pEmojiUri <> ""
-        pEmoji = CreateObject("roSGNode", "Poster")
-        pEmoji.uri = pEmojiUri
-        pEmoji.width = 32
-        pEmoji.height = 32
-        pEmoji.translation = [16, 12]
-        row.appendChild(pEmoji)
-      end if
-
-      placeL = addLabel(row, safeStr(p.place), 56, 10, 260)
-      placeL.font = makeFont("Outfit-Bold", 26)
-      placeL.color = "#ffd200"
-
-      prizeL = addLabel(row, safeStr(p.prize), 340, 12, 400)
-      prizeL.font = makeFont("Outfit-Regular", 22)
-      prizeL.color = "#ffffff59"
-
-      m.contentWrapper.appendChild(row)
-      yPos = yPos + 66
-    end for
-  end if
+  ' Prizes removed from the event template.
 end sub
 
 ' ══════════════════════════════════════════════════════════════
