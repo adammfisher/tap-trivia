@@ -49,7 +49,7 @@ const AnimCounter = ({ end, duration = 2000, prefix = "", suffix = "", inView })
 const platformData = [
   { name: "Roku", color: "#662D91" },
   { name: "Fire Stick", color: "#FF9900" },
-  // { name: "Apple TV", color: "#A2AAAD" },  // coming soon
+  { name: "Apple TV", color: "#A2AAAD" },
   // { name: "Samsung", color: "#1428A0" },   // coming soon
   // { name: "LG", color: "#A50034" },        // coming soon
 ];
@@ -57,9 +57,9 @@ const platformData = [
 const platformDataFull = [
   { name: "Roku", color: "#662D91" },
   { name: "Fire Stick", color: "#FF9900" },
+  { name: "Apple TV", color: "#A2AAAD" },
   // { name: "Samsung Tizen", color: "#1428A0" },  // coming soon
   // { name: "LG webOS", color: "#A50034" },       // coming soon
-  // { name: "Apple TV", color: "#A2AAAD" },       // coming soon
 ];
 
 const PlatformPill = ({ name, color, delay = 0, inView = true }) => (
@@ -221,7 +221,7 @@ const SocialProof = () => {
 const HowItWorks = () => {
   const [ref, inView] = useInView();
   const steps = [
-    { num:"1",icon:"📺",title:"Install the Free TV App",desc:"Search for TapTrivia in the Roku or Fire Stick app store. Download it — it's free.",time:"1 minute" },
+    { num:"1",icon:"📺",title:"Install the Free TV App",desc:"Search for TapTrivia in the Roku, Fire Stick, or Apple TV app store. Download it — it's free.",time:"1 minute" },
     { num:"2",icon:"📝",title:"Register Your Venue",desc:"Open the app on your TV and enter your venue name and email. You'll get a permanent venue code on screen instantly. No payment info — there is nothing to pay.",time:"30 seconds" },
     { num:"3",icon:"🎉",title:"Guests Play Along",desc:"Your venue code displays on the TV. Guests see the code, open the free TapTrivia companion app on their phone, and join. Trivia runs automatically — no staff attention required.",time:"Nightly" },
     { num:"4",icon:"🎨",title:"Customize Your Experience",desc:"Check the email you registered with — it has a link to your venue dashboard. Upload your logo, manage your digital signage, and view guest engagement stats. All free.",time:"Anytime" },
@@ -254,7 +254,7 @@ const Features = () => {
   const features = [
     { icon:"🧠",title:"200,000+ Questions",desc:"Spanning 60 categories from pop culture and sports to history and science. New questions added regularly, including current events." },
     { icon:"📱",title:"Companion App",desc:"Guests play along on the free TapTrivia app for iOS and Android. See the code on the TV, open the app, and join in seconds." },
-    { icon:"📺",title:"Available on Major TV Platforms",desc:"Roku and Fire Stick available now. Samsung, LG, and Apple TV coming soon. Download free from their app stores." },
+    { icon:"📺",title:"Available on Major TV Platforms",desc:"Roku, Fire Stick, and Apple TV available now. Samsung and LG coming soon. Download free from their app stores." },
     { icon:"🎨",title:"Your Branding on Screen",desc:"Upload your logo and it displays between rounds. AI-powered background removal ensures a clean, professional look automatically." },
     { icon:"🏆",title:"Live Leaderboards",desc:"Real-time rankings update between every question. Points drain from 1,000 to 100 — the faster you answer, the more you score." },
     { icon:"⚡",title:"No Setup Costs",desc:"No special hardware. No contracts. No monthly fees. Use your existing TV and internet connection. Download the app and go." },
@@ -471,7 +471,7 @@ const FAQ = () => {
   const [ref, inView] = useInView();
   const faqs = [
     {q:"Is this actually free? What's the catch?",a:"There is no catch and no hidden cost. TapTrivia is free for venues. No trial that expires, no credit card on file, no fees ever. We cover our costs through the companion mobile app, not through venue charges."},
-    {q:"What equipment do I need?",a:"A TV and an internet connection. Plug in a Roku or Fire Stick and install TapTrivia from their app store. Open the app, enter your venue name, and you're live. Support for Samsung, LG, and Apple TV is coming soon."},
+    {q:"What equipment do I need?",a:"A TV and an internet connection. Plug in a Roku, Fire Stick, or Apple TV and install TapTrivia from their app store. Open the app, enter your venue name, and you're live. Support for Samsung and LG is coming soon."},
     {q:"How do guests play?",a:"Guests download the free TapTrivia companion app on iOS or Android, enter the venue code displayed on your TV, and they're in. Trivia runs every evening — a new round starts every 15 minutes."},
     {q:"Does someone on my staff need to run the trivia?",a:"No. Games run automatically every evening with no staff interaction required. Between rounds, your TV switches to displaying your digital signage — your logo, promotions, and event announcements. Just leave the TV on."},
     {q:"What kind of trivia questions are available?",a:"Over 200,000 questions across 60 categories — pop culture, sports, movies, music, history, science, geography, food, and more. Difficulty ranges from accessible to challenging, and new questions are added regularly including current events."},
