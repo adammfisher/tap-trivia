@@ -169,17 +169,20 @@ const fmtTime = (s) => {
 };
 
 const HeroVideo = ({ enterStyle }) => {
-  const iframeRef = useRef(null);
-  const playerRef = useRef(null);
+  const videoRef = useRef(null);
   const [progress, setProgress] = useState(0);
   const [remaining, setRemaining] = useState(0);
+  const [muted, setMuted] = useState(false);
+  const [started, setStarted] = useState(false);
   const [ended, setEnded] = useState(false);
-  const [session, setSession] = useState(0); // bump to remount the iframe → replay
-  const watchAgain = () => { setProgress(0); setEnded(false); setSession((s) => s + 1); };
-  // "Fullscreen" = a fixed overlay driven by React state, NOT the native
-  // Fullscreen API (which is flaky on phones and often won't exit). The close
-  // button is a plain onClick, so it always works — on iOS and Android.
   const [isFs, setIsFs] = useState(false);
+
+  // Tap-to-play: the poster (thumb.jpg) shows until the user taps play, then it
+  // plays with sound (a tap is a gesture, so sound is always allowed — iOS too).
+  // Self-hosted native <video>, no Vimeo → nothing for iOS to block.
+
+  // "Fullscreen" = a fixed CSS overlay driven by React state (reliable on iOS,
+  // with a close button that always works), not the flaky native FS API.
   const toggleFs = () => setIsFs((v) => !v);
   useEffect(() => {
     if (!isFs) return;
@@ -190,82 +193,82 @@ const HeroVideo = ({ enterStyle }) => {
     document.body.setAttribute("data-video-fs", ""); // hides the nav (see GlobalStyles)
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prevOverflow; document.body.removeAttribute("data-video-fs"); };
   }, [isFs]);
-  useEffect(() => {
-    let cancelled = false, finishing = false, teardownUnmute = () => {};
-    const loadSdk = () => new Promise((resolve) => {
-      if (window.Vimeo) return resolve(window.Vimeo);
-      const s = document.createElement("script");
-      s.src = "https://player.vimeo.com/api/player.js";
-      s.onload = () => resolve(window.Vimeo);
-      document.body.appendChild(s);
-    });
-    loadSdk().then((Vimeo) => {
-      if (cancelled || !iframeRef.current || !Vimeo) return;
-      const player = new Vimeo.Player(iframeRef.current);
-      playerRef.current = player;
-      player.getDuration().then((d) => setRemaining(d)).catch(() => {});
-      // Unmute ~500ms after load (let the muted autoplay settle first), with a
-      // first-interaction fallback for any browser that blocks the timed unmute.
-      const unmute = (withPlay) => player.setMuted(false).then(() => player.setVolume(1)).then(() => (withPlay ? player.play() : null)).catch(() => {});
-      const unmuteTimer = setTimeout(() => unmute(false), 500);
-      const unmuteEvts = ["pointerdown", "keydown", "touchstart"];
-      const onInteract = () => { unmute(true); teardownUnmute(); };
-      teardownUnmute = () => { clearTimeout(unmuteTimer); unmuteEvts.forEach((e) => window.removeEventListener(e, onInteract)); };
-      unmuteEvts.forEach((e) => window.addEventListener(e, onInteract, { passive: true }));
-      const finish = () => {
-        if (finishing) return;
-        finishing = true;
-        // Trip just before the true end so Vimeo's end cards ("More from",
-        // author byline) never get a chance to render, then remove the video
-        // entirely so the content below slides up into its place.
-        player.pause().catch(() => {});
-        setIsFs(false); // exit the fullscreen overlay if the clip ends while open
-        setEnded(true);
-      };
-      player.on("timeupdate", (d) => {
-        if (d.duration && d.seconds >= d.duration - 0.4) return finish();
-        setProgress(d.percent || 0);
-        if (d.duration) setRemaining(d.duration - d.seconds);
-      });
-      player.on("ended", finish); // fallback if the timeupdate window is missed
-    });
-    return () => { cancelled = true; teardownUnmute(); const pl = playerRef.current; if (pl) { pl.off("timeupdate"); pl.off("ended"); } };
-  }, [session]);
 
-  // When finished, replace the player with a small "Watch again" pill. Clicking
-  // it bumps `session`, remounting the iframe — a user gesture, so the replay is
-  // allowed to play with sound.
-  if (ended) return (
-    <div style={{ textAlign:"center",margin:"0 auto 28px",...enterStyle }}>
-      <button onClick={watchAgain} style={{ display:"inline-flex",alignItems:"center",gap:8,background:T.w(0.06),border:`1px solid ${T.w(0.12)}`,color:"#fff",fontFamily:"'Outfit',sans-serif",fontSize:14,fontWeight:600,padding:"10px 22px",borderRadius:T.radius.pill,cursor:"pointer",backdropFilter:"blur(12px)",transition:"all 0.25s" }} onMouseEnter={(e)=>{e.currentTarget.style.background=T.w(0.1);e.currentTarget.style.borderColor=T.w(0.2)}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.w(0.06);e.currentTarget.style.borderColor=T.w(0.12)}}>
-        <span style={{ fontSize:15,lineHeight:1 }}>↻</span> Watch video again
-      </button>
-    </div>
-  );
+  const onTime = () => {
+    const v = videoRef.current;
+    if (!v || !v.duration) return;
+    setProgress(v.currentTime / v.duration);
+    setRemaining(v.duration - v.currentTime);
+  };
+  const startPlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = false; v.volume = 1; setMuted(false); setStarted(true);
+    v.play().catch(() => {});
+  };
+  const toggleMute = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    const m = !v.muted; v.muted = m; if (!m) v.volume = 1; setMuted(m);
+  };
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v || !started) return;
+    if (v.paused) v.play().catch(() => {}); else v.pause();
+  };
+  const watchAgain = () => {
+    const v = videoRef.current;
+    setEnded(false); setProgress(0); setStarted(true); setMuted(false);
+    if (v) { v.currentTime = 0; v.muted = false; v.volume = 1; v.play().catch(() => {}); }
+  };
 
   return (
     <div style={{ maxWidth:880,margin:"0 auto 28px",...enterStyle,...(isFs?{transform:"none"}:{}) }}>
       <div style={isFs
-        ? { position:"fixed",inset:0,zIndex:9999,width:"100vw",height:"100vh",background:"#000" }
+        ? { position:"fixed",inset:0,zIndex:9999,width:"100vw",height:"100vh",background:"#000",display:"flex",alignItems:"center",justifyContent:"center" }
         : { position:"relative",aspectRatio:"16/9",borderRadius:T.radius.lg,overflow:"hidden",border:`2px solid ${T.w(0.08)}`,boxShadow:T.shadow.glow }}>
+        <video
+          ref={videoRef}
+          src="/assets/hero.mp4"
+          poster="/assets/poster.jpg"
+          playsInline
+          preload="metadata"
+          onLoadedMetadata={onTime}
+          onTimeUpdate={onTime}
+          onEnded={() => { setIsFs(false); setEnded(true); }}
+          onClick={togglePlay}
+          style={isFs
+            ? { width:"100%",height:"100%",objectFit:"contain" }
+            : { position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover" }}
+        />
         <button onClick={toggleFs} aria-label={isFs ? "Exit fullscreen" : "Fullscreen"} style={{ position:"absolute",top:isFs?16:10,right:isFs?16:10,zIndex:10000,width:isFs?48:40,height:isFs?48:40,borderRadius:isFs?"50%":10,border:"none",background:"rgba(0,0,0,0.6)",color:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",WebkitBackdropFilter:"blur(4px)",backdropFilter:"blur(4px)" }}>
           {isFs
             ? <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>}
         </button>
-        <iframe
-          key={session}
-          ref={iframeRef}
-          title="vimeo-player"
-          src="https://player.vimeo.com/video/1197430993?h=20b18dffb4&autoplay=1&muted=0&loop=0&title=0&byline=0&portrait=0"
-          style={{ position:"absolute",top:0,left:0,width:"100%",height:"100%",border:0 }}
-          frameBorder="0"
-          referrerPolicy="strict-origin-when-cross-origin"
-          allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
-          allowFullScreen
-        />
+        {started && !ended && (
+          <button onClick={toggleMute} aria-label={muted ? "Unmute" : "Mute"} style={{ position:"absolute",top:10,left:10,zIndex:4,width:40,height:40,borderRadius:10,border:"none",background:"rgba(0,0,0,0.55)",color:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",WebkitBackdropFilter:"blur(4px)",backdropFilter:"blur(4px)" }}>
+            {muted
+              ? <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.27 2 2 3.27 5.73 7H3v10h4l5 5v-6.73l3.55 3.55c-.56.43-1.18.78-1.85 1.02v2.06a8.94 8.94 0 0 0 3.31-1.66L19.73 22 21 20.73 3.27 2zM12 4 9.91 6.09 12 8.18V4z"/></svg>
+              : <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z"/></svg>}
+          </button>
+        )}
+        {!started && !ended && (
+          <button onClick={startPlay} aria-label="Play video" style={{ position:"absolute",inset:0,zIndex:3,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(6,6,15,0.3)",border:"none",cursor:"pointer" }} onMouseEnter={(e)=>{const c=e.currentTarget.firstChild;if(c)c.style.transform="scale(1.08)";}} onMouseLeave={(e)=>{const c=e.currentTarget.firstChild;if(c)c.style.transform="";}}>
+            <span style={{ width:"clamp(84px,17vw,128px)",height:"clamp(84px,17vw,128px)",borderRadius:"50%",background:T.grad.cta,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:T.shadow.greenGlow,transition:"transform 0.2s" }}>
+              <svg viewBox="0 0 24 24" fill={T.dark} style={{ width:"46%",height:"46%",marginLeft:"7%" }}><path d="M8 5v14l11-7z"/></svg>
+            </span>
+          </button>
+        )}
+        {ended && (
+          <button onClick={watchAgain} aria-label="Watch video again" style={{ position:"absolute",inset:0,zIndex:5,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(6,6,15,0.55)",border:"none",cursor:"pointer" }}>
+            <span style={{ display:"inline-flex",alignItems:"center",gap:8,background:T.w(0.1),border:`1px solid ${T.w(0.2)}`,color:"#fff",fontFamily:"'Outfit',sans-serif",fontSize:15,fontWeight:600,padding:"12px 24px",borderRadius:T.radius.pill,WebkitBackdropFilter:"blur(12px)",backdropFilter:"blur(12px)" }}>
+              <span style={{ fontSize:16,lineHeight:1 }}>↻</span> Watch video again
+            </span>
+          </button>
+        )}
       </div>
-      <div style={{ display:"flex",alignItems:"center",gap:12,marginTop:10 }}>
+      <div style={{ display:started?"flex":"none",alignItems:"center",gap:12,marginTop:10 }}>
         <div style={{ position:"relative",flex:1,height:4,borderRadius:2,background:T.w(0.1),overflow:"hidden" }}>
           <div style={{ position:"absolute",top:0,left:0,height:"100%",width:`${progress*100}%`,background:T.grad.cta,borderRadius:2,transition:"width 0.15s linear" }} />
         </div>
