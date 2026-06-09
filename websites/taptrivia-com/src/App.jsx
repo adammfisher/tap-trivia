@@ -34,6 +34,17 @@ const useInView = (threshold = 0.15) => {
   return [ref, inView];
 };
 
+const useIsMobile = (bp = 768) => {
+  const [m, setM] = useState(() => typeof window !== "undefined" && window.innerWidth < bp);
+  useEffect(() => {
+    const check = () => setM(window.innerWidth < bp);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, [bp]);
+  return m;
+};
+
 const AnimCounter = ({ end, duration = 2000, prefix = "", suffix = "", inView }) => {
   const [val, setVal] = useState(0);
   useEffect(() => {
@@ -122,15 +133,15 @@ const HeroSection = ({ onNavigate }) => {
         <h1 style={{ fontFamily:"'Fredoka',sans-serif",fontSize:"clamp(32px, 5.5vw, 62px)",fontWeight:700,lineHeight:1.1,color:"#fff",letterSpacing:-1,marginTop:20,marginBottom:20,...anim(0.2) }}>
           Live Trivia &amp; Digital Signage<br />
           <span style={{ background:T.grad.gold,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>for Any Venue.</span>{" "}
-          <span style={{ color:T.green }}>Completely Free.</span>
+          <span style={{ color:T.green }}>Free for Venues.</span>
         </h1>
 
-        <p style={{ fontFamily:"'Outfit',sans-serif",fontSize:"clamp(16px, 2.5vw, 21px)",fontWeight:400,color:T.w(0.6),lineHeight:1.6,maxWidth:660,margin:"0 auto 24px",...anim(0.35) }}>
+        <HeroVideo enterStyle={anim(0.35)} />
+
+        <p style={{ fontFamily:"'Outfit',sans-serif",fontSize:"clamp(16px, 2.5vw, 21px)",fontWeight:400,color:T.w(0.6),lineHeight:1.6,maxWidth:660,margin:"0 auto 32px",...anim(0.4) }}>
           Turn your smart TV or streaming device into an interactive trivia experience with built-in promotional signage.
           Guests play along on a free companion app for iOS and Android. No hardware to buy. No fees of any kind.
         </p>
-
-        <div style={{ marginBottom:32 }} />
 
         <div style={{ marginBottom:36,...anim(0.45) }}>
           <div style={{ fontFamily:"'DM Mono',monospace",fontSize:11,color:T.w(0.35),textTransform:"uppercase",letterSpacing:2,marginBottom:14 }}>Available free on</div>
@@ -149,6 +160,118 @@ const HeroSection = ({ onNavigate }) => {
         </div>
       </div>
     </section>
+  );
+};
+
+const fmtTime = (s) => {
+  s = Math.max(0, Math.round(s || 0));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+};
+
+const HeroVideo = ({ enterStyle }) => {
+  const iframeRef = useRef(null);
+  const playerRef = useRef(null);
+  const [progress, setProgress] = useState(0);
+  const [remaining, setRemaining] = useState(0);
+  const [ended, setEnded] = useState(false);
+  const [session, setSession] = useState(0); // bump to remount the iframe → replay
+  const watchAgain = () => { setProgress(0); setEnded(false); setSession((s) => s + 1); };
+  // "Fullscreen" = a fixed overlay driven by React state, NOT the native
+  // Fullscreen API (which is flaky on phones and often won't exit). The close
+  // button is a plain onClick, so it always works — on iOS and Android.
+  const [isFs, setIsFs] = useState(false);
+  const toggleFs = () => setIsFs((v) => !v);
+  useEffect(() => {
+    if (!isFs) return;
+    const onKey = (e) => { if (e.key === "Escape") setIsFs(false); };
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.body.setAttribute("data-video-fs", ""); // hides the nav (see GlobalStyles)
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prevOverflow; document.body.removeAttribute("data-video-fs"); };
+  }, [isFs]);
+  useEffect(() => {
+    let cancelled = false, finishing = false, teardownUnmute = () => {};
+    const loadSdk = () => new Promise((resolve) => {
+      if (window.Vimeo) return resolve(window.Vimeo);
+      const s = document.createElement("script");
+      s.src = "https://player.vimeo.com/api/player.js";
+      s.onload = () => resolve(window.Vimeo);
+      document.body.appendChild(s);
+    });
+    loadSdk().then((Vimeo) => {
+      if (cancelled || !iframeRef.current || !Vimeo) return;
+      const player = new Vimeo.Player(iframeRef.current);
+      playerRef.current = player;
+      player.getDuration().then((d) => setRemaining(d)).catch(() => {});
+      // Unmute ~500ms after load (let the muted autoplay settle first), with a
+      // first-interaction fallback for any browser that blocks the timed unmute.
+      const unmute = (withPlay) => player.setMuted(false).then(() => player.setVolume(1)).then(() => (withPlay ? player.play() : null)).catch(() => {});
+      const unmuteTimer = setTimeout(() => unmute(false), 500);
+      const unmuteEvts = ["pointerdown", "keydown", "touchstart"];
+      const onInteract = () => { unmute(true); teardownUnmute(); };
+      teardownUnmute = () => { clearTimeout(unmuteTimer); unmuteEvts.forEach((e) => window.removeEventListener(e, onInteract)); };
+      unmuteEvts.forEach((e) => window.addEventListener(e, onInteract, { passive: true }));
+      const finish = () => {
+        if (finishing) return;
+        finishing = true;
+        // Trip just before the true end so Vimeo's end cards ("More from",
+        // author byline) never get a chance to render, then remove the video
+        // entirely so the content below slides up into its place.
+        player.pause().catch(() => {});
+        setIsFs(false); // exit the fullscreen overlay if the clip ends while open
+        setEnded(true);
+      };
+      player.on("timeupdate", (d) => {
+        if (d.duration && d.seconds >= d.duration - 0.4) return finish();
+        setProgress(d.percent || 0);
+        if (d.duration) setRemaining(d.duration - d.seconds);
+      });
+      player.on("ended", finish); // fallback if the timeupdate window is missed
+    });
+    return () => { cancelled = true; teardownUnmute(); const pl = playerRef.current; if (pl) { pl.off("timeupdate"); pl.off("ended"); } };
+  }, [session]);
+
+  // When finished, replace the player with a small "Watch again" pill. Clicking
+  // it bumps `session`, remounting the iframe — a user gesture, so the replay is
+  // allowed to play with sound.
+  if (ended) return (
+    <div style={{ textAlign:"center",margin:"0 auto 28px",...enterStyle }}>
+      <button onClick={watchAgain} style={{ display:"inline-flex",alignItems:"center",gap:8,background:T.w(0.06),border:`1px solid ${T.w(0.12)}`,color:"#fff",fontFamily:"'Outfit',sans-serif",fontSize:14,fontWeight:600,padding:"10px 22px",borderRadius:T.radius.pill,cursor:"pointer",backdropFilter:"blur(12px)",transition:"all 0.25s" }} onMouseEnter={(e)=>{e.currentTarget.style.background=T.w(0.1);e.currentTarget.style.borderColor=T.w(0.2)}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.w(0.06);e.currentTarget.style.borderColor=T.w(0.12)}}>
+        <span style={{ fontSize:15,lineHeight:1 }}>↻</span> Watch video again
+      </button>
+    </div>
+  );
+
+  return (
+    <div style={{ maxWidth:880,margin:"0 auto 28px",...enterStyle,...(isFs?{transform:"none"}:{}) }}>
+      <div style={isFs
+        ? { position:"fixed",inset:0,zIndex:9999,width:"100vw",height:"100vh",background:"#000" }
+        : { position:"relative",aspectRatio:"16/9",borderRadius:T.radius.lg,overflow:"hidden",border:`2px solid ${T.w(0.08)}`,boxShadow:T.shadow.glow }}>
+        <button onClick={toggleFs} aria-label={isFs ? "Exit fullscreen" : "Fullscreen"} style={{ position:"absolute",top:isFs?16:10,right:isFs?16:10,zIndex:10000,width:isFs?48:40,height:isFs?48:40,borderRadius:isFs?"50%":10,border:"none",background:"rgba(0,0,0,0.6)",color:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",WebkitBackdropFilter:"blur(4px)",backdropFilter:"blur(4px)" }}>
+          {isFs
+            ? <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>}
+        </button>
+        <iframe
+          key={session}
+          ref={iframeRef}
+          title="vimeo-player"
+          src="https://player.vimeo.com/video/1197430993?h=20b18dffb4&autoplay=1&muted=0&loop=0&title=0&byline=0&portrait=0"
+          style={{ position:"absolute",top:0,left:0,width:"100%",height:"100%",border:0 }}
+          frameBorder="0"
+          referrerPolicy="strict-origin-when-cross-origin"
+          allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+          allowFullScreen
+        />
+      </div>
+      <div style={{ display:"flex",alignItems:"center",gap:12,marginTop:10 }}>
+        <div style={{ position:"relative",flex:1,height:4,borderRadius:2,background:T.w(0.1),overflow:"hidden" }}>
+          <div style={{ position:"absolute",top:0,left:0,height:"100%",width:`${progress*100}%`,background:T.grad.cta,borderRadius:2,transition:"width 0.15s linear" }} />
+        </div>
+        <span style={{ fontFamily:"'DM Mono',monospace",fontSize:13,color:T.w(0.5),minWidth:42,textAlign:"right" }}>{fmtTime(remaining)}</span>
+      </div>
+    </div>
   );
 };
 
@@ -220,6 +343,7 @@ const SocialProof = () => {
 // ═══ HOW IT WORKS ═══
 const HowItWorks = () => {
   const [ref, inView] = useInView();
+  const isMobile = useIsMobile();
   const steps = [
     { num:"1",icon:"📺",title:"Install the Free TV App",desc:"Search for TapTrivia in the Roku, Fire Stick, or Apple TV app store. Download it — it's free.",time:"1 minute" },
     { num:"2",icon:"📝",title:"Register Your Venue",desc:"Open the app on your TV and enter your venue name and email. You'll get a permanent venue code on screen instantly. No payment info — there is nothing to pay.",time:"30 seconds" },
@@ -233,7 +357,7 @@ const HowItWorks = () => {
           <div style={{ display:"inline-block",fontFamily:"'DM Mono',monospace",fontSize:12,fontWeight:500,color:T.green,textTransform:"uppercase",letterSpacing:2,marginBottom:12,background:"rgba(0,212,170,0.08)",padding:"6px 16px",borderRadius:T.radius.pill,border:"1px solid rgba(0,212,170,0.15)" }}>How It Works</div>
           <h2 style={{ fontFamily:"'Fredoka',sans-serif",fontSize:"clamp(30px,5vw,48px)",fontWeight:700,color:"#fff",lineHeight:1.15,letterSpacing:-0.5 }}>Up and Running in<br /><span style={{ background:T.grad.gold,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>Under 3 Minutes</span></h2>
         </div>
-        <div style={{ display:"grid",gridTemplateColumns:"repeat(2, 1fr)",gap:20,maxWidth:800,margin:"0 auto" }}>
+        <div style={{ display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(2, 1fr)",gap:20,maxWidth:800,margin:"0 auto" }}>
           {steps.map((s,i) => <div key={i} style={{ background:T.grad.card,borderRadius:T.radius.lg,padding:"32px 28px",border:`1px solid ${T.w(0.06)}`,position:"relative",overflow:"hidden",opacity:inView?1:0,transform:inView?"translateY(0)":"translateY(24px)",transition:`all 0.6s ease ${i*0.12}s` }}>
             <div style={{ display:"flex",alignItems:"center",gap:14,marginBottom:16 }}>
               <div style={{ width:44,height:44,borderRadius:12,background:"rgba(0,212,170,0.1)",border:"1px solid rgba(0,212,170,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Fredoka',sans-serif",fontSize:22,fontWeight:700,color:T.green,flexShrink:0 }}>{s.num}</div>
@@ -284,6 +408,7 @@ const Features = () => {
 // ═══ DIGITAL SIGNAGE DEMO ═══
 const SignageDemo = () => {
   const [ref, inView] = useInView();
+  const isMobile = useIsMobile();
   const [venueName, setVenueName] = useState("Lakeside Country Club");
   const [headline, setHeadline] = useState("Member Appreciation Night — Friday 7pm");
   const [details, setDetails] = useState("Complimentary appetizers • Live trivia • Door prizes");
@@ -317,7 +442,7 @@ const SignageDemo = () => {
                 {/* Divider */}
                 <div style={{ width:1,background:T.w(0.08),flexShrink:0 }} />
                 {/* Right: signage panel */}
-                <div style={{ width:"32%",flexShrink:0,display:"flex",flexDirection:"column",padding:"4% 3%",background:T.w(0.02),gap:"4%" }}>
+                <div style={{ width:isMobile?"50%":"32%",flexShrink:0,display:"flex",flexDirection:"column",padding:"4% 3%",background:T.w(0.02),gap:"4%" }}>
                   <div style={{ display:"flex",alignItems:"center",gap:"clamp(4px,0.5vw,8px)" }}>
                     <div style={{ width:"clamp(18px,2.5vw,30px)",height:"clamp(18px,2.5vw,30px)",borderRadius:"50%",background:"linear-gradient(135deg,#2a5298,#1e3c72)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"clamp(9px,1.1vw,14px)",fontFamily:"'Fredoka',sans-serif",fontWeight:700,color:"#fff",flexShrink:0 }}>{venueName.charAt(0)||"V"}</div>
                     <div style={{ fontFamily:"'Outfit',sans-serif",fontSize:"clamp(8px,1vw,13px)",fontWeight:700,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{venueName||"Your Venue"}</div>
@@ -400,6 +525,7 @@ const WhoItsFor = () => {
 // ═══ COMPARISON ═══
 const WhyFree = () => {
   const [ref, inView] = useInView();
+  const isMobile = useIsMobile();
   return (
     <section style={{ padding:"100px 24px",background:T.dark,position:"relative" }}>
       <div style={{ position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 50%, rgba(0,212,170,0.04) 0%, transparent 50%)",pointerEvents:"none" }} />
@@ -408,13 +534,13 @@ const WhyFree = () => {
           <div style={{ display:"inline-block",fontFamily:"'DM Mono',monospace",fontSize:12,fontWeight:500,color:T.green,textTransform:"uppercase",letterSpacing:2,marginBottom:12,background:"rgba(0,212,170,0.06)",padding:"6px 16px",borderRadius:T.radius.pill,border:"1px solid rgba(0,212,170,0.1)" }}>The Cost</div>
           <h2 style={{ fontFamily:"'Fredoka',sans-serif",fontSize:"clamp(30px,5vw,48px)",fontWeight:700,color:"#fff",lineHeight:1.15,letterSpacing:-0.5,marginBottom:20 }}>Traditional Trivia<br /><span style={{ color:T.green }}>vs. TapTrivia</span></h2>
         </div>
-        <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,opacity:inView?1:0,transform:inView?"translateY(0)":"translateY(20px)",transition:"all 0.7s ease 0.2s" }}>
-          <div style={{ background:"rgba(255,71,87,0.04)",borderRadius:T.radius.lg,padding:"32px 28px",border:"1px solid rgba(255,71,87,0.1)" }}>
-            <div style={{ fontFamily:"'Fredoka',sans-serif",fontSize:20,fontWeight:600,color:T.red,marginBottom:20 }}>Hiring a Trivia Host</div>
+        <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:isMobile?10:20,opacity:inView?1:0,transform:inView?"translateY(0)":"translateY(20px)",transition:"all 0.7s ease 0.2s" }}>
+          <div style={{ background:"rgba(255,71,87,0.04)",borderRadius:T.radius.lg,padding:isMobile?"20px 14px":"32px 28px",border:"1px solid rgba(255,71,87,0.1)" }}>
+            <div style={{ fontFamily:"'Fredoka',sans-serif",fontSize:isMobile?16:20,fontWeight:600,color:T.red,marginBottom:isMobile?14:20 }}>Hiring a Trivia Host</div>
             {["$150–300 per event","Limited to one or two nights per week","Host cancels? Event is cancelled.","Paper and pen — slow, manual scoring","Separate digital signage — $50–100/mo","No data on engagement or preferences"].map((t,i) => <div key={i} style={{ display:"flex",gap:10,alignItems:"flex-start",marginBottom:12,fontFamily:"'Outfit',sans-serif",fontSize:14,color:T.w(0.55),lineHeight:1.5 }}><span style={{ color:T.red,fontSize:16,flexShrink:0,marginTop:1 }}>✕</span>{t}</div>)}
           </div>
-          <div style={{ background:"rgba(0,212,170,0.04)",borderRadius:T.radius.lg,padding:"32px 28px",border:"1px solid rgba(0,212,170,0.1)" }}>
-            <div style={{ fontFamily:"'Fredoka',sans-serif",fontSize:20,fontWeight:600,color:T.green,marginBottom:20 }}>TapTrivia</div>
+          <div style={{ background:"rgba(0,212,170,0.04)",borderRadius:T.radius.lg,padding:isMobile?"20px 14px":"32px 28px",border:"1px solid rgba(0,212,170,0.1)" }}>
+            <div style={{ fontFamily:"'Fredoka',sans-serif",fontSize:isMobile?16:20,fontWeight:600,color:T.green,marginBottom:isMobile?14:20 }}>TapTrivia</div>
             {["$0. Not $0 for a trial. $0 forever.","Trivia runs automatically, every evening","Signage displays between rounds — at no cost","Instant scoring on every guest's phone","Digital signage included — also $0","Venue dashboard with engagement data"].map((t,i) => <div key={i} style={{ display:"flex",gap:10,alignItems:"flex-start",marginBottom:12,fontFamily:"'Outfit',sans-serif",fontSize:14,color:T.w(0.55),lineHeight:1.5 }}><span style={{ color:T.green,fontSize:16,flexShrink:0,marginTop:1 }}>✓</span>{t}</div>)}
           </div>
         </div>
@@ -638,6 +764,7 @@ const GlobalStyles = () => (
     @keyframes orbFloat3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(15px,-15px) scale(1.05)}}
     @media(max-width:768px){.desktop-nav{display:none!important}.mobile-nav-btn{display:block!important}}
     @media(min-width:769px){.mobile-nav-btn{display:none!important}}
+    body[data-video-fs] nav{display:none!important}
   `}</style>
 );
 
