@@ -3,12 +3,16 @@ import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 const ses = new SESClient({ region: 'us-east-1' });
 
 const ALLOWED_ORIGINS = [
+  'https://taptrivia.tv',
+  'https://www.taptrivia.tv',
+  'https://taptrivia.com',
   'https://www.taptrivia.com',
-  'https://taptrivia.com'
+  'http://localhost:5173'
 ];
 
-const FROM_EMAIL = 'adam@visudolabs.com';
-const TO_EMAIL = 'adam@visudolabs.com';
+const FROM_EMAIL = 'adam.fisher@visudolabs.com';
+// Leads are delivered to both inboxes (Gmail is the known-good fallback).
+const TO_EMAILS = ['adam.fisher@visudolabs.com', 'adammfisher@gmail.com'];
 
 function getCorsOrigin(event) {
   const origin = event.headers?.origin || event.headers?.Origin || '';
@@ -106,7 +110,7 @@ export const handler = async (event) => {
 
     const command = new SendEmailCommand({
       Source: FROM_EMAIL,
-      Destination: { ToAddresses: [TO_EMAIL] },
+      Destination: { ToAddresses: TO_EMAILS },
       ReplyToAddresses: [trimmedEmail],
       Message: {
         Subject: { Data: `TapTrivia Contact: ${trimmedName}` },
