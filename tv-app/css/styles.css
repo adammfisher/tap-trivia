@@ -232,8 +232,8 @@ body {
 .tt-qr-badge--bl {
   bottom: 28px;
   left: 40px;
-  /* question-screen badge reads from across the bar: 2x, anchored to its corner */
-  transform: scale(2);
+  /* question-screen badge reads from across the bar: 1.2x (2x was too big), anchored to its corner */
+  transform: scale(1.2);
   transform-origin: bottom left;
 }
 .tt-qr-badge--br { bottom: 28px; right: 40px; }
