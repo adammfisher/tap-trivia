@@ -4077,3 +4077,14 @@ body {
   transform: scale(1.35);
   transform-origin: center center;
 }
+
+/* Screen-2 venue ad: content 25% bigger inside the same box — the inner block
+ * shrinks to 80% of the frame and scales 1.25, so it fills the panel edge-to-
+ * edge with larger type instead of more whitespace. */
+.tt-2s__ad .tt-signage-panel__inner {
+  width: 80%;
+  height: 80%;
+  margin: auto;
+  transform: scale(1.25);
+  transform-origin: center center;
+}
