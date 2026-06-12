@@ -1446,34 +1446,37 @@ body {
    "Reconnecting..." with spinner
    ═══════════════════════════════════════════════════════════════ */
 .tt-error-overlay {
+  /* Corner pill, not a takeover — the show goes on under a connection note */
   position: fixed;
-  inset: 0;
+  right: 28px;
+  bottom: 28px;
   z-index: 100;
-  background: rgba(15,3,38,0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15,3,38,0.92);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 999px;
+  padding: 10px 22px;
   display: flex;
   align-items: center;
-  justify-content: center;
 }
 .tt-error-overlay__content {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 40px;
+  gap: 12px;
 }
 .tt-error-overlay__spinner {
-  width: 80px; height: 80px;
-  border: 6px solid rgba(255,255,255,0.1);
-  border-top-color: #667eea;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-top-color: #ffd200;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: tt-spin 1s linear infinite;
 }
 .tt-error-overlay__text {
-  font-family: 'Fredoka', sans-serif;
-  font-size: 40px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
   font-weight: 600;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.85);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -4043,3 +4046,13 @@ body {
 /* In the two-screen rotation the right half IS the QR card — hide the
    signage panel's built-in QR footer to avoid showing two QR codes at once. */
 .tt-2s__ad .tt-signage-panel__qr { display: none; }
+
+/* Screen 2 content reads from across the bar — scale the welcome and QR
+ * cards 35% up. transform doesn't affect flow, halves stay 50/50, centered
+ * content stays centered and clears the frame at 1920x1080. The signage ad
+ * panel is excluded — it already fills its half. */
+.tt-2s__screen--2 .tt-2s__welcome,
+.tt-2s__screen--2 .tt-2s__play {
+  transform: scale(1.35);
+  transform-origin: center center;
+}

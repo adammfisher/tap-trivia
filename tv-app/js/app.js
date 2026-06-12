@@ -123,7 +123,10 @@
     })();
   }
   let consecutiveErrors = 0;
-  const MAX_ERRORS_BEFORE_OVERLAY = 3;
+  // A bar TV must never blank over a blip: lambda deploys, wifi hiccups and
+  // game rollovers all cause a few failed 2s polls. The local game clock keeps
+  // rendering phases regardless, so only sustained outage (~30s) gets a badge.
+  const MAX_ERRORS_BEFORE_OVERLAY = 15;
   let pollInFlight = false;
 
   // Local clock state for smooth animation (mirrors player-app approach)
@@ -1994,7 +1997,7 @@
    *  The split is derived from the shared game clock (elapsedInQuestion), not
    *  an independent timer chain, so a TV loading mid-phase shows the correct
    *  screen and nothing can drift from the synchronized clock. */
-  const SCORES_SCREEN1_END_MS = 43000;
+  const SCORES_SCREEN1_END_MS = 44000; // Screen 1: 0:37-0:44 (7s), Screen 2: 0:44-0:52 (8s)
 
   /** Elapsed ms within the current question, server-synced. Falls back to the
    *  last poll's value when the local clock epoch isn't available. */
@@ -2020,7 +2023,13 @@
       if (currentScreen !== 'between') { scoresScreenRaf = null; return; }
       const container = document.getElementById('tv-2s');
       if (container) {
-        container.classList.toggle('tt-2s--s2', scoresElapsedMs(state) >= SCORES_SCREEN1_END_MS);
+        const e = scoresElapsedMs(state);
+        // Latch Screen 2 once shown: at question rollover elapsedInQuestion
+        // wraps to ~0 while the poll still reports 'between' for up to 2s —
+        // without the latch, Screen 1 flashes for ~1s before the next question.
+        if (e >= SCORES_SCREEN1_END_MS) container.classList.add('tt-2s--s2');
+        else if (e >= 37000) container.classList.remove('tt-2s--s2');
+        // e < 37000: stale 'between' during rollover — hold the current screen
       }
       scoresScreenRaf = requestAnimationFrame(tick);
     }
