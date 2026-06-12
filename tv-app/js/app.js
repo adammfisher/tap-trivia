@@ -291,6 +291,8 @@
         ${qrCodeHTML(120)}
         <div class="tt-qr-badge__info">
           <div class="tt-qr-badge__title">Join Trivia!</div>
+          <div class="tt-qr-badge__offer">Play free for 7 days</div>
+          <div class="tt-qr-badge__scan">scan to start</div>
           <div class="tt-qr-badge__url">app.taptrivia.tv</div>
           <div class="tt-qr-badge__code-row">
             <span class="tt-qr-badge__code-label">JOIN</span>
