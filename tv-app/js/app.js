@@ -288,7 +288,7 @@
   function qrBadgeHTML(position = 'bl') {
     return `
       <div class="tt-qr-badge tt-qr-badge--${position}">
-        ${qrCodeHTML(120)}
+        ${qrCodeHTML(170)}
         <div class="tt-qr-badge__info">
           <div class="tt-qr-badge__title">Join Trivia!</div>
           <div class="tt-qr-badge__offer">Play free for 7 days</div>
