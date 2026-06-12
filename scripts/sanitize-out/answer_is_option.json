@@ -1,0 +1,72 @@
+[
+  {
+    "id": 110011,
+    "question": "Who is the leader of the Human High Council resisting Apocalypse?",
+    "answer": "Bolivar Trask",
+    "wrong_answers": [
+      "Moira MacTaggert",
+      "Bolivar Trask",
+      "Sebastian Shaw"
+    ]
+  },
+  {
+    "id": 113303,
+    "question": "Which European did Popovich turn into Finals MVP?",
+    "answer": "Tony Parker",
+    "wrong_answers": [
+      "Tony Parker",
+      "Manu Ginobili",
+      "Pau Gasol"
+    ]
+  },
+  {
+    "id": 131767,
+    "question": "On Seinfeld, what dessert did Elaine eat that made her cheat on her diet and her boyfriend's trust?",
+    "answer": "BLANK",
+    "wrong_answers": [
+      "BLANK",
+      "BLANK",
+      "BLANK"
+    ]
+  },
+  {
+    "id": 175054,
+    "question": "What three-letter acronym describes the human-level AI Altman's company aims to build?",
+    "answer": "AGI",
+    "wrong_answers": [
+      "ASI",
+      "LLM",
+      "AGI"
+    ]
+  },
+  {
+    "id": 177597,
+    "question": "What dark Netflix dramedy did The Atlantic name the best show of 2023?",
+    "answer": "Beef",
+    "wrong_answers": [
+      "Painkiller",
+      "Dead to Me",
+      "BEEF"
+    ]
+  },
+  {
+    "id": 179989,
+    "question": "Which Northern family did Stannis defeat outside the Wall to save the Night's Watch?",
+    "answer": "House Bolton",
+    "wrong_answers": [
+      "House Bolton",
+      "House Karstark",
+      "House Umber"
+    ]
+  },
+  {
+    "id": 188208,
+    "question": "What helmet-wearing producer's 2014 Mothership tour featured a spaceship rig with 360-degree lasers?",
+    "answer": "Deadmau5",
+    "wrong_answers": [
+      "Marshmello",
+      "Daft Punk",
+      "Deadmau5"
+    ]
+  }
+]

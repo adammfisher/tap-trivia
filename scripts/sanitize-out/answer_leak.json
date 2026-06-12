@@ -1,0 +1,32 @@
+[
+  {
+    "id": 81230,
+    "question": "What single word became Lil Jon's trademark ad-lib?",
+    "answer": "What?!",
+    "wrong_answers": [
+      "Boom!",
+      "Hey!",
+      "Wow!"
+    ]
+  },
+  {
+    "id": 95197,
+    "question": "What word did crowds yell whenever Stone Cold paused during a promo?",
+    "answer": "What?",
+    "wrong_answers": [
+      "Yeah!",
+      "Hell Yeah!",
+      "Stunner!"
+    ]
+  },
+  {
+    "id": 173108,
+    "question": "What do Discord users call the act of mass-pinging everyone in a server?",
+    "answer": "@everyone",
+    "wrong_answers": [
+      "@all",
+      "@server",
+      "@here"
+    ]
+  }
+]

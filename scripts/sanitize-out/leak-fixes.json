@@ -1,0 +1,95 @@
+[
+  {
+    "id": 59468,
+    "action": "reword",
+    "question": "Which dance move shares its name with the Dem Franchize Boyz hit that tells you to 'rock wit it'?",
+    "note": "Removed 'Lean wit It' phrasing that contained the answer 'The Lean'."
+  },
+  {
+    "id": 81230,
+    "action": "keep",
+    "note": "The question asks for the single trademark ad-lib word, and the answer IS that word ('What?!'); it cannot be removed without breaking the question."
+  },
+  {
+    "id": 81755,
+    "action": "reword",
+    "question": "In freestyle BMX, a stall performed on one of the metal foot-rest cylinders on the axles is named after what part?",
+    "note": "Replaced 'peg stall' / 'peg' wording with a description so the answer 'A peg' no longer appears."
+  },
+  {
+    "id": 93423,
+    "action": "reword",
+    "question": "What 2011 Ashton Kutcher–Natalie Portman film centers on friends who agree to keep their relationship purely physical?",
+    "note": "Removed 'no-strings-attached' phrase that contained the answer."
+  },
+  {
+    "id": 95197,
+    "action": "keep",
+    "note": "The question asks for the single word crowds yelled, and the answer IS that word ('What?'); it cannot be removed without breaking the question."
+  },
+  {
+    "id": 98694,
+    "action": "reword",
+    "question": "Which character did Ray Tomlinson choose to separate the username and host in email addresses?",
+    "note": "Replaced 'symbol' with 'character' so the answer '@ symbol' no longer appears as a substring."
+  },
+  {
+    "id": 109541,
+    "action": "reword",
+    "question": "In 2014, the search giant bought the rights to operate a top-level domain matching its own brand name. What is that TLD?",
+    "note": "Removed the word 'Google' (and any '.google' substring) by referring to 'the search giant' and 'its own brand name'."
+  },
+  {
+    "id": 143499,
+    "action": "reword",
+    "question": "Which proposed framework, named for a single letter, unifies the five string theories into one 11-dimensional model?",
+    "note": "Removed the explicit 'M' theory / M-theory wording; describes it as 'named for a single letter'."
+  },
+  {
+    "id": 151189,
+    "action": "reword",
+    "question": "What is the name of the short nine-hole layout used for the Wednesday warm-up event at Augusta?",
+    "note": "Removed 'par-3 course' phrasing that contained the answer 'Par 3 Course'."
+  },
+  {
+    "id": 160837,
+    "action": "reword",
+    "question": "In Pictionary-style games, what category forces every team to draw simultaneously under one timer?",
+    "note": "Removed 'All-Play' from the question (it contained the answer 'All Play')."
+  },
+  {
+    "id": 164921,
+    "action": "reword",
+    "question": "In which film did fans first expect — but not get — the team's iconic 'Assemble' rallying line?",
+    "note": "Removed 'Avengers' (the answer 'The Avengers') from the question."
+  },
+  {
+    "id": 173108,
+    "action": "keep",
+    "note": "The question asks what users call the mass-ping action, and the answer IS that term ('@everyone'); it cannot be removed without breaking the question."
+  },
+  {
+    "id": 187763,
+    "action": "reword",
+    "question": "What now-deprecated HTML tag made construction warning text flash on and off obnoxiously?",
+    "note": "Replaced 'blink' with 'flash on and off' so the answer '<blink>' no longer appears."
+  },
+  {
+    "id": 191697,
+    "action": "reword",
+    "question": "What Bruce Channel song's chorus do crowds sing along to that opens with three shouts of 'Hey!'?",
+    "note": "Removed 'Baby' from the chorus quote so the answer 'Hey Baby' no longer appears; added the artist for clarity."
+  },
+  {
+    "id": 192376,
+    "action": "reword",
+    "question": "Which 2014 Netflix special by Bo Burnham mixed stand-up with theatrical staging and projections?",
+    "note": "Changed the opening word from 'What' to 'Which' so the answer 'what.' is no longer a substring."
+  },
+  {
+    "id": 196775,
+    "action": "reword",
+    "question": "Which prestige HBO mob drama do Alan Sepinwall and Matt Zoller Seitz cover in their book and companion podcast about the series?",
+    "note": "Removed 'Sopranos Sessions' so the answer 'The Sopranos' no longer appears; described it as the HBO mob drama."
+  }
+]

@@ -1,0 +1,578 @@
+[
+  {
+    "id": 55783,
+    "question": "What was Teresa Halbach's profession when she disappeared?",
+    "answer": "Photographer",
+    "wrong_answers": [
+      "Journalist",
+      "Real estate agent",
+      "Freelance writer"
+    ],
+    "category": "Netflix Reality & Docuseries",
+    "difficulty": 2
+  },
+  {
+    "id": 44375,
+    "question": "Over how many consecutive weekends is Coachella typically scheduled?",
+    "answer": "Two",
+    "wrong_answers": [
+      "One",
+      "Three",
+      "Four"
+    ],
+    "category": "Album Art, Music Videos & Visual Music Moments That Defined Decades",
+    "difficulty": 3
+  },
+  {
+    "id": 41127,
+    "question": "What was Brendan Dassey's relation to Steven Avery?",
+    "answer": "Nephew",
+    "wrong_answers": [
+      "Son",
+      "Cousin",
+      "Brother"
+    ],
+    "category": "Netflix Reality & Docuseries",
+    "difficulty": 1
+  },
+  {
+    "id": 128298,
+    "question": "Which Megan Thee Stallion track sparked a viral hand-flipping dance challenge in summer 2020?",
+    "answer": "Savage",
+    "wrong_answers": [
+      "Body",
+      "WAP",
+      "Hot Girl Summer"
+    ],
+    "category": "Computers, Coding, the Internet & How Technology A",
+    "difficulty": 2
+  },
+  {
+    "id": 58999,
+    "question": "What ingredient makes a martini 'dirty'?",
+    "answer": "Olive brine",
+    "wrong_answers": [
+      "Extra vermouth",
+      "Lemon juice",
+      "Anchovy paste"
+    ],
+    "category": "Classic Cocktails & Famous Drinks",
+    "difficulty": 1
+  },
+  {
+    "id": 48950,
+    "question": "How many beef patties are mentioned in the Big Mac jingle?",
+    "answer": "Two",
+    "wrong_answers": [
+      "Three",
+      "One",
+      "Four"
+    ],
+    "category": "Brands, Logos & 'Name That Company'",
+    "difficulty": 2
+  },
+  {
+    "id": 45466,
+    "question": "What brewing method uses hot water pushed through ground coffee under high pressure?",
+    "answer": "Espresso",
+    "wrong_answers": [
+      "Drip coffee",
+      "French press",
+      "Turkish coffee"
+    ],
+    "category": "Guinness World Records, Human Extremes & 'Wait, Someone Did That?'",
+    "difficulty": 1
+  },
+  {
+    "id": 50379,
+    "question": "What was the name of Laci Peterson's dog?",
+    "answer": "McKenzie",
+    "wrong_answers": [
+      "Buddy",
+      "Shadow",
+      "Max"
+    ],
+    "category": "True Crime on Screen & Podcast",
+    "difficulty": 3
+  },
+  {
+    "id": 87330,
+    "question": "Who did Logan initially groom as his successor?",
+    "answer": "Kendall Roy",
+    "wrong_answers": [
+      "Roman Roy",
+      "Siobhan Roy",
+      "Connor Roy"
+    ],
+    "category": "Succession, White Lotus & Modern HBO Dramedies",
+    "difficulty": 2
+  },
+  {
+    "id": 173148,
+    "question": "What tech giant is the obvious inspiration for Silicon Valley's fictional Hooli company?",
+    "answer": "Google",
+    "wrong_answers": [
+      "Apple",
+      "Microsoft",
+      "Facebook"
+    ],
+    "category": "HBO Comedies & Cult Hits",
+    "difficulty": 1
+  },
+  {
+    "id": 150778,
+    "question": "What chain serves Spicy Chicken Nuggets that fans got brought back via a viral 2019 tweet?",
+    "answer": "Wendy's",
+    "wrong_answers": [
+      "McDonald's",
+      "Chick-fil-A",
+      "Popeyes"
+    ],
+    "category": "Fast Food Business",
+    "difficulty": 1
+  },
+  {
+    "id": 128235,
+    "question": "What nickname has Tony Hawk gone by throughout his career?",
+    "answer": "The Birdman",
+    "wrong_answers": [
+      "The Hawk",
+      "Air Tony",
+      "The Falcon"
+    ],
+    "category": "Extreme Sports",
+    "difficulty": 2
+  },
+  {
+    "id": 54078,
+    "question": "What newspaper published the classified Pentagon Papers exposing Vietnam War secrets?",
+    "answer": "The New York Times",
+    "wrong_answers": [
+      "The Washington Post",
+      "The Boston Globe",
+      "The Wall Street Journal"
+    ],
+    "category": "Podcasts",
+    "difficulty": 2
+  },
+  {
+    "id": 183048,
+    "question": "Which goddess gave Perseus a polished shield to safely view Medusa?",
+    "answer": "Athena",
+    "wrong_answers": [
+      "Hera",
+      "Aphrodite",
+      "Artemis"
+    ],
+    "category": "Mythology",
+    "difficulty": 1
+  },
+  {
+    "id": 74380,
+    "question": "Kendrick Lamar's Section.80 arrived before which major-label album debut?",
+    "answer": "good kid, m.A.A.d city",
+    "wrong_answers": [
+      "To Pimp a Butterfly",
+      "DAMN.",
+      "Mr. Morale & the Big Steppers"
+    ],
+    "category": "Hip-Hop & Rap",
+    "difficulty": 2
+  },
+  {
+    "id": 32401,
+    "question": "How many cups does each team start with in beer pong?",
+    "answer": "10",
+    "wrong_answers": [
+      "8",
+      "12",
+      "15"
+    ],
+    "category": "Bar Sports",
+    "difficulty": 1
+  },
+  {
+    "id": 158810,
+    "question": "In which 2015 Vin Diesel action film did Ronda Rousey make her acting debut?",
+    "answer": "Furious 7",
+    "wrong_answers": [
+      "Fast Five",
+      "Fast & Furious 6",
+      "The Fate of the Furious"
+    ],
+    "category": "UFC & MMA",
+    "difficulty": 1
+  },
+  {
+    "id": 79271,
+    "question": "What creature's venom destroys Horcruxes?",
+    "answer": "Basilisk",
+    "wrong_answers": [
+      "Phoenix",
+      "Acromantula",
+      "Thestral"
+    ],
+    "category": "Harry Potter & the Wizarding World",
+    "difficulty": 3
+  },
+  {
+    "id": 70756,
+    "question": "What was Route 66's most famous nickname?",
+    "answer": "The Mother Road",
+    "wrong_answers": [
+      "The Great American Road",
+      "The Ribbon of America",
+      "The Highway to Dreams"
+    ],
+    "category": "Trains, Ships, the Titanic & Transportation History",
+    "difficulty": 1
+  },
+  {
+    "id": 124490,
+    "question": "What color skin do the Na'vi have in Avatar?",
+    "answer": "Blue",
+    "wrong_answers": [
+      "Green",
+      "Purple",
+      "Silver"
+    ],
+    "category": "2000s & 2010s Blockbusters",
+    "difficulty": 1
+  },
+  {
+    "id": 102294,
+    "question": "Which record label was founded by Jay-Z?",
+    "answer": "Roc-A-Fella Records",
+    "wrong_answers": [
+      "Bad Boy Records",
+      "Def Jam",
+      "Death Row Records"
+    ],
+    "category": "Brands, Logos & 'Name That Company'",
+    "difficulty": 1
+  },
+  {
+    "id": 48128,
+    "question": "What did Michael Collins' spacecraft do while Armstrong and Aldrin explored the moon?",
+    "answer": "Orbited the moon",
+    "wrong_answers": [
+      "Descended to the surface",
+      "Returned to Earth",
+      "Docked with space station"
+    ],
+    "category": "Space Exploration",
+    "difficulty": 3
+  },
+  {
+    "id": 194299,
+    "question": "What was the name of the first fully electromechanical slot machine, released by Bally in 1963?",
+    "answer": "Money Honey",
+    "wrong_answers": [
+      "Lucky Lady",
+      "Big Bertha",
+      "Reel Deal"
+    ],
+    "category": "Gambling, Poker, Casinos, Las Vegas & the Culture ",
+    "difficulty": 3
+  },
+  {
+    "id": 165038,
+    "question": "Which MLB team did Aaron Judge play for during his 62-homer season?",
+    "answer": "New York Yankees",
+    "wrong_answers": [
+      "Boston Red Sox",
+      "Los Angeles Dodgers",
+      "Houston Astros"
+    ],
+    "category": "MLB Baseball",
+    "difficulty": 2
+  },
+  {
+    "id": 36668,
+    "question": "Fyre Festival organizer Billy McFarland was convicted of what federal crime?",
+    "answer": "Wire fraud",
+    "wrong_answers": [
+      "Money laundering",
+      "Racketeering",
+      "Tax evasion"
+    ],
+    "category": "Music Festivals",
+    "difficulty": 3
+  },
+  {
+    "id": 112787,
+    "question": "What family of viruses causes most common colds that lozenges aim to shorten?",
+    "answer": "Rhinovirus",
+    "wrong_answers": [
+      "Coronavirus",
+      "Adenovirus",
+      "Influenza"
+    ],
+    "category": "Chemistry & the Periodic Table",
+    "difficulty": 2
+  },
+  {
+    "id": 104579,
+    "question": "What was Samuel Little's preferred method of killing his victims?",
+    "answer": "Strangulation",
+    "wrong_answers": [
+      "Stabbing",
+      "Shooting",
+      "Poisoning"
+    ],
+    "category": "Serial Killers",
+    "difficulty": 3
+  },
+  {
+    "id": 114850,
+    "question": "An axe blade is an everyday example of which simple machine?",
+    "answer": "Wedge",
+    "wrong_answers": [
+      "Screw",
+      "Lever",
+      "Pulley"
+    ],
+    "category": "Physics",
+    "difficulty": 1
+  },
+  {
+    "id": 103811,
+    "question": "What fruit did Persephone eat that bound her to the Underworld?",
+    "answer": "Pomegranate",
+    "wrong_answers": [
+      "Fig",
+      "Apple",
+      "Grape"
+    ],
+    "category": "Mythology",
+    "difficulty": 1
+  },
+  {
+    "id": 48680,
+    "question": "What is Hannah Gadsby's breakthrough Netflix comedy special called?",
+    "answer": "Nanette",
+    "wrong_answers": [
+      "Douglas",
+      "Blueprint",
+      "Humanity"
+    ],
+    "category": "Stand-Up Comedy",
+    "difficulty": 1
+  },
+  {
+    "id": 67440,
+    "question": "Which hop variety, used in West Coast IPAs, is known for its citrus and pine notes?",
+    "answer": "Cascade",
+    "wrong_answers": [
+      "Willamette",
+      "Hallertau",
+      "Sterling"
+    ],
+    "category": "US Regions",
+    "difficulty": 2
+  },
+  {
+    "id": 61841,
+    "question": "Danny McBride created and starred in which HBO dramedy about a washed-up baseball player?",
+    "answer": "Eastbound & Down",
+    "wrong_answers": [
+      "Vice Principals",
+      "Righteous Gemstones",
+      "The Leftovers"
+    ],
+    "category": "HBO Comedies & Cult Hits",
+    "difficulty": 1
+  },
+  {
+    "id": 148085,
+    "question": "What was the title of Jay-Z's debut studio album?",
+    "answer": "Reasonable Doubt",
+    "wrong_answers": [
+      "The Blueprint",
+      "Vol. 2... Hard Knock Life",
+      "In My Lifetime"
+    ],
+    "category": "Hip-Hop & Rap",
+    "difficulty": 1
+  },
+  {
+    "id": 62262,
+    "question": "What alien race does Mark Grayson's father belong to in Invincible?",
+    "answer": "Viltrumite",
+    "wrong_answers": [
+      "Thraxian",
+      "Eternian",
+      "Atlantean"
+    ],
+    "category": "The Boys, Invincible & Amazon Superhero Shows",
+    "difficulty": 1
+  },
+  {
+    "id": 96831,
+    "question": "What forensic technique uses genetic markers to identify individuals?",
+    "answer": "DNA profiling",
+    "wrong_answers": [
+      "Fingerprint analysis",
+      "Ballistics analysis",
+      "Fiber analysis"
+    ],
+    "category": "Forensic Science, DNA Evidence & How Modern Crimes Get Solved",
+    "difficulty": 2
+  },
+  {
+    "id": 75000,
+    "question": "What 2021 Justin Bieber collaboration became a viral summer TikTok hit?",
+    "answer": "Peaches",
+    "wrong_answers": [
+      "Anyone",
+      "Intentions",
+      "Holy"
+    ],
+    "category": "2010s Music",
+    "difficulty": 2
+  },
+  {
+    "id": 132913,
+    "question": "What was Eric Bristow's famous nickname on the oche?",
+    "answer": "The Crafty Cockney",
+    "wrong_answers": [
+      "The Power",
+      "The Bronzed Adonis",
+      "The Limestone Cowboy"
+    ],
+    "category": "Bar Sports",
+    "difficulty": 3
+  },
+  {
+    "id": 69289,
+    "question": "Which state has Jackson as its capital?",
+    "answer": "Mississippi",
+    "wrong_answers": [
+      "Louisiana",
+      "Alabama",
+      "Arkansas"
+    ],
+    "category": "US State Capitals, Nicknames & 'Most People Get These Wrong'",
+    "difficulty": 1
+  },
+  {
+    "id": 148835,
+    "question": "Who founded Amazon in 1994?",
+    "answer": "Jeff Bezos",
+    "wrong_answers": [
+      "Bill Gates",
+      "Mark Zuckerberg",
+      "Larry Ellison"
+    ],
+    "category": "Brands, Logos & 'Name That Company'",
+    "difficulty": 1
+  },
+  {
+    "id": 92066,
+    "question": "Which beer brand aired the iconic Super Bowl ad about a puppy's friendship with a Clydesdale horse?",
+    "answer": "Budweiser",
+    "wrong_answers": [
+      "Miller",
+      "Coors",
+      "Corona"
+    ],
+    "category": "Famous Super Bowl Commercials, Ad Campaigns & Marketing Moments",
+    "difficulty": 1
+  },
+  {
+    "id": 175090,
+    "question": "Which state was the site of the 1979 Three Mile Island nuclear accident?",
+    "answer": "Pennsylvania",
+    "wrong_answers": [
+      "Ohio",
+      "New Jersey",
+      "New York"
+    ],
+    "category": "Weird State Laws, Strange State Facts & 'Which Sta",
+    "difficulty": 2
+  },
+  {
+    "id": 190834,
+    "question": "What weapon is Aquaman famous for wielding?",
+    "answer": "Trident",
+    "wrong_answers": [
+      "Harpoon",
+      "Cutlass",
+      "Net gun"
+    ],
+    "category": "Physics",
+    "difficulty": 1
+  },
+  {
+    "id": 120640,
+    "question": "Who is often called the 'King of Rock and Roll'?",
+    "answer": "Elvis Presley",
+    "wrong_answers": [
+      "Chuck Berry",
+      "Little Richard",
+      "Buddy Holly"
+    ],
+    "category": "Podcasts",
+    "difficulty": 1
+  },
+  {
+    "id": 157749,
+    "question": "Who took over hosting duties from Bob Barker in 2007?",
+    "answer": "Drew Carey",
+    "wrong_answers": [
+      "Jeff Foxworthy",
+      "Wayne Brady",
+      "Howie Mandel"
+    ],
+    "category": "Soap Operas, Daytime TV & Talk Shows",
+    "difficulty": 1
+  },
+  {
+    "id": 119250,
+    "question": "On what date in 2021 were Maggie and Paul Murdaugh shot?",
+    "answer": "June 7",
+    "wrong_answers": [
+      "June 14",
+      "May 27",
+      "July 4"
+    ],
+    "category": "Famous Trials & Courtroom Drama",
+    "difficulty": 2
+  },
+  {
+    "id": 134392,
+    "question": "Who became the first rider to land a double backflip in competition at the 2006 X Games?",
+    "answer": "Travis Pastrana",
+    "wrong_answers": [
+      "Carey Hart",
+      "Brian Deegan",
+      "Jeremy McGrath"
+    ],
+    "category": "Motorcycles, Monster Trucks, Heavy Machines & Vehi",
+    "difficulty": 2
+  },
+  {
+    "id": 198617,
+    "question": "What's the name of Heath Ledger's daughter, who inherited his estate?",
+    "answer": "Matilda",
+    "wrong_answers": [
+      "Mathilda",
+      "Mia",
+      "Madeline"
+    ],
+    "category": "Celebrity Gossip, Famous Couples, Breakups & Pop C",
+    "difficulty": 1
+  },
+  {
+    "id": 162536,
+    "question": "What ocean did the Hindenburg cross on its final journey?",
+    "answer": "Atlantic",
+    "wrong_answers": [
+      "Pacific",
+      "Arctic",
+      "Indian"
+    ],
+    "category": "Famous Disasters",
+    "difficulty": 3
+  }
+]

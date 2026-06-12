@@ -1,0 +1,2082 @@
+[
+  {
+    "id": 2472,
+    "question": "In this 1950 film about theatrical rivalry, Bette Davis played aging star Margo Channing. Name it.",
+    "answer": "All About Eve",
+    "wrong_answers": [
+      "A Streetcar Named Desire",
+      "Sunset Boulevard",
+      "The Asphalt Jungle"
+    ]
+  },
+  {
+    "id": 3091,
+    "question": "Shampoo belongs on your scalp, but conditioner should go on your:",
+    "answer": "Hair ends",
+    "wrong_answers": [
+      "Scalp",
+      "Roots",
+      "Entire length"
+    ]
+  },
+  {
+    "id": 3095,
+    "question": "Applying conditioner to your scalp most likely causes:",
+    "answer": "Greasy roots",
+    "wrong_answers": [
+      "Scalp dryness",
+      "Hair loss",
+      "Frizz at the tips"
+    ]
+  },
+  {
+    "id": 3097,
+    "question": "Cold water rinses make hair shinier, but the effect is actually:",
+    "answer": "Temporary",
+    "wrong_answers": [
+      "Permanent",
+      "Cumulative over time",
+      "Reversible with heat"
+    ]
+  },
+  {
+    "id": 3098,
+    "question": "Washing your hair too infrequently can lead to:",
+    "answer": "Scalp buildup",
+    "wrong_answers": [
+      "Hair shaft damage",
+      "Permanent hair loss",
+      "Increased growth rate"
+    ]
+  },
+  {
+    "id": 3668,
+    "question": "\"Train, say your ___, and take your vitamins\" — complete the phrase.",
+    "answer": "Prayers",
+    "wrong_answers": [
+      "Thanks",
+      "Blessings",
+      "Wishes"
+    ]
+  },
+  {
+    "id": 4903,
+    "question": "Name the iconic fight song of the Longhorns football team.",
+    "answer": "Texas Fight",
+    "wrong_answers": [
+      "The Eyes of Texas",
+      "Glory, Glory to Old Texas",
+      "Deep in the Heart of Texas"
+    ]
+  },
+  {
+    "id": 7827,
+    "question": "FEMA informally uses the _____ Index to assess disaster recovery in a region.",
+    "answer": "Waffle House",
+    "wrong_answers": [
+      "McDonald's",
+      "Denny's",
+      "IHOP"
+    ]
+  },
+  {
+    "id": 9117,
+    "question": "Before home refrigerators became common, most American families used an _____ to keep food cold.",
+    "answer": "Ice box",
+    "wrong_answers": [
+      "Root cellar",
+      "Spring house",
+      "Pantry"
+    ]
+  },
+  {
+    "id": 9822,
+    "question": "Complete the name of the Harry Potter charm that begins with 'Oculus'",
+    "answer": "Reparo",
+    "wrong_answers": [
+      "Restauro",
+      "Fixo",
+      "Nexus"
+    ]
+  },
+  {
+    "id": 10140,
+    "question": "Stanford's football team is known as the:",
+    "answer": "Cardinal",
+    "wrong_answers": [
+      "Cougars",
+      "Hawks",
+      "Eagles"
+    ]
+  },
+  {
+    "id": 10142,
+    "question": "UC Berkeley's football team nickname is:",
+    "answer": "Golden Bears",
+    "wrong_answers": [
+      "Grizzlies",
+      "Gold Miners",
+      "Badgers"
+    ]
+  },
+  {
+    "id": 10143,
+    "question": "Stanford's sprawling 8,000-acre campus is commonly called:",
+    "answer": "The Farm",
+    "wrong_answers": [
+      "The Valley",
+      "The Ranch",
+      "The Grounds"
+    ]
+  },
+  {
+    "id": 10146,
+    "question": "The annual football rivalry between Cal and Stanford is commonly called:",
+    "answer": "The Big Game",
+    "wrong_answers": [
+      "The Gold Rush",
+      "The Farm Classic",
+      "The Bay Area Battle"
+    ]
+  },
+  {
+    "id": 11570,
+    "question": "Name James Brown's most-sampled drum break.",
+    "answer": "Funky Drummer",
+    "wrong_answers": [
+      "The Payback Break",
+      "Funky Feet",
+      "Soul Machine"
+    ]
+  },
+  {
+    "id": 12878,
+    "question": "Rachel Lindsay was the first _____ Bachelorette lead.",
+    "answer": "Black",
+    "wrong_answers": [
+      "Latina",
+      "Asian",
+      "Divorced"
+    ]
+  },
+  {
+    "id": 13158,
+    "question": "Weezer's self-titled 1994 debut is commonly referred to by its primary cover color. Name it.",
+    "answer": "The Blue Album",
+    "wrong_answers": [
+      "Pinkerton",
+      "Green",
+      "Maladroit"
+    ]
+  },
+  {
+    "id": 15906,
+    "question": "Lewis B. Puller rose through the Marine Corps ranks partly because of his:",
+    "answer": "Combat success",
+    "wrong_answers": [
+      "Political connections",
+      "Academic credentials",
+      "Diplomatic skills"
+    ]
+  },
+  {
+    "id": 16121,
+    "question": "Name the 1987 horror-comedy starring Bruce Campbell as Ash Williams.",
+    "answer": "Evil Dead 2",
+    "wrong_answers": [
+      "The Evil Dead",
+      "Army of Darkness",
+      "Evil Dead Rise"
+    ]
+  },
+  {
+    "id": 16125,
+    "question": "Identify the 1983 David Cronenberg film featuring 'Long live the new flesh.'",
+    "answer": "Videodrome",
+    "wrong_answers": [
+      "Scanners",
+      "The Fly",
+      "Naked Lunch"
+    ]
+  },
+  {
+    "id": 16660,
+    "question": "Name the popular rush ticket program offered by Broadway theaters.",
+    "answer": "Student rush",
+    "wrong_answers": [
+      "Student matinee",
+      "Preview night",
+      "Dress rehearsal"
+    ]
+  },
+  {
+    "id": 16843,
+    "question": "Ask Jeeves' formal butler appearance was completed with white ___ on his hands.",
+    "answer": "Gloves",
+    "wrong_answers": [
+      "Socks",
+      "Bracelets",
+      "Rings"
+    ]
+  },
+  {
+    "id": 17129,
+    "question": "Neptune is the _____ planet from the sun.",
+    "answer": "Eighth",
+    "wrong_answers": [
+      "Sixth",
+      "Seventh",
+      "Ninth"
+    ]
+  },
+  {
+    "id": 18571,
+    "question": "Which group sang 'Who Let the Dogs Out?'",
+    "answer": "Baha Men",
+    "wrong_answers": [
+      "Backstreet Boys",
+      "No Doubt",
+      "Sugar Ray"
+    ]
+  },
+  {
+    "id": 24427,
+    "question": "If osteoporosis runs in your family, your risk is:",
+    "answer": "Higher",
+    "wrong_answers": [
+      "Lower",
+      "The same",
+      "Unaffected"
+    ]
+  },
+  {
+    "id": 25492,
+    "question": "Mars's highest daytime temperature is about:",
+    "answer": "20°C",
+    "wrong_answers": [
+      "50°C",
+      "100°C",
+      "-50°C"
+    ]
+  },
+  {
+    "id": 25493,
+    "question": "Mercury's surface can get as hot as:",
+    "answer": "430°C",
+    "wrong_answers": [
+      "250°C",
+      "500°C",
+      "600°C"
+    ]
+  },
+  {
+    "id": 25496,
+    "question": "Saturn's cloud-top temperature is closest to:",
+    "answer": "-140°C",
+    "wrong_answers": [
+      "-100°C",
+      "-200°C",
+      "50°C"
+    ]
+  },
+  {
+    "id": 26298,
+    "question": "Common starred opposite Paula Patton in a sports romantic comedy titled:",
+    "answer": "Just Wright",
+    "wrong_answers": [
+      "Love & Basketball",
+      "Fast Break",
+      "40 Days and 40 Nights"
+    ]
+  },
+  {
+    "id": 28397,
+    "question": "St. Elmo's Fire requires high electrical _____ to occur.",
+    "answer": "Potential",
+    "wrong_answers": [
+      "Resistance",
+      "Conductivity",
+      "Density"
+    ]
+  },
+  {
+    "id": 28958,
+    "question": "Who repeatedly asks Tony 'You gonna make that appointment?'",
+    "answer": "Dr. Jennifer Melfi",
+    "wrong_answers": [
+      "Carmela Soprano",
+      "Livia Soprano",
+      "Janice Soprano"
+    ]
+  },
+  {
+    "id": 29388,
+    "question": "Boyz II Men's R&B cover of this Beatles classic became a major hit in 1995. Name it.",
+    "answer": "Yesterday",
+    "wrong_answers": [
+      "Help!",
+      "Let It Be",
+      "Come Together"
+    ]
+  },
+  {
+    "id": 29390,
+    "question": "Complete this famous Beatles lyric: 'You say you want a ___.'",
+    "answer": "Revolution",
+    "wrong_answers": [
+      "Change",
+      "Evolution",
+      "Solution"
+    ]
+  },
+  {
+    "id": 29872,
+    "question": "Complete the movie title: 'Sleepless in ___'.",
+    "answer": "Seattle",
+    "wrong_answers": [
+      "Portland",
+      "Vancouver",
+      "Tacoma"
+    ]
+  },
+  {
+    "id": 30434,
+    "question": "Good Things Come to Those Who ___—complete the Guinness slogan.",
+    "answer": "Wait",
+    "wrong_answers": [
+      "Work",
+      "Want",
+      "Win"
+    ]
+  },
+  {
+    "id": 31536,
+    "question": "Name Angelina and Brad's biological twins.",
+    "answer": "Knox and Vivienne",
+    "wrong_answers": [
+      "Maddox and Zahara",
+      "Shiloh and Knox",
+      "Vivienne and Pax"
+    ]
+  },
+  {
+    "id": 31640,
+    "question": "A bettor's false belief that a winning streak will continue is known as the:",
+    "answer": "Hot hand fallacy",
+    "wrong_answers": [
+      "House edge",
+      "Variance",
+      "Kelly criterion"
+    ]
+  },
+  {
+    "id": 32097,
+    "question": "John Singleton directed this 1993 film starring Janet Jackson and Tupac Shakur.",
+    "answer": "Poetic Justice",
+    "wrong_answers": [
+      "Love Jones",
+      "Set It Off",
+      "Waiting to Exhale"
+    ]
+  },
+  {
+    "id": 32423,
+    "question": "What Norwegian comedy group performed the viral 'What Does the Fox Say?'",
+    "answer": "Ylvis",
+    "wrong_answers": [
+      "Röyksopp",
+      "Garmarna",
+      "Lordi"
+    ]
+  },
+  {
+    "id": 33072,
+    "question": "Unlike American gummy candies, Hi-Chew maintains its ___ throughout an extended chew.",
+    "answer": "Flavor",
+    "wrong_answers": [
+      "Shape",
+      "Sweetness",
+      "Crunchiness"
+    ]
+  },
+  {
+    "id": 34823,
+    "question": "Fill in the blank: 'Uglier than a ___' is a Southern put-down.",
+    "answer": "Mud fence",
+    "wrong_answers": [
+      "Toad",
+      "Dead mule",
+      "Burnt biscuit"
+    ]
+  },
+  {
+    "id": 34824,
+    "question": "Fill in the blank: 'More nervous than a long-tailed cat in a room full of ___'.",
+    "answer": "Rocking chairs",
+    "wrong_answers": [
+      "Spinning tops",
+      "Ceiling fans",
+      "Mousetraps"
+    ]
+  },
+  {
+    "id": 34827,
+    "question": "Fill in the blank: 'More useless than a screen door on a ___'.",
+    "answer": "Submarine",
+    "wrong_answers": [
+      "Motorboat",
+      "Spaceship",
+      "Houseboat"
+    ]
+  },
+  {
+    "id": 34960,
+    "question": "The choice between bent grass and Bermuda is determined by:",
+    "answer": "Climate",
+    "wrong_answers": [
+      "Budget",
+      "Aesthetics",
+      "Player preference"
+    ]
+  },
+  {
+    "id": 34962,
+    "question": "Bent grass is preferred for putting greens because of its:",
+    "answer": "Fine texture",
+    "wrong_answers": [
+      "Durability",
+      "Green color",
+      "Quick growth"
+    ]
+  },
+  {
+    "id": 34993,
+    "question": "\"Banh mi,\" the Vietnamese sandwich, contains \"banh,\" which means:",
+    "answer": "Bread",
+    "wrong_answers": [
+      "Meat",
+      "Vegetables",
+      "Rice"
+    ]
+  },
+  {
+    "id": 34996,
+    "question": "In \"dim sum,\" the Cantonese word \"sum\" translates to:",
+    "answer": "Heart",
+    "wrong_answers": [
+      "Small",
+      "Bite",
+      "Taste"
+    ]
+  },
+  {
+    "id": 34998,
+    "question": "In Thai, \"nam prik\" (curry paste) literally translates as:",
+    "answer": "Chili water",
+    "wrong_answers": [
+      "Fish paste",
+      "Shrimp sauce",
+      "Curry liquid"
+    ]
+  },
+  {
+    "id": 35082,
+    "question": "Mark Roth was famous for his ___ bowling style.",
+    "answer": "Powerful",
+    "wrong_answers": [
+      "Precise",
+      "Conservative",
+      "Defensive"
+    ]
+  },
+  {
+    "id": 35177,
+    "question": "What was the name of the kids' group that told scary stories on \"Are You Afraid of the Dark?\"",
+    "answer": "The Midnight Society",
+    "wrong_answers": [
+      "The Spooky Circle",
+      "The Fear Society",
+      "The Night Tales"
+    ]
+  },
+  {
+    "id": 35191,
+    "question": "Louisiana law prohibits doing this publicly:",
+    "answer": "Gargling",
+    "wrong_answers": [
+      "Whistling",
+      "Humming",
+      "Singing"
+    ]
+  },
+  {
+    "id": 35192,
+    "question": "Montana forbids this animal in a taxi without a chaperone:",
+    "answer": "Sheep",
+    "wrong_answers": [
+      "Goats",
+      "Dogs",
+      "Pigs"
+    ]
+  },
+  {
+    "id": 35936,
+    "question": "Ronald Reagan jokingly said \"We begin __ in five minutes\" on a hot microphone in 1984.",
+    "answer": "Bombing",
+    "wrong_answers": [
+      "Building",
+      "Negotiating",
+      "Launching"
+    ]
+  },
+  {
+    "id": 35938,
+    "question": "George W. Bush said \"Rarely is the question asked: Is our children __?\"",
+    "answer": "Learning",
+    "wrong_answers": [
+      "Safe",
+      "Healthy",
+      "Thriving"
+    ]
+  },
+  {
+    "id": 35941,
+    "question": "Lincoln said \"A house divided against itself cannot __.\"",
+    "answer": "Stand",
+    "wrong_answers": [
+      "Fall",
+      "Break",
+      "Endure"
+    ]
+  },
+  {
+    "id": 37170,
+    "question": "Name the civilian who spied with John Walker.",
+    "answer": "Jerry Whitworth",
+    "wrong_answers": [
+      "Harold Bennett",
+      "Samuel Mitchell",
+      "James Richardson"
+    ]
+  },
+  {
+    "id": 38727,
+    "question": "In Seinfeld, George is 'Master of My ___' in the Season 4 finale",
+    "answer": "Domain",
+    "wrong_answers": [
+      "Universe",
+      "Destiny",
+      "Kingdom"
+    ]
+  },
+  {
+    "id": 38943,
+    "question": "Complete the famous line from The Room: 'Oh _____ Mark'",
+    "answer": "hi",
+    "wrong_answers": [
+      "there",
+      "my",
+      "buddy"
+    ]
+  },
+  {
+    "id": 39184,
+    "question": "The change from 'nice' meaning bad to meaning good is called:",
+    "answer": "Amelioration",
+    "wrong_answers": [
+      "Pejoration",
+      "Metaphor",
+      "Alliteration"
+    ]
+  },
+  {
+    "id": 39186,
+    "question": "In Jane Austen novels, 'nice' typically meant someone or something was:",
+    "answer": "Particular",
+    "wrong_answers": [
+      "Beautiful",
+      "Hilarious",
+      "Wealthy"
+    ]
+  },
+  {
+    "id": 39187,
+    "question": "The Latin word 'nescius' literally means:",
+    "answer": "Not knowing",
+    "wrong_answers": [
+      "Very new",
+      "Not wise",
+      "Never seen"
+    ]
+  },
+  {
+    "id": 40551,
+    "question": "Name the three standard target scents in NACSW nosework.",
+    "answer": "Birch, Anise, and Clove",
+    "wrong_answers": [
+      "Lavender, Mint, Cedar",
+      "Pine, Lemon, Thyme",
+      "Eucalyptus, Rosemary, Citrus"
+    ]
+  },
+  {
+    "id": 40593,
+    "question": "Ralph Bunche, first African American Nobel Prize winner, worked primarily as a:",
+    "answer": "Diplomat",
+    "wrong_answers": [
+      "Historian",
+      "Labor organizer",
+      "Educator"
+    ]
+  },
+  {
+    "id": 43238,
+    "question": "Logan's second wife and mother of three of his children is:",
+    "answer": "Caroline",
+    "wrong_answers": [
+      "Marcia",
+      "Rava",
+      "Gerri"
+    ]
+  },
+  {
+    "id": 43239,
+    "question": "Logan's youngest and most shamelessly ruthless child is:",
+    "answer": "Roman",
+    "wrong_answers": [
+      "Kendall",
+      "Siobhan",
+      "Connor"
+    ]
+  },
+  {
+    "id": 44008,
+    "question": "Canadian group Len's summer smash was called:",
+    "answer": "Steal My Sunshine",
+    "wrong_answers": [
+      "Take the Sunshine",
+      "Sunshine Stolen",
+      "My Sunshine"
+    ]
+  },
+  {
+    "id": 44011,
+    "question": "PSY's viral 2012 hit defined that year with:",
+    "answer": "Gangnam Style",
+    "wrong_answers": [
+      "Seoul Train",
+      "K-Pop Dance",
+      "Korean Shuffle"
+    ]
+  },
+  {
+    "id": 44012,
+    "question": "Tag Team's massive 1993 hit with a confusing hook was:",
+    "answer": "Whoomp! (There It Is)",
+    "wrong_answers": [
+      "What?!",
+      "There's the Beat",
+      "Yo, What's Happening?"
+    ]
+  },
+  {
+    "id": 44527,
+    "question": "Puerto Rico is a ___ of the United States.",
+    "answer": "Territory",
+    "wrong_answers": [
+      "State",
+      "Colony",
+      "Independent nation"
+    ]
+  },
+  {
+    "id": 44716,
+    "question": "Before directing A Star Is Born, Bradley Cooper's primary career was as a:",
+    "answer": "Film actor",
+    "wrong_answers": [
+      "Stage actor",
+      "Music producer",
+      "Screenwriter"
+    ]
+  },
+  {
+    "id": 44717,
+    "question": "Lady Gaga's character Ally doubts her singing ability, contrasting with Gaga's real background as:",
+    "answer": "A trained musician",
+    "wrong_answers": [
+      "A former dancer",
+      "A reality TV finalist",
+      "A backup singer"
+    ]
+  },
+  {
+    "id": 45648,
+    "question": "Sir Mix-a-Lot's novelty hit is \"Baby Got ___\". Fill in the blank.",
+    "answer": "Back",
+    "wrong_answers": [
+      "Booty",
+      "Curves",
+      "Junk"
+    ]
+  },
+  {
+    "id": 46464,
+    "question": "Complete the opening line: \"Get your motor ___\"",
+    "answer": "Runnin'",
+    "wrong_answers": [
+      "Revvin'",
+      "Burnin'",
+      "Purrin'"
+    ]
+  },
+  {
+    "id": 47530,
+    "question": "Name Newton's 1687 masterwork unifying his laws of motion and gravity.",
+    "answer": "Principia",
+    "wrong_answers": [
+      "Opticks",
+      "Method of Fluxions",
+      "De Analysi"
+    ]
+  },
+  {
+    "id": 50964,
+    "question": "This Costco brand gets its name from a Washington city—name the city.",
+    "answer": "Kirkland",
+    "wrong_answers": [
+      "Seattle",
+      "Spokane",
+      "Tacoma"
+    ]
+  },
+  {
+    "id": 51090,
+    "question": "One major limitation of profiling is that it relies heavily on profilers' personal ___.",
+    "answer": "Bias",
+    "wrong_answers": [
+      "Training",
+      "Experience",
+      "Education"
+    ]
+  },
+  {
+    "id": 52660,
+    "question": "Kidney stones that form in acidic urine are typically this type:",
+    "answer": "Uric acid",
+    "wrong_answers": [
+      "Calcium oxalate",
+      "Struvite",
+      "Cystine"
+    ]
+  },
+  {
+    "id": 52698,
+    "question": "The banana sticker on The Velvet Underground & Nico revealed __ when peeled.",
+    "answer": "A peeled pink banana",
+    "wrong_answers": [
+      "A hidden message",
+      "A cartoon face",
+      "Lou Reed's portrait"
+    ]
+  },
+  {
+    "id": 53497,
+    "question": "Name the iconic Southern California pier featured in countless films and TV shows.",
+    "answer": "Malibu Pier",
+    "wrong_answers": [
+      "Santa Monica Pier",
+      "Huntington Beach Pier",
+      "Manhattan Beach Pier"
+    ]
+  },
+  {
+    "id": 53540,
+    "question": "Name the ancient Egyptian religious text placed in tombs to guide the deceased in the afterlife.",
+    "answer": "The Book of the Dead",
+    "wrong_answers": [
+      "The Pyramid Texts",
+      "The Coffin Texts",
+      "The Spells of Ra"
+    ]
+  },
+  {
+    "id": 53788,
+    "question": "Complete Miller Lite's famous slogan: \"Tastes Great, ___\"",
+    "answer": "Less Filling",
+    "wrong_answers": [
+      "More Taste",
+      "Full Flavor",
+      "Cold Crisp"
+    ]
+  },
+  {
+    "id": 53792,
+    "question": "Bud Light's early 2000s campaign featured \"Real Men of ___\"",
+    "answer": "Genius",
+    "wrong_answers": [
+      "Action",
+      "Valor",
+      "Steel"
+    ]
+  },
+  {
+    "id": 54349,
+    "question": "Name the 1969 Latin rock debut album that shares its name with the band.",
+    "answer": "Santana",
+    "wrong_answers": [
+      "Black Magic Woman",
+      "Caravanserai",
+      "Welcome"
+    ]
+  },
+  {
+    "id": 54695,
+    "question": "Drake and Rihanna collaborated on the hit:",
+    "answer": "Work",
+    "wrong_answers": [
+      "Kiss It Better",
+      "We Found Love",
+      "Love On The Brain"
+    ]
+  },
+  {
+    "id": 54696,
+    "question": "Billie Eilish frequently collaborates with her brother, whose stage name is:",
+    "answer": "Finneas",
+    "wrong_answers": [
+      "Noah",
+      "Khalid",
+      "Jack"
+    ]
+  },
+  {
+    "id": 54697,
+    "question": "Snoop Dogg's debut album was produced by:",
+    "answer": "Dr. Dre",
+    "wrong_answers": [
+      "DJ Premier",
+      "Timbaland",
+      "Just Blaze"
+    ]
+  },
+  {
+    "id": 54700,
+    "question": "OutKast was a rap duo featuring André 3000 and:",
+    "answer": "Big Boi",
+    "wrong_answers": [
+      "Slim Thug",
+      "T.I.",
+      "UGK"
+    ]
+  },
+  {
+    "id": 54708,
+    "question": "Name the team whose Big Three of Durant, Kyrie Irving, and Harden never truly played together.",
+    "answer": "Brooklyn Nets",
+    "wrong_answers": [
+      "Los Angeles Clippers",
+      "Philadelphia 76ers",
+      "Portland Trail Blazers"
+    ]
+  },
+  {
+    "id": 54964,
+    "question": "The dark, crusty exterior of smoked meat is called:",
+    "answer": "Bark",
+    "wrong_answers": [
+      "Crust",
+      "Char",
+      "Skin"
+    ]
+  },
+  {
+    "id": 56156,
+    "question": "Peated Scotch's smoky flavor comes from peat used during:",
+    "answer": "Malting",
+    "wrong_answers": [
+      "Cask selection",
+      "Aging",
+      "Distillation"
+    ]
+  },
+  {
+    "id": 56157,
+    "question": "Spirit ages faster in smaller casks primarily because of:",
+    "answer": "Greater wood surface area",
+    "wrong_answers": [
+      "Lower temperature",
+      "Higher humidity",
+      "Faster evaporation"
+    ]
+  },
+  {
+    "id": 57198,
+    "question": "What beer brand's 2000s campaign featured friends saying \"Whassup?\"",
+    "answer": "Budweiser",
+    "wrong_answers": [
+      "Bud Light",
+      "Coors",
+      "Miller Lite"
+    ]
+  },
+  {
+    "id": 57952,
+    "question": "In \"Barry,\" Gene Conan is Barry's acting teacher whose relationship becomes:",
+    "answer": "Mentorship",
+    "wrong_answers": [
+      "Romance",
+      "Rivalry",
+      "Friendship"
+    ]
+  },
+  {
+    "id": 57957,
+    "question": "In \"Silicon Valley,\" Monica Hall's primary professional role is:",
+    "answer": "Venture capitalist",
+    "wrong_answers": [
+      "CEO",
+      "Board member",
+      "Lawyer"
+    ]
+  },
+  {
+    "id": 57959,
+    "question": "In \"Barry,\" Sally Reed becomes romantically involved with Barry while both are:",
+    "answer": "Acting students",
+    "wrong_answers": [
+      "Undercover agents",
+      "Criminals on the run",
+      "Prison inmates"
+    ]
+  },
+  {
+    "id": 58131,
+    "question": "Which relationship expert hosts 'Where Should We Begin?'",
+    "answer": "Esther Perel",
+    "wrong_answers": [
+      "Brené Brown",
+      "Sue Johnson",
+      "Dan Savage"
+    ]
+  },
+  {
+    "id": 58602,
+    "question": "This 1994 SNES action-adventure game is renowned in speedrunning for its advanced movement and route optimization potential.",
+    "answer": "Super Metroid",
+    "wrong_answers": [
+      "Castlevania IV",
+      "Mega Man X",
+      "Contra III"
+    ]
+  },
+  {
+    "id": 59018,
+    "question": "Trenches like the Mariana are frequent sites of:",
+    "answer": "Major earthquakes",
+    "wrong_answers": [
+      "Iceberg calving",
+      "Coral reef growth",
+      "Rogue waves"
+    ]
+  },
+  {
+    "id": 59123,
+    "question": "Jobs ended his Stanford commencement speech with 'Stay hungry, stay ____.'",
+    "answer": "Foolish",
+    "wrong_answers": [
+      "Young",
+      "Curious",
+      "Bold"
+    ]
+  },
+  {
+    "id": 59125,
+    "question": "In his Stanford speech, Jobs revealed that he was ______.",
+    "answer": "Adopted",
+    "wrong_answers": [
+      "Born in poverty",
+      "Orphaned",
+      "Raised by grandparents"
+    ]
+  },
+  {
+    "id": 59126,
+    "question": "In his Stanford speech, Jobs said you can only connect the dots by looking ______ at your life.",
+    "answer": "Backward",
+    "wrong_answers": [
+      "Forward",
+      "Inward",
+      "Outward"
+    ]
+  },
+  {
+    "id": 59821,
+    "question": "\"There's no crying in _____!\" is a famous line from A League of Their Own.",
+    "answer": "baseball",
+    "wrong_answers": [
+      "sports",
+      "football",
+      "life"
+    ]
+  },
+  {
+    "id": 59823,
+    "question": "In The Karate Kid, the rival dojo's evil command is \"Sweep the _____\"",
+    "answer": "leg",
+    "wrong_answers": [
+      "arm",
+      "neck",
+      "back"
+    ]
+  },
+  {
+    "id": 59824,
+    "question": "\"Ducks fly _____\" is the team motto in The Mighty Ducks hockey film.",
+    "answer": "together",
+    "wrong_answers": [
+      "high",
+      "free",
+      "fast"
+    ]
+  },
+  {
+    "id": 59827,
+    "question": "In Friday Night Lights, the team motto is \"Clear eyes, full hearts, _____\"",
+    "answer": "can't lose",
+    "wrong_answers": [
+      "won't fail",
+      "will win",
+      "stay strong"
+    ]
+  },
+  {
+    "id": 60160,
+    "question": "A fraudulent medicine salesman is called a _____ oil salesman.",
+    "answer": "Snake",
+    "wrong_answers": [
+      "Cod",
+      "Olive",
+      "Castor"
+    ]
+  },
+  {
+    "id": 60162,
+    "question": "The FDA was partly created to regulate fraudulent _____ medicines in the early 1900s.",
+    "answer": "Patent",
+    "wrong_answers": [
+      "Herbal",
+      "Homeopathic",
+      "Holistic"
+    ]
+  },
+  {
+    "id": 62336,
+    "question": "Dry cells replaced this earlier type of battery for portable applications.",
+    "answer": "Wet cell",
+    "wrong_answers": [
+      "Solar cell",
+      "Fuel cell",
+      "Voltaic pile"
+    ]
+  },
+  {
+    "id": 62813,
+    "question": "In The Boys, Queen Maeve's primary killing method involves using:",
+    "answer": "Superhuman strength",
+    "wrong_answers": [
+      "Laser eyes",
+      "Sonic scream",
+      "Electrical powers"
+    ]
+  },
+  {
+    "id": 62815,
+    "question": "In Invincible, Omniman kills the Guardians of the Globe using:",
+    "answer": "Super strength",
+    "wrong_answers": [
+      "Laser eyes",
+      "Mind control",
+      "Telekinesis"
+    ]
+  },
+  {
+    "id": 62816,
+    "question": "In The Boys, Homelander kills Madelyn Stillwell by using:",
+    "answer": "Laser eyes",
+    "wrong_answers": [
+      "Crushing her",
+      "Drowning her",
+      "Poisoning her"
+    ]
+  },
+  {
+    "id": 63288,
+    "question": "Complete the Haribo gummy bears jingle: 'Haribo makes mouths ___'",
+    "answer": "Happy",
+    "wrong_answers": [
+      "Smile",
+      "Dance",
+      "Joyful"
+    ]
+  },
+  {
+    "id": 63421,
+    "question": "Jasmine is Michael Jordan's daughter. Name one of his sons with Juanita.",
+    "answer": "Marcus",
+    "wrong_answers": [
+      "Christopher",
+      "Brandon",
+      "David"
+    ]
+  },
+  {
+    "id": 64569,
+    "question": "Complete George Wallace's famous 1963 statement: 'I draw the line in the dust and toss the gauntlet before the feet of tyranny, and I say....'",
+    "answer": "Segregation now, segregation forever",
+    "wrong_answers": [
+      "Segregation always",
+      "Segregation is our way",
+      "Segregation forever and ever"
+    ]
+  },
+  {
+    "id": 69285,
+    "question": "Complete the title: 'So You Think You Can ___'",
+    "answer": "Dance",
+    "wrong_answers": [
+      "Move",
+      "Groove",
+      "Perform"
+    ]
+  },
+  {
+    "id": 70830,
+    "question": "In Egyptian mythology, Horus fought Set primarily to—",
+    "answer": "Avenge his father",
+    "wrong_answers": [
+      "Gain the throne",
+      "Destroy chaos",
+      "Impress Ra"
+    ]
+  },
+  {
+    "id": 75263,
+    "question": "Name the artist behind 'Total Eclipse of the Heart'.",
+    "answer": "Bonnie Tyler",
+    "wrong_answers": [
+      "Pat Benatar",
+      "Tina Turner",
+      "Anne Murray"
+    ]
+  },
+  {
+    "id": 77576,
+    "question": "The Higgs boson was discovered at CERN by two independent detectors. Name one.",
+    "answer": "ATLAS",
+    "wrong_answers": [
+      "ALEPH",
+      "LHCb",
+      "Belle"
+    ]
+  },
+  {
+    "id": 77668,
+    "question": "Cats must obtain this fat-soluble nutrient from meat as they cannot produce it internally. Name it.",
+    "answer": "Vitamin A",
+    "wrong_answers": [
+      "Vitamin D",
+      "Vitamin C",
+      "Vitamin E"
+    ]
+  },
+  {
+    "id": 77695,
+    "question": "Name the secretive Ministry agency that stores prophecies.",
+    "answer": "Department of Mysteries",
+    "wrong_answers": [
+      "Department of Prophecies",
+      "Department of Secrets",
+      "Department of Classified Information"
+    ]
+  },
+  {
+    "id": 77698,
+    "question": "Name the Ministry office responsible for magical creature control and licensing.",
+    "answer": "Regulation of Magical Creatures",
+    "wrong_answers": [
+      "Department of Beast Control",
+      "Office of Creature Affairs",
+      "Magical Wildlife Department"
+    ]
+  },
+  {
+    "id": 79985,
+    "question": "Anne Bonny's escape from execution was based on a claim of:",
+    "answer": "Pregnancy",
+    "wrong_answers": [
+      "Insanity",
+      "Royal pardon",
+      "Mistaken identity"
+    ]
+  },
+  {
+    "id": 84398,
+    "question": "During fermentation, yeast and bacteria produce this gas that creates pizza dough bubbles.",
+    "answer": "Carbon dioxide",
+    "wrong_answers": [
+      "Nitrogen",
+      "Oxygen",
+      "Helium"
+    ]
+  },
+  {
+    "id": 84668,
+    "question": "Alaska ranks _____ in state population despite being geographically the largest state.",
+    "answer": "48th",
+    "wrong_answers": [
+      "50th",
+      "45th",
+      "42nd"
+    ]
+  },
+  {
+    "id": 84670,
+    "question": "Pennsylvania ranks _____ in state population.",
+    "answer": "Fifth",
+    "wrong_answers": [
+      "Fourth",
+      "Sixth",
+      "Seventh"
+    ]
+  },
+  {
+    "id": 87634,
+    "question": "How many years did Alex Trebek host the syndicated Jeopardy!",
+    "answer": "36",
+    "wrong_answers": [
+      "28",
+      "42",
+      "31"
+    ]
+  },
+  {
+    "id": 90010,
+    "question": "Name the 1994 film in which Captain Kirk meets Captain Picard of the Enterprise-D.",
+    "answer": "Star Trek: Generations",
+    "wrong_answers": [
+      "Star Trek: First Contact",
+      "Star Trek: Insurrection",
+      "Star Trek: Nemesis"
+    ]
+  },
+  {
+    "id": 91653,
+    "question": "In conventional grip, fingers go in up to the:",
+    "answer": "Second knuckle",
+    "wrong_answers": [
+      "First knuckle",
+      "Third knuckle",
+      "Fingertip only"
+    ]
+  },
+  {
+    "id": 93771,
+    "question": "This Tex-Mex breakfast dish of tortilla scraps and eggs stretched rationed ingredients during WWII.",
+    "answer": "Migas",
+    "wrong_answers": [
+      "Chilaquiles",
+      "Huevos rancheros",
+      "Quesadillas"
+    ]
+  },
+  {
+    "id": 93924,
+    "question": "Mako sharks are nicknamed 'the _____ of the sea' because of their speed.",
+    "answer": "Cheetah",
+    "wrong_answers": [
+      "Falcon",
+      "Greyhound",
+      "Gazelle"
+    ]
+  },
+  {
+    "id": 95069,
+    "question": "Mount Shasta Ski Bowl set the single-storm snowfall record at approximately:",
+    "answer": "189 inches",
+    "wrong_answers": [
+      "129 inches",
+      "249 inches",
+      "159 inches"
+    ]
+  },
+  {
+    "id": 95399,
+    "question": "Trebek hosted a show where contestants rolled giant dice for money. Name it.",
+    "answer": "High Rollers",
+    "wrong_answers": [
+      "Card Sharks",
+      "Press Your Luck",
+      "Tic-Tac-Dough"
+    ]
+  },
+  {
+    "id": 95442,
+    "question": "Chipotle tested this cheese dip for years before rolling it out nationwide in 2018.",
+    "answer": "Queso",
+    "wrong_answers": [
+      "Guacamole",
+      "Chorizo",
+      "Sofritas"
+    ]
+  },
+  {
+    "id": 96333,
+    "question": "George H.W. Bush's son became the _____ president of the United States.",
+    "answer": "43rd",
+    "wrong_answers": [
+      "42nd",
+      "44th",
+      "40th"
+    ]
+  },
+  {
+    "id": 96993,
+    "question": "East Coast breaking emphasized rapid footwork compared to West Coast's focus on:",
+    "answer": "Popping",
+    "wrong_answers": [
+      "Locking",
+      "Freezing",
+      "Toprock"
+    ]
+  },
+  {
+    "id": 96996,
+    "question": "The acrobatic move where a breaker spins on their arms is called a:",
+    "answer": "Windmill",
+    "wrong_answers": [
+      "Headspin",
+      "Freeze",
+      "Backspin"
+    ]
+  },
+  {
+    "id": 97205,
+    "question": "In The Abyss director's cut, the main character survives rather than—",
+    "answer": "Humanity being destroyed",
+    "wrong_answers": [
+      "Drowning",
+      "An alien attack",
+      "A nuclear blast"
+    ]
+  },
+  {
+    "id": 97211,
+    "question": "Ridley Scott's director's cut of Alien restores scenes showing—",
+    "answer": "Dallas in an alien cocoon",
+    "wrong_answers": [
+      "The alien's homeworld",
+      "Ripley's backstory",
+      "The Nostromo launching"
+    ]
+  },
+  {
+    "id": 97367,
+    "question": "A side dish that enhances a main course is a ___.",
+    "answer": "Complement",
+    "wrong_answers": [
+      "Compliment",
+      "Component",
+      "Completion"
+    ]
+  },
+  {
+    "id": 97368,
+    "question": "Which sentence uses the correct word? 'The new furniture ___ the room perfectly.'",
+    "answer": "Complements",
+    "wrong_answers": [
+      "Compliments",
+      "Comments",
+      "Comprises"
+    ]
+  },
+  {
+    "id": 97370,
+    "question": "In wine pairing, a bold red wine is a perfect ___ to grilled steak.",
+    "answer": "Complement",
+    "wrong_answers": [
+      "Compliment",
+      "Composition",
+      "Complication"
+    ]
+  },
+  {
+    "id": 97372,
+    "question": "If your boss compliments your work, they're ___.",
+    "answer": "Praising you",
+    "wrong_answers": [
+      "Complementing you",
+      "Comparing you",
+      "Criticizing you"
+    ]
+  },
+  {
+    "id": 98001,
+    "question": "Severe hypotension caused by widespread infection is called:",
+    "answer": "Septic shock",
+    "wrong_answers": [
+      "Cardiogenic shock",
+      "Hypovolemic shock",
+      "Anaphylactic shock"
+    ]
+  },
+  {
+    "id": 98724,
+    "question": "James and Oliver Phelps, who played Fred and George Weasley, were actually:",
+    "answer": "Real-life twins",
+    "wrong_answers": [
+      "Cousins",
+      "One actor with effects",
+      "Unrelated actors"
+    ]
+  },
+  {
+    "id": 98942,
+    "question": "Miley Cyrus and Dua Lipa's 2020 duet was titled:",
+    "answer": "Prisoner",
+    "wrong_answers": [
+      "Midnight Sky",
+      "Angels Like You",
+      "Malibu"
+    ]
+  },
+  {
+    "id": 99097,
+    "question": "Name the grocery delivery service available exclusively to Prime loyalty members.",
+    "answer": "Amazon Fresh",
+    "wrong_answers": [
+      "Prime Pantry",
+      "Amazon Grocery",
+      "Fresh Prime"
+    ]
+  },
+  {
+    "id": 99648,
+    "question": "Name Ares' two sons who personify fear and panic.",
+    "answer": "Phobos and Deimos",
+    "wrong_answers": [
+      "Thanatos and Hypnos",
+      "Eris and Nemesis",
+      "Kratos and Nike"
+    ]
+  },
+  {
+    "id": 99896,
+    "question": "Whose iconic catchphrase is \"How you doin'?\"",
+    "answer": "Joey",
+    "wrong_answers": [
+      "Chandler",
+      "Phoebe",
+      "Rachel"
+    ]
+  },
+  {
+    "id": 100086,
+    "question": "Name the resolution commonly referred to as '4K'.",
+    "answer": "3840x2160",
+    "wrong_answers": [
+      "2560x1440",
+      "1920x1080",
+      "3200x1800"
+    ]
+  },
+  {
+    "id": 100892,
+    "question": "Complete Einstein's famous quote about God and probability.",
+    "answer": "Play dice",
+    "wrong_answers": [
+      "Sleep",
+      "Gamble",
+      "Choose"
+    ]
+  },
+  {
+    "id": 100917,
+    "question": "Stewardesses at major airlines in the 1950s-60s were required to be:",
+    "answer": "Unmarried",
+    "wrong_answers": [
+      "Natural blonde",
+      "Over 30 years old",
+      "Fluent in French"
+    ]
+  },
+  {
+    "id": 103419,
+    "question": "What red carpet host coined the question 'Who are you wearing?'",
+    "answer": "Joan Rivers",
+    "wrong_answers": [
+      "Ryan Seacrest",
+      "Giuliana Rancic",
+      "Barbara Walters"
+    ]
+  },
+  {
+    "id": 103437,
+    "question": "Which rocker famously bit the head off a dove? (Not at VMAs — but who did similar shock acts?)",
+    "answer": "Ozzy Osbourne",
+    "wrong_answers": [
+      "Alice Cooper",
+      "Marilyn Manson",
+      "Gene Simmons"
+    ]
+  },
+  {
+    "id": 104108,
+    "question": "This Vegas venue opened in 2023 and has become renowned for its innovative LED display technology and immersive entertainment experiences.",
+    "answer": "Sphere",
+    "wrong_answers": [
+      "The Dome",
+      "Orb Arena",
+      "Globe Theater"
+    ]
+  },
+  {
+    "id": 104196,
+    "question": "This Zelda glitch technique allows players to bypass collision detection and access unintended areas.",
+    "answer": "Ledge Clip",
+    "wrong_answers": [
+      "Wall Grab",
+      "Z-Target Boost",
+      "Crouch Stab"
+    ]
+  },
+  {
+    "id": 104426,
+    "question": "A former MTV VJ hosted this hidden-camera comedy program that premiered on MTV in 2000. Name it.",
+    "answer": "The Man Show",
+    "wrong_answers": [
+      "Crank Yankers",
+      "Trigger Happy TV",
+      "Punk'd"
+    ]
+  },
+  {
+    "id": 104469,
+    "question": "Name the Beatles cartoon film with the band fighting Blue Meanies.",
+    "answer": "Yellow Submarine",
+    "wrong_answers": [
+      "Magical Mystery Tour",
+      "Help!",
+      "Let It Be"
+    ]
+  },
+  {
+    "id": 105861,
+    "question": "Glamping packages often include this climate control that tent campers go without.",
+    "answer": "Air conditioning",
+    "wrong_answers": [
+      "Humidifier",
+      "Space heater",
+      "Ceiling fan"
+    ]
+  },
+  {
+    "id": 107636,
+    "question": "This Nordic language shares its name with the volcanic island where it's the official language.",
+    "answer": "Icelandic",
+    "wrong_answers": [
+      "Danish",
+      "Norwegian",
+      "Faroese"
+    ]
+  },
+  {
+    "id": 113125,
+    "question": "Tyrion says, \"I drink and I _____.\" Fill in the blank.",
+    "answer": "know things",
+    "wrong_answers": [
+      "read books",
+      "speak truth",
+      "forget nothing"
+    ]
+  },
+  {
+    "id": 113658,
+    "question": "Which Richard Kelly cult film features the quote 'Why are you wearing that stupid man suit?'",
+    "answer": "Donnie Darko",
+    "wrong_answers": [
+      "The Butterfly Effect",
+      "Mulholland Drive",
+      "Eternal Sunshine"
+    ]
+  },
+  {
+    "id": 115395,
+    "question": "Name the parental-themed chunky sneaker trend of the late 2010s.",
+    "answer": "Dad shoes",
+    "wrong_answers": [
+      "Dunk shoes",
+      "Skate shoes",
+      "Court shoes"
+    ]
+  },
+  {
+    "id": 119838,
+    "question": "Cher's Oscar-winning character falls for her fiancé's:",
+    "answer": "Brother",
+    "wrong_answers": [
+      "Cousin",
+      "Best friend",
+      "Business partner"
+    ]
+  },
+  {
+    "id": 119937,
+    "question": "Name the 2003 horror crossover film that united two iconic slasher villains",
+    "answer": "Freddy vs. Jason",
+    "wrong_answers": [
+      "Freddy vs. Michael",
+      "Freddy vs. Chucky",
+      "Freddy vs. Pinhead"
+    ]
+  },
+  {
+    "id": 122286,
+    "question": "Tourists often think this New England state is tiny, but it's the largest in the region.",
+    "answer": "Maine",
+    "wrong_answers": [
+      "Vermont",
+      "New Hampshire",
+      "Massachusetts"
+    ]
+  },
+  {
+    "id": 123494,
+    "question": "In classic ads, which M&M panics and screams 'They can talk?!'",
+    "answer": "Red",
+    "wrong_answers": [
+      "Yellow",
+      "Green",
+      "Blue"
+    ]
+  },
+  {
+    "id": 123900,
+    "question": "Which SNL alum starred in the fried-chicken-fueled comedy 'Are We There Yet?'",
+    "answer": "Ice Cube",
+    "wrong_answers": [
+      "Chris Tucker",
+      "Eddie Murphy",
+      "Martin Lawrence"
+    ]
+  },
+  {
+    "id": 128147,
+    "question": "Which superstar broke Stockton's single-season assists record? (He didn't — who holds it?)",
+    "answer": "Magic Johnson",
+    "wrong_answers": [
+      "Isiah Thomas",
+      "Steve Nash",
+      "Jason Kidd"
+    ]
+  },
+  {
+    "id": 129547,
+    "question": "People often think this state touches the Atlantic, but it's actually landlocked in New England.",
+    "answer": "Vermont",
+    "wrong_answers": [
+      "New Hampshire",
+      "Massachusetts",
+      "Connecticut"
+    ]
+  },
+  {
+    "id": 130946,
+    "question": "What Italian gesture with pinched fingers means 'what do you want?'",
+    "answer": "Mano a borsa",
+    "wrong_answers": [
+      "Ciao bella",
+      "Mamma mia",
+      "Forza Italia"
+    ]
+  },
+  {
+    "id": 138117,
+    "question": "What 2019 Lizzo hit samples the hook 'Why men great til they gotta be great?'",
+    "answer": "Truth Hurts",
+    "wrong_answers": [
+      "Juice",
+      "Good as Hell",
+      "Tempo"
+    ]
+  },
+  {
+    "id": 142937,
+    "question": "Two hostages are revealed to be held at opposite locations during the interrogation — name one.",
+    "answer": "Harvey Dent",
+    "wrong_answers": [
+      "Lucius Fox",
+      "Mayor Garcia",
+      "Commissioner Loeb"
+    ]
+  },
+  {
+    "id": 148812,
+    "question": "Complete the misquoted Star Wars line: 'Luke, I am ___.'",
+    "answer": "Your father",
+    "wrong_answers": [
+      "Your uncle",
+      "Your brother",
+      "Your master"
+    ]
+  },
+  {
+    "id": 148817,
+    "question": "Misquoted Scarface villain line: 'Say hello to my ___.'",
+    "answer": "Little friend",
+    "wrong_answers": [
+      "Big friend",
+      "Best friend",
+      "Old friend"
+    ]
+  },
+  {
+    "id": 148818,
+    "question": "Misquoted Die Hard villain line: 'Now I have a machine gun. ___.'",
+    "answer": "Ho ho ho",
+    "wrong_answers": [
+      "Merry Christmas",
+      "Bah humbug",
+      "Yippee ki yay"
+    ]
+  },
+  {
+    "id": 149696,
+    "question": "The deeper you measure a jagged coastline, the ___ it gets.",
+    "answer": "Longer",
+    "wrong_answers": [
+      "Shorter",
+      "Straighter",
+      "Smoother"
+    ]
+  },
+  {
+    "id": 150453,
+    "question": "What Tribe Called Quest album features the single 'Can I Kick It?'",
+    "answer": "People's Instinctive Travels and the Paths of Rhythm",
+    "wrong_answers": [
+      "The Low End Theory",
+      "Midnight Marauders",
+      "Beats, Rhymes and Life"
+    ]
+  },
+  {
+    "id": 150962,
+    "question": "Which Real Housewife shouted \"Who gonna check me, boo?\"",
+    "answer": "Sheree Whitfield",
+    "wrong_answers": [
+      "NeNe Leakes",
+      "Kim Zolciak",
+      "Kandi Burruss"
+    ]
+  },
+  {
+    "id": 154557,
+    "question": "This scenic Maui coastal drive is famed for its numerous waterfalls, lush bamboo forests, and the local banana bread stands visitors encounter along the winding route.",
+    "answer": "Road to Hana",
+    "wrong_answers": [
+      "Pali Highway",
+      "Saddle Road",
+      "Crater Rim Drive"
+    ]
+  },
+  {
+    "id": 160436,
+    "question": "Name the UK consumer organization famous for investigating fake reviews on Amazon.",
+    "answer": "Which?",
+    "wrong_answers": [
+      "Consumer Reports",
+      "Trustpilot",
+      "Ofcom"
+    ]
+  },
+  {
+    "id": 166499,
+    "question": "What rocker rambled incoherently on Letterman in 2006, prompting Dave to ask 'Are you drunk?'",
+    "answer": "Paula Abdul",
+    "wrong_answers": [
+      "Courtney Love",
+      "Tara Reid",
+      "Anna Nicole Smith"
+    ]
+  },
+  {
+    "id": 168128,
+    "question": "Who directed the Harry Potter film where Dumbledore aggressively shakes Harry demanding 'Did you put your name in the Goblet of Fire?'",
+    "answer": "Mike Newell",
+    "wrong_answers": [
+      "David Yates",
+      "Alfonso Cuarón",
+      "Chris Columbus"
+    ]
+  },
+  {
+    "id": 170665,
+    "question": "Which comedian co-hosts the racial justice podcast 'Yo, Is This Racist?'",
+    "answer": "Andrew Ti",
+    "wrong_answers": [
+      "Hari Kondabolu",
+      "Wyatt Cenac",
+      "Hasan Minhaj"
+    ]
+  },
+  {
+    "id": 171361,
+    "question": "Which low-cost carrier's tagline is \"Wanna Get Away?\"",
+    "answer": "Southwest Airlines",
+    "wrong_answers": [
+      "JetBlue",
+      "Spirit Airlines",
+      "Frontier Airlines"
+    ]
+  },
+  {
+    "id": 172531,
+    "question": "Who released the 2003 pro-troops country hit 'Have You Forgotten?'",
+    "answer": "Darryl Worley",
+    "wrong_answers": [
+      "Alan Jackson",
+      "Trace Adkins",
+      "Aaron Tippin"
+    ]
+  },
+  {
+    "id": 172992,
+    "question": "What rapper hosts the podcast 'It's Tricky with Raquel Harper'? (Hint: he co-founded Run-DMC)",
+    "answer": "Rev Run",
+    "wrong_answers": [
+      "LL Cool J",
+      "Chuck D",
+      "Ice-T"
+    ]
+  },
+  {
+    "id": 172995,
+    "question": "What singer hosts 'Apple Music 1' interview show 'The Ebro Show' replacement 'Apple Music Hits Radio'? Hosts 'Time Crisis'",
+    "answer": "Ezra Koenig",
+    "wrong_answers": [
+      "Father John Misty",
+      "Mac DeMarco",
+      "Win Butler"
+    ]
+  },
+  {
+    "id": 172997,
+    "question": "What pop star launched the podcast 'On Purpose' guest spot that went viral discussing her mental health? Hosts 'Cherry On Top'",
+    "answer": "Sabrina Carpenter",
+    "wrong_answers": [
+      "Olivia Rodrigo",
+      "Gracie Abrams",
+      "Tate McRae"
+    ]
+  },
+  {
+    "id": 173085,
+    "question": "Which bear species eats almost nothing but eucalyptus leaves? (Trick: it's not a bear)",
+    "answer": "Koala",
+    "wrong_answers": [
+      "Sloth",
+      "Sun bear",
+      "Wombat"
+    ]
+  },
+  {
+    "id": 174294,
+    "question": "What does Venkman quip after slimed Ray asks how he is? 'Ugly little ___'",
+    "answer": "Spud",
+    "wrong_answers": [
+      "Bug",
+      "Creep",
+      "Ghoul"
+    ]
+  },
+  {
+    "id": 175467,
+    "question": "'The Lord is my shepherd, I shall not ___' — fill in the blank.",
+    "answer": "Want",
+    "wrong_answers": [
+      "Fear",
+      "Falter",
+      "Fall"
+    ]
+  },
+  {
+    "id": 175471,
+    "question": "'Yea, though I walk through the valley of the shadow of ___' — fill in the blank.",
+    "answer": "Death",
+    "wrong_answers": [
+      "Darkness",
+      "Doubt",
+      "Despair"
+    ]
+  },
+  {
+    "id": 177430,
+    "question": "In this puzzle, you locate hidden answers running horizontally, vertically, and diagonally across a grid.",
+    "answer": "Word search",
+    "wrong_answers": [
+      "Cryptic crossword",
+      "Boggle",
+      "Scrabble grid"
+    ]
+  },
+  {
+    "id": 178551,
+    "question": "Cleopatra reportedly dissolved one of these in vinegar to win a bet with Antony.",
+    "answer": "Pearl",
+    "wrong_answers": [
+      "Ruby",
+      "Gold coin",
+      "Emerald"
+    ]
+  },
+  {
+    "id": 183656,
+    "question": "What Klingon greeting roughly translates to 'What do you want?'",
+    "answer": "nuqneH",
+    "wrong_answers": [
+      "Qapla'",
+      "Heghlu'meH",
+      "tlhIngan"
+    ]
+  },
+  {
+    "id": 183864,
+    "question": "This major QSR brand's average transaction value jumped roughly 21% from 2019-2023, sparking backlash. Name it.",
+    "answer": "Chick-fil-A",
+    "wrong_answers": [
+      "Popeyes",
+      "KFC",
+      "Raising Cane's"
+    ]
+  },
+  {
+    "id": 184257,
+    "question": "What soul legend duetted with the duo on the 1987 single 'What Have I Done to Deserve This?'",
+    "answer": "Dusty Springfield",
+    "wrong_answers": [
+      "Aretha Franklin",
+      "Gladys Knight",
+      "Tina Turner"
+    ]
+  },
+  {
+    "id": 184805,
+    "question": "Who shouted the iconic pre-battle line 'What do we say to the God of Death?'",
+    "answer": "Melisandre",
+    "wrong_answers": [
+      "Davos Seaworth",
+      "Beric Dondarrion",
+      "Syrio Forel"
+    ]
+  },
+  {
+    "id": 186636,
+    "question": "In Game of Thrones, what is the Braavosi reply to 'What do we say to the god of death?'",
+    "answer": "Not today",
+    "wrong_answers": [
+      "Not tonight",
+      "Never",
+      "Begone"
+    ]
+  },
+  {
+    "id": 186641,
+    "question": "What was the profession of the man who first told Arya 'What do we say to the god of death?'",
+    "answer": "Sword instructor",
+    "wrong_answers": [
+      "Maester",
+      "Faceless Man",
+      "Sellsword"
+    ]
+  },
+  {
+    "id": 190260,
+    "question": "Cakes made with oil tend to be more ___ than cakes made with butter.",
+    "answer": "Moist",
+    "wrong_answers": [
+      "Crumbly",
+      "Flaky",
+      "Crispy"
+    ]
+  },
+  {
+    "id": 191747,
+    "question": "What Australian band scored a US #1 in 1982 with 'Who Can It Be Now?'",
+    "answer": "Men at Work",
+    "wrong_answers": [
+      "INXS",
+      "Midnight Oil",
+      "Air Supply"
+    ]
+  },
+  {
+    "id": 193132,
+    "question": "What short-seller publicly questioned Enron with the phrase 'How do they make money?'",
+    "answer": "Jim Chanos",
+    "wrong_answers": [
+      "David Einhorn",
+      "Bill Ackman",
+      "Carson Block"
+    ]
+  },
+  {
+    "id": 193133,
+    "question": "What Fortune reporter wrote the March 2001 article 'Is Enron Overpriced?'",
+    "answer": "Bethany McLean",
+    "wrong_answers": [
+      "Gretchen Morgenson",
+      "Roger Lowenstein",
+      "Carol Loomis"
+    ]
+  },
+  {
+    "id": 194584,
+    "question": "Whose square patties inspired Dave Thomas to mock McDonald's with the slogan 'Where's the beef?'",
+    "answer": "Wendy's",
+    "wrong_answers": [
+      "Burger King",
+      "White Castle",
+      "Steak 'n Shake"
+    ]
+  },
+  {
+    "id": 195651,
+    "question": "What Cars debut single asks 'Is it the way you say goodbye?'",
+    "answer": "Just What I Needed",
+    "wrong_answers": [
+      "My Best Friend's Girl",
+      "Good Times Roll",
+      "Let's Go"
+    ]
+  },
+  {
+    "id": 197531,
+    "question": "At the 1954 Army-McCarthy hearings, who asked Senator McCarthy 'Have you no sense of decency, sir?'",
+    "answer": "Joseph Welch",
+    "wrong_answers": [
+      "Edward R. Murrow",
+      "Robert Kennedy",
+      "Roy Cohn"
+    ]
+  },
+  {
+    "id": 198355,
+    "question": "What Pixies album features the track 'Where Is My Mind?'",
+    "answer": "Surfer Rosa",
+    "wrong_answers": [
+      "Doolittle",
+      "Bossanova",
+      "Trompe le Monde"
+    ]
+  }
+]

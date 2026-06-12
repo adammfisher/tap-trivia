@@ -1,0 +1,43 @@
+[
+  {
+    "id": 110011,
+    "action": "replace",
+    "wrong_answers": ["Moira MacTaggert", "William Stryker", "Sebastian Shaw"],
+    "note": "Replaced duplicate 'Bolivar Trask' with 'William Stryker', another X-Men antagonist who is not the leader of the Human High Council; clearly wrong and not a synonym for Trask."
+  },
+  {
+    "id": 113303,
+    "action": "replace",
+    "wrong_answers": ["Boris Diaw", "Manu Ginobili", "Pau Gasol"],
+    "note": "Replaced duplicate 'Tony Parker' with 'Boris Diaw', another European who played under Popovich on the Spurs but was never a Finals MVP; clearly incorrect."
+  },
+  {
+    "id": 131767,
+    "action": "drop",
+    "note": "Question is corrupt: answer and all wrong_answers are 'BLANK', so the real correct answer (Elaine's Today Sponge/Mackinaw peaches storyline aside, this entry has no usable content) cannot be determined. Unsalvageable."
+  },
+  {
+    "id": 175054,
+    "action": "replace",
+    "wrong_answers": ["ASI", "LLM", "ANI"],
+    "note": "Replaced duplicate 'AGI' with 'ANI' (Artificial Narrow Intelligence), a real three-letter AI acronym describing task-specific (non-human-level) AI; clearly wrong and not a synonym for AGI."
+  },
+  {
+    "id": 177597,
+    "action": "replace",
+    "wrong_answers": ["Painkiller", "Dead to Me", "Bodies"],
+    "note": "Replaced 'BEEF' (case variant of the answer 'Beef') with 'Bodies', another 2023 Netflix drama series; clearly incorrect and not the same show as Beef."
+  },
+  {
+    "id": 179989,
+    "action": "replace",
+    "wrong_answers": ["House Mormont", "House Karstark", "House Umber"],
+    "note": "Replaced duplicate 'House Bolton' with 'House Mormont', another Northern family from Game of Thrones that Stannis did not defeat at the Wall; clearly wrong."
+  },
+  {
+    "id": 188208,
+    "action": "replace",
+    "wrong_answers": ["Marshmello", "Daft Punk", "Skrillex"],
+    "note": "Replaced duplicate 'Deadmau5' with 'Skrillex', another major EDM producer not associated with the 2014 Mothership tour or the mau5head helmet; clearly incorrect."
+  }
+]
