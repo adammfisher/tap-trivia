@@ -3991,9 +3991,13 @@ body {
 }
 
 /* Screen 2 left — venue ad (signage panel slide or welcome card) */
+.tt-2s__half--ad { padding: 0; }
 .tt-2s__half .tt-signage-panel.tt-2s__ad {
-  margin: 56px 0;
-  border-radius: 24px;
+  /* full-bleed: the ad owns its entire half, edge to edge */
+  margin: 0;
+  border-radius: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 .tt-2s__welcome { text-align: center; }

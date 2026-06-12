@@ -2128,7 +2128,7 @@
           <div class="tt-2s__half">${standingsHTML}</div>
         </div>
         <div class="tt-2s__screen tt-2s__screen--2">
-          <div class="tt-2s__half tt-2s__half--divider">${venueAdHTML}</div>
+          <div class="tt-2s__half tt-2s__half--divider${slideRenderer ? ' tt-2s__half--ad' : ''}">${venueAdHTML}</div>
           <div class="tt-2s__half">${qrHTML}</div>
         </div>
       </div>`;
