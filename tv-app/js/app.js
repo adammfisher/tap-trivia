@@ -280,7 +280,7 @@
         }
       }
     }
-    const smClass = size <= 150 ? ' tt-qr--sm' : '';
+    const smClass = size <= 180 ? ' tt-qr--sm' : '';
     return `<div class="tt-qr${smClass} ${cssClass}"><svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" fill="#1e0f4a">${rects}</svg></div>`;
   }
 
