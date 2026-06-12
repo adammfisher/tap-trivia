@@ -6,6 +6,7 @@ function renderDashboard() {
 
   const { bar, data } = getAuthState();
   const barName = bar ? bar.barName : 'Your Location';
+  const housePlayersOn = !bar || bar.housePlayersEnabled !== false;
   const signage = bar && bar.signage ? bar.signage : { slides: [], enabled: false };
   const slideCount = signage.slides ? signage.slides.filter(s => s.enabled).length : 0;
   const analytics = data && data.analytics ? data.analytics : {};
@@ -107,8 +108,43 @@ function renderDashboard() {
           </div>
         </div>
       </div>
+
+      <div class="dash-card settings-card">
+        <div class="card-title">Venue Settings</div>
+        <div class="settings-row">
+          <div class="settings-row-text">
+            <div class="settings-row-title">Fill empty leaderboards with house players</div>
+            <div class="settings-row-desc">Adds up to 3 house players when fewer than 3 real players are in a game. They're removed one-for-one as real players join, and a real player always ranks #1. House players never appear in cross-venue standings.</div>
+          </div>
+          <div class="toggle-wrap" id="toggle-house-players">
+            <div class="toggle-switch ${housePlayersOn ? 'on' : ''}">
+              <div class="toggle-knob"></div>
+            </div>
+            <span class="toggle-label">${housePlayersOn ? 'ON' : 'OFF'}</span>
+          </div>
+        </div>
+      </div>
     </div>
   `;
+
+  document.getElementById('toggle-house-players').addEventListener('click', async (e) => {
+    const wrap = e.currentTarget;
+    const sw = wrap.querySelector('.toggle-switch');
+    const label = wrap.querySelector('.toggle-label');
+    const next = !sw.classList.contains('on');
+
+    // Optimistic flip, revert on failure
+    sw.classList.toggle('on', next);
+    label.textContent = next ? 'ON' : 'OFF';
+    try {
+      await apiCall('PUT', '/dashboard/settings', { housePlayersEnabled: next });
+      if (bar) bar.housePlayersEnabled = next;
+    } catch (err) {
+      sw.classList.toggle('on', !next);
+      label.textContent = !next ? 'ON' : 'OFF';
+      console.error('Failed to save settings:', err);
+    }
+  });
 
   document.getElementById('btn-go-signage').addEventListener('click', () => DashApp.showScreen('signage'));
   document.getElementById('qa-signage').addEventListener('click', () => DashApp.showScreen('signage'));

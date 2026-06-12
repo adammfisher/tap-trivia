@@ -1,8 +1,9 @@
 'use strict';
 
 const { TABLE, get, query } = require('./shared/dynamo');
-const { GAME_DURATION_MS } = require('./shared/game-clock');
+const { GAME_DURATION_MS, getGameState } = require('./shared/game-clock');
 const { deduplicateNames } = require('./shared/name-suffixes');
+const { injectHousePlayers, housePlayersEnabled } = require('./shared/house-players');
 
 function response(statusCode, body) {
   return {
@@ -90,13 +91,45 @@ exports.handler = async (event) => {
       const dedupMap = deduplicateNames(leaderboard.map(e => ({ playerId: e.playerId, playerName: e.playerName })));
       for (const e of leaderboard) e.playerName = dedupMap.get(e.playerId) || e.playerName;
 
-      // Get bar info for barName
+      // Get bar info for barName + house-players toggle
       const bar = await get(TABLE.BARS, { PK: `BAR#${barCode}` });
       const barName = bar?.barName || barCode;
 
-      // Find the requesting player's entry
+      // House accrual index from the shared game clock (same freeze rule as
+      // the TV: a question's scores land on the board at reveal). Falls back
+      // to the highest answered question if the game record can't be found.
+      let completedQuestions = 0;
+      try {
+        const games = await query(TABLE.GAMES, {
+          IndexName: 'gameId-index',
+          KeyConditionExpression: 'gameId = :gid',
+          ExpressionAttributeValues: { ':gid': gameId }
+        });
+        if (games && games.length > 0) {
+          const gs = getGameState(games[0].startTimeEpoch, Date.now());
+          if (gs.gamePhase === 'post_game') {
+            completedQuestions = 15;
+          } else if (gs.gamePhase === 'active') {
+            const revealed = gs.questionPhase === 'reveal' || gs.questionPhase === 'scores';
+            completedQuestions = revealed ? gs.questionNumber : gs.questionNumber - 1;
+          }
+        } else {
+          completedQuestions = answers.reduce((m, a) => Math.max(m, a.questionNumber || 0), 0);
+        }
+      } catch (e) {
+        completedQuestions = answers.reduce((m, a) => Math.max(m, a.questionNumber || 0), 0);
+      }
+
+      const board = injectHousePlayers(leaderboard, {
+        enabled: housePlayersEnabled(bar),
+        gameId,
+        barCode,
+        completedQuestions
+      });
+
+      // Find the requesting player's entry (house entries have no playerId)
       const playerEntry = playerId
-        ? leaderboard.find(e => e.playerId === playerId)
+        ? board.find(e => e.playerId === playerId)
         : null;
 
       // Count distinct questions answered across all players
@@ -109,10 +142,11 @@ exports.handler = async (event) => {
         type: 'bar',
         barCode,
         barName,
-        leaders: leaderboard.slice(0, 20).map(e => ({
+        leaders: board.slice(0, 20).map(e => ({
           rank: e.rank,
           playerName: e.playerName,
-          score: e.score
+          score: e.score,
+          ...(e.isHouse ? { isHouse: true } : {})
         })),
         you: playerEntry ? {
           rank: playerEntry.rank,
@@ -120,7 +154,7 @@ exports.handler = async (event) => {
           playerName: playerEntry.playerName,
           score: playerEntry.score
         } : null,
-        totalPlayers: leaderboard.length,
+        totalPlayers: board.length,
         questionsCompleted: allQuestionNumbers.size
       });
     }

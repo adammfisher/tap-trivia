@@ -3,6 +3,7 @@
 const { TABLE, get, query, scan } = require('./shared/dynamo');
 const { getNextGameTime, gameTimeslotPK, GAME_DURATION_MS, RESULTS_DURATION_MS } = require('./shared/game-clock');
 const { deduplicateNames } = require('./shared/name-suffixes');
+const { injectHousePlayers, housePlayersEnabled } = require('./shared/house-players');
 
 function response(statusCode, body) {
   return {
@@ -42,7 +43,7 @@ const STATE_NAMES = {
 /**
  * Build podium data — top 10 players from the completed game at this bar.
  */
-async function buildPodium(gameId, barCode) {
+async function buildPodium(gameId, barCode, bar) {
   try {
     // Query all answers for this game at this bar via game-bar-index
     const answers = await query(TABLE.ANSWERS, {
@@ -51,13 +52,9 @@ async function buildPodium(gameId, barCode) {
       ExpressionAttributeValues: { ':gbc': `${gameId}#${barCode}` }
     });
 
-    if (!answers || answers.length === 0) {
-      return { players: [], questionCount: 15, playerCount: 0 };
-    }
-
     // Aggregate scores by player
     const playerScores = new Map();
-    for (const a of answers) {
+    for (const a of (answers || [])) {
       const pid = a.playerId;
       if (!playerScores.has(pid)) {
         playerScores.set(pid, { playerId: pid, name: a.playerName || 'Anonymous', score: 0, questionsAnswered: 0 });
@@ -70,16 +67,25 @@ async function buildPodium(gameId, barCode) {
     // Sort by score descending
     const sorted = [...playerScores.values()].sort((a, b) => b.score - a.score);
     const dedupMap = deduplicateNames(sorted.map(p => ({ playerId: p.playerId, playerName: p.name })));
-    const top10 = sorted.slice(0, 10).map((p, i) => ({
-      name: dedupMap.get(p.playerId) || p.name,
+
+    // House players appear here too (completed game → all 15 questions) so
+    // the post-game podium matches the board patrons watched all game.
+    const board = injectHousePlayers(
+      sorted.map(p => ({ playerName: dedupMap.get(p.playerId) || p.name, score: p.score })),
+      { enabled: housePlayersEnabled(bar), gameId, barCode, completedQuestions: 15 }
+    );
+
+    const top10 = board.slice(0, 10).map((p, i) => ({
+      name: p.playerName,
       score: p.score,
-      rank: i + 1
+      rank: p.rank != null ? p.rank : i + 1,
+      ...(p.isHouse ? { isHouse: true } : {})
     }));
 
     return {
       players: top10,
       questionCount: 15,
-      playerCount: playerScores.size
+      playerCount: board.length
     };
   } catch (err) {
     console.error('buildPodium error:', err.message);
@@ -314,9 +320,12 @@ exports.handler = async (event) => {
 
     const nowEpoch = Date.now();
 
+    // Bar record drives the house-players toggle for the podium
+    const bar = await get(TABLE.BARS, { PK: `BAR#${barCode}` });
+
     // Fetch all 4 phases in parallel
     const [podium, barStandings, national, hype] = await Promise.all([
-      buildPodium(gameId, barCode),
+      buildPodium(gameId, barCode, bar),
       buildBarStandings(barCode),
       buildNational(barCode),
       buildHype(nowEpoch)

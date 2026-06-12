@@ -521,6 +521,12 @@ data "archive_file" "save_signage" {
   output_path = "${path.module}/zip/save-signage.zip"
 }
 
+data "archive_file" "save_settings" {
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/functions/save-settings"
+  output_path = "${path.module}/zip/save-settings.zip"
+}
+
 data "archive_file" "upload_logo" {
   type        = "zip"
   source_dir  = "${path.module}/../backend/functions/upload-logo"
@@ -633,6 +639,32 @@ resource "aws_lambda_function" "save_signage" {
 }
 
 # -----------------------------------------------------------------------------
+# 15b. save-settings
+#     Saves per-venue settings flags (e.g. housePlayersEnabled) on the bar record.
+#     DynamoDB: Read/Write Bars, Read Sessions
+# -----------------------------------------------------------------------------
+resource "aws_lambda_function" "save_settings" {
+  function_name    = "${local.name_prefix}-save-settings"
+  role             = aws_iam_role.lambda_execution.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  memory_size      = 128
+  timeout          = 10
+  filename         = data.archive_file.save_settings.output_path
+  source_code_hash = data.archive_file.save_settings.output_base64sha256
+
+  environment {
+    variables = local.common_environment_variables
+  }
+
+  tags = {
+    Environment = local.stage
+    Project     = "TapTrivia"
+    Function    = "save-settings"
+  }
+}
+
+# -----------------------------------------------------------------------------
 # 16. upload-logo
 #     Processes and uploads bar logo with background removal via Bedrock.
 #     DynamoDB: Read/Write Bars, Read Sessions
@@ -693,6 +725,14 @@ resource "aws_lambda_permission" "save_signage_apigw" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.save_signage.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "save_settings_apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.save_settings.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }

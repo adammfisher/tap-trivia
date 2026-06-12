@@ -3860,3 +3860,186 @@ body {
   font-weight: 600;
   color: rgba(255,255,255,.5);
 }
+
+/* =============================================================================
+   TWO-SCREEN SCORES ROTATION (docs/taptrivia-2screen.jsx)
+   Screen 1 (0:37–0:43): Did You Know | Standings
+   Screen 2 (0:43–0:52): Venue Ad     | Play TapTrivia QR
+   ============================================================================= */
+.tt-2s { position: relative; width: 100%; height: 100%; }
+.tt-2s__screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .5s ease;
+}
+.tt-2s .tt-2s__screen--1 { opacity: 1; }
+.tt-2s.tt-2s--s2 .tt-2s__screen--1 { opacity: 0; }
+.tt-2s.tt-2s--s2 .tt-2s__screen--2 { opacity: 1; }
+
+.tt-2s__half {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 5%;
+}
+.tt-2s__half--divider { border-right: 1px solid rgba(255,255,255,.08); }
+
+.tt-2s__label {
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  letter-spacing: 8px;
+  text-align: center;
+}
+.tt-2s__label--gold { color: #ffd200; margin-bottom: 32px; }
+.tt-2s__label--green { color: #00d4aa; letter-spacing: 6px; margin-bottom: 26px; }
+.tt-2s__label--dim {
+  color: rgba(255,255,255,.4);
+  font-size: 18px;
+  letter-spacing: 5px;
+  margin-top: 8px;
+}
+
+/* Screen 1 left — Did You Know */
+.tt-2s__fact { text-align: center; }
+.tt-2s__fact-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: 42px;
+  font-weight: 600;
+  color: #f5f5f5;
+  line-height: 1.4;
+}
+.tt-2s__brand-logo { margin-bottom: 18px; }
+.tt-2s__brand-sub { font-size: 30px; color: rgba(255,255,255,.5); }
+
+/* Screen 1 right — Standings */
+.tt-2s__standings { display: flex; flex-direction: column; }
+.tt-2s__standings-head { text-align: center; margin-bottom: 24px; }
+.tt-2s__rows { display: flex; flex-direction: column; gap: 12px; }
+.tt-2s__row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 18px;
+  padding: 13px 23px;
+}
+.tt-2s__row--first {
+  background: rgba(255,255,255,.1);
+  border-color: rgba(255,210,0,.33);
+}
+.tt-2s__row-rank {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 25px;
+  font-weight: 700;
+  color: rgba(255,255,255,.3);
+  width: 28px;
+  flex-shrink: 0;
+}
+.tt-2s__row-rank--top { color: #ffd200; }
+.tt-2s__row-name {
+  flex: 1;
+  font-size: 25px;
+  font-weight: 500;
+  color: rgba(255,255,255,.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tt-2s__row--first .tt-2s__row-name { font-weight: 700; color: #f5f5f5; }
+.tt-2s__row-score {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 25px;
+  font-weight: 700;
+  color: #ffd200;
+}
+.tt-2s__empty {
+  text-align: center;
+  font-size: 28px;
+  color: rgba(255,255,255,.4);
+  padding: 40px 0;
+}
+
+/* Screen 2 left — venue ad (signage panel slide or welcome card) */
+.tt-2s__half .tt-signage-panel.tt-2s__ad {
+  margin: 56px 0;
+  border-radius: 24px;
+  overflow: hidden;
+}
+.tt-2s__welcome { text-align: center; }
+.tt-2s__welcome-name {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 64px;
+  font-weight: 700;
+  color: #f5f5f5;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+.tt-2s__welcome-sub { font-size: 26px; color: rgba(255,255,255,.5); }
+
+/* Screen 2 right — Play TapTrivia QR card */
+.tt-2s__play {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.tt-2s__play-emoji {
+  font-size: 72px;
+  margin-bottom: 12px;
+  animation: breathe 4s ease-in-out infinite;
+}
+.tt-2s__play-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 55px;
+  font-weight: 700;
+  color: #f5f5f5;
+  margin-bottom: 8px;
+}
+.tt-2s__play-offer {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: #00d4aa;
+  line-height: 1;
+}
+.tt-2s__play-scan {
+  font-size: 21px;
+  color: rgba(255,255,255,.45);
+  margin: 6px 0 28px;
+}
+.tt-2s__play-url {
+  font-family: 'DM Mono', monospace;
+  font-size: 21px;
+  color: #ffd200;
+  margin-top: 20px;
+}
+.tt-2s__play-code-row {
+  margin-top: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.tt-2s__play-code-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 20px;
+  color: rgba(255,255,255,.4);
+  letter-spacing: 3px;
+}
+.tt-2s__play-code {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 49px;
+  font-weight: 700;
+  color: #ffd200;
+  letter-spacing: 7px;
+}
+
+/* In the two-screen rotation the right half IS the QR card — hide the
+   signage panel's built-in QR footer to avoid showing two QR codes at once. */
+.tt-2s__ad .tt-signage-panel__qr { display: none; }

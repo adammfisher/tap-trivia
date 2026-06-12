@@ -1988,85 +1988,141 @@
     bindResetArrow();
   }
 
-  /** BETWEEN QUESTIONS — left: fun fact + standings, right: signage panel */
+  /** SCORES PHASE — two-screen rotation (docs/taptrivia-2screen.jsx).
+   *  Screen 1 (0:37–0:43, 6s): Did You Know | Standings
+   *  Screen 2 (0:43–0:52, 9s): Venue Ad     | Play TapTrivia QR
+   *  The split is derived from the shared game clock (elapsedInQuestion), not
+   *  an independent timer chain, so a TV loading mid-phase shows the correct
+   *  screen and nothing can drift from the synchronized clock. */
+  const SCORES_SCREEN1_END_MS = 43000;
+
+  /** Elapsed ms within the current question, server-synced. Falls back to the
+   *  last poll's value when the local clock epoch isn't available. */
+  function scoresElapsedMs(state) {
+    if (localGameStartEpoch && typeof getGameState === 'function') {
+      const cs = getGameState(localGameStartEpoch, getServerNow());
+      if (cs.gamePhase === 'active') return cs.elapsedInQuestion;
+    }
+    if (state && state.elapsedInQuestionMs != null) return state.elapsedInQuestionMs;
+    // No clock and no poll value — only reachable in demo mode. Loop the 15s
+    // window so the demo shows the real 6s/9s rotation cadence.
+    return 37000 + (Date.now() % 15000);
+  }
+
+  let scoresScreenRaf = null;
+  function stopScoresScreenTick() {
+    if (scoresScreenRaf) { cancelAnimationFrame(scoresScreenRaf); scoresScreenRaf = null; }
+  }
+  /** Flip Screen 1 → Screen 2 exactly at 0:43, driven by the shared clock. */
+  function startScoresScreenTick(state) {
+    stopScoresScreenTick();
+    function tick() {
+      if (currentScreen !== 'between') { scoresScreenRaf = null; return; }
+      const container = document.getElementById('tv-2s');
+      if (container) {
+        container.classList.toggle('tt-2s--s2', scoresElapsedMs(state) >= SCORES_SCREEN1_END_MS);
+      }
+      scoresScreenRaf = requestAnimationFrame(tick);
+    }
+    scoresScreenRaf = requestAnimationFrame(tick);
+  }
+
   function renderBetween(state) {
     const scores = state.scores || [];
     const num = state.questionNumber || 1;
     const totalQ = state.totalQuestions || 15;
-    const nextIn = state.nextQuestionIn || 5;
-    const isLastQuestion = num >= totalQ;
     const funFactRaw = state.funFact || '';
     const funFact = funFactRaw && !funFactRaw.startsWith('This is a fun fact placeholder') ? funFactRaw : '';
-    const panel = signagePanelWrapHTML();
 
-    let countdownLine = '';
-    if (rotationActive) {
-      if (state.nextGameStartEpoch) {
-        const secsLeft = Math.max(0, Math.ceil((state.nextGameStartEpoch - getServerNow()) / 1000));
-        if (secsLeft > 0) {
-          const mins = Math.floor(secsLeft / 60);
-          const secs = secsLeft % 60;
-          const display = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${secs}s`;
-          countdownLine = `<div class="tt-between__next">Next game in ${display}</div>`;
-        }
-      }
-    } else {
-      const countdownText = isLastQuestion
-        ? 'Final results coming...'
-        : `Next question in <span class="tt-between__countdown-num">${nextIn}</span>s...`;
-      countdownLine = `<div id="tv-between-countdown" class="tt-between__next">${countdownText}</div>`;
-    }
-
-    // Fun fact card (only if non-empty and not placeholder)
-    let funFactHTML = '';
-    if (funFact) {
-      funFactHTML = `
-        <div class="tt-between__funfact-card">
-          <div class="tt-between__funfact-label">DID YOU KNOW?</div>
-          <div class="tt-between__funfact-text">${funFact}</div>
+    // ── Screen 1 left: Did You Know (brand card fallback when no fact) ──
+    const factHTML = funFact
+      ? `
+        <div class="tt-2s__fact">
+          <div class="tt-2s__label tt-2s__label--gold">DID YOU KNOW?</div>
+          <div class="tt-2s__fact-text">${funFact}</div>
+        </div>`
+      : `
+        <div class="tt-2s__fact tt-2s__fact--brand">
+          <div class="tt-2s__brand-logo">${logoHTML('lg')}</div>
+          <div class="tt-2s__brand-sub">Live trivia every 15 minutes</div>
         </div>`;
-    }
 
-    // Standings rows (top 5 for half-width layout)
-    let standingsHTML = '';
-    scores.slice(0, 5).forEach((p, i) => {
-      const rank = i + 1;
+    // ── Screen 1 right: standings from the API board ──
+    let rowsHTML = '';
+    scores.slice(0, 7).forEach((p, i) => {
       const name = p.name || p.playerName || 'Player';
       const score = p.score || 0;
-      standingsHTML += `
-        <div class="tt-standing-row" style="animation:rankSlide .3s ease-out ${i * 0.06}s both">
-          <span class="tt-standing-row__rank">${rank}</span>
+      rowsHTML += `
+        <div class="tt-2s__row${i === 0 ? ' tt-2s__row--first' : ''}" style="animation:rankSlide .3s ease-out ${i * 0.06}s both">
+          <span class="tt-2s__row-rank${i < 3 ? ' tt-2s__row-rank--top' : ''}">${i + 1}</span>
           ${avatarHTML(name, { size: 'sm' })}
-          <span class="tt-standing-row__name">${name}</span>
-          <span class="tt-standing-row__score">${score.toLocaleString()}</span>
+          <span class="tt-2s__row-name">${name}</span>
+          <span class="tt-2s__row-score">${score.toLocaleString()}</span>
         </div>`;
     });
+    if (!rowsHTML) {
+      rowsHTML = '<div class="tt-2s__empty">Waiting for players&hellip;</div>';
+    }
+    // EXTENSION POINT: national strip ("TOP ACROSS TAPTRIVIA TONIGHT", see the
+    // mockup) renders below the rows once a during-game cross-venue aggregate
+    // exists. None does today — see docs/tv-scores-phase-data-contract.md §6.
+    const standingsHTML = `
+      <div class="tt-2s__standings">
+        <div class="tt-2s__standings-head">
+          ${logoHTML('sm')}
+          <div class="tt-2s__label tt-2s__label--dim">STANDINGS &middot; Q${num} OF ${totalQ}</div>
+        </div>
+        <div class="tt-2s__rows">${rowsHTML}</div>
+      </div>`;
 
-    // Advance signage to next slide each time standings appears (no rotation while visible)
+    // ── Screen 2 left: venue ad — advance the venue's slide once per window ──
     stopSignageRotation();
     const activeSlides = getActiveSlides();
     if (activeSlides.length > 1) {
       signageCurrentIndex = (signageCurrentIndex + 1) % activeSlides.length;
     }
+    const slide = activeSlides.length > 0 ? activeSlides[signageCurrentIndex % activeSlides.length] : null;
+    const slideRenderer = slide ? SIGNAGE_PANEL[slide.template] : null;
+    const venueAdHTML = slideRenderer
+      ? `<div class="tt-signage-panel tt-2s__ad">${slideRenderer(slide.data || {})}</div>`
+      : `
+        <div class="tt-2s__welcome">
+          <div class="tt-2s__label tt-2s__label--green">WELCOME TO</div>
+          <div class="tt-2s__welcome-name">${barName || 'TapTrivia'}</div>
+          <div class="tt-2s__welcome-sub">Live trivia every 15 minutes</div>
+        </div>`;
 
-    // Re-get panel after advancing index
-    const panelFinal = signagePanelWrapHTML();
+    // ── Screen 2 right: Play TapTrivia QR card ──
+    const qrHTML = `
+      <div class="tt-2s__play">
+        <div class="tt-2s__play-emoji">&#x1F9E0;</div>
+        <div class="tt-2s__play-title">Play TapTrivia!</div>
+        <div class="tt-2s__play-offer">Free for 7 days</div>
+        <div class="tt-2s__play-scan">scan to start</div>
+        ${qrCodeHTML(244)}
+        <div class="tt-2s__play-url">app.taptrivia.tv</div>
+        <div class="tt-2s__play-code-row">
+          <span class="tt-2s__play-code-label">CODE</span>
+          <span class="tt-2s__play-code">${barCode}</span>
+        </div>
+      </div>`;
+
+    const showScreen2 = scoresElapsedMs(state) >= SCORES_SCREEN1_END_MS;
 
     screenEl.innerHTML = `
-      <div class="tt-between tt-between--half${panelFinal ? ' tt-between--with-panel' : ''}">
+      <div id="tv-2s" class="tt-2s${showScreen2 ? ' tt-2s--s2' : ''}">
         ${resetArrowHTML()}
-        <div class="tt-between__panel">
-          ${funFactHTML}
-          <div class="tt-between__spacer"></div>
-          ${logoHTML('sm')}
-          ${barNameHTML('md')}
-          <div class="tt-between__section-label">Standings</div>
-          <div class="tt-between__standings">${standingsHTML}</div>
-          ${countdownLine}
+        <div class="tt-2s__screen tt-2s__screen--1">
+          <div class="tt-2s__half tt-2s__half--divider">${factHTML}</div>
+          <div class="tt-2s__half">${standingsHTML}</div>
         </div>
-        ${panelFinal}
+        <div class="tt-2s__screen tt-2s__screen--2">
+          <div class="tt-2s__half tt-2s__half--divider">${venueAdHTML}</div>
+          <div class="tt-2s__half">${qrHTML}</div>
+        </div>
       </div>`;
     bindResetArrow();
+    startScoresScreenTick(state);
   }
 
   /** LEADERBOARD SCREEN — v4 lines 598-637 + signage panel */
@@ -3216,6 +3272,9 @@
         const elapsed = apiState.elapsedSeconds || 37;
         gs.nextQuestionIn = Math.max(1, Math.ceil(QUESTION_DURATION_MS / 1000 - elapsed));
         gs.funFact = apiState.funFact || '';
+        // Poll-derived fallback for the two-screen split when the local
+        // clock epoch isn't available yet (cold load mid-phase).
+        gs.elapsedInQuestionMs = (apiState.elapsedSeconds || 37) * 1000;
       } else {
         // Playing phase (read_time, answer_time, etc.)
         gs.screen = 'playing';
@@ -3524,6 +3583,7 @@
       totalQuestions: 15,
       nextQuestionIn: 5,
       scores: DEMO_PLAYERS,
+      funFact: "The UH-1's distinctive 'whop-whop' rotor sound became so iconic that it defined the entire Vietnam War era for millions of people.",
     },
     {
       screen: 'results',
