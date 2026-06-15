@@ -2209,24 +2209,78 @@ body {
   .an-chart-wide { grid-column: 1; }
 }
 
-/* --- Venue Settings card (dashboard) --- */
-.settings-card { margin-top: 20px; }
-.settings-row {
+/* --- Settings screen (prominent house-players control) --- */
+.setting-block { padding: 28px 30px; }
+.setting-block-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 6px 0 2px;
+  gap: 32px;
 }
-.settings-row-title {
-  font-size: 14px;
-  font-weight: 600;
+.setting-block-text { flex: 1; min-width: 0; }
+.setting-block-title {
+  font-size: 19px;
+  font-weight: 700;
   color: #fff;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
-.settings-row-desc {
-  font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.5);
-  line-height: 1.55;
+.setting-block-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255,255,255,.55);
   max-width: 640px;
 }
+.setting-block-desc strong { color: rgba(255,255,255,.85); }
+
+.setting-toggle-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.big-toggle {
+  width: 64px;
+  height: 34px;
+  border-radius: 17px;
+  background: rgba(255,255,255,.12);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+  transition: background .2s;
+}
+.big-toggle.on { background: #00d4aa; }
+.big-toggle-knob {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: left .2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+.big-toggle.on .big-toggle-knob { left: 33px; }
+.big-toggle-state {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-family: 'Outfit', sans-serif;
+}
+.big-toggle-state.on { color: #00d4aa; }
+.big-toggle-state.off { color: rgba(255,255,255,.4); }
+
+.settings-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 24px;
+}
+.settings-actions .btn-primary { padding: 12px 28px; font-size: 14px; }
+.settings-status { font-size: 13px; font-weight: 600; }
+.settings-status--ok { color: #00d4aa; }
+.settings-status--err { color: #ff4757; }
+.settings-status--dirty { color: rgba(255,255,255,.5); }
