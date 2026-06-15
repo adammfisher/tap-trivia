@@ -97,6 +97,10 @@ async function generateQRCodes() {
   // 200px QR for signage
   await QRCode.toFile(path.join(IMAGES_DIR, 'qr-play-200.png'), url, { ...opts, width: 200, margin: 1 });
   console.log('  ✓ qr-play-200.png');
+
+  // 244px QR for the two-screen Scores rotation (matches web qrCodeHTML(244))
+  await QRCode.toFile(path.join(IMAGES_DIR, 'qr-play-244.png'), url, { ...opts, width: 244, margin: 1 });
+  console.log('  ✓ qr-play-244.png');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -513,6 +517,46 @@ function generateLeaderRowBg() {
   ctx.quadraticCurveTo(w - 0.5, 0.5, w - 0.5, r);
   ctx.stroke();
   save(c, 'leader-row-bg.png');
+}
+
+// ═══════════════════════════════════════════════════════════
+// TWO-SCREEN SCORES ROTATION assets (match web tv-app .tt-2s)
+// ═══════════════════════════════════════════════════════════
+
+function generateTwoScreenAssets() {
+  console.log('Generating two-screen Scores rotation assets...');
+
+  // Standings row — normal: white 4% fill + white 6% border (web .tt-2s__row)
+  let c = createCanvas(864, 66);
+  let ctx = c.getContext('2d');
+  roundedRect(ctx, 0, 0, 864, 66, 18);
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  roundedRect(ctx, 0.5, 0.5, 863, 65, 18);
+  ctx.stroke();
+  save(c, 'row2s-bg.png');
+
+  // Standings row — first place: white 10% fill + gold 33% border (web .tt-2s__row--first)
+  c = createCanvas(864, 66);
+  ctx = c.getContext('2d');
+  roundedRect(ctx, 0, 0, 864, 66, 18);
+  ctx.fillStyle = 'rgba(255,255,255,0.10)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,210,0,0.33)';
+  ctx.lineWidth = 2;
+  roundedRect(ctx, 1, 1, 862, 64, 17);
+  ctx.stroke();
+  save(c, 'row2s-first.png');
+
+  // QR white card (web .tt-2s__play QR wrapper — white rounded card, padding)
+  c = createCanvas(268, 268);
+  ctx = c.getContext('2d');
+  roundedRect(ctx, 0, 0, 268, 268, 20);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  save(c, 'qrcard2s.png');
 }
 
 // ═══════════════════════════════════════════════════════════

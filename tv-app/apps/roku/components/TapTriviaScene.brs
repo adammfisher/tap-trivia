@@ -391,7 +391,10 @@ function translateApiState(apiState as Object) as Object
         elapsed = Int(elapsedMs / 1000)
       else
         elapsed = safeInt(apiState.elapsedSeconds, 45)
+        elapsedMs = elapsed * 1000&
       end if
+      ' Drives the two-screen Scores rotation split (Screen 1 < 44s, Screen 2 ≥ 44s)
+      gs.elapsedInQuestionMs = elapsedMs
       gs.nextQuestionIn = maxInt(1, ceilInt(m.QUESTION_DURATION_MS / 1000 - elapsed))
       gs.funFact = safeStr(apiState.funFact)
     else
