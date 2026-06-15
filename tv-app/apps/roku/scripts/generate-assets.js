@@ -560,6 +560,34 @@ function generateTwoScreenAssets() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// IN-GAME QR BADGE (web .tt-qr-badge--bl, 1.2x baked → 1920 native)
+// ═══════════════════════════════════════════════════════════
+
+function generateInGameQrBadge() {
+  console.log('Generating in-game QR badge assets...');
+
+  // Dark glass badge background (web .tt-qr-badge on TV: rgba(10,5,20,.88))
+  let c = createCanvas(600, 270);
+  let ctx = c.getContext('2d');
+  roundedRect(ctx, 0, 0, 600, 270, 38);
+  ctx.fillStyle = 'rgba(10,5,20,0.88)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 2;
+  roundedRect(ctx, 1, 1, 598, 268, 37);
+  ctx.stroke();
+  save(c, 'qrbadge-game-bg.png');
+
+  // White rounded QR card (web .tt-qr wrapper)
+  c = createCanvas(230, 230);
+  ctx = c.getContext('2d');
+  roundedRect(ctx, 0, 0, 230, 230, 24);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  save(c, 'qrbadge-card.png');
+}
+
+// ═══════════════════════════════════════════════════════════
 // QR BADGE BACKGROUND (360x140, rounded)
 // ═══════════════════════════════════════════════════════════
 

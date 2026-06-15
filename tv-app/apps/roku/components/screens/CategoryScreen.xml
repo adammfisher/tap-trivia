@@ -58,7 +58,7 @@
     </Group>
 
     <!-- QR Badge — bottom-left -->
-    <QRBadge id="qrBadge" translation="[40, 920]" />
+    <QRBadgeGame id="qrBadge" translation="[40, 782]" />
 
     <!-- Category icon zoom animation -->
     <Animation id="categoryZoomAnim" duration="0.6" easeFunction="outBack" repeat="false">

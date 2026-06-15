@@ -165,7 +165,7 @@
     </Group>
 
     <!-- QR Badge — bottom-left -->
-    <QRBadge id="qrBadge" translation="[40, 920]" />
+    <QRBadgeGame id="qrBadge" translation="[40, 782]" />
   </children>
 
   <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
