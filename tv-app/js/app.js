@@ -193,9 +193,38 @@
     const hours = Math.floor(secsLeft / 3600);
     const mins = Math.floor((secsLeft % 3600) / 60);
     const secs = secsLeft % 60;
+    // Format matches countdownTextFromEpoch (seconds zero-padded when minutes
+    // are shown) so every between-games countdown reads identically.
     if (hours > 0) return `${hours}h ${mins}m`;
-    if (mins > 0) return `${mins}m ${secs}s`;
+    if (mins > 0) return `${mins}m ${String(secs).padStart(2, '0')}s`;
     return `${secs}s`;
+  }
+
+  /** Persistent top "notch" pill: "TRIVIA STARTS IN M:SS" counting down to the
+   *  next game. Overlays the waiting screens (idle / lobby / results /
+   *  between-rounds sequence); hidden during live gameplay, on setup, and when
+   *  no game is imminent (off-hours). Runs on a standalone 1s tick. */
+  const NEXT_PILL_SHOW = { idle: 1, lobby: 1, results: 1, 'results-seq': 1 };
+  function updateNextPill() {
+    const pill = document.getElementById('tt-next-pill');
+    if (!pill) return;
+    const onWaitingScreen = NEXT_PILL_SHOW[currentScreen] ||
+      (typeof currentScreen === 'string' && currentScreen.indexOf('between-') === 0);
+    // The between-rounds sequence carries its own next-game epoch.
+    let epoch = nextGameStartEpochCached;
+    if (currentScreen === 'results-seq' && resultsSeqCtx && resultsSeqCtx.nextEpoch) {
+      epoch = resultsSeqCtx.nextEpoch;
+    }
+    const msLeft = epoch ? epoch - getServerNow() : 0;
+    // Only show when a game is within the next cycle (≤16 min) so M:SS stays meaningful.
+    const show = epoch && msLeft > 0 && msLeft <= 16 * 60 * 1000 && onWaitingScreen;
+    if (!show) { pill.classList.add('tt-hidden'); return; }
+    const total = Math.floor(msLeft / 1000);
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    const timeEl = pill.querySelector('.tt-next-pill__time');
+    if (timeEl) timeEl.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+    pill.classList.remove('tt-hidden');
   }
 
   /** Generate a deterministic hue from a name string (v4 line 130) */
@@ -560,9 +589,9 @@
     return secs + '<span class="tt-signage-header__countdown-unit">s</span>';
   }
 
-  /** Full-screen signage header (location logo + name + countdown + TapTrivia logo) */
+  /** Full-screen signage header (location logo + name + TapTrivia logo).
+   *  The next-game countdown now lives in the persistent top pill. */
   function signageHeaderHTML() {
-    const countdownText = countdownTextFromEpoch(nextGameStartEpochCached);
     return `
       <div class="tt-signage-header">
         <div class="tt-signage-header__bar">
@@ -572,11 +601,6 @@
           </div>
         </div>
         <div class="tt-signage-header__right">
-          <div class="tt-signage-header__countdown">
-            <div class="tt-signage-header__countdown-label">Trivia starts in</div>
-            <div class="tt-signage-header__countdown-value" id="signage-countdown-value">${countdownText}</div>
-          </div>
-          <div class="tt-signage-header__divider"></div>
           ${logoHTML('sm')}
         </div>
       </div>`;
@@ -890,30 +914,27 @@
       const items = (d.menuItems || []).map(item => `
         <div class="tt-signage-menu-item">
           <span class="tt-signage-menu-item__icon">${item.icon || ''}</span>
-          <div style="flex:1">
+          <div style="flex:1;text-align:left">
             <div class="tt-signage-menu-item__name">${item.name || ''}</div>
             <div class="tt-signage-menu-item__desc">${item.desc || ''}</div>
           </div>
           <div class="tt-signage-menu-item__price">${item.price || ''}</div>
         </div>`).join('');
+      const hasItems = (d.menuItems || []).length > 0;
       return `
         <div class="tt-signage-fs tt-signage-fade-in" style="background:linear-gradient(150deg,#0a0612,#1a0f30 30%,#2d1550 60%,#1a0f30)">
           ${signageHeaderHTML()}
-          <div class="tt-signage-content">
-            <div style="flex:1.1;display:flex;flex-direction:column;justify-content:center;padding:0 80px">
-              <div class="tt-signage-label" style="color:#f59e0b">${d.emoji || ''} ${d.label || "Today's Specials"}</div>
-              <div class="tt-signage-headline">${d.headline || ''}<br><span class="tt-signage-headline--gold">${d.subheadline || ''}</span></div>
-              <div class="tt-signage-featured">
-                <div>
-                  <div class="tt-signage-featured__name">${d.featuredName || ''}</div>
-                  <div class="tt-signage-featured__desc">${d.featuredDesc || ''}</div>
-                </div>
-                <div class="tt-signage-featured__price">${d.featuredPrice || ''}</div>
+          <div class="tt-signage-center">
+            <div class="tt-signage-label" style="color:#f59e0b">${d.emoji || ''} ${d.label || "Today's Specials"}</div>
+            <div class="tt-signage-headline">${d.headline || ''}${d.subheadline ? `<br><span class="tt-signage-headline--gold">${d.subheadline}</span>` : ''}</div>
+            ${d.featuredName ? `<div class="tt-signage-featured" style="margin-top:8px">
+              <div style="text-align:left">
+                <div class="tt-signage-featured__name">${d.featuredName}</div>
+                <div class="tt-signage-featured__desc">${d.featuredDesc || ''}</div>
               </div>
-            </div>
-            <div style="flex:0.9;display:flex;flex-direction:column;justify-content:center;padding:0 72px 0 0;gap:24px">
-              ${items}
-            </div>
+              <div class="tt-signage-featured__price">${d.featuredPrice || ''}</div>
+            </div>` : ''}
+            ${hasItems ? `<div style="display:flex;flex-direction:column;gap:12px;margin-top:18px;width:100%;max-width:820px">${items}</div>` : ''}
           </div>
         </div>`;
     },
@@ -1077,10 +1098,16 @@
           </div>
           <div class="tt-signage-panel__menu-price">${item.price || ''}</div>
         </div>`).join('');
+      const kicker = (d.label || '').trim();
       return `
         <div class="tt-signage-panel__inner">
           ${signagePanelHeaderHTML()}
-          <div class="tt-signage-panel__label" style="color:#f59e0b">${d.emoji || ''} ${d.label || "Tonight's Specials"}</div>
+          <div class="tt-signage-panel__specials-head">
+            ${d.emoji ? `<div class="tt-signage-panel__specials-emoji">${d.emoji}</div>` : ''}
+            ${kicker ? `<div class="tt-signage-panel__label" style="color:#f59e0b">${kicker}</div>` : ''}
+            ${d.headline ? `<div class="tt-signage-panel__headline">${d.headline}</div>` : ''}
+            ${d.subheadline ? `<div class="tt-signage-panel__subtitle" style="color:#00d4aa;margin-bottom:0">${d.subheadline}</div>` : ''}
+          </div>
           <div class="tt-signage-panel__featured">
             <div>
               <div class="tt-signage-panel__featured-name">${d.featuredName || ''}</div>
@@ -1256,6 +1283,7 @@
     localQuestionNumber = qNum;
     lastLoggedSlideKey = ''; // screen changed — re-log even if same slide index
     queueMicrotask(logSignageImpressionIfNew);
+    updateNextPill(); // show/hide the persistent countdown pill immediately on screen change
 
     switch (screen) {
       case 'idle':
@@ -1767,19 +1795,10 @@
         </div>`;
     });
 
-    // Countdown to next game (always compute client-side like player-app)
-    const nextEpoch = getNextFutureGameTime(state.nextGameStartEpoch);
-    const secsLeft = Math.max(0, Math.ceil((nextEpoch - getServerNow()) / 1000));
-    const countdownHTML = `
-      <div class="tt-lobby__countdown">
-        <span class="tt-lobby__countdown-label">Next game in</span>
-        <span class="tt-lobby__countdown-num" id="tv-lobby-countdown">${formatCountdown(secsLeft)}</span>
-      </div>`;
-
+    // Next-game countdown now lives in the persistent top pill — no duplicate here.
     screenEl.innerHTML = `
       <div class="tt-lobby${panel ? ' tt-lobby--with-panel' : ''}">
         ${resetArrowHTML()}
-        ${countdownHTML}
         <div class="tt-lobby__left">
           <div class="tt-lobby__logo">${logoHTML('xl')}</div>
           ${barNameHTML('lg')}
@@ -2691,6 +2710,270 @@
   }
 
   // ═══════════════════════════════════════════════════════════════
+  // BETWEEN-ROUNDS SEQUENCE — fixed 5-slide loop across the 120s Results
+  // window (matches reference/taptrivia-between-rounds-poc.jsx). Slide timing
+  // is derived from the shared game clock (offset into the Results window via
+  // nextGameStartEpoch), so a TV loading mid-window shows the correct slide and
+  // never drifts. The game clock itself is untouched.
+  //   0:00–0:20 Leader Results · 0:20–0:40 Signage 1 · 0:40–1:20 Play TapTrivia
+  //   1:20–1:40 Signage 2 · 1:40–2:00 Coming Up
+  // ═══════════════════════════════════════════════════════════════
+
+  const RESULTS_SEQUENCE = [
+    { key: 'leader',   end: 20000 },
+    { key: 'signage1', end: 40000 },
+    { key: 'play',     end: 80000 },
+    { key: 'signage2', end: 100000 },
+    { key: 'comingup', end: 120000 },
+  ];
+  // sign1 = purple→red, sign2 = teal — distinct from trivia purple (POC C.grad)
+  const RSEQ_SIGN1_GRAD = 'linear-gradient(135deg,#1a0b2e,#5b1e5e,#a8334a)';
+  const RSEQ_SIGN2_GRAD = 'linear-gradient(135deg,#0a1f2e,#13495e,#1f8a7a)';
+
+  let resultsSeqActive = false;
+  let resultsSeqGameId = null;
+  let resultsSeqTimer = null;
+  let resultsSeqSlideIdx = -1;
+  let resultsSeqCtx = null;
+
+  /** Elapsed ms into the 120s Results window, derived from the shared clock. */
+  function resultsWindowOffsetMs() {
+    if (!resultsSeqCtx) return 0;
+    const off = RESULTS_DURATION_MS - (resultsSeqCtx.nextEpoch - getServerNow());
+    return Math.max(0, Math.min(RESULTS_DURATION_MS, off));
+  }
+  function resultsSlideIdxForOffset(off) {
+    for (let i = 0; i < RESULTS_SEQUENCE.length; i++) if (off < RESULTS_SEQUENCE[i].end) return i;
+    return RESULTS_SEQUENCE.length - 1;
+  }
+
+  /** POC-style avatar: hue from name, gradient disc with the first initial. */
+  function rseqAvatar(name, size) {
+    const n = String(name || '?');
+    const sum = n.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    const h = sum % 360, h2 = (h + 40) % 360;
+    return `<div style="width:${size}px;height:${size}px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,hsl(${h},60%,55%),hsl(${h2},60%,45%));display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:${Math.round(size * 0.42)}px;color:#fff">${n.charAt(0).toUpperCase()}</div>`;
+  }
+
+  /** Pick two random venue signage slides for the two full-screen promo slots. */
+  function pickResultsSignageSlides() {
+    const active = getActiveSlides();
+    if (!active.length) return [null, null];
+    const pool = active.slice();
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+    return [pool[0], pool.length > 1 ? pool[1] : pool[0]];
+  }
+
+  // ── Slide 1: Leader Results (final standings) ──
+  function rseqLeaderHTML(scores) {
+    const top5 = (scores || []).slice(0, 5);
+    const rows = top5.map((p, i) => {
+      const name = p.name || p.playerName || 'Player';
+      const score = (p.score || 0).toLocaleString();
+      const first = i === 0;
+      const rankColor = first ? '#1e0f4a' : (i < 3 ? '#ffd200' : 'rgba(255,255,255,0.3)');
+      const rankTxt = first ? '👑' : (i + 1);
+      return `
+        <div style="display:flex;align-items:center;gap:23px;background:${first ? 'linear-gradient(135deg,#f7971e,#ffd200,#ffe066)' : 'rgba(255,255,255,0.05)'};border:1px solid ${first ? 'transparent' : 'rgba(255,255,255,0.07)'};border-radius:21px;padding:15px 29px">
+          <span style="font-family:'Fredoka',sans-serif;font-size:33px;font-weight:700;color:${rankColor};width:38px;text-align:center">${rankTxt}</span>
+          ${rseqAvatar(name, 52)}
+          <span style="flex:1;min-width:0;font-size:28px;font-weight:${first ? 700 : 500};color:${first ? '#1e0f4a' : 'rgba(255,255,255,0.8)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
+          <span style="font-family:'Fredoka',sans-serif;font-size:28px;font-weight:700;color:${first ? '#1e0f4a' : '#ffd200'}">${score}</span>
+        </div>`;
+    }).join('');
+    const empty = top5.length === 0 ? `<div style="font-size:28px;color:rgba(255,255,255,0.5);text-align:center;margin-top:20px">No players this round</div>` : '';
+    return `
+      <div class="tt-rseq" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8%;animation:fadeIn .5s ease-out">
+        ${resetArrowHTML()}
+        <div style="font-family:'Fredoka',sans-serif;font-size:55px;font-weight:700;color:#fff;margin-bottom:4px">Round Complete! 🎉</div>
+        <div style="font-family:'DM Mono',monospace;font-size:18px;letter-spacing:5px;color:#ffd200;margin-bottom:30px;text-align:center;max-width:90%">FINAL STANDINGS · ${barName}</div>
+        <div style="width:100%;max-width:980px;display:flex;flex-direction:column;gap:11px">${rows}${empty}</div>
+      </div>`;
+  }
+
+  // ── Slides 2 & 4: full-screen venue signage (owner content; graceful fallback) ──
+  function rseqSignageHTML(slide, gradient) {
+    if (slide) {
+      const html = renderSignageFullScreen(slide);
+      if (html) return html;
+    }
+    return `
+      <div class="tt-rseq" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:${gradient};animation:fadeIn .5s ease-out">
+        ${resetArrowHTML()}
+        <div style="font-family:'DM Mono',monospace;font-size:22px;letter-spacing:8px;color:rgba(255,255,255,0.6);margin-bottom:24px">WELCOME TO</div>
+        <div style="font-family:'Fredoka',sans-serif;font-size:90px;font-weight:700;color:#fff;line-height:1.05;max-width:80%">${barName}</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:32px;color:rgba(255,255,255,0.6);margin-top:20px">Live trivia every 15 minutes</div>
+      </div>`;
+  }
+
+  // ── Slide 3: Play TapTrivia (text left, QR right) ──
+  function rseqPlayHTML() {
+    return `
+      <div class="tt-rseq" style="position:absolute;inset:0;display:flex;animation:fadeIn .5s ease-out">
+        ${resetArrowHTML()}
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 7%;border-right:1px solid rgba(255,255,255,0.08)">
+          <div style="font-size:96px;margin-bottom:22px;animation:breathe 4s ease-in-out infinite">🧠</div>
+          <div style="font-family:'DM Mono',monospace;font-size:24px;letter-spacing:8px;color:#667eea;margin-bottom:18px">NEW QUESTIONS EVERY 15 MIN</div>
+          <div style="font-family:'Fredoka',sans-serif;font-size:90px;font-weight:700;color:#fff;line-height:1.02;margin-bottom:22px">Play <span style="color:#ffd200">TapTrivia</span></div>
+          <span style="font-family:'Fredoka',sans-serif;font-size:46px;font-weight:700;color:#00d4aa">Free for 7 days</span>
+          <span style="font-family:'Outfit',sans-serif;font-size:33px;color:rgba(255,255,255,0.6);margin-top:8px;margin-bottom:36px">Scan the code → playing on your phone in seconds</span>
+          <div style="font-family:'DM Mono',monospace;font-size:30px;color:#ffd200;letter-spacing:2px">app.taptrivia.tv</div>
+          <div style="margin-top:18px;display:flex;align-items:baseline;gap:22px">
+            <span style="font-family:'DM Mono',monospace;font-size:24px;color:rgba(255,255,255,0.45);letter-spacing:3px">AND ENTER CODE</span>
+            <span style="font-family:'Fredoka',sans-serif;font-size:78px;font-weight:700;color:#ffd200;letter-spacing:11px;line-height:1">${barCode}</span>
+          </div>
+        </div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:0 5%">
+          ${qrCodeHTML(520)}
+        </div>
+      </div>`;
+  }
+
+  // ── Slide 5: Coming Up (join CTA left, next categories right) ──
+  function rseqComingUpHTML(cats) {
+    const list = (cats || []).slice(0, 8);
+    const grid = list.length > 0 ? `
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">
+        ${list.map((c, i) => `
+          <div style="display:flex;align-items:center;gap:14px;min-width:0;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px 18px;animation:popIn .4s ease-out ${(i * 0.04).toFixed(2)}s both">
+            <span style="font-size:30px;flex-shrink:0">${getCategoryIcon(c)}</span>
+            <span style="flex:1;min-width:0;font-family:'Outfit',sans-serif;font-size:21px;font-weight:600;color:rgba(255,255,255,0.85);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c}</span>
+          </div>`).join('')}
+      </div>` : '';
+    return `
+      <div class="tt-rseq" style="position:absolute;inset:0;display:flex;animation:fadeIn .5s ease-out">
+        ${resetArrowHTML()}
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:0 6%;border-right:1px solid rgba(255,255,255,0.08)">
+          <div style="font-size:66px;margin-bottom:14px;animation:breathe 4s ease-in-out infinite">🧠</div>
+          <div style="font-family:'Fredoka',sans-serif;font-size:72px;font-weight:700;color:#fff;line-height:1;margin-bottom:10px">Play <span style="color:#ffd200">TapTrivia</span></div>
+          <span style="font-family:'Fredoka',sans-serif;font-size:34px;font-weight:700;color:#00d4aa;margin-bottom:30px">Free for 7 days</span>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+            ${qrCodeHTML(300)}
+            <div style="text-align:center">
+              <div style="font-family:'DM Mono',monospace;font-size:24px;color:#ffd200;letter-spacing:2px">app.taptrivia.tv</div>
+              <div style="margin-top:12px;font-family:'DM Mono',monospace;font-size:18px;color:rgba(255,255,255,0.45);letter-spacing:3px">AND ENTER CODE</div>
+              <div style="font-family:'Fredoka',sans-serif;font-size:58px;font-weight:700;color:#ffd200;letter-spacing:9px;line-height:1.1">${barCode}</div>
+            </div>
+          </div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 6%">
+          <div style="font-family:'DM Mono',monospace;font-size:21px;letter-spacing:7px;color:#667eea;margin-bottom:13px">NEXT ROUND STARTS SOON</div>
+          <div style="font-family:'Fredoka',sans-serif;font-size:49px;font-weight:700;color:#fff;margin-bottom:26px">Coming Up</div>
+          ${grid}
+        </div>
+      </div>`;
+  }
+
+  function renderResultsSlide(idx) {
+    if (!resultsSeqCtx) return;
+    const seg = RESULTS_SEQUENCE[idx];
+    let html;
+    if (seg.key === 'leader') html = rseqLeaderHTML(resultsSeqCtx.standings);
+    else if (seg.key === 'signage1') html = rseqSignageHTML(resultsSeqCtx.sign1, RSEQ_SIGN1_GRAD);
+    else if (seg.key === 'play') html = rseqPlayHTML();
+    else if (seg.key === 'signage2') html = rseqSignageHTML(resultsSeqCtx.sign2, RSEQ_SIGN2_GRAD);
+    else html = rseqComingUpHTML(resultsSeqCtx.categories);
+    currentScreen = 'results-seq';
+    localQuestionNumber = null;
+    screenEl.innerHTML = html;
+    bindResetArrow();
+  }
+
+  function resultsSeqTick() {
+    if (!resultsSeqActive || !resultsSeqCtx) return;
+    const idx = resultsSlideIdxForOffset(resultsWindowOffsetMs());
+    if (idx !== resultsSeqSlideIdx) { resultsSeqSlideIdx = idx; renderResultsSlide(idx); }
+    // Keep the signage-slide countdown live (slides 2 & 4) so it ticks down in
+    // sync with Lobby/Results instead of freezing at the value baked at render.
+    const cv = document.getElementById('signage-countdown-value');
+    if (cv) cv.innerHTML = countdownTextFromEpoch(nextGameStartEpochCached);
+  }
+
+  /** Start the 5-slide between-rounds sequence for this game (idempotent). */
+  async function startResultsSequence(gameId, apiState) {
+    if (betweenGameActive) exitBetweenGameMode();
+    resultsSeqActive = true;
+    resultsSeqGameId = gameId;
+    resultsSeqSlideIdx = -1;
+    const [s1, s2] = pickResultsSignageSlides();
+    resultsSeqCtx = {
+      nextEpoch: getNextFutureGameTime(apiState.nextGameStartEpoch),
+      standings: (apiState.barLeaderboard || []).map((p, i) => ({ name: p.name || p.playerName, score: p.score || 0, rank: i + 1 })),
+      sign1: s1,
+      sign2: s2,
+      categories: [],
+    };
+    resultsSeqTick();
+    if (!resultsSeqTimer) resultsSeqTimer = setInterval(resultsSeqTick, 500);
+    // Next-round categories are optional — fetch best-effort, refresh slide 5 if visible.
+    try {
+      const between = await apiCall('GET', `/game/between?barCode=${barCode}&gameId=${gameId}`);
+      if (resultsSeqActive && resultsSeqGameId === gameId && between && between.hype && Array.isArray(between.hype.categories)) {
+        resultsSeqCtx.categories = between.hype.categories.slice(0, 8);
+        if (resultsSeqSlideIdx === 4) renderResultsSlide(4);
+      }
+    } catch (e) { /* categories optional — omit grid gracefully */ }
+  }
+
+  function stopResultsSequence() {
+    resultsSeqActive = false;
+    if (resultsSeqTimer) { clearInterval(resultsSeqTimer); resultsSeqTimer = null; }
+    resultsSeqCtx = null;
+    resultsSeqSlideIdx = -1;
+  }
+
+  // ── LOCAL PREVIEW (testing only) ──────────────────────────────────────────
+  // Cycles the five between-rounds slides using live data for a bar (default
+  // B8PQP; override with &code=XXXXX). Auto-advances every 5s; ←/→ step, space
+  // pauses. Drives the real slide renderers, so it doubles as the design
+  // feedback loop. Reached only via `?preview=between` (see init()).
+  async function startBetweenRoundsPreview() {
+    const params = new URLSearchParams(window.location.search);
+    barCode = (params.get('code') || 'B8PQP').toUpperCase();
+    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+
+    let standings = [], categories = [], gameId = '';
+    try {
+      const ts = await apiCall('GET', `/game/tv-state?barCode=${barCode}`);
+      if (ts && !ts.error) {
+        if (ts.barName) barName = ts.barName;
+        if (ts.signage && ts.signage.slides && ts.signage.slides.length) signageSlides = ts.signage.slides;
+        gameId = ts.gameId || '';
+        standings = (ts.barLeaderboard || []).map((p, i) => ({ name: p.name || p.playerName, score: p.score || 0, rank: i + 1 }));
+      }
+    } catch (e) { /* offline — fall back to samples below */ }
+    try {
+      const bw = await apiCall('GET', `/game/between?barCode=${barCode}&gameId=${gameId}`);
+      if (bw && bw.hype && Array.isArray(bw.hype.categories)) categories = bw.hype.categories.slice(0, 8);
+    } catch (e) { /* categories optional */ }
+    // Sample finishers so the leader slide is testable when no game is live.
+    if (standings.length === 0) standings = [
+      { name: 'Adam', score: 13420 }, { name: 'Priya', score: 12180 },
+      { name: 'Wes', score: 11650 }, { name: 'Marcus', score: 9900 }, { name: 'Jen', score: 8740 },
+    ];
+    const [s1, s2] = pickResultsSignageSlides();
+    // Sample next-game epoch (~2 min out) so the countdown pill renders in preview.
+    resultsSeqCtx = { nextEpoch: getServerNow() + 125000, standings, sign1: s1, sign2: s2, categories };
+
+    let idx = 0, paused = false;
+    const hud = document.createElement('div');
+    hud.style.cssText = 'position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:99999;background:rgba(0,0,0,0.72);color:#fff;font:600 14px/1 Outfit,sans-serif;padding:9px 18px;border-radius:10px;letter-spacing:0.5px;white-space:nowrap;pointer-events:none';
+    document.body.appendChild(hud);
+    function show() {
+      renderResultsSlide(idx);
+      hud.textContent = `PREVIEW · ${RESULTS_SEQUENCE[idx].key} · ${idx + 1}/5 · ${barCode}${paused ? ' · PAUSED' : ''}   —  ←/→ step · space play/pause`;
+    }
+    const step = (d) => { idx = (idx + d + RESULTS_SEQUENCE.length) % RESULTS_SEQUENCE.length; show(); };
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') step(1);
+      else if (e.key === 'ArrowLeft') step(-1);
+      else if (e.key === ' ') { paused = !paused; show(); e.preventDefault(); }
+    });
+    show();
+    setInterval(() => { if (!paused) step(1); }, 5000);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   // ERROR OVERLAY
   // ═══════════════════════════════════════════════════════════════
   function showError() { errorOverlay.classList.remove('tt-hidden'); }
@@ -2775,16 +3058,8 @@
   }
 
   function updateLobbyCountdown(state) {
-    const el = document.getElementById('tv-lobby-countdown');
-    if (!el) {
-      // Countdown element doesn't exist yet — force re-render
-      currentScreen = '';
-      renderScreen(state);
-      return;
-    }
-    const nextEpoch = getNextFutureGameTime(state.nextGameStartEpoch);
-    const secsLeft = Math.max(0, Math.ceil((nextEpoch - getServerNow()) / 1000));
-    el.textContent = formatCountdown(secsLeft);
+    // The next-game countdown now lives in the persistent top pill; the lobby no
+    // longer renders its own. Nothing to update here.
   }
 
   function updateBetweenCountdown(state) {
@@ -3159,6 +3434,7 @@
         setPollRate(CONFIG.POLL_INTERVAL_IDLE);
         exitRotationMode();
         if (betweenGameActive) exitBetweenGameMode();
+        if (resultsSeqActive) stopResultsSequence();
         if (currentScreen === 'idle') return;
         renderScreen({ ...gameState, screen: 'idle' });
         return;
@@ -3170,26 +3446,32 @@
         schedulePreGameWakeup(state.nextGameStartEpoch);
         exitRotationMode();
         if (betweenGameActive) exitBetweenGameMode();
+        if (resultsSeqActive) stopResultsSequence();
         // Don't re-render if already on idle — avoids flashing on every poll tick
         if (currentScreen === 'idle') return;
         renderScreen({ ...gameState, screen: 'idle' });
         return;
       }
 
-      // Game over — slow polling, between-game experience then rotation
+      // Game over — slow polling, run the fixed 5-slide between-rounds sequence
+      // (clock-offset driven) across the 120s Results window, then idle rotation.
       if (state.state === 'game_over') {
         stopIdleCountdownTick();
         setPollRate(CONFIG.POLL_INTERVAL_IDLE);
         const gameId = state.gameId || '';
-        // Start between-game experience if not already running and not yet done for this game
-        if (!betweenGameActive && betweenGameLastGameId !== gameId && gameId) {
+        // Start the sequence once per game
+        if (!resultsSeqActive && resultsSeqGameId !== gameId && gameId) {
           schedulePreGameWakeup(state.nextGameStartEpoch);
-          startBetweenGameExperience(gameId);
+          startResultsSequence(gameId, state);
           return;
         }
-        // If between-game is active, let it continue (don't interfere)
-        if (betweenGameActive) return;
-        // Between-game done — enter normal rotation
+        // While active, keep the next-game epoch fresh; the tick drives the slides
+        if (resultsSeqActive) {
+          if (resultsSeqCtx) resultsSeqCtx.nextEpoch = getNextFutureGameTime(state.nextGameStartEpoch);
+          schedulePreGameWakeup(state.nextGameStartEpoch);
+          return;
+        }
+        // Sequence already completed for this game — normal rotation until next game
         schedulePreGameWakeup(state.nextGameStartEpoch);
         handleScreenRotation(gameState);
         return;
@@ -3201,6 +3483,7 @@
       setPollRate(CONFIG.POLL_INTERVAL_ACTIVE);
       exitRotationMode();
       if (betweenGameActive) exitBetweenGameMode();
+      if (resultsSeqActive) stopResultsSequence();
       renderScreen(gameState);
     } finally {
       pollInFlight = false;
@@ -3698,6 +3981,14 @@
       saveTvConfig();
     }
 
+    // Local preview/testing — `?preview=between` cycles the five between-rounds
+    // slides using live data for a bar (default B8PQP). Inert in production:
+    // gated behind the URL param, never reached by a real TV.
+    if (new URLSearchParams(window.location.search).get('preview') === 'between') {
+      startBetweenRoundsPreview();
+      return;
+    }
+
     // Demo mode — cycle through screens with mock data
     if (isDemoMode()) {
       runDemoMode();
@@ -3737,6 +4028,10 @@
   } else {
     init();
   }
+
+  // Persistent next-game pill — standalone 1s updater, independent of which
+  // screen is showing or which mode (live / preview) is active.
+  setInterval(updateNextPill, 1000);
 
   // ═══════════════════════════════════════════════════════════════
   // EMBED TOGGLE — demo.html can force idle (signage) or live (real polling)

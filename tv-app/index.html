@@ -21,6 +21,14 @@
   <!-- Single screen container — JS swaps content here -->
   <main id="tt-screen" class="tt-screen" role="main" aria-live="polite"></main>
 
+  <!-- Persistent "next game" countdown pill — notch hanging from the top edge,
+       overlays every screen. Shown/updated by app.js (updateNextPill). -->
+  <div id="tt-next-pill" class="tt-next-pill tt-hidden" aria-hidden="true">
+    <span class="tt-next-pill__dot"></span>
+    <span class="tt-next-pill__label">Trivia starts in</span>
+    <span class="tt-next-pill__time">0:00</span>
+  </div>
+
   <!-- Error/reconnecting overlay (shown on top of current screen) -->
   <div id="tt-error-overlay" class="tt-error-overlay tt-hidden" role="alert" aria-label="Connection status">
     <div class="tt-error-overlay__content">

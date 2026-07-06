@@ -2590,22 +2590,24 @@ body {
   align-items: center;
   z-index: 5;
   text-align: center;
-  padding: 0 80px;
+  /* Top padding clears the header + the persistent countdown pill so centered
+     content never rides up under them; bottom keeps a safe margin. */
+  padding: 104px 80px 40px;
 }
 .tt-signage-label {
   font-size: 24px;
   font-weight: 700;
   letter-spacing: 4px;
   text-transform: uppercase;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 .tt-signage-headline {
   font-family: 'Fredoka', sans-serif;
-  font-size: 88px;
+  font-size: 72px;
   font-weight: 700;
   color: #f0f0f0;
-  line-height: 1.15;
-  margin-bottom: 16px;
+  line-height: 1.12;
+  margin-bottom: 14px;
 }
 .tt-signage-headline--gold {
   background: linear-gradient(135deg, #f7971e 0%, #ffd200 50%, #ffe066 100%);
@@ -2627,17 +2629,17 @@ body {
 /* Featured item box (specials) */
 .tt-signage-featured {
   background: rgba(255,255,255,.06);
-  border-radius: 40px;
-  padding: 40px 48px;
+  border-radius: 36px;
+  padding: 24px 44px;
   border: 2px solid rgba(255,255,255,.06);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 760px;
+  max-width: 820px;
   width: 100%;
 }
 .tt-signage-featured__name {
-  font-size: 44px;
+  font-size: 36px;
   font-weight: 700;
   color: #f0f0f0;
 }
@@ -2657,13 +2659,13 @@ body {
 .tt-signage-menu-item {
   display: flex;
   align-items: center;
-  gap: 32px;
-  padding: 28px 36px;
+  gap: 26px;
+  padding: 16px 32px;
   background: rgba(255,255,255,.04);
-  border-radius: 28px;
+  border-radius: 24px;
   border: 2px solid rgba(255,255,255,.04);
 }
-.tt-signage-menu-item__icon { font-size: 56px; }
+.tt-signage-menu-item__icon { font-size: 60px; }
 .tt-signage-menu-item__name { font-size: 32px; font-weight: 700; color: #f0f0f0; }
 .tt-signage-menu-item__desc { font-size: 24px; color: rgba(255,255,255,.4); }
 .tt-signage-menu-item__price {
@@ -2927,6 +2929,18 @@ body {
 .tt-signage-panel__emoji {
   font-size: 80px;
   margin-bottom: 20px;
+}
+/* Specials: centered hero icon at ~25% from the top, sized to match the
+   60px bar "location" logo, with the title stacked beneath it. */
+.tt-signage-panel__specials-head {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+.tt-signage-panel__specials-emoji {
+  font-size: 60px;
+  line-height: 1;
+  margin-bottom: 14px;
 }
 .tt-signage-panel__body {
   font-size: 24px;
@@ -4091,4 +4105,66 @@ body {
   margin: auto;
   transform: scale(1.25);
   transform-origin: center center;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   NEXT-GAME COUNTDOWN PILL — a notch hanging from the top-center edge that
+   overlays every screen. Shows "TRIVIA STARTS IN M:SS" to the next game.
+   Toggled/updated by app.js (updateNextPill).
+   ═══════════════════════════════════════════════════════════════════════ */
+.tt-next-pill {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 15px 46px 18px;
+  background: rgba(15, 3, 38, 0.93);
+  border: 2px solid rgba(255, 255, 255, 0.13);
+  border-top: none;
+  border-radius: 0 0 30px 30px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.tt-next-pill__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #00d4aa;
+  box-shadow: 0 0 14px rgba(0, 212, 170, 0.9);
+  animation: ttNextPulse 1.6s ease-in-out infinite;
+}
+@keyframes ttNextPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.66); }
+}
+.tt-next-pill__label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+.tt-next-pill__time {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 38px;
+  line-height: 1;
+  color: #ffd200;
+  font-variant-numeric: tabular-nums;
+  min-width: 96px;
+  text-align: left;
+}
+/* low-power TVs (Fire TV/Vega): drop blur to match the rest of the app */
+.tt-low-power .tt-next-pill {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: rgba(15, 3, 38, 0.97);
 }
