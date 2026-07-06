@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Between-rounds slide 3 — "Play TapTrivia" (text left, QR right).
+     Authored at the measured web coordinates (tv.taptrivia.tv ?preview=between). -->
+<component name="PlayTapTriviaScreen" extends="Group">
+  <interface>
+    <field id="barCode" type="string" onChange="onBarCodeChanged" />
+  </interface>
+
+  <children>
+    <!-- ── Left column ── -->
+    <Poster id="brain" uri="pkg:/images/emoji-lg-1f9e0.png" width="112" height="112" translation="[128, 242]" />
+
+    <Label text="NEW QUESTIONS EVERY 15 MIN" translation="[134, 396]" color="#667eea">
+      <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="24" />
+    </Label>
+
+    <Label text="Play" translation="[134, 432]" color="#ffffff">
+      <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="90" />
+    </Label>
+    <Label id="playWord" text="TapTrivia" translation="[337, 432]" color="#ffd200">
+      <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="90" />
+    </Label>
+
+    <Label text="Free for 7 days" translation="[134, 557]" color="#00d4aa">
+      <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="46" />
+    </Label>
+
+    <Label text="Scan the code → playing on your phone in seconds"
+           translation="[134, 622]" width="780" color="#ffffff99">
+      <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="33" />
+    </Label>
+
+    <Label text="app.taptrivia.tv" translation="[134, 700]" color="#ffd200">
+      <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="30" />
+    </Label>
+
+    <Label text="AND ENTER CODE" translation="[134, 800]" color="#ffffff73">
+      <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="24" />
+    </Label>
+    <Label id="codeLabel" text="" translation="[383, 754]" color="#ffd200">
+      <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="78" />
+    </Label>
+
+    <!-- ── Right: QR (white card + code image) ── -->
+    <Rectangle color="#ffffff" width="568" height="568" translation="[1175, 256]" />
+    <Poster uri="pkg:/images/qr-play-520.png" width="520" height="520" translation="[1199, 280]" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="PlayTapTriviaScreen.brs" />
+</component>

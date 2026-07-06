@@ -97,6 +97,10 @@ async function generateQRCodes() {
   // 200px QR for signage
   await QRCode.toFile(path.join(IMAGES_DIR, 'qr-play-200.png'), url, { ...opts, width: 200, margin: 1 });
   console.log('  ✓ qr-play-200.png');
+
+  // 244px QR for the two-screen Scores rotation (matches web qrCodeHTML(244))
+  await QRCode.toFile(path.join(IMAGES_DIR, 'qr-play-244.png'), url, { ...opts, width: 244, margin: 1 });
+  console.log('  ✓ qr-play-244.png');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -516,6 +520,74 @@ function generateLeaderRowBg() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// TWO-SCREEN SCORES ROTATION assets (match web tv-app .tt-2s)
+// ═══════════════════════════════════════════════════════════
+
+function generateTwoScreenAssets() {
+  console.log('Generating two-screen Scores rotation assets...');
+
+  // Standings row — normal: white 4% fill + white 6% border (web .tt-2s__row)
+  let c = createCanvas(864, 66);
+  let ctx = c.getContext('2d');
+  roundedRect(ctx, 0, 0, 864, 66, 18);
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  roundedRect(ctx, 0.5, 0.5, 863, 65, 18);
+  ctx.stroke();
+  save(c, 'row2s-bg.png');
+
+  // Standings row — first place: white 10% fill + gold 33% border (web .tt-2s__row--first)
+  c = createCanvas(864, 66);
+  ctx = c.getContext('2d');
+  roundedRect(ctx, 0, 0, 864, 66, 18);
+  ctx.fillStyle = 'rgba(255,255,255,0.10)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,210,0,0.33)';
+  ctx.lineWidth = 2;
+  roundedRect(ctx, 1, 1, 862, 64, 17);
+  ctx.stroke();
+  save(c, 'row2s-first.png');
+
+  // QR white card (web .tt-2s__play QR wrapper — white rounded card, padding)
+  c = createCanvas(268, 268);
+  ctx = c.getContext('2d');
+  roundedRect(ctx, 0, 0, 268, 268, 20);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  save(c, 'qrcard2s.png');
+}
+
+// ═══════════════════════════════════════════════════════════
+// IN-GAME QR BADGE (web .tt-qr-badge--bl, 1.2x baked → 1920 native)
+// ═══════════════════════════════════════════════════════════
+
+function generateInGameQrBadge() {
+  console.log('Generating in-game QR badge assets...');
+
+  // Dark glass badge background (web .tt-qr-badge on TV: rgba(10,5,20,.88))
+  let c = createCanvas(600, 270);
+  let ctx = c.getContext('2d');
+  roundedRect(ctx, 0, 0, 600, 270, 38);
+  ctx.fillStyle = 'rgba(10,5,20,0.88)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 2;
+  roundedRect(ctx, 1, 1, 598, 268, 37);
+  ctx.stroke();
+  save(c, 'qrbadge-game-bg.png');
+
+  // White rounded QR card (web .tt-qr wrapper)
+  c = createCanvas(230, 230);
+  ctx = c.getContext('2d');
+  roundedRect(ctx, 0, 0, 230, 230, 24);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  save(c, 'qrbadge-card.png');
+}
+
+// ═══════════════════════════════════════════════════════════
 // QR BADGE BACKGROUND (360x140, rounded)
 // ═══════════════════════════════════════════════════════════
 
@@ -864,19 +936,19 @@ function generateSignageElements() {
     save(c, 'signage-header-logo-bg.png');
   }
 
-  // Brand logo bg (large) — 280x280, same gradient
+  // Brand logo bg (large) — 364x364 (+30%, matches IdleScreen brandLogoBg), same gradient
   {
-    const c = createCanvas(280, 280);
+    const c = createCanvas(364, 364);
     const ctx = c.getContext('2d');
-    roundedRect(ctx, 2, 2, 276, 276, 56);
-    const g = ctx.createLinearGradient(0, 0, 280, 280);
+    roundedRect(ctx, 3, 3, 358, 358, 73);
+    const g = ctx.createLinearGradient(0, 0, 364, 364);
     g.addColorStop(0, '#2a1a4e');
     g.addColorStop(1, '#3d2266');
     ctx.fillStyle = g;
     ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-    ctx.lineWidth = 4;
-    roundedRect(ctx, 2, 2, 276, 276, 56);
+    ctx.lineWidth = 5;
+    roundedRect(ctx, 3, 3, 358, 358, 73);
     ctx.stroke();
     save(c, 'signage-brand-logo-bg.png');
   }

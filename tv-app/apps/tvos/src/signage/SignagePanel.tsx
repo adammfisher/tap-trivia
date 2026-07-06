@@ -196,15 +196,13 @@ const pn = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  // Just position the badge — no extra card. QRBadge (inline) already carries its
+  // own card styling, so wrapping it again here made the signage "Join Trivia!"
+  // badge a card-in-a-card that didn't match the bare badge used on every other
+  // screen. Keep only centering + top margin so it matches in all spots.
   qrFooter: {
     alignItems: 'center',
     marginTop: spacing.sm,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 22,
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.05)',
   },
   label: {
     fontFamily: fonts.outfit.bold,
@@ -251,6 +249,7 @@ const pn = StyleSheet.create({
   },
   // Menu / Specials
   menuItem: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
@@ -266,6 +265,7 @@ const pn = StyleSheet.create({
   menuName: { flex: 1, fontFamily: fonts.outfit.medium, fontSize: 22, color: '#ffffff' },
   menuPrice: { fontFamily: fonts.fredoka.bold, fontSize: 28, color: colors.gold },
   featured: {
+    width: '100%',
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 24,
     paddingVertical: 24,
@@ -281,6 +281,7 @@ const pn = StyleSheet.create({
   featuredPrice: { fontFamily: fonts.fredoka.bold, fontSize: 48, color: colors.gold },
   // Deals
   deal: {
+    width: '100%',
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 24,
     paddingVertical: 28,

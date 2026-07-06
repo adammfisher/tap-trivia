@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Between-rounds slide 1 — "Leader Results" (final standings, top 5).
+     Authored at the measured web coordinates (tv.taptrivia.tv ?preview=between). -->
+<component name="LeaderResultsScreen" extends="Group">
+  <interface>
+    <field id="barName" type="string" onChange="onBarNameChanged" />
+    <field id="standings" type="array" onChange="onStandingsChanged" />
+  </interface>
+
+  <children>
+    <Label text="Round Complete!" translation="[716, 243]" color="#ffffff">
+      <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="55" />
+    </Label>
+    <Poster uri="pkg:/images/emoji-md-1f389.png" width="56" height="56" translation="[1150, 239]" />
+
+    <Label id="standingsLabel" text="FINAL STANDINGS" translation="[0, 319]" width="1920" horizAlign="center" color="#ffd200">
+      <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="18" />
+    </Label>
+
+    <!-- Rows built dynamically -->
+    <Group id="rowsGroup" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="LeaderResultsScreen.brs" />
+</component>

@@ -305,6 +305,22 @@ resource "aws_apigatewayv2_route" "save_signage" {
 }
 
 # -----------------------------------------------------------------------------
+# PUT /dashboard/settings → save-settings
+# -----------------------------------------------------------------------------
+resource "aws_apigatewayv2_integration" "save_settings" {
+  api_id                 = aws_apigatewayv2_api.main.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.save_settings.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "save_settings" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "PUT /dashboard/settings"
+  target    = "integrations/${aws_apigatewayv2_integration.save_settings.id}"
+}
+
+# -----------------------------------------------------------------------------
 # POST /dashboard/logo → upload-logo
 # -----------------------------------------------------------------------------
 resource "aws_apigatewayv2_integration" "upload_logo" {

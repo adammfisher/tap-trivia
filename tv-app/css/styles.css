@@ -223,13 +223,19 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: 32px; /* 16×2 */
-  padding: 24px 36px 24px 28px; /* 12,18,12,14 × 2 */
+  padding: 16px 28px 16px 18px;
   border: 2px solid rgba(255,255,255,0.08); /* 1×2 */
 }
 @supports not (backdrop-filter: blur(12px)) {
   .tt-qr-badge { background: rgba(10,5,20,0.88); }
 }
-.tt-qr-badge--bl { bottom: 28px; left: 40px; } /* 14,20 × 2 */
+.tt-qr-badge--bl {
+  bottom: 28px;
+  left: 40px;
+  /* question-screen badge reads from across the bar: 1.2x (2x was too big), anchored to its corner */
+  transform: scale(1.2);
+  transform-origin: bottom left;
+}
 .tt-qr-badge--br { bottom: 28px; right: 40px; }
 .tt-qr-badge--inline {
   position: relative;
@@ -243,6 +249,21 @@ body {
   font-weight: 700;
   color: #f0f0f0;
   line-height: 1.2;
+}
+.tt-qr-badge__offer {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #00d4aa;
+  margin-top: 4px;
+}
+.tt-qr-badge__scan {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 2px;
 }
 .tt-qr-badge__url {
   font-size: 22px; /* 11×2 */
@@ -1446,34 +1467,37 @@ body {
    "Reconnecting..." with spinner
    ═══════════════════════════════════════════════════════════════ */
 .tt-error-overlay {
+  /* Corner pill, not a takeover — the show goes on under a connection note */
   position: fixed;
-  inset: 0;
+  right: 28px;
+  bottom: 28px;
   z-index: 100;
-  background: rgba(15,3,38,0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15,3,38,0.92);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 999px;
+  padding: 10px 22px;
   display: flex;
   align-items: center;
-  justify-content: center;
 }
 .tt-error-overlay__content {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 40px;
+  gap: 12px;
 }
 .tt-error-overlay__spinner {
-  width: 80px; height: 80px;
-  border: 6px solid rgba(255,255,255,0.1);
-  border-top-color: #667eea;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-top-color: #ffd200;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: tt-spin 1s linear infinite;
 }
 .tt-error-overlay__text {
-  font-family: 'Fredoka', sans-serif;
-  font-size: 40px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
   font-weight: 600;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.85);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2566,22 +2590,24 @@ body {
   align-items: center;
   z-index: 5;
   text-align: center;
-  padding: 0 80px;
+  /* Top padding clears the header + the persistent countdown pill so centered
+     content never rides up under them; bottom keeps a safe margin. */
+  padding: 104px 80px 40px;
 }
 .tt-signage-label {
   font-size: 24px;
   font-weight: 700;
   letter-spacing: 4px;
   text-transform: uppercase;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 .tt-signage-headline {
   font-family: 'Fredoka', sans-serif;
-  font-size: 88px;
+  font-size: 72px;
   font-weight: 700;
   color: #f0f0f0;
-  line-height: 1.15;
-  margin-bottom: 16px;
+  line-height: 1.12;
+  margin-bottom: 14px;
 }
 .tt-signage-headline--gold {
   background: linear-gradient(135deg, #f7971e 0%, #ffd200 50%, #ffe066 100%);
@@ -2603,17 +2629,17 @@ body {
 /* Featured item box (specials) */
 .tt-signage-featured {
   background: rgba(255,255,255,.06);
-  border-radius: 40px;
-  padding: 40px 48px;
+  border-radius: 36px;
+  padding: 24px 44px;
   border: 2px solid rgba(255,255,255,.06);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 760px;
+  max-width: 820px;
   width: 100%;
 }
 .tt-signage-featured__name {
-  font-size: 44px;
+  font-size: 36px;
   font-weight: 700;
   color: #f0f0f0;
 }
@@ -2633,13 +2659,13 @@ body {
 .tt-signage-menu-item {
   display: flex;
   align-items: center;
-  gap: 32px;
-  padding: 28px 36px;
+  gap: 26px;
+  padding: 16px 32px;
   background: rgba(255,255,255,.04);
-  border-radius: 28px;
+  border-radius: 24px;
   border: 2px solid rgba(255,255,255,.04);
 }
-.tt-signage-menu-item__icon { font-size: 56px; }
+.tt-signage-menu-item__icon { font-size: 60px; }
 .tt-signage-menu-item__name { font-size: 32px; font-weight: 700; color: #f0f0f0; }
 .tt-signage-menu-item__desc { font-size: 24px; color: rgba(255,255,255,.4); }
 .tt-signage-menu-item__price {
@@ -2903,6 +2929,18 @@ body {
 .tt-signage-panel__emoji {
   font-size: 80px;
   margin-bottom: 20px;
+}
+/* Specials: centered hero icon at ~25% from the top, sized to match the
+   60px bar "location" logo, with the title stacked beneath it. */
+.tt-signage-panel__specials-head {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+.tt-signage-panel__specials-emoji {
+  font-size: 60px;
+  line-height: 1;
+  margin-bottom: 14px;
 }
 .tt-signage-panel__body {
   font-size: 24px;
@@ -3859,4 +3897,274 @@ body {
   font-size: 22px;
   font-weight: 600;
   color: rgba(255,255,255,.5);
+}
+
+/* =============================================================================
+   TWO-SCREEN SCORES ROTATION (docs/taptrivia-2screen.jsx)
+   Screen 1 (0:37–0:43): Did You Know | Standings
+   Screen 2 (0:43–0:52): Venue Ad     | Play TapTrivia QR
+   ============================================================================= */
+.tt-2s { position: relative; width: 100%; height: 100%; }
+.tt-2s__screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .5s ease;
+}
+.tt-2s .tt-2s__screen--1 { opacity: 1; }
+.tt-2s.tt-2s--s2 .tt-2s__screen--1 { opacity: 0; }
+.tt-2s.tt-2s--s2 .tt-2s__screen--2 { opacity: 1; }
+
+.tt-2s__half {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 5%;
+}
+.tt-2s__half--divider { border-right: 1px solid rgba(255,255,255,.08); }
+
+.tt-2s__label {
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  letter-spacing: 8px;
+  text-align: center;
+}
+.tt-2s__label--gold { color: #ffd200; margin-bottom: 32px; }
+.tt-2s__label--green { color: #00d4aa; letter-spacing: 6px; margin-bottom: 26px; }
+.tt-2s__label--dim {
+  color: rgba(255,255,255,.4);
+  font-size: 18px;
+  letter-spacing: 5px;
+  margin-top: 8px;
+}
+
+/* Screen 1 left — Did You Know */
+.tt-2s__fact { text-align: center; }
+.tt-2s__fact-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: 42px;
+  font-weight: 600;
+  color: #f5f5f5;
+  line-height: 1.4;
+}
+.tt-2s__brand-logo { margin-bottom: 18px; }
+.tt-2s__brand-sub { font-size: 30px; color: rgba(255,255,255,.5); }
+
+/* Screen 1 right — Standings */
+.tt-2s__standings { display: flex; flex-direction: column; }
+.tt-2s__standings-head { text-align: center; margin-bottom: 24px; }
+.tt-2s__rows { display: flex; flex-direction: column; gap: 12px; }
+.tt-2s__row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 18px;
+  padding: 13px 23px;
+}
+.tt-2s__row--first {
+  background: rgba(255,255,255,.1);
+  border-color: rgba(255,210,0,.33);
+}
+.tt-2s__row-rank {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 25px;
+  font-weight: 700;
+  color: rgba(255,255,255,.3);
+  width: 28px;
+  flex-shrink: 0;
+}
+.tt-2s__row-rank--top { color: #ffd200; }
+.tt-2s__row-name {
+  flex: 1;
+  font-size: 25px;
+  font-weight: 500;
+  color: rgba(255,255,255,.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tt-2s__row--first .tt-2s__row-name { font-weight: 700; color: #f5f5f5; }
+.tt-2s__row-score {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 25px;
+  font-weight: 700;
+  color: #ffd200;
+}
+.tt-2s__empty {
+  text-align: center;
+  font-size: 28px;
+  color: rgba(255,255,255,.4);
+  padding: 40px 0;
+}
+
+/* Screen 2 left — venue ad (signage panel slide or welcome card) */
+.tt-2s__half--ad { padding: 0; }
+.tt-2s__half .tt-signage-panel.tt-2s__ad {
+  /* full-bleed: the ad owns its entire half, edge to edge */
+  margin: 0;
+  border-radius: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.tt-2s__welcome { text-align: center; }
+.tt-2s__welcome-name {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 64px;
+  font-weight: 700;
+  color: #f5f5f5;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+.tt-2s__welcome-sub { font-size: 26px; color: rgba(255,255,255,.5); }
+
+/* Screen 2 right — Play TapTrivia QR card */
+.tt-2s__play {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.tt-2s__play-emoji {
+  font-size: 72px;
+  margin-bottom: 12px;
+  animation: breathe 4s ease-in-out infinite;
+}
+.tt-2s__play-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 55px;
+  font-weight: 700;
+  color: #f5f5f5;
+  margin-bottom: 8px;
+}
+.tt-2s__play-offer {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: #00d4aa;
+  line-height: 1;
+}
+.tt-2s__play-scan {
+  font-size: 21px;
+  color: rgba(255,255,255,.45);
+  margin: 6px 0 28px;
+}
+.tt-2s__play-url {
+  font-family: 'DM Mono', monospace;
+  font-size: 21px;
+  color: #ffd200;
+  margin-top: 20px;
+}
+.tt-2s__play-code-row {
+  margin-top: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.tt-2s__play-code-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 20px;
+  color: rgba(255,255,255,.4);
+  letter-spacing: 3px;
+}
+.tt-2s__play-code {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 49px;
+  font-weight: 700;
+  color: #ffd200;
+  letter-spacing: 7px;
+}
+
+/* In the two-screen rotation the right half IS the QR card — hide the
+   signage panel's built-in QR footer to avoid showing two QR codes at once. */
+.tt-2s__ad .tt-signage-panel__qr { display: none; }
+
+/* Screen 2 content reads from across the bar — scale the welcome and QR
+ * cards 35% up. transform doesn't affect flow, halves stay 50/50, centered
+ * content stays centered and clears the frame at 1920x1080. The signage ad
+ * panel is excluded — it already fills its half. */
+.tt-2s__screen--2 .tt-2s__welcome,
+.tt-2s__screen--2 .tt-2s__play {
+  transform: scale(1.35);
+  transform-origin: center center;
+}
+
+/* Screen-2 venue ad: content 25% bigger inside the same box — the inner block
+ * shrinks to 80% of the frame and scales 1.25, so it fills the panel edge-to-
+ * edge with larger type instead of more whitespace. */
+.tt-2s__ad .tt-signage-panel__inner {
+  width: 80%;
+  height: 80%;
+  margin: auto;
+  transform: scale(1.25);
+  transform-origin: center center;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   NEXT-GAME COUNTDOWN PILL — a notch hanging from the top-center edge that
+   overlays every screen. Shows "TRIVIA STARTS IN M:SS" to the next game.
+   Toggled/updated by app.js (updateNextPill).
+   ═══════════════════════════════════════════════════════════════════════ */
+.tt-next-pill {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 15px 46px 18px;
+  background: rgba(15, 3, 38, 0.93);
+  border: 2px solid rgba(255, 255, 255, 0.13);
+  border-top: none;
+  border-radius: 0 0 30px 30px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.tt-next-pill__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #00d4aa;
+  box-shadow: 0 0 14px rgba(0, 212, 170, 0.9);
+  animation: ttNextPulse 1.6s ease-in-out infinite;
+}
+@keyframes ttNextPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.66); }
+}
+.tt-next-pill__label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+.tt-next-pill__time {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 38px;
+  line-height: 1;
+  color: #ffd200;
+  font-variant-numeric: tabular-nums;
+  min-width: 96px;
+  text-align: left;
+}
+/* low-power TVs (Fire TV/Vega): drop blur to match the rest of the app */
+.tt-low-power .tt-next-pill {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: rgba(15, 3, 38, 0.97);
 }

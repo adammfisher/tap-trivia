@@ -1,0 +1,32 @@
+[
+  {
+    "id": 185367,
+    "question": "Rose's accuser was identified in court documents by what placeholder name?",
+    "answer": "Jane Doe",
+    "wrong_answers": [
+      "Jane Roe",
+      "Mary Doe",
+      "Jane Smith"
+    ]
+  },
+  {
+    "id": 187764,
+    "question": "What phrase typically followed \"This page is\" on placeholder sites?",
+    "answer": "Under construction",
+    "wrong_answers": [
+      "Being built",
+      "In progress",
+      "Coming soon"
+    ]
+  },
+  {
+    "id": 192046,
+    "question": "What do songwriters call placeholder lyrics sung over a melody before real words exist?",
+    "answer": "Gibberish",
+    "wrong_answers": [
+      "Scratch vocals",
+      "Demo dub",
+      "Filler tracks"
+    ]
+  }
+]

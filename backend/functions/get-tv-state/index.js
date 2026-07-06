@@ -5,6 +5,7 @@ const { getGameState, getNextGameTime, gameTimeslotPK, GAME_DURATION_MS, RESULTS
 const { calculatePoints } = require('./shared/scoring');
 const { deduplicateNames } = require('./shared/name-suffixes');
 const { getConfig } = require('./shared/config');
+const { injectHousePlayers, housePlayersEnabled } = require('./shared/house-players');
 
 function response(statusCode, body) {
   return {
@@ -130,8 +131,12 @@ function aggregateBarScores(answers) {
  * Build a bar leaderboard for a given game + barCode.
  * If excludeQuestion is set, answers for that question number are excluded
  * so scores don't update in real time while the question is active.
+ *
+ * houseOpts ({ enabled, completedQuestions }) controls house-player injection.
+ * completedQuestions must match the freeze rule: pass the same question index
+ * real scores are shown through, so house scores accrue in lockstep.
  */
-async function getBarLeaderboard(gameId, barCode, limit, excludeQuestion) {
+async function getBarLeaderboard(gameId, barCode, limit, excludeQuestion, houseOpts) {
   const answers = await query(TABLE.ANSWERS, {
     IndexName: 'game-bar-index',
     KeyConditionExpression: 'gameIdBarCode = :gbk',
@@ -144,10 +149,23 @@ async function getBarLeaderboard(gameId, barCode, limit, excludeQuestion) {
 
   const leaderboard = aggregateBarScores(filtered);
   const dedupMap = deduplicateNames(leaderboard.map(e => ({ playerId: e.playerId, playerName: e.playerName })));
-  return leaderboard.slice(0, limit || 10).map(e => ({
-    rank: e.rank,
+  const realEntries = leaderboard.map(e => ({
     playerName: dedupMap.get(e.playerId) || e.playerName,
     score: e.score
+  }));
+
+  const merged = injectHousePlayers(realEntries, {
+    enabled: houseOpts ? houseOpts.enabled : false,
+    gameId,
+    barCode,
+    completedQuestions: houseOpts ? houseOpts.completedQuestions : 0
+  });
+
+  return merged.slice(0, limit || 10).map((e, i) => ({
+    rank: e.rank != null ? e.rank : i + 1,
+    playerName: e.playerName,
+    score: e.score,
+    ...(e.isHouse ? { isHouse: true } : {})
   }));
 }
 
@@ -366,7 +384,10 @@ exports.handler = async (event) => {
         const prevGame = await get(TABLE.GAMES, { PK: prevPK });
 
         if (prevGame) {
-          const barLeaderboard = await getBarLeaderboard(prevGame.gameId, barCode, 10);
+          const barLeaderboard = await getBarLeaderboard(prevGame.gameId, barCode, 10, null, {
+            enabled: housePlayersEnabled(bar),
+            completedQuestions: 15
+          });
           const globalLeaderboard = await getGlobalLeaderboard(prevGame.gameId, 10);
 
           return response(200, {
@@ -409,7 +430,10 @@ exports.handler = async (event) => {
     // --- POST-GAME: game is over ---
 
     if (gameState.gamePhase === 'post_game') {
-      const barLeaderboard = await getBarLeaderboard(game.gameId, barCode, 10);
+      const barLeaderboard = await getBarLeaderboard(game.gameId, barCode, 10, null, {
+        enabled: housePlayersEnabled(bar),
+        completedQuestions: 15
+      });
       const globalLeaderboard = await getGlobalLeaderboard(game.gameId, 10);
 
       // Check if there's a next game coming
@@ -496,10 +520,15 @@ exports.handler = async (event) => {
       : 0;
 
     // During playing phases, exclude the current question's answers so
-    // scores stay frozen and don't reveal who answered correctly.
+    // scores stay frozen and don't reveal who answered correctly. House
+    // accrual follows the same freeze rule via completedQuestions.
     const barLeaderboard = await getBarLeaderboard(
       game.gameId, barCode, 10,
-      isRevealOrScores ? null : questionNumber
+      isRevealOrScores ? null : questionNumber,
+      {
+        enabled: housePlayersEnabled(bar),
+        completedQuestions: isRevealOrScores ? questionNumber : questionNumber - 1
+      }
     );
 
     // During reveal/scores, compute answer distribution percentages

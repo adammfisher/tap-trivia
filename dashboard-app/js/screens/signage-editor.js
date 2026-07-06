@@ -804,8 +804,8 @@ function buildSpecialsForm(el, d) {
     </div>
     ${fieldHTML('featuredDesc', 'Description', d.featuredDesc || '', 'House lime, Cointreau...')}
     <div class="menu-items-header">
-      <div class="field-label form-section-label">MENU ITEMS (${(d.menuItems || []).length}/6)</div>
-      ${(d.menuItems || []).length < 6 ? '<button class="btn-ghost btn-sm" id="btn-add-menu-item">+ Add</button>' : ''}
+      <div class="field-label form-section-label">MENU ITEMS (${(d.menuItems || []).length}/4)</div>
+      ${(d.menuItems || []).length < 4 ? '<button class="btn-ghost btn-sm" id="btn-add-menu-item">+ Add</button>' : ''}
     </div>
     <div id="menu-items-list">
       ${(d.menuItems || []).map((item, i) => `

@@ -207,6 +207,7 @@ exports.handler = async (event) => {
           logoUrl: bar.logoUrl || null,
           logoHash: bar.logoHash || null,
           signage: bar.signage || { slides: [], rotationSpeed: 60, enabled: true },
+          housePlayersEnabled: bar.housePlayersEnabled !== false, // absent ⇒ enabled
           memberSince: bar.createdAt || null
         },
         barActivity: {

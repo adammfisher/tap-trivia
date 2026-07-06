@@ -1,0 +1,22 @@
+[
+  {
+    "id": 37813,
+    "question": "Perplexity AI raised billions as an AI alternative to what search service?",
+    "answer": "Google",
+    "wrong_answers": [
+      "Bing",
+      "Yahoo",
+      "DuckDuckGo"
+    ]
+  },
+  {
+    "id": 177472,
+    "question": "Gemini is built into which Google web browser as an AI assistant?",
+    "answer": "Chrome",
+    "wrong_answers": [
+      "Edge",
+      "Safari",
+      "Firefox"
+    ]
+  }
+]

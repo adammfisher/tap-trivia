@@ -1,0 +1,191 @@
+[
+  {
+    "PK": {
+      "S": "Q#34597"
+    },
+    "answer": {
+      "S": "Teeth"
+    },
+    "category": {
+      "S": "Geology"
+    },
+    "createdAt": {
+      "S": "2026-03-25 21:14:09"
+    },
+    "difficulty": {
+      "N": "3"
+    },
+    "difficultySort": {
+      "S": "3#34597"
+    },
+    "expired": {
+      "N": "0"
+    },
+    "funFact": {
+      "S": "Archaeopteryx's teeth gave it a perfect dinosaur-to-bird transition fossil look — museums went crazy when they found it."
+    },
+    "lastUsedEpoch": {
+      "N": "1779116077245"
+    },
+    "question": {
+      "S": "What dinosaur feature did Archaeopteryx possess that modern birds lack?"
+    },
+    "questionId": {
+      "N": "34597"
+    },
+    "shelfLife": {
+      "S": "permanent"
+    },
+    "sourceType": {
+      "S": "static"
+    },
+    "subcategory": {
+      "S": "Famous Fossils & Museum Pieces"
+    },
+    "topicLeaf": {
+      "S": "Smithsonian Institution fossil archives"
+    },
+    "usageCount": {
+      "N": "1"
+    },
+    "wrongAnswers": {
+      "L": [
+        {
+          "S": "Feathers"
+        },
+        {
+          "S": "Wishbone"
+        },
+        {
+          "S": "Hollow bones"
+        }
+      ]
+    }
+  },
+  {
+    "topicLeaf": {
+      "S": "Archaeopteryx & feathered dinosaurs"
+    },
+    "question": {
+      "S": "What dinosaur feature do most modern birds lack that Archaeopteryx possessed?"
+    },
+    "questionId": {
+      "N": "39120"
+    },
+    "shelfLife": {
+      "S": "permanent"
+    },
+    "lastUsedEpoch": {
+      "N": "0"
+    },
+    "createdAt": {
+      "S": "2026-03-26 01:30:54"
+    },
+    "usageCount": {
+      "N": "0"
+    },
+    "difficulty": {
+      "N": "2"
+    },
+    "subcategory": {
+      "S": "Major Fossil Discoveries & Breakthroughs"
+    },
+    "answer": {
+      "S": "Teeth"
+    },
+    "expired": {
+      "N": "0"
+    },
+    "sourceType": {
+      "S": "static"
+    },
+    "wrongAnswers": {
+      "L": [
+        {
+          "S": "Feathers"
+        },
+        {
+          "S": "Wings"
+        },
+        {
+          "S": "Lightweight skeleton"
+        }
+      ]
+    },
+    "category": {
+      "S": "Geology"
+    },
+    "funFact": {
+      "S": "Modern birds lost their teeth millions of years ago and developed beaks instead — but Archaeopteryx still had them."
+    },
+    "difficultySort": {
+      "S": "2#39120"
+    },
+    "PK": {
+      "S": "Q#39120"
+    }
+  },
+  {
+    "PK": {
+      "S": "Q#100718"
+    },
+    "answer": {
+      "S": "Teeth"
+    },
+    "category": {
+      "S": "Dinosaurs, Fossils, Prehistoric Creatures & Life B"
+    },
+    "createdAt": {
+      "S": "2026-04-04 15:10:13"
+    },
+    "difficulty": {
+      "N": "3"
+    },
+    "difficultySort": {
+      "S": "3#100718"
+    },
+    "expired": {
+      "N": "0"
+    },
+    "funFact": {
+      "S": "Archaeopteryx had sharp teeth like its dinosaur cousins, making modern toothless birds look like evolution's biggest glow-up."
+    },
+    "lastUsedEpoch": {
+      "N": "1780419666004"
+    },
+    "question": {
+      "S": "What anatomical feature proved Archaeopteryx was not purely avian?"
+    },
+    "questionId": {
+      "N": "100718"
+    },
+    "shelfLife": {
+      "S": "permanent"
+    },
+    "sourceType": {
+      "S": "static"
+    },
+    "subcategory": {
+      "S": "Famous Fossil Discoveries"
+    },
+    "topicLeaf": {
+      "S": "Archaeopteryx fossil evidence for bird evolution"
+    },
+    "usageCount": {
+      "N": "7"
+    },
+    "wrongAnswers": {
+      "L": [
+        {
+          "S": "Feathers"
+        },
+        {
+          "S": "Hollow bones"
+        },
+        {
+          "S": "Wishbone"
+        }
+      ]
+    }
+  }
+]

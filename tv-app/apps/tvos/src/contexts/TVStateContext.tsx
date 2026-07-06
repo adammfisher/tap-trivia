@@ -170,6 +170,76 @@ function computeCountdown(nextEpoch?: number): number {
   return Math.max(0, Math.ceil((next - now) / 1000));
 }
 
+// ─── DEV PREVIEW ──────────────────────────────────────────────────────
+// Set DEV_PREVIEW_SCREEN to a TVScreen to force it with sample data and skip
+// all polling — for visual QA against the web + Roku apps. null = normal.
+export const DEV_PREVIEW_SCREEN: TVScreen | null = null;
+
+const SAMPLE_SIGNAGE: SignageSlide[] = [
+  {
+    template: 'specials', enabled: true, emoji: '🍺',
+    customLabel: 'Two Buck Saloon', headline: 'Daily Specials', subheadline: 'All Day Everyday',
+    featured: { name: 'PBR Draft - High Life - Busch Light', price: '$2' },
+    items: [
+      { icon: '🥃', name: 'Buck Shot - PBR & Jim Beam', price: '$6' },
+      { icon: '🥃', name: 'Cowboy Shot - PBR & Hornitos', price: '$7' },
+      { icon: '🥃', name: 'Cowboy Shot - Vodka & Red bull', price: '$7' },
+      { icon: '🥃', name: 'Doe Shot - White Claw & Deep Eddies', price: '$8' },
+    ],
+  } as any,
+  {
+    template: 'announcement', enabled: true, emoji: '🍕',
+    headline: 'Grab a Pizza!', message: 'We have pizza behind the bar - ask your bartender for a cheese or 3-meat.',
+  } as any,
+];
+
+const SAMPLE_LEADERBOARD: any[] = [
+  { playerName: 'Hollis', name: 'Hollis', score: 2690, rank: 1 },
+  { playerName: 'Tina_M', name: 'Tina_M', score: 2237, rank: 2 },
+  { playerName: 'QuizKid', name: 'QuizKid', score: 1980, rank: 3 },
+  { playerName: 'Marcus', name: 'Marcus', score: 1540, rank: 4 },
+  { playerName: 'Jen', name: 'Jen', score: 1320, rank: 5 },
+];
+
+const SAMPLE_TV_STATE: TVState = {
+  screen: 'idle',
+  barCode: 'B8PQP',
+  barName: 'Two Buck Saloon',
+  gameId: 'sample-game',
+  activePlayers: 12,
+  questionNumber: 7,
+  totalQuestions: 15,
+  question: 'Which planet is known as the Red Planet?',
+  category: 'Science & Space',
+  subcategory: 'The Planets',
+  difficulty: 2,
+  answers: ['Venus', 'Mars', 'Jupiter', 'Saturn'],
+  correctIndex: 1,
+  eliminated: [],
+  answerPercentages: [10, 70, 12, 8],
+  pctCorrect: 70,
+  funFact: 'Mars appears red because of iron oxide (rust) coating its surface.',
+  gameStartEpoch: Date.now() - 7 * 52000,
+  elapsedSeconds: 13,
+  currentPointsAvailable: 650,
+  timerSeconds: 18,
+  barLeaderboard: SAMPLE_LEADERBOARD,
+  globalLeaderboard: SAMPLE_LEADERBOARD,
+  nextGameStartEpoch: Date.now() + 105000,
+  secondsUntilNextGame: 105,
+  signageSlides: SAMPLE_SIGNAGE,
+  signageRotationSpeed: 8,
+  signageCurrentIndex: 0,
+  betweenData: {
+    podium: { players: SAMPLE_LEADERBOARD.map(p => ({ name: p.name, score: p.score, rank: p.rank })), questionCount: 15, playerCount: 12 },
+    barStandings: null,
+    national: null,
+    hype: { nextGameId: 'next', categories: ['Movie Quotes', 'Fashion Trends, Streetwear', 'Pizza Wars', 'AI, Robots, Self-Driving Cars', 'Trains, Ships, the Titanic', 'World Capitals & Countries'], startsAt: Date.now() + 105000 },
+  },
+  consecutiveErrors: 0,
+  isConnected: true,
+};
+
 // ─── Context ──────────────────────────────────────────────────────────
 
 interface TVStateContextValue {
@@ -191,21 +261,25 @@ export function useTVState(): TVStateContextValue {
 // ─── Provider ─────────────────────────────────────────────────────────
 
 export function TVStateProvider({ children }: { children: React.ReactNode }) {
-  const [tvState, setTvState] = useState<TVState>({
-    screen: 'setup',
-    barCode: '',
-    barName: '',
-    activePlayers: 0,
-    totalQuestions: 15,
-    barLeaderboard: [],
-    globalLeaderboard: [],
-    secondsUntilNextGame: 0,
-    signageSlides: [],
-    signageRotationSpeed: 60,
-    signageCurrentIndex: 0,
-    consecutiveErrors: 0,
-    isConnected: true,
-  });
+  const [tvState, setTvState] = useState<TVState>(
+    DEV_PREVIEW_SCREEN
+      ? { ...SAMPLE_TV_STATE, screen: DEV_PREVIEW_SCREEN }
+      : {
+          screen: 'setup',
+          barCode: '',
+          barName: '',
+          activePlayers: 0,
+          totalQuestions: 15,
+          barLeaderboard: [],
+          globalLeaderboard: [],
+          secondsUntilNextGame: 0,
+          signageSlides: [],
+          signageRotationSpeed: 60,
+          signageCurrentIndex: 0,
+          consecutiveErrors: 0,
+          isConnected: true,
+        },
+  );
 
   // Mutable refs for poll loop
   const barCodeRef = useRef('');
@@ -238,10 +312,20 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
   const betweenGamePhaseIdxRef = useRef(0);
   const betweenGameTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const betweenGameLastGameIdRef = useRef('');
+  const betweenGamesStartedAtRef = useRef(0);
 
   // ─── Load saved config ──────────────────────────────────────────────
 
+  // DEV preview: re-apply the forced screen on mount + on every Fast Refresh
+  // (so editing DEV_PREVIEW_SCREEN live-updates the previewed screen).
   useEffect(() => {
+    if (DEV_PREVIEW_SCREEN) {
+      setTvState({ ...SAMPLE_TV_STATE, screen: DEV_PREVIEW_SCREEN });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (DEV_PREVIEW_SCREEN) return; // preview mode — skip config load + polling
     (async () => {
       try {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
@@ -472,19 +556,20 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
 
       // Handle rotation for game_over / break
       if (api.state === 'game_over') {
-        // Fetch between-game data once per game
+        // Fetch hype/categories once per game (for the Coming Up slide)
         if (api.gameId && api.gameId !== betweenGameLastGameIdRef.current) {
           betweenGameLastGameIdRef.current = api.gameId;
-          fetchBetweenGameData(api.gameId, newState);
-        } else if (betweenGameActiveRef.current) {
-          // Already in between-game — update state but keep current between screen
+          void fetchBetweenGameDataQuiet(api.gameId);
+        }
+        if (!betweenGameActiveRef.current) {
+          startBetweenGames(newState);
+        } else {
+          // Already rotating — refresh data; the time-based driver owns the screen
           setTvState(prev => ({
             ...newState,
             screen: prev.screen,
-            betweenData: prev.betweenData,
+            betweenData: betweenGameDataRef.current || prev.betweenData,
           }));
-        } else {
-          handlePostGameRotation(api, newState);
         }
       } else if (api.state === 'break') {
         if (betweenGameActiveRef.current) {
@@ -618,89 +703,75 @@ export function TVStateProvider({ children }: { children: React.ReactNode }) {
     cachedScreenDataRef.current = {};
   }
 
-  // ─── Between-game experience ────────────────────────────────────
+  // ─── Between-games rotation (Roku 5-slide, time-based over 120s) ──────
+  //   0–20s  round-complete
+  //   20–40s signage (full-screen 'idle')
+  //   40–80s play-taptrivia
+  //   80–100s signage (full-screen 'idle')
+  //   100s+  coming-up
+  // Driven off the synced clock so a TV that joins mid-window lands on the
+  // correct slide (matches Roku's betweenRoundsOffsetMs approach).
 
-  async function fetchBetweenGameData(gameId: string, baseState: TVState) {
+  function betweenGamesScreenFor(offsetMs: number): TVScreen {
+    if (offsetMs < 20000) return 'round-complete';
+    if (offsetMs < 40000) return 'idle';           // full-screen signage slot A
+    if (offsetMs < 80000) return 'play-taptrivia';
+    if (offsetMs < 100000) return 'idle';          // full-screen signage slot B
+    return 'coming-up';
+  }
+
+  function betweenGamesOffsetMs(): number {
+    const gse = latestApiRef.current?.gameStartEpoch;
+    if (gse != null) {
+      return Math.max(0, getServerNow() - (gse + GAME_DURATION_MS));
+    }
+    if (betweenGamesStartedAtRef.current) {
+      return Math.max(0, getServerNow() - betweenGamesStartedAtRef.current);
+    }
+    return 0;
+  }
+
+  function applyBetweenGamesSlide() {
+    const screen = betweenGamesScreenFor(betweenGamesOffsetMs());
+    setTvState(prev =>
+      prev.screen === screen
+        ? prev
+        : { ...prev, screen, betweenData: betweenGameDataRef.current || prev.betweenData },
+    );
+  }
+
+  function startBetweenGames(baseState: TVState) {
+    betweenGameActiveRef.current = true;
+    if (!betweenGamesStartedAtRef.current) betweenGamesStartedAtRef.current = getServerNow();
+    const screen = betweenGamesScreenFor(betweenGamesOffsetMs());
+    setTvState({
+      ...baseState,
+      screen,
+      betweenData: betweenGameDataRef.current || baseState.betweenData,
+    });
+    if (betweenGameTimerRef.current) clearInterval(betweenGameTimerRef.current as unknown as ReturnType<typeof setInterval>);
+    betweenGameTimerRef.current = setInterval(
+      applyBetweenGamesSlide,
+      500,
+    ) as unknown as ReturnType<typeof setTimeout>;
+  }
+
+  async function fetchBetweenGameDataQuiet(gameId: string) {
     try {
       const data = await getBetweenGameData(barCodeRef.current, gameId);
       betweenGameDataRef.current = data;
-
-      // Build phase list from non-null phases
-      const phases: TVScreen[] = [];
-      if (data.podium) phases.push('between-podium');
-      if (data.barStandings) phases.push('between-standings');
-      if (data.national) phases.push('between-national');
-      if (data.hype) phases.push('between-hype');
-
-      if (phases.length === 0) {
-        // No data — fall back to normal rotation
-        handlePostGameRotation(latestApiRef.current!, baseState);
-        return;
-      }
-
-      // Start between-game sequence
-      betweenGameActiveRef.current = true;
-      betweenGamePhasesRef.current = phases;
-      betweenGamePhaseIdxRef.current = 0;
-
-      const firstScreen = phases[0];
-      setTvState({
-        ...baseState,
-        screen: firstScreen,
-        betweenData: data,
-      });
-
-      // Schedule phase cycling
-      scheduleBetweenGamePhase(phases);
+      setTvState(prev => ({ ...prev, betweenData: data }));
     } catch {
-      // API error — fall back to normal rotation
-      handlePostGameRotation(latestApiRef.current!, baseState);
+      /* non-fatal — Coming Up shows a fallback */
     }
-  }
-
-  function scheduleBetweenGamePhase(phases: TVScreen[]) {
-    if (betweenGameTimerRef.current) clearTimeout(betweenGameTimerRef.current);
-    // Distribute total duration evenly across phases
-    const phaseDuration = Math.floor(BETWEEN_TOTAL_DURATION / phases.length);
-
-    betweenGameTimerRef.current = setTimeout(() => {
-      if (!betweenGameActiveRef.current) return;
-
-      betweenGamePhaseIdxRef.current++;
-
-      if (betweenGamePhaseIdxRef.current >= phases.length) {
-        // All phases done — transition to normal rotation
-        exitBetweenGameMode();
-        if (latestApiRef.current) {
-          const api = latestApiRef.current;
-          // Build base state for rotation, clearing betweenData
-          setTvState(prev => {
-            const baseState: TVState = { ...prev, betweenData: null };
-            // Kick off rotation on next tick to avoid nested setState
-            setTimeout(() => handlePostGameRotation(api, baseState), 0);
-            return baseState;
-          });
-        }
-        return;
-      }
-
-      const nextScreen = phases[betweenGamePhaseIdxRef.current];
-      setTvState(prev => ({
-        ...prev,
-        screen: nextScreen,
-      }));
-
-      scheduleBetweenGamePhase(phases);
-    }, phaseDuration);
   }
 
   function exitBetweenGameMode() {
     betweenGameActiveRef.current = false;
     betweenGameDataRef.current = null;
-    betweenGamePhasesRef.current = [];
-    betweenGamePhaseIdxRef.current = 0;
+    betweenGamesStartedAtRef.current = 0;
     if (betweenGameTimerRef.current) {
-      clearTimeout(betweenGameTimerRef.current);
+      clearInterval(betweenGameTimerRef.current as unknown as ReturnType<typeof setInterval>);
       betweenGameTimerRef.current = null;
     }
   }

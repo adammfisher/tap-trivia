@@ -24,7 +24,13 @@ sub init()
   m.nameFadeAnim = m.top.findNode("nameFadeAnim")
   m.diffFadeAnim = m.top.findNode("diffFadeAnim")
 
+  ' Re-layout timer (re-measure category height once the label has rendered)
+  m.layoutTimer = m.top.findNode("layoutTimer")
+  m.layoutTimer.observeField("fire", "onLayoutTimer")
+
   m.lastCategory = ""
+  m.catFontSize = 84
+  m.hasSubcat = false
 
   fixAllLabelFonts(m.top)
 end sub
@@ -68,19 +74,16 @@ sub onGameStateChanged(event as Object)
   m.categoryName.text = category
   catLen = Len(category)
   if catLen > 40
-    m.categoryName.font = makeFont("Fredoka-Bold", 52)
-    subY = 312 + 140
+    fsize = 52
   else if catLen > 30
-    m.categoryName.font = makeFont("Fredoka-Bold", 64)
-    subY = 312 + 160
+    fsize = 64
   else if catLen > 20
-    m.categoryName.font = makeFont("Fredoka-Bold", 74)
-    subY = 312 + 120
+    fsize = 74
   else
-    m.categoryName.font = makeFont("Fredoka-Bold", 84)
-    subY = 312 + 120
+    fsize = 84
   end if
-  m.subcategoryName.translation = [0, subY]
+  m.categoryName.font = makeFont("Fredoka-Bold", fsize)
+  m.catFontSize = fsize
 
   ' Category icon (pre-rendered emoji PNG)
   m.categoryIcon.uri = getCategoryIconUri(category)
@@ -90,13 +93,14 @@ sub onGameStateChanged(event as Object)
   if q.subcategory <> invalid then sub_cat = q.subcategory
   if sub_cat = "" and state.subcategory <> invalid then sub_cat = state.subcategory
   m.subcategoryName.text = sub_cat
-  if sub_cat = ""
-    m.subcategoryName.visible = false
-    m.difficultyRow.translation = [0, subY + 10]
-  else
-    m.subcategoryName.visible = true
-    m.difficultyRow.translation = [0, subY + 70]
-  end if
+  m.hasSubcat = (sub_cat <> "")
+  m.subcategoryName.visible = m.hasSubcat
+
+  ' Position subtitle + difficulty directly under the category name. Done once
+  ' now (estimate) and again after the label lays out (exact boundingRect), so
+  ' the gap stays tight whether the name is one or two lines — like web's flow.
+  positionCategoryBlock()
+  m.layoutTimer.control = "start"
 
   ' Difficulty (1-3)
   diff = 3
@@ -113,6 +117,37 @@ sub onGameStateChanged(event as Object)
     m.categoryZoomAnim.control = "start"
     m.nameFadeAnim.control = "start"
     m.diffFadeAnim.control = "start"
+  end if
+end sub
+
+sub onLayoutTimer()
+  positionCategoryBlock()
+end sub
+
+' Place the subtitle 16px below the category name's actual rendered bottom
+' (web .tt-category__name margin-bottom), and the difficulty row below that.
+sub positionCategoryBlock()
+  catTop = 312
+  h = 0
+  rect = m.categoryName.boundingRect()
+  if rect <> invalid and rect.height <> invalid then h = rect.height
+  if h <= 0
+    ' boundingRect not ready yet — estimate from length + chosen font size
+    fsize = m.catFontSize
+    cpl = Int(1400 / (fsize * 0.52))
+    if cpl < 1 then cpl = 1
+    lines = Int((Len(m.categoryName.text) - 1) / cpl) + 1
+    if lines < 1 then lines = 1
+    if lines > 2 then lines = 2
+    h = lines * Int(fsize * 1.2)
+  end if
+
+  subY = catTop + h + 16
+  m.subcategoryName.translation = [0, subY]
+  if m.hasSubcat
+    m.difficultyRow.translation = [0, subY + 70]
+  else
+    m.difficultyRow.translation = [0, subY + 10]
   end if
 end sub
 

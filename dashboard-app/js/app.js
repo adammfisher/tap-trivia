@@ -43,6 +43,7 @@ const DashApp = {
     else if (screenId === 'signage') renderSignageEditor();
     else if (screenId === 'analytics') renderAnalytics();
     else if (screenId === 'logo') renderLogoUpload();
+    else if (screenId === 'settings') renderSettings();
   },
 
   enterDashboard() {
@@ -60,6 +61,7 @@ const DashApp = {
       { key: 'signage', icon: '\u{1F4FA}', label: 'Signage Creator' },
       { key: 'analytics', icon: '\u{1F4CA}', label: 'Analytics' },
       { key: 'logo', icon: '\u{1F5BC}', label: 'Logo & Branding' },
+      { key: 'settings', icon: '\u{2699}\u{FE0F}', label: 'Settings' },
     ];
 
     const sidebar = document.getElementById('sidebar');
@@ -103,6 +105,7 @@ const DashApp = {
 
     document.getElementById('btn-logout').addEventListener('click', () => {
       clearAuthState();
+      if (typeof resetSettingsState === 'function') resetSettingsState();
       DashApp.showScreen('login');
     });
   }

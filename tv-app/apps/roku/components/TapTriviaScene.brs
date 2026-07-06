@@ -50,9 +50,11 @@ sub init()
   m.betweenGameStartEpoch = 0&
   m.betweenGameLastGameId = ""
   m.betweenGameNextGameEpoch = 0&
+  m.brPreviewMode = false   ' true only under the QA sequence preview (off in production)
+  m.brCurrentSlide = -1
 
   ' ── Node references ──
-  m.screenNames = ["setupScreen", "idleScreen", "lobbyScreen", "getReadyScreen", "categoryScreen", "playingScreen", "revealScreen", "leaderboardScreen", "betweenScreen", "resultsScreen", "betweenPodiumScreen", "betweenStandingsScreen", "betweenNationalScreen", "betweenHypeScreen"]
+  m.screenNames = ["setupScreen", "idleScreen", "lobbyScreen", "getReadyScreen", "categoryScreen", "playingScreen", "revealScreen", "leaderboardScreen", "betweenScreen", "resultsScreen", "betweenPodiumScreen", "betweenStandingsScreen", "betweenNationalScreen", "betweenHypeScreen", "playTapTriviaScreen", "comingUpScreen", "leaderResultsScreen"]
   m.screens = {}
   for each name in m.screenNames
     m.screens[name] = m.top.findNode(name)
@@ -103,6 +105,16 @@ sub init()
   m.betweenGamePhaseTimer = CreateObject("roSGNode", "Timer")
   m.betweenGamePhaseTimer.repeat = false
   m.betweenGamePhaseTimer.observeField("fire", "onBetweenGamePhaseTimer")
+
+  ' ── Next-game countdown pill (persistent overlay, always-on 1s tick) ──
+  m.nextPill = m.top.findNode("nextPill")
+  m.nextPillTime = m.top.findNode("nextPillTime")
+  m.nextPillEpoch = 0&
+  m.nextPillTimer = CreateObject("roSGNode", "Timer")
+  m.nextPillTimer.repeat = true
+  m.nextPillTimer.duration = 1
+  m.nextPillTimer.observeField("fire", "onNextPillTick")
+  m.nextPillTimer.control = "start"
 
   ' ── Screen container ──
   m.screenContainer = m.top.findNode("screenContainer")
@@ -160,6 +172,20 @@ sub doInit()
   ' NOTE: roAppManager cannot be called from the render thread.
   ' GetLastExitInfo() and memory monitoring are handled in KeepAwakeTask (task thread).
 
+  ' ── DEBUG: between-rounds visual QA — force a slide on launch for pixel diffing
+  '    against tv.taptrivia.tv. Set to "" to disable (normal operation). ──
+  ' "sequence" = auto-cycle all 5 between-rounds slides (sample data) for QA.
+  ' "" = normal operation (the real game_over flow drives the sequence).
+  PREVIEW_SCREEN = ""
+  if PREVIEW_SCREEN = "sequence"
+    m.barCode = "B8PQP"
+    m.barName = "Two Buck Saloon"
+    m.signageSlides = [{ template: "specials", enabled: true, data: { emoji: "🍺", label: " ", headline: "Daily Specials", subheadline: "All Day Everyday", featuredName: "PBR Draft - High Life - Busch Light", featuredPrice: "$2", menuItems: [{ name: "Buck Shot - PBR & Jim Beam", icon: "🥃", price: "$6", desc: "" }, { name: "Cowboy Shot - PBR & Hornitos", icon: "🥃", price: "$7", desc: "" }, { name: "Cowboy Shot - Vodka & Red bull", icon: "🥃", price: "$7", desc: "" }, { name: "Doe Shot - White Claw & Deep Eddies", icon: "🥃", price: "$8", desc: "" }] } }, { template: "announcement", enabled: true, data: { emoji: "🍕", headline: "Grab a Pizza!", message: "We have pizza behind the bar - ask your bartender for a cheese or 3-meat.", subtext: "" } }]
+    m.betweenGameData = { podium: { players: [{ name: "Hollis", score: 2690 }, { name: "Tina_M", score: 2237 }, { name: "QuizKid", score: 0 }, { name: "Marcus", score: 0 }, { name: "Jen", score: 0 }] }, hype: { categories: ["Movie Quotes", "Fashion Trends, Streetwear", "Pizza Wars", "AI, Robots, Self-Driving Cars", "Trains, Ships, the Titanic", "World Capitals & Countries"] } }
+    startBetweenRoundsPreviewCycle()
+    return
+  end if
+
   if m.tvDeviceId = ""
     di = CreateObject("roDeviceInfo")
     m.tvDeviceId = di.GetChannelClientId()
@@ -173,7 +199,12 @@ sub doInit()
     ' First launch (or post-reset) — show activation flow.
     switchScreen("setupScreen")
   else
-    ' Show idle screen immediately so there's no blank screen while verifying.
+    ' Push known config to the idle screen and render its default slide NOW, so
+    ' there's no blank gradient on boot while /bar verify + the first poll load.
+    m.screens.idleScreen.setField("barCode", m.barCode)
+    m.screens.idleScreen.setField("barName", m.barName)
+    m.screens.idleScreen.setField("barLogoUrl", m.barLogoUrl)
+    m.screens.idleScreen.setField("gameState", {})
     switchScreen("idleScreen")
     ' Re-verify in case the bar got deactivated server-side.
     verifyBarCode(m.barCode)
@@ -213,6 +244,7 @@ sub switchScreen(screenName as String)
   end if
   m.currentScreen = screenName
   logSignageImpressionIfNew()
+  updateNextPill()  ' show/hide the persistent countdown pill on screen change
 end sub
 
 ' ══════════════════════════════════════════════════════════════
@@ -261,7 +293,11 @@ sub processGameState(apiState as Object)
   state = ""
   if apiState.state <> invalid then state = apiState.state
 
-  if state = "break"
+  ' Waiting states (between games, off-hours, and the pre-game window) all show
+  ' the bar's signage rotation — matching the web. Previously "idle"/"pre_game"
+  ' fell through to the generic "How to Play" lobby and never showed the bar's
+  ' configured signage.
+  if state = "break" or state = "idle" or state = "pre_game"
     setPollRate(m.POLL_INTERVAL_IDLE)
     exitRotationMode()
     exitBetweenGameMode()
@@ -283,15 +319,14 @@ sub processGameState(apiState as Object)
     if apiState.gameId <> invalid then gameId = apiState.gameId
     if gameId <> "" and gameId <> m.betweenGameLastGameId and not m.betweenGameActive
       m.betweenGameLastGameId = gameId
-      ' Capture next game epoch for countdown bar
-      nextEpoch = 0&
-      if gameState.nextGameStartEpoch <> invalid then nextEpoch = gameState.nextGameStartEpoch
-      if nextEpoch <= 0
-        SLOT_MS = 15& * 60 * 1000
-        nowMs = getEpochMs()
-        nextEpoch = nowMs + SLOT_MS - (nowMs mod SLOT_MS)
-      end if
-      m.betweenGameNextGameEpoch = nextEpoch
+      ' Next-game epoch drives the 120s between-rounds slide cycle. The API's
+      ' nextGameStartEpoch is unreliable during game_over (often stale/in the
+      ' past), which pinned the window offset on the last slide ("Coming Up").
+      ' Games always start on 15-min boundaries, so use the API value ONLY if it
+      ' is genuinely in the future; otherwise derive the next 15-min boundary
+      ' from the server-corrected clock (mirrors web getNextFutureGameTime).
+      m.betweenGameNextGameEpoch = nextFutureGameEpoch(gameState)
+      m.nextPillEpoch = m.betweenGameNextGameEpoch
       fetchBetweenGameData(gameId)
     end if
 
@@ -391,7 +426,10 @@ function translateApiState(apiState as Object) as Object
         elapsed = Int(elapsedMs / 1000)
       else
         elapsed = safeInt(apiState.elapsedSeconds, 45)
+        elapsedMs = elapsed * 1000&
       end if
+      ' Drives the two-screen Scores rotation split (Screen 1 < 44s, Screen 2 ≥ 44s)
+      gs.elapsedInQuestionMs = elapsedMs
       gs.nextQuestionIn = maxInt(1, ceilInt(m.QUESTION_DURATION_MS / 1000 - elapsed))
       gs.funFact = safeStr(apiState.funFact)
     else
@@ -616,8 +654,19 @@ sub cacheForRotation(gameState as Object, apiState as Object)
   if apiState.nextGameStartEpoch <> invalid then nextEpoch = apiState.nextGameStartEpoch
   if nextEpoch = 0 and gameState.nextGameStartEpoch <> invalid then nextEpoch = gameState.nextGameStartEpoch
 
+  ' Mid-cycle the API omits (or sends a stale) nextGameStartEpoch. During the
+  ' game cycle, derive the next 15-min boundary so the countdown pill has a valid
+  ' future epoch ready for the game_over / break transition. (Off-hours states
+  ' are left at 0 → pill hidden.)
+  st = ""
+  if apiState.state <> invalid then st = apiState.state
+  if st = "active_game" or st = "game_over"
+    nextEpoch = nextFutureGameEpoch(gameState)
+  end if
+
   ' Propagate nextGameStartEpoch to all cached states
   if nextEpoch > 0
+    m.nextPillEpoch = nextEpoch
     for each k in m.cachedScreenData
       if m.cachedScreenData[k] <> invalid
         m.cachedScreenData[k].nextGameStartEpoch = nextEpoch
@@ -745,6 +794,37 @@ sub onCountdownTick()
   end if
   ' Update current rotated screen countdown
   ' Individual screens handle their own tick updates
+end sub
+
+' ── Next-game countdown pill ────────────────────────────────────────
+sub onNextPillTick()
+  updateNextPill()
+end sub
+
+' Show/update the persistent "TRIVIA STARTS IN M:SS" pill. Shown on the
+' waiting / between-rounds screens; hidden during live gameplay and when no
+' game is imminent (within the next cycle, ≤16 min).
+sub updateNextPill()
+  if m.nextPill = invalid then return
+  sc = m.currentScreen
+  show = (sc = "idleScreen" or sc = "lobbyScreen" or sc = "getReadyScreen" or sc = "resultsScreen" or sc = "leaderResultsScreen" or sc = "playTapTriviaScreen" or sc = "comingUpScreen" or sc = "betweenPodiumScreen" or sc = "betweenStandingsScreen" or sc = "betweenNationalScreen" or sc = "betweenHypeScreen")
+
+  epoch = m.nextPillEpoch
+  if epoch = invalid then epoch = 0&
+  nowMs = getEpochMs() + m.clockOffset
+  msLeft = epoch - nowMs
+
+  if show and epoch > 0 and msLeft > 0 and msLeft <= 960000&
+    totalSec = Int(msLeft / 1000)
+    mins = Int(totalSec / 60)
+    secs = totalSec mod 60
+    secsStr = Str(secs).Trim()
+    if secs < 10 then secsStr = "0" + secsStr
+    m.nextPillTime.text = Str(mins).Trim() + ":" + secsStr
+    m.nextPill.visible = true
+  else
+    m.nextPill.visible = false
+  end if
 end sub
 
 sub exitRotationMode()
@@ -991,113 +1071,164 @@ sub onBetweenGameDataResponse(response as Object)
   if response.error <> invalid then return
 
   m.betweenGameData = response
+  m.betweenGameActive = true
 
-  ' Build phase list — skip null phases
-  phases = []
-  if response.podium <> invalid then phases.push("podium")
-  if response.barStandings <> invalid then phases.push("standings")
-  if response.national <> invalid then phases.push("national")
-  if response.hype <> invalid then phases.push("hype")
-
-  if phases.count() = 0
-    #if DEBUG
-    print ">>> betweenGame: no phases available, skipping"
-    #end if
-    return
+  ' Pick two distinct random venue signage slides for the full-screen promo slots.
+  m.brSign1 = -1
+  m.brSign2 = -1
+  n = m.signageSlides.count()
+  if n > 0
+    m.brSign1 = Rnd(n) - 1
+    if n > 1
+      m.brSign2 = (m.brSign1 + Rnd(n - 1)) mod n
+    else
+      m.brSign2 = m.brSign1
+    end if
   end if
 
-  #if DEBUG
-  print ">>> betweenGame: starting with " + Str(phases.count()).trim() + " phases"
-  #end if
-  m.betweenGamePhases = phases
-  m.betweenGamePhaseIdx = 0
-  m.betweenGameActive = true
-  m.betweenGameStartEpoch = getEpochMs()
+  m.brCurrentSlide = -1
   exitRotationMode()
   stopSignageRotation()
 
-  renderBetweenGamePhase()
-  startBetweenGamePhaseTimer()
-end sub
+  updateBetweenRoundsSlide()
 
-sub renderBetweenGamePhase()
-  if m.betweenGamePhases.count() = 0 then return
-  if m.betweenGamePhaseIdx >= m.betweenGamePhases.count() then return
-
-  phase = m.betweenGamePhases[m.betweenGamePhaseIdx]
-  #if DEBUG
-  print ">>> betweenGame: rendering phase " + Str(m.betweenGamePhaseIdx + 1).trim() + "/" + Str(m.betweenGamePhases.count()).trim() + " = " + phase
-  #end if
-
-  if phase = "podium"
-    showBetweenPodiumScreen()
-  else if phase = "standings"
-    showBetweenStandingsScreen()
-  else if phase = "national"
-    showBetweenNationalScreen()
-  else if phase = "hype"
-    showBetweenHypeScreen()
-  end if
-end sub
-
-sub showBetweenPodiumScreen()
-  m.screens.betweenPodiumScreen.setField("barCode", m.barCode)
-  m.screens.betweenPodiumScreen.setField("barName", m.barName)
-  m.screens.betweenPodiumScreen.setField("nextGameEpoch", m.betweenGameNextGameEpoch)
-  m.screens.betweenPodiumScreen.setField("betweenData", m.betweenGameData)
-  switchScreen("betweenPodiumScreen")
-end sub
-
-sub showBetweenStandingsScreen()
-  m.screens.betweenStandingsScreen.setField("barCode", m.barCode)
-  m.screens.betweenStandingsScreen.setField("barName", m.barName)
-  m.screens.betweenStandingsScreen.setField("nextGameEpoch", m.betweenGameNextGameEpoch)
-  m.screens.betweenStandingsScreen.setField("betweenData", m.betweenGameData)
-  switchScreen("betweenStandingsScreen")
-end sub
-
-sub showBetweenNationalScreen()
-  m.screens.betweenNationalScreen.setField("barCode", m.barCode)
-  m.screens.betweenNationalScreen.setField("barName", m.barName)
-  m.screens.betweenNationalScreen.setField("nextGameEpoch", m.betweenGameNextGameEpoch)
-  m.screens.betweenNationalScreen.setField("betweenData", m.betweenGameData)
-  switchScreen("betweenNationalScreen")
-end sub
-
-sub showBetweenHypeScreen()
-  m.screens.betweenHypeScreen.setField("barCode", m.barCode)
-  m.screens.betweenHypeScreen.setField("barName", m.barName)
-  m.screens.betweenHypeScreen.setField("nextGameEpoch", m.betweenGameNextGameEpoch)
-  m.screens.betweenHypeScreen.setField("betweenData", m.betweenGameData)
-  switchScreen("betweenHypeScreen")
-end sub
-
-sub startBetweenGamePhaseTimer()
+  ' Tick once per second; the slide is chosen purely from the shared-clock offset
+  ' into the 120s Results window, so a mid-window load shows the correct slide.
   m.betweenGamePhaseTimer.control = "stop"
-  phaseCount = m.betweenGamePhases.count()
-  if phaseCount = 0 then return
-  ' Distribute 120s evenly across available phases
-  phaseDuration = Int(m.betweenGameTotalDuration / 1000 / phaseCount)
-  m.betweenGamePhaseTimer.duration = phaseDuration
+  m.betweenGamePhaseTimer.repeat = true
+  m.betweenGamePhaseTimer.duration = 1
   m.betweenGamePhaseTimer.control = "start"
 end sub
 
-sub onBetweenGamePhaseTimer()
-  if not m.betweenGameActive then return
-  m.betweenGamePhaseIdx = m.betweenGamePhaseIdx + 1
+' Next game-start epoch, guaranteed to be in the FUTURE. Games always begin on
+' 15-min boundaries, so prefer the API's nextGameStartEpoch only when it is
+' genuinely ahead of the server-corrected clock; otherwise derive the next
+' 15-min boundary. Mirrors the web's getNextFutureGameTime and prevents a
+' stale/past API epoch from pinning the between-rounds offset on the last slide.
+function nextFutureGameEpoch(gameState as Object) as LongInteger
+  adjNow = getEpochMs() + m.clockOffset
+  nextEpoch = 0&
+  if gameState <> invalid and gameState.nextGameStartEpoch <> invalid then nextEpoch = gameState.nextGameStartEpoch
+  if nextEpoch <= adjNow
+    SLOT_MS = 15& * 60 * 1000
+    nextEpoch = adjNow + SLOT_MS - (adjNow mod SLOT_MS)
+  end if
+  while nextEpoch <= adjNow
+    nextEpoch = nextEpoch + 900000&
+  end while
+  return nextEpoch
+end function
 
-  if m.betweenGamePhaseIdx >= m.betweenGamePhases.count()
-    ' All phases complete — exit to normal rotation
-    exitBetweenGameMode()
-    ' Trigger normal game_over rotation with cached data
-    if m.cachedScreenData.results <> invalid
-      handleScreenRotation(m.cachedScreenData.results)
-    end if
+' Elapsed ms into the 120s Results window, from the drift-corrected shared clock.
+function betweenRoundsOffsetMs() as Integer
+  adjNow = getEpochMs() + m.clockOffset
+  offset = 120000& - (m.betweenGameNextGameEpoch - adjNow)
+  if offset < 0& then offset = 0&
+  if offset > 120000& then offset = 120000&
+  return offset
+end function
+
+sub updateBetweenRoundsSlide()
+  if not m.betweenGameActive then return
+  offset = betweenRoundsOffsetMs()
+  idx = 4
+  if offset < 20000 then
+    idx = 0
+  else if offset < 40000 then
+    idx = 1
+  else if offset < 80000 then
+    idx = 2
+  else if offset < 100000 then
+    idx = 3
+  else
+    idx = 4
+  end if
+  if idx = m.brCurrentSlide then return
+  m.brCurrentSlide = idx
+  showBetweenRoundsSlide(idx)
+end sub
+
+sub showBetweenRoundsSlide(idx as Integer)
+  if idx = 0
+    showLeaderSlide()
+  else if idx = 1
+    showSignageSlide(m.brSign1)
+  else if idx = 2
+    showPlaySlide()
+  else if idx = 3
+    showSignageSlide(m.brSign2)
+  else
+    showComingUpSlide()
+  end if
+end sub
+
+sub showLeaderSlide()
+  scr = m.screens.leaderResultsScreen
+  scr.setField("barName", m.barName)
+  standings = []
+  if m.betweenGameData <> invalid and m.betweenGameData.podium <> invalid and m.betweenGameData.podium.players <> invalid
+    standings = m.betweenGameData.podium.players
+  end if
+  scr.setField("standings", standings)
+  switchScreen("leaderResultsScreen")
+end sub
+
+sub showPlaySlide()
+  m.screens.playTapTriviaScreen.setField("barCode", m.barCode)
+  switchScreen("playTapTriviaScreen")
+end sub
+
+sub showComingUpSlide()
+  scr = m.screens.comingUpScreen
+  scr.setField("barCode", m.barCode)
+  cats = []
+  if m.betweenGameData <> invalid and m.betweenGameData.hype <> invalid and m.betweenGameData.hype.categories <> invalid
+    cats = m.betweenGameData.hype.categories
+  end if
+  scr.setField("categories", cats)
+  switchScreen("comingUpScreen")
+end sub
+
+' Full-screen venue signage slot — reuse the idle screen's signage renderer,
+' pinned to a fixed slide index (no rotation during the Results window).
+sub showSignageSlide(sigIdx as Integer)
+  gs = { state: "game_over", nextGameStartEpoch: m.betweenGameNextGameEpoch }
+  m.screens.idleScreen.setField("barCode", m.barCode)
+  m.screens.idleScreen.setField("barName", m.barName)
+  m.screens.idleScreen.setField("barLogoUrl", m.barLogoUrl)
+  m.screens.idleScreen.setField("signageSlides", m.signageSlides)
+  if sigIdx >= 0 then m.screens.idleScreen.setField("signageIndex", sigIdx)
+  m.screens.idleScreen.setField("gameState", gs)
+  switchScreen("idleScreen")
+end sub
+
+sub onBetweenGamePhaseTimer()
+  if m.brPreviewMode = true
+    m.brPreviewIdx = (m.brPreviewIdx + 1) mod 5
+    ' Roll the sample countdown each full preview cycle so the pill keeps ticking.
+    if m.brPreviewIdx = 0 then m.nextPillEpoch = (getEpochMs() + m.clockOffset) + 125000&
+    showBetweenRoundsSlide(m.brPreviewIdx)
     return
   end if
+  if not m.betweenGameActive then return
+  updateBetweenRoundsSlide()
+end sub
 
-  renderBetweenGamePhase()
-  startBetweenGamePhaseTimer()
+' QA: auto-cycle the five between-rounds slides every 5s using sample data.
+sub startBetweenRoundsPreviewCycle()
+  m.brPreviewMode = true
+  m.brSign1 = 0
+  m.brSign2 = 1
+  m.brPreviewIdx = 0
+  ' Sample next-game epoch (~2 min out) so the countdown pill renders in preview.
+  m.nextPillEpoch = (getEpochMs() + m.clockOffset) + 125000&
+  exitRotationMode()
+  stopSignageRotation()
+  showBetweenRoundsSlide(0)
+  m.betweenGamePhaseTimer.control = "stop"
+  m.betweenGamePhaseTimer.repeat = true
+  m.betweenGamePhaseTimer.duration = 20
+  m.betweenGamePhaseTimer.control = "start"
 end sub
 
 sub exitBetweenGameMode()

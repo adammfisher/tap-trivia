@@ -198,33 +198,38 @@ end sub
 
 sub renderSpecials(data as Object)
   label = safeStr(data.label)
-  if label = "" then label = "Tonight's Specials"
   emoji = safeStr(data.emoji)
-  emojiUri = getEmojiUri(emoji, "xs")
+  emojiUri = getEmojiUri(emoji, "lg")
+
+  yPos = 0
 
   if emojiUri <> ""
+    ' Hero emoji — 107x107 (178% of the prior 60px), horizontally centered in
+    ' the 880px content, top at ~15% of the screen
+    ' (signageContent sits at y=150, so content y=12 → screen y=162).
     m.templateLabel.visible = false
-    labelGroup = CreateObject("roSGNode", "Group")
-    labelGroup.translation = [0, -34]
-
     ePoster = CreateObject("roSGNode", "Poster")
     ePoster.uri = emojiUri
-    ePoster.width = 28
-    ePoster.height = 28
-    ePoster.translation = [310, -2]
-    labelGroup.appendChild(ePoster)
+    ePoster.width = 107
+    ePoster.height = 107
+    ePoster.translation = [386, 12]
+    m.contentWrapper.appendChild(ePoster)
+    yPos = 135
 
-    lbl = addLabel(labelGroup, UCase(label), 346, 0, 534)
-    lbl.font = makeFont("Outfit-Bold", 22)
-    lbl.color = "#f59e0b"
-    m.contentWrapper.appendChild(labelGroup)
+    ' Optional amber kicker below the icon, only when the bar set a real label
+    if label.Trim() <> ""
+      lbl = addLabel(m.contentWrapper, UCase(label), 0, yPos, 880)
+      lbl.font = makeFont("Outfit-Bold", 22)
+      lbl.color = "#f59e0b"
+      lbl.horizAlign = "center"
+      yPos = yPos + 34
+    end if
   else
+    if label = "" then label = "Tonight's Specials"
     m.templateLabel.visible = true
     m.templateLabel.text = UCase(label)
     m.templateLabel.color = "#f59e0b"
   end if
-
-  yPos = 0
 
   ' Headline — centered
   headline = safeStr(data.headline)

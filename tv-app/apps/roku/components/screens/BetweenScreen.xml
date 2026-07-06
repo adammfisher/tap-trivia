@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!--
+  BetweenScreen — Scores-phase TWO-SCREEN rotation (matches web tv-app exactly).
+  Screen 1 (0:37–0:44, 7s): Did You Know | Standings
+  Screen 2 (0:44–0:52, 8s): Venue Ad     | Play TapTrivia QR
+  Split derived from gameState.elapsedInQuestionMs (shared game clock), latched
+  so a mid-phase load shows the correct screen with no drift. 1920x1080 native.
+-->
 <component name="BetweenScreen" extends="Group">
   <interface>
     <field id="barCode" type="string" />
@@ -10,64 +17,92 @@
   </interface>
 
   <children>
-    <!-- Background gradient -->
 
-    <!-- Dark panel behind right/signage half -->
-    <Rectangle id="rightPanelBg" translation="[960, 0]" width="960" height="1080" color="#000000" opacity="0.2" />
+    <!-- ═══════════════ SCREEN 1: Did You Know | Standings ═══════════════ -->
+    <Group id="screen1">
+      <Rectangle id="s1Divider" translation="[959, 0]" width="2" height="1080" color="#FFFFFF" opacity="0.08" />
 
-    <!-- ═══ LEFT COLUMN (960px): Fun fact + standings ═══ -->
-
-    <Group id="leftCol" translation="[0, 0]">
-
-      <!-- Fun fact card (glass morphism background) — TOP of left column -->
-      <Rectangle id="funFactBg" translation="[30, 30]" width="900" height="200"
-                 color="#FFFFFF" opacity="0.08" cornerRadius="20" visible="false" />
-      <Label id="funFactLabel" text="DID YOU KNOW?" translation="[30, 48]"
-             width="900" horizAlign="center" color="#ffd200" visible="false">
-        <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="20" />
-      </Label>
-      <Label id="funFactText" text="" translation="[60, 82]"
-             width="840" horizAlign="center" wrap="true" maxLines="4"
-             color="#f0f0f0" visible="false">
-        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="32" />
-      </Label>
-
-      <!-- Logo (md, 48px) — centered in 960px -->
-      <Logo id="logo" translation="[374, 160]" />
-
-      <!-- Bar name — centered -->
-      <Label id="barNameLabel" text="" translation="[0, 226]" color="#f0f0f0"
-             width="960" horizAlign="center">
-        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="32" />
-      </Label>
-
-      <!-- "Standings" heading — centered -->
-      <Label id="standingsLabel" text="Standings"
-             translation="[0, 270]" color="#ffffff80" width="960" horizAlign="center">
-        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="34" />
-      </Label>
-
-      <!-- 5 standings rows (860px wide, centered in 960px → X=50) -->
-      <Group id="standingsList" translation="[50, 320]">
-        <LeaderRow id="standing1" translation="[0, 0]" />
-        <LeaderRow id="standing2" translation="[0, 80]" />
-        <LeaderRow id="standing3" translation="[0, 160]" />
-        <LeaderRow id="standing4" translation="[0, 240]" />
-        <LeaderRow id="standing5" translation="[0, 320]" />
+      <!-- Left half — Did You Know fact -->
+      <Group id="s1FactGroup">
+        <Label id="s1FactKicker" text="DID YOU KNOW?" width="960" horizAlign="center" color="#ffd200">
+          <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="22" />
+        </Label>
+        <Label id="s1FactText" text="" translation="[70, 0]" width="820" horizAlign="center"
+               wrap="true" maxLines="6" lineSpacing="14" color="#f5f5f5">
+          <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="42" />
+        </Label>
       </Group>
 
-      <!-- Countdown label — centered (Y positioned dynamically in BRS) -->
-      <Label id="countdownLabel" text=""
-             translation="[0, 740]" color="#ffffff40" width="960" horizAlign="center">
-        <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="22" />
-      </Label>
+      <!-- Left half — brand fallback (no fact) -->
+      <Group id="s1BrandGroup" visible="false">
+        <Logo id="s1BrandLogo" translation="[339, 472]" />
+        <Label id="s1BrandSub" text="Live trivia every 15 minutes" translation="[0, 566]"
+               width="960" horizAlign="center" color="#ffffff80">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="30" />
+        </Label>
+      </Group>
+
+      <!-- Right half — Standings -->
+      <Group id="s1Right" translation="[960, 0]">
+        <Logo id="s1Logo" />
+        <Label id="s1Kicker" text="STANDINGS" width="960" horizAlign="center" color="#ffffff66">
+          <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="18" />
+        </Label>
+        <Group id="s1Rows" />
+        <Label id="s1Empty" text="Waiting for players..." translation="[0, 470]"
+               width="960" horizAlign="center" color="#ffffff66" visible="false">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="28" />
+        </Label>
+      </Group>
     </Group>
 
-    <!-- QR Badge — bottom-center of left half (shown when no signage) -->
-    <QRBadge id="qrBadge" translation="[300, 940]" visible="false" />
+    <!-- ═══════════════ SCREEN 2: Venue Ad | Play QR ═══════════════ -->
+    <Group id="screen2" visible="false">
+      <Rectangle id="s2Divider" translation="[959, 0]" width="2" height="1080" color="#FFFFFF" opacity="0.08" />
 
-    <!-- ═══ RIGHT HALF: Signage panel ═══ -->
-    <SignagePanel id="signagePanel" translation="[960, 0]" visible="false" />
+      <!-- Left half — venue ad (signage panel, full 960 left half) -->
+      <SignagePanel id="signagePanel" translation="[0, 0]" visible="false" />
+
+      <!-- Left half — welcome fallback (no signage) -->
+      <Group id="s2Welcome" visible="false">
+        <Label id="s2WelcomeKicker" text="WELCOME TO" translation="[0, 420]" width="960" horizAlign="center" color="#00d4aa">
+          <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="22" />
+        </Label>
+        <Label id="s2WelcomeName" text="" translation="[30, 470]" width="900" horizAlign="center"
+               wrap="true" maxLines="2" color="#f5f5f5">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="64" />
+        </Label>
+        <Label id="s2WelcomeSub" text="Live trivia every 15 minutes" translation="[0, 600]" width="960" horizAlign="center" color="#ffffff80">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="26" />
+        </Label>
+      </Group>
+
+      <!-- Right half — Play TapTrivia QR card -->
+      <Group id="s2Play" translation="[960, 0]">
+        <Poster id="playBrain" uri="pkg:/images/emoji-lg-1f9e0.png" width="72" height="72" />
+        <Label id="playTitle" text="Play TapTrivia!" width="960" horizAlign="center" color="#f5f5f5">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="55" />
+        </Label>
+        <Label id="playOffer" text="Free for 7 days" width="960" horizAlign="center" color="#00d4aa">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="36" />
+        </Label>
+        <Label id="playScan" text="scan to start" width="960" horizAlign="center" color="#ffffff73">
+          <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="21" />
+        </Label>
+        <Poster id="playQRCard" uri="pkg:/images/qrcard2s.png" width="268" height="268" />
+        <Poster id="playQR" uri="pkg:/images/qr-play-244.png" width="244" height="244" />
+        <Label id="playUrl" text="app.taptrivia.tv" width="960" horizAlign="center" color="#ffd200">
+          <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="21" />
+        </Label>
+        <Label id="playCodeKicker" text="CODE" color="#ffffff66">
+          <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="20" />
+        </Label>
+        <Label id="playCode" text="" color="#ffd200">
+          <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="49" />
+        </Label>
+      </Group>
+    </Group>
+
   </children>
 
   <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />

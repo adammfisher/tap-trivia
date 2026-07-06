@@ -279,6 +279,7 @@ const fs = StyleSheet.create({
     fontSize: 24,
     letterSpacing: 4,
     textTransform: 'uppercase',
+    textAlign: 'center',
     marginBottom: 16,
   },
   headline: {

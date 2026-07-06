@@ -24,7 +24,7 @@ if [ ! -d "$BACKEND_DIR/node_modules" ]; then
   cd "$BACKEND_DIR" && npm install
 fi
 
-DASHBOARD_FUNCTIONS="get-dashboard save-signage upload-logo"
+DASHBOARD_FUNCTIONS="get-dashboard save-signage save-settings upload-logo"
 
 for func_dir in "$FUNCTIONS_DIR"/*/; do
   func_name=$(basename "$func_dir")
@@ -60,6 +60,7 @@ for func_dir in "$FUNCTIONS_DIR"/*/; do
     cp "$SHARED_DIR/name-suffixes.js" "$func_dir/shared/"
     cp "$SHARED_DIR/config.js" "$func_dir/shared/"
     cp "$SHARED_DIR/profanity.js" "$func_dir/shared/"
+    cp "$SHARED_DIR/house-players.js" "$func_dir/shared/"
 
     for df in $DASHBOARD_FUNCTIONS; do
       if [ "$func_name" = "$df" ]; then

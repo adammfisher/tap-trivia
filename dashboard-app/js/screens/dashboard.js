@@ -105,8 +105,14 @@ function renderDashboard() {
             <div class="action-card-title">Logo &amp; Branding</div>
             <div class="action-card-desc">Upload your location logo</div>
           </div>
+          <div class="dash-card action-card" id="qa-settings">
+            <span class="action-card-icon">&#x2699;&#xFE0F;</span>
+            <div class="action-card-title">Settings</div>
+            <div class="action-card-desc">House players &amp; game options</div>
+          </div>
         </div>
       </div>
+
     </div>
   `;
 
@@ -114,4 +120,5 @@ function renderDashboard() {
   document.getElementById('qa-signage').addEventListener('click', () => DashApp.showScreen('signage'));
   document.getElementById('qa-analytics').addEventListener('click', () => DashApp.showScreen('analytics'));
   document.getElementById('qa-logo').addEventListener('click', () => DashApp.showScreen('logo'));
+  document.getElementById('qa-settings').addEventListener('click', () => DashApp.showScreen('settings'));
 }

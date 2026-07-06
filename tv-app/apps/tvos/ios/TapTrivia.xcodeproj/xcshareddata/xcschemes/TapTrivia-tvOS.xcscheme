@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "1510"
-   version = "1.7">
+   version = "1.8">
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES">
@@ -78,7 +78,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Inject Assets.car"
-               scriptText = "TODAY=$(date &quot;+%Y-%m-%d&quot;)&#xa;XCARCHIVE=$(ls -td &quot;${HOME}/Library/Developer/Xcode/Archives/${TODAY}/TapTrivia&quot;*.xcarchive 2&gt;/dev/null | head -1)&#xa;if [ -z &quot;${XCARCHIVE}&quot; ]; then echo &quot;[PostAction] No xcarchive found&quot;; exit 0; fi&#xa;APP_PATH=&quot;${XCARCHIVE}/Products/Applications/TapTrivia.app&quot;&#xa;XCASSETS=&quot;/Users/adamfisher/DEVELOP/tap-trivia/tv-app/apps/tvos/ios/TapTrivia-tvOS/Images.xcassets&quot;&#xa;echo &quot;[PostAction] Injecting Assets.car into ${APP_PATH}&quot; &gt; /tmp/post-action-debug.txt&#xa;echo &quot;XCASSETS=${XCASSETS}&quot; &gt;&gt; /tmp/post-action-debug.txt&#xa;ls &quot;${XCASSETS}&quot; &gt;&gt; /tmp/post-action-debug.txt 2&gt;&amp;1&#xa;xcrun actool --compile &quot;${APP_PATH}&quot; --platform appletvos --minimum-deployment-target 17.0 --target-device tv --app-icon AppIcon --output-partial-info-plist /tmp/post-actool.plist &quot;${XCASSETS}&quot; &gt;&gt; /tmp/post-action-debug.txt 2&gt;&amp;1&#xa;echo &quot;actool exit: $?&quot; &gt;&gt; /tmp/post-action-debug.txt&#xa;ls -la &quot;${APP_PATH}/Assets.car&quot; &gt;&gt; /tmp/post-action-debug.txt 2&gt;&amp;1&#xa;"
+               scriptText = "TODAY=$(date &quot;+%Y-%m-%d&quot;)&#10;XCARCHIVE=$(ls -td &quot;${HOME}/Library/Developer/Xcode/Archives/${TODAY}/TapTrivia&quot;*.xcarchive 2&gt;/dev/null | head -1)&#10;if [ -z &quot;${XCARCHIVE}&quot; ]; then echo &quot;[PostAction] No xcarchive found&quot;; exit 0; fi&#10;APP_PATH=&quot;${XCARCHIVE}/Products/Applications/TapTrivia.app&quot;&#10;XCASSETS=&quot;/Users/adamfisher/DEVELOP/tap-trivia/tv-app/apps/tvos/ios/TapTrivia-tvOS/Images.xcassets&quot;&#10;echo &quot;[PostAction] Injecting Assets.car into ${APP_PATH}&quot; &gt; /tmp/post-action-debug.txt&#10;echo &quot;XCASSETS=${XCASSETS}&quot; &gt;&gt; /tmp/post-action-debug.txt&#10;ls &quot;${XCASSETS}&quot; &gt;&gt; /tmp/post-action-debug.txt 2&gt;&amp;1&#10;xcrun actool --compile &quot;${APP_PATH}&quot; --platform appletvos --minimum-deployment-target 17.0 --target-device tv --app-icon AppIcon --output-partial-info-plist /tmp/post-actool.plist &quot;${XCASSETS}&quot; &gt;&gt; /tmp/post-action-debug.txt 2&gt;&amp;1&#10;echo &quot;actool exit: $?&quot; &gt;&gt; /tmp/post-action-debug.txt&#10;ls -la &quot;${APP_PATH}/Assets.car&quot; &gt;&gt; /tmp/post-action-debug.txt 2&gt;&amp;1&#10;"
                useShellEnvironment = "YES">
                <EnvironmentBuildable>
                   <BuildableReference

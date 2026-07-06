@@ -55,7 +55,7 @@
     </Group>
 
     <!-- QR Badge — bottom-left -->
-    <QRBadge id="qrBadge" translation="[40, 920]" />
+    <QRBadgeGame id="qrBadge" translation="[40, 782]" />
 
     <!-- Countdown pulse animation (flash bright then settle) -->
     <Animation id="pulseAnim" duration="0.6" easeFunction="outCubic" repeat="false">

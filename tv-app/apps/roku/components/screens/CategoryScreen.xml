@@ -58,7 +58,11 @@
     </Group>
 
     <!-- QR Badge — bottom-left -->
-    <QRBadge id="qrBadge" translation="[40, 920]" />
+    <QRBadgeGame id="qrBadge" translation="[40, 782]" />
+
+    <!-- Re-measures the category label after it lays out, so the subtitle sits
+         tight below it (boundingRect is 0 until the label has rendered). -->
+    <Timer id="layoutTimer" duration="0.06" repeat="false" />
 
     <!-- Category icon zoom animation -->
     <Animation id="categoryZoomAnim" duration="0.6" easeFunction="outBack" repeat="false">

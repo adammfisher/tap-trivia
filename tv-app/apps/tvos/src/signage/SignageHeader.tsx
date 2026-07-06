@@ -13,9 +13,9 @@ interface Props {
   secondsUntilNextGame?: number;
 }
 
-export function SignageHeader({ barName, logoUrl, secondsUntilNextGame }: Props) {
-  const countdownText = formatCountdown(secondsUntilNextGame || 0);
-
+export function SignageHeader({ barName, logoUrl }: Props) {
+  // The next-game countdown now lives in the persistent top pill (App.tsx),
+  // so the header just shows the bar identity + the TapTrivia logo.
   return (
     <View style={styles.container}>
       <View style={styles.left}>
@@ -23,11 +23,6 @@ export function SignageHeader({ barName, logoUrl, secondsUntilNextGame }: Props)
         <Text style={styles.barName} numberOfLines={1}>{barName}</Text>
       </View>
       <View style={styles.right}>
-        <View style={styles.countdown}>
-          <Text style={styles.countdownLabel}>Trivia starts in</Text>
-          <Text style={styles.countdownValue}>{countdownText}</Text>
-        </View>
-        <View style={styles.divider} />
         <Logo size="sm" />
       </View>
     </View>

@@ -1,8 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Animated, StyleSheet } from 'react-native';
+import { Animated, StyleSheet, View, Text } from 'react-native';
 import { TVStateProvider, useTVState } from './contexts/TVStateContext';
 import { SetupButton } from './components/SetupButton';
 import { GradientBackground } from './components/GradientBackground';
+import { fonts } from './theme/typography';
 
 // Screens
 import { SetupScreen } from './screens/SetupScreen';
@@ -19,11 +20,15 @@ import { BetweenPodiumScreen } from './screens/BetweenPodiumScreen';
 import { BetweenStandingsScreen } from './screens/BetweenStandingsScreen';
 import { BetweenNationalScreen } from './screens/BetweenNationalScreen';
 import { BetweenHypeScreen } from './screens/BetweenHypeScreen';
+import { RoundCompleteScreen } from './screens/RoundCompleteScreen';
+import { PlayTapTriviaScreen } from './screens/PlayTapTriviaScreen';
+import { ComingUpScreen } from './screens/ComingUpScreen';
 
 // Screens that should fade between each other (idle rotation + between-game)
 const FADE_SCREENS = new Set([
   'idle', 'lobby', 'results',
   'between-podium', 'between-standings', 'between-national', 'between-hype',
+  'round-complete', 'play-taptrivia', 'coming-up',
 ]);
 
 function getScreen(screenName: string): React.ReactNode {
@@ -42,6 +47,9 @@ function getScreen(screenName: string): React.ReactNode {
     case 'between-standings': return <BetweenStandingsScreen />;
     case 'between-national': return <BetweenNationalScreen />;
     case 'between-hype': return <BetweenHypeScreen />;
+    case 'round-complete': return <RoundCompleteScreen />;
+    case 'play-taptrivia': return <PlayTapTriviaScreen />;
+    case 'coming-up': return <ComingUpScreen />;
     default: return <SetupScreen />;
   }
 }
@@ -113,9 +121,61 @@ function ScreenRouter() {
         {getScreen(currentScreen)}
       </Animated.View>
       {currentScreen !== 'setup' && <SetupButton />}
+      <NextPill />
     </>
   );
 }
+
+// Persistent "TRIVIA STARTS IN M:SS" notch pill — overlays the waiting screens,
+// hidden during live gameplay. Mirrors the web + Roku TV apps.
+const PILL_SCREENS = new Set<string>([
+  'idle', 'lobby', 'results',
+  'between-podium', 'between-standings', 'between-national', 'between-hype',
+  'round-complete', 'play-taptrivia', 'coming-up',
+]);
+
+function NextPill() {
+  const { state } = useTVState();
+  const secs = state.secondsUntilNextGame || 0;
+  if (!PILL_SCREENS.has(state.screen) || secs <= 0 || secs > 16 * 60) return null;
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return (
+    <View pointerEvents="none" style={pill.wrap}>
+      <View style={pill.pill}>
+        <View style={pill.dot} />
+        <Text style={pill.label}>TRIVIA STARTS IN</Text>
+        <Text style={pill.time}>{m}:{s < 10 ? '0' : ''}{s}</Text>
+      </View>
+    </View>
+  );
+}
+
+const pill = StyleSheet.create({
+  wrap: { position: 'absolute', top: 0, left: 0, right: 0, alignItems: 'center', zIndex: 50 },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 18,
+    paddingHorizontal: 46,
+    paddingTop: 14,
+    paddingBottom: 18,
+    backgroundColor: 'rgba(15,3,38,0.93)',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    borderWidth: 2,
+    borderTopWidth: 0,
+    borderColor: 'rgba(255,255,255,0.13)',
+  },
+  dot: { width: 14, height: 14, borderRadius: 7, backgroundColor: '#00d4aa' },
+  label: {
+    fontFamily: fonts.outfit.semiBold,
+    fontSize: 24,
+    letterSpacing: 4,
+    color: 'rgba(255,255,255,0.62)',
+  },
+  time: { fontFamily: fonts.fredoka.bold, fontSize: 38, color: '#ffd200' },
+});
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0f0326' },
