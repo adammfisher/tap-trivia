@@ -51,3 +51,7 @@ tv-app/apps/roku/dist/
 
 # Dev logs
 logs/
+
+# Debug screenshots (signage/specials QA artifacts, not source)
+TapTrivia/specials-fixed*.jpeg
+tv-app/apps/roku/sig*.jpg
