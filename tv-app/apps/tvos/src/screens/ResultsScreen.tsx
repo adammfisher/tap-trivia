@@ -36,13 +36,7 @@ export function ResultsScreen() {
         <View style={s.body}>
           {/* ── Left panel: Results ─────────── */}
           <View style={[s.panel, hasSignage && s.panelHalf]}>
-            {/* Countdown at TOP */}
-            <View style={s.countdown}>
-              <Text style={s.countdownLabel}>NEXT GAME IN</Text>
-              <Text style={s.countdownValue}>
-                {formatCountdown(secondsUntilNextGame)}
-              </Text>
-            </View>
+            {/* Next-game countdown now lives in the persistent top pill (App.tsx) */}
 
             {/* Trophy */}
             <ZoomInText spring style={[s.trophy, hasSignage && s.trophyHalf]}>

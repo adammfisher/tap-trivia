@@ -14,7 +14,11 @@ export type TVScreen =
   | 'between-podium'
   | 'between-standings'
   | 'between-national'
-  | 'between-hype';
+  | 'between-hype'
+  // Between-games rotation (Roku 5-slide flow)
+  | 'round-complete'
+  | 'play-taptrivia'
+  | 'coming-up';
 
 export interface BetweenGameData {
   podium: {

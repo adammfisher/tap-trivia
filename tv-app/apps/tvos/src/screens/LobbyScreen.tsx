@@ -17,12 +17,7 @@ export function LobbyScreen() {
   return (
     <>
       <View style={s.root}>
-        {/* ── Countdown (top-left overlay) ─────────── */}
-        <View style={s.countdownOverlay}>
-          <Text style={s.countdownLabel}>STARTS IN</Text>
-          <Text style={s.countdownValue}>{formatCountdown(secondsUntilNextGame)}</Text>
-        </View>
-
+        {/* Next-game countdown now lives in the persistent top pill (App.tsx) */}
         <View style={s.body}>
           {/* ── Left: Logo + QR + Code ─────────── */}
           <View style={s.leftCol}>

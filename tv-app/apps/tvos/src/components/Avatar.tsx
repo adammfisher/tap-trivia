@@ -24,8 +24,9 @@ const SIZES: Record<AvatarSize, { dim: number; font: number }> = {
 };
 
 export function Avatar({ name, size = 'md', style }: Props) {
+  const safeName = name || 'Player';
   const s = SIZES[size];
-  const [c1, c2] = avatarGradient(name);
+  const [c1, c2] = avatarGradient(safeName);
 
   return (
     <LinearGradient
@@ -45,7 +46,7 @@ export function Avatar({ name, size = 'md', style }: Props) {
       ]}
     >
       <Text style={[styles.letter, { fontSize: s.font }]}>
-        {initials(name)}
+        {initials(safeName)}
       </Text>
     </LinearGradient>
   );

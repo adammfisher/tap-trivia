@@ -26,7 +26,7 @@ function InlineQR({ barCode }: { barCode: string }) {
       <View style={inlineStyles.qrWrapper}>
         <QRCode
           value={PLAYER_APP_URL}
-          size={100}
+          size={130}
           backgroundColor="white"
           color="#1e0f4a"
         />
@@ -35,11 +35,13 @@ function InlineQR({ barCode }: { barCode: string }) {
       {/* Info */}
       <View style={inlineStyles.info}>
         <Text style={inlineStyles.title}>Join Trivia!</Text>
+        <Text style={inlineStyles.offer}>Play free for 7 days</Text>
+        <Text style={inlineStyles.scan}>SCAN TO START</Text>
         <Text style={inlineStyles.url}>
           {PLAYER_APP_URL.replace('https://', '')}
         </Text>
         <View style={inlineStyles.codeRow}>
-          <Text style={inlineStyles.codeLabel}>CODE </Text>
+          <Text style={inlineStyles.codeLabel}>JOIN </Text>
           <Text style={inlineStyles.codeValue}>{barCode}</Text>
         </View>
       </View>
@@ -77,52 +79,66 @@ const inlineStyles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 28,
+    gap: 36,
     backgroundColor: 'rgba(0,0,0,0.55)',
-    borderRadius: 32,
-    paddingVertical: 24,
-    paddingLeft: 28,
-    paddingRight: 36,
+    borderRadius: 42,
+    paddingVertical: 31,
+    paddingLeft: 36,
+    paddingRight: 47,
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.08)',
   },
   qrWrapper: {
     backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 21,
+    padding: 31,
   },
   info: {
     flexDirection: 'column',
   },
   title: {
     fontFamily: fonts.fredoka.bold,
-    fontSize: 32,
+    fontSize: 42,
     color: '#f0f0f0',
-    lineHeight: 38,
+    lineHeight: 50,
+  },
+  offer: {
+    fontFamily: fonts.outfit.bold,
+    fontSize: 29,
+    color: colors.green,
+    marginTop: 3,
+  },
+  scan: {
+    fontFamily: fonts.outfit.semiBold,
+    fontSize: 17,
+    color: w(0.4),
+    letterSpacing: 3,
+    marginTop: 8,
+    marginBottom: 3,
   },
   url: {
     fontFamily: fonts.outfit.semiBold,
-    fontSize: 22,
+    fontSize: 29,
     color: colors.gold,
-    marginTop: 6,
+    marginTop: 8,
   },
   codeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginTop: 10,
+    gap: 13,
+    marginTop: 13,
   },
   codeLabel: {
     fontFamily: fonts.outfit.semiBold,
-    fontSize: 18,
+    fontSize: 23,
     color: w(0.4),
-    letterSpacing: 2,
+    letterSpacing: 3,
   },
   codeValue: {
     fontFamily: fonts.fredoka.bold,
-    fontSize: 28,
+    fontSize: 36,
     color: colors.gold,
-    letterSpacing: 4,
+    letterSpacing: 5,
   },
 });
 
