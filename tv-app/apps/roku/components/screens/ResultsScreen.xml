@@ -17,13 +17,13 @@
 
     <!-- ═══ LEFT COLUMN — SIGNAGE MODE: centered Game Over + winner ═══ -->
     <Group id="gameOverCenter" translation="[0, 0]" visible="false">
-      <!-- "NEXT GAME IN" -->
-      <Label id="countdownPreCenter" text="NEXT GAME IN" color="#ffffff60"
+      <!-- "NEXT GAME IN" — hidden: the persistent top pill owns the countdown. -->
+      <Label id="countdownPreCenter" text="NEXT GAME IN" color="#ffffff60" visible="false"
              translation="[0, 170]" width="960" horizAlign="center">
         <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="22" />
       </Label>
       <!-- Countdown value -->
-      <Label id="countdownValueCenter" text=""
+      <Label id="countdownValueCenter" text="" visible="false"
              translation="[0, 200]" width="960" horizAlign="center" color="#ffd200">
         <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="56" />
       </Label>
@@ -57,8 +57,8 @@
     <!-- ═══ LEFT COLUMN — NO-SIGNAGE MODE: Podium + standings ═══ -->
     <Group id="leftCol" translation="[0, 0]">
 
-      <!-- Countdown to next game (top) -->
-      <Group id="countdownArea" translation="[120, 30]">
+      <!-- Countdown to next game (top) — hidden: pill owns the countdown. -->
+      <Group id="countdownArea" translation="[120, 30]" visible="false">
         <Label id="countdownPre" text="Next game in" color="#ffffff60">
           <Font role="font" uri="pkg:/fonts/Outfit-Regular.ttf" size="20" />
         </Label>

@@ -45,12 +45,13 @@
           <!-- TapTrivia Logo widget (playing=32px, closest to web sm=34px) -->
           <Logo id="headerLogo" translation="[-220, 24]" />
 
-          <!-- Divider (28px gap from logo start) -->
+          <!-- Divider (28px gap from logo start) — hidden: the persistent top
+               countdown pill now owns the "trivia starts in" countdown. -->
           <Rectangle id="headerDividerRect" translation="[-248, 10]"
-                     color="#ffffff14" width="2" height="56" />
+                     color="#ffffff14" width="2" height="56" visible="false" />
 
-          <!-- Countdown (28px gap from divider, right-aligned) -->
-          <Group id="headerCountdownGroup" translation="[-500, 0]">
+          <!-- Countdown — hidden (replaced by the persistent top pill) -->
+          <Group id="headerCountdownGroup" translation="[-500, 0]" visible="false">
             <Label id="headerCountdownLabel" text="TRIVIA STARTS IN" color="#ffffff59"
                    translation="[0, 4]" horizAlign="right" width="222">
               <Font role="font" uri="pkg:/fonts/Outfit-SemiBold.ttf" size="18" />
@@ -74,28 +75,28 @@
           <!-- Left column (vertically centered in content area) -->
           <Group id="specialsLeft" translation="[80, 370]">
             <!-- Label emoji + text -->
-            <Poster id="specialsLabelEmoji" width="32" height="32"
-                    translation="[0, -4]" visible="false" />
+            <Poster id="specialsLabelEmoji" width="88" height="88"
+                    translation="[916, 0]" visible="false" />
             <Label id="specialsLabel" text="" color="#f59e0b"
-                   translation="[0, 0]">
+                   translation="[0, 0]" width="1920" horizAlign="center">
               <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
             </Label>
             <!-- Headline -->
             <Label id="specialsHeadline" text="" color="#f0f0f0"
-                   translation="[0, 50]" width="900" wrap="true" maxLines="2">
-              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="88" />
+                   translation="[0, 100]" width="1920" horizAlign="center" wrap="true" maxLines="2">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="70" />
             </Label>
             <!-- Subheadline (gold, consecutive line after headline) -->
             <Label id="specialsSubheadline" text="" color="#ffd200"
-                   translation="[0, 148]" width="900">
-              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="88" />
+                   translation="[0, 178]" width="1920" horizAlign="center">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="70" />
             </Label>
-            <!-- Featured item box -->
-            <Group id="specialsFeatured" translation="[0, 258]">
+            <!-- Featured item box (centered: (1920-760)/2 = 580) -->
+            <Group id="specialsFeatured" translation="[580, 262]">
               <Poster uri="pkg:/images/signage-featured-box.png" width="760" height="120" />
-              <Label id="specialsFeaturedName" text="" translation="[48, 20]" color="#f0f0f0"
-                     width="450">
-                <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="44" />
+              <Label id="specialsFeaturedName" text="" translation="[48, 16]" color="#f0f0f0"
+                     width="470" wrap="true" maxLines="2">
+                <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="40" />
               </Label>
               <Label id="specialsFeaturedDesc" text="" translation="[48, 68]" color="#ffffff66"
                      width="450">
@@ -139,8 +140,8 @@
         <!-- Centered: emoji + when label + event name + details + prizes row -->
         <Group id="tplEvent" visible="false">
           <Group id="eventCenter" translation="[960, 540]">
-            <Poster id="eventEmoji" width="128" height="128"
-                    translation="[-64, -295]" />
+            <Poster id="eventEmoji" width="144" height="144"
+                    translation="[-72, -303]" />
             <Label id="eventWhen" text="" color="#ffd200"
                    horizAlign="center" width="1200" translation="[-600, -127]">
               <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
@@ -162,14 +163,14 @@
         <!-- ── Brand template (NO header — full centered) ── -->
         <Group id="tplBrand" visible="false">
           <Group id="brandCenter" translation="[960, 540]">
-            <!-- Large brand logo -->
+            <!-- Large brand logo (+30%, center held at brandCenter x=0, y=-184) -->
             <Poster id="brandLogoBg" uri="pkg:/images/signage-brand-logo-bg.png"
-                    width="280" height="280" translation="[-140, -324]" />
+                    width="364" height="364" translation="[-182, -366]" />
             <Label id="brandLogoInitial" text="" color="#ffd200"
-                   horizAlign="center" width="280" translation="[-140, -234]">
-              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="100" />
+                   horizAlign="center" width="364" translation="[-182, -249]">
+              <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="130" />
             </Label>
-            <Poster id="brandLogoPoster" translation="[-130, -314]" width="260" height="260"
+            <Poster id="brandLogoPoster" translation="[-169, -353]" width="338" height="338"
                     visible="false" />
             <!-- Bar name -->
             <Label id="brandBarName" text="" color="#f0f0f0"
@@ -207,8 +208,8 @@
         <!-- Centered: big emoji + headline + message body + subtext -->
         <Group id="tplAnnouncement" visible="false">
           <Group id="announcementCenter" translation="[960, 540]">
-            <Poster id="announcementEmoji" width="128" height="128"
-                    translation="[-64, -236]" />
+            <Poster id="announcementEmoji" width="144" height="144"
+                    translation="[-72, -244]" />
             <Label id="announcementHeadline" text="" color="#f0f0f0"
                    horizAlign="center" width="1400" translation="[-700, -68]"
                    wrap="true" maxLines="2">
@@ -230,8 +231,8 @@
         <!-- Centered: emoji + label + matchup + when + promo box + tagline -->
         <Group id="tplSports" visible="false">
           <Group id="sportsCenter" translation="[960, 540]">
-            <Poster id="sportsEmoji" width="128" height="128"
-                    translation="[-64, -289]" />
+            <Poster id="sportsEmoji" width="144" height="144"
+                    translation="[-72, -297]" />
             <Label id="sportsHeadline" text="" color="#ff4757"
                    horizAlign="center" width="1200" translation="[-600, -121]">
               <Font role="font" uri="pkg:/fonts/Outfit-Bold.ttf" size="24" />
@@ -264,8 +265,8 @@
         <!-- Centered: emoji + headline + body + items row -->
         <Group id="tplCustom" visible="false">
           <Group id="customCenter" translation="[960, 540]">
-            <Poster id="customEmoji" width="128" height="128"
-                    translation="[-64, -241]" />
+            <Poster id="customEmoji" width="144" height="144"
+                    translation="[-72, -249]" />
             <Label id="customHeadline" text="" color="#f0f0f0"
                    horizAlign="center" width="1400" translation="[-700, -73]"
                    wrap="true" maxLines="2">

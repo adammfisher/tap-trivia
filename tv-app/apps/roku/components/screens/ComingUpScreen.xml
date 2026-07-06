@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Between-rounds slide 5 — "Coming Up" (join CTA left, next categories right).
+     Authored at the measured web coordinates (tv.taptrivia.tv ?preview=between). -->
+<component name="ComingUpScreen" extends="Group">
+  <interface>
+    <field id="barCode" type="string" onChange="onBarCodeChanged" />
+    <field id="categories" type="array" onChange="onCategoriesChanged" />
+  </interface>
+
+  <children>
+    <!-- ── Left column: join CTA ── -->
+    <Poster id="brain" uri="pkg:/images/emoji-lg-1f9e0.png" width="92" height="92" translation="[113, 158]" />
+
+    <Label text="Play" translation="[115, 257]" color="#ffffff">
+      <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="72" />
+    </Label>
+    <Label text="TapTrivia" translation="[277, 257]" color="#ffd200">
+      <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="72" />
+    </Label>
+    <Label text="Free for 7 days" translation="[115, 347]" color="#00d4aa">
+      <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="34" />
+    </Label>
+
+    <!-- QR (white card + code image) + code stacked underneath, centered on the QR -->
+    <Rectangle color="#ffffff" width="324" height="324" translation="[127, 406]" />
+    <Poster uri="pkg:/images/qr-play-300.png" width="300" height="300" translation="[139, 418]" />
+
+    <Label text="app.taptrivia.tv" translation="[127, 786]" width="324" horizAlign="center" color="#ffd200">
+      <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="24" />
+    </Label>
+    <Label text="AND ENTER CODE" translation="[127, 829]" width="324" horizAlign="center" color="#ffffff73">
+      <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="18" />
+    </Label>
+    <Label id="codeLabel" text="" translation="[127, 853]" width="324" horizAlign="center" color="#ffd200">
+      <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="58" />
+    </Label>
+
+    <!-- ── Right column: next categories ── -->
+    <Label text="NEXT ROUND STARTS SOON" translation="[1076, 334]" color="#667eea">
+      <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="21" />
+    </Label>
+    <Label text="Coming Up" translation="[1076, 375]" color="#ffffff">
+      <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="49" />
+    </Label>
+
+    <!-- Category grid (cells built dynamically) -->
+    <Group id="catGrid" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/utils/FontFix.brs" />
+  <script type="text/brightscript" uri="ComingUpScreen.brs" />
+</component>

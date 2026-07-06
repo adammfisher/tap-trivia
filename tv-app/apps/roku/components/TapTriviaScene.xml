@@ -47,6 +47,25 @@
       <BetweenStandingsScreen id="betweenStandingsScreen" visible="false" />
       <BetweenNationalScreen id="betweenNationalScreen" visible="false" />
       <BetweenHypeScreen id="betweenHypeScreen" visible="false" />
+      <PlayTapTriviaScreen id="playTapTriviaScreen" visible="false" />
+      <ComingUpScreen id="comingUpScreen" visible="false" />
+      <LeaderResultsScreen id="leaderResultsScreen" visible="false" />
+    </Group>
+
+    <!-- Persistent next-game countdown pill — a "notch" hanging from the top
+         center edge, overlays every screen. Toggled/updated in TapTriviaScene.brs
+         (updateNextPill). Sits above all screens, below the error overlay. -->
+    <Group id="nextPill" translation="[650, 0]" visible="false">
+      <Poster uri="pkg:/images/next-pill-bg.png" width="620" height="96" />
+      <Poster uri="pkg:/images/next-pill-dot.png" width="34" height="34" translation="[118, 31]" />
+      <Label id="nextPillLabel" text="TRIVIA STARTS IN" translation="[166, 0]"
+             width="320" height="96" vertAlign="center" color="#ffffffA6">
+        <Font role="font" uri="pkg:/fonts/DMMono-Regular.ttf" size="24" />
+      </Label>
+      <Label id="nextPillTime" text="0:00" translation="[420, 0]"
+             width="150" height="96" vertAlign="center" color="#ffd200">
+        <Font role="font" uri="pkg:/fonts/Fredoka-Bold.ttf" size="40" />
+      </Label>
     </Group>
 
     <!-- Error overlay (hidden by default) -->

@@ -258,7 +258,8 @@ function getActiveSlides() as Object
     if sDays <> invalid and sDays.count() > 0
       found = false
       for each d in sDays
-        if d = today then found = true
+        ' API sends capitalized day names ("Mon","Thu",…); compare case-insensitively.
+        if LCase(d) = today then found = true
       end for
       if not found then goto skipSlide
     end if
@@ -324,6 +325,15 @@ sub renderSignageSlide(slide as Object)
   ' Show signage container, hide default
   m.signageContainer.visible = true
   m.defaultContainer.visible = false
+
+  ' Hide the "Press Back to change location" hint during the between-rounds
+  ' Results window (it's an idle-only affordance; the web signage has none).
+  hint = m.top.findNode("changeLocationHint")
+  if hint <> invalid
+    st = ""
+    if m.gsCache <> invalid and m.gsCache.state <> invalid then st = m.gsCache.state
+    hint.visible = (st <> "game_over")
+  end if
 
   ' signageBg uses fixed URI from XML (signage-announcement.png).
   ' Never changed at runtime — Roku Poster URI changes are async and
@@ -486,20 +496,20 @@ end sub
 sub renderSpecials(data as Object)
   m.tplSpecials.visible = true
 
-  ' Emoji before label (web: ${d.emoji || ''} ${d.label})
-  emojiUri = getEmojiUri(safeField(data, "emoji"), "sm")
+  ' Kicker emoji above the headline (large, centered)
+  emojiUri = getEmojiUri(safeField(data, "emoji"), "lg")
+  m.specialsLabel.translation = [0, 0]
   if emojiUri <> ""
     m.specialsLabelEmoji.uri = emojiUri
+    m.specialsLabelEmoji.translation = [916, 0]
     m.specialsLabelEmoji.visible = true
-    m.specialsLabel.translation = [40, 0]
   else
     m.specialsLabelEmoji.visible = false
-    m.specialsLabel.translation = [0, 0]
   end if
 
-  label = safeField(data, "label")
-  if label = "" then label = "Today's Specials"
-  m.specialsLabel.text = UCase(label)
+  ' Kicker label hidden: it duplicated the header bar name and collided with the
+  ' large centered emoji. The big emoji + headline stand alone.
+  m.specialsLabel.text = ""
   m.specialsHeadline.text = safeField(data, "headline")
   m.specialsSubheadline.text = safeField(data, "subheadline")
   m.specialsFeaturedName.text = safeField(data, "featuredName")
@@ -523,60 +533,62 @@ sub renderSpecials(data as Object)
     rowBg.height = 112
     row.appendChild(rowBg)
 
-    ' Emoji icon (web: 56px, gap 32px from left padding 36px)
-    emojiUri = getEmojiUri(safeField(item, "icon"), "sm")
+    ' Emoji icon — large glyph (lg source), vertically centered (overflows row).
+    emojiUri = getEmojiUri(safeField(item, "icon"), "lg")
+    if emojiUri = "" then emojiUri = getEmojiUri(safeField(item, "icon"), "md")
     if emojiUri <> ""
       emojiPoster = CreateObject("roSGNode", "Poster")
       emojiPoster.uri = emojiUri
-      emojiPoster.width = 56
-      emojiPoster.height = 56
-      emojiPoster.translation = [36, 28]
+      emojiPoster.width = 132
+      emojiPoster.height = 132
+      emojiPoster.translation = [12, -10]
       row.appendChild(emojiPoster)
     end if
 
-    ' Name label (web: 36+56+32=124 from left)
+    ' Name label — vertically centered in the row
     nameLabel = CreateObject("roSGNode", "Label")
     nameLabel.text = safeField(item, "name")
-    nameLabel.translation = [124, 24]
-    nameLabel.font = makeFont("Outfit-Bold", 32)
+    nameLabel.translation = [160, 0]
+    nameLabel.font = makeFont("Outfit-Bold", 28)
     nameLabel.color = "#f0f0f0"
-    nameLabel.width = 470
+    nameLabel.width = 428
+    nameLabel.vertAlign = "center"
+    nameLabel.height = 112
+    nameLabel.wrap = true
+    nameLabel.maxLines = 2
     row.appendChild(nameLabel)
 
-    descLabel = CreateObject("roSGNode", "Label")
-    descLabel.text = safeField(item, "desc")
-    descLabel.translation = [124, 62]
-    descLabel.font = makeFont("Outfit-Regular", 24)
-    descLabel.color = "#ffffffE6"
-    descLabel.width = 470
-    row.appendChild(descLabel)
-
-    ' Price (web: margin-left auto, right side with 36px padding)
+    ' Price — vertically centered
     priceLabel = CreateObject("roSGNode", "Label")
     priceLabel.text = safeField(item, "price")
-    priceLabel.translation = [594, 28]
-    priceLabel.font = makeFont("Fredoka-Bold", 44)
+    priceLabel.translation = [600, 0]
+    priceLabel.font = makeFont("Fredoka-Bold", 38)
     priceLabel.color = "#00d4aa"
     priceLabel.horizAlign = "right"
+    priceLabel.vertAlign = "center"
+    priceLabel.height = 112
     priceLabel.width = 160
     row.appendChild(priceLabel)
 
     m.specialsMenuItems.appendChild(row)
-    yPos = yPos + 136
+    yPos = yPos + 126
   end for
 
-  ' Center columns vertically in content area (header ends ~140, screen 1080)
-  contentAreaCenter = 610  ' midpoint of 140–1080
-  if menuItems.count() > 0
-    rightColHeight = menuItems.count() * 136 - 24
-    rightStartY = contentAreaCenter - Int(rightColHeight / 2)
-    m.specialsMenuItems.translation = [1056, rightStartY]
-  end if
+  ' Centered single column (matches web): kicker/headline/subheadline/featured
+  ' centered, menu rows centered below. Vertically center the whole stack.
+  contentAreaCenter = 590  ' a touch above true-center to leave bottom margin
+  blockH = 382             ' big kicker + headline + subheadline + featured box
+  menuH = 0
+  if menuItems.count() > 0 then menuH = 40 + menuItems.count() * 126 - 14
+  totalH = blockH + menuH
+  startY = contentAreaCenter - Int(totalH / 2)
 
-  leftColHeight = 378  ' label + headline + subheadline + featured
-  leftStartY = contentAreaCenter - Int(leftColHeight / 2)
   m.specialsLeft = m.top.findNode("specialsLeft")
-  m.specialsLeft.translation = [80, leftStartY]
+  m.specialsLeft.translation = [0, startY]
+  if menuItems.count() > 0
+    ' 790-wide rows centered: (1920-790)/2 = 565, placed below the featured box
+    m.specialsMenuItems.translation = [565, startY + 420]
+  end if
 end sub
 
 sub renderHappyhour(data as Object)
@@ -882,14 +894,14 @@ sub renderCustom(data as Object)
     cardBg.height = 80
     card.appendChild(cardBg)
 
-    ' Emoji icon
-    iEmojiUri = getEmojiUri(safeField(item, "emoji"), "sm")
+    ' Emoji icon — use "md" art (glyph fills more of the canvas) at a larger size
+    iEmojiUri = getEmojiUri(safeField(item, "emoji"), "md")
     if iEmojiUri <> ""
       iEmoji = CreateObject("roSGNode", "Poster")
       iEmoji.uri = iEmojiUri
-      iEmoji.width = 48
-      iEmoji.height = 48
-      iEmoji.translation = [16, 16]
+      iEmoji.width = 58
+      iEmoji.height = 58
+      iEmoji.translation = [16, 11]
       card.appendChild(iEmoji)
     end if
 

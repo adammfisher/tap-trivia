@@ -936,19 +936,19 @@ function generateSignageElements() {
     save(c, 'signage-header-logo-bg.png');
   }
 
-  // Brand logo bg (large) — 280x280, same gradient
+  // Brand logo bg (large) — 364x364 (+30%, matches IdleScreen brandLogoBg), same gradient
   {
-    const c = createCanvas(280, 280);
+    const c = createCanvas(364, 364);
     const ctx = c.getContext('2d');
-    roundedRect(ctx, 2, 2, 276, 276, 56);
-    const g = ctx.createLinearGradient(0, 0, 280, 280);
+    roundedRect(ctx, 3, 3, 358, 358, 73);
+    const g = ctx.createLinearGradient(0, 0, 364, 364);
     g.addColorStop(0, '#2a1a4e');
     g.addColorStop(1, '#3d2266');
     ctx.fillStyle = g;
     ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-    ctx.lineWidth = 4;
-    roundedRect(ctx, 2, 2, 276, 276, 56);
+    ctx.lineWidth = 5;
+    roundedRect(ctx, 3, 3, 358, 358, 73);
     ctx.stroke();
     save(c, 'signage-brand-logo-bg.png');
   }
